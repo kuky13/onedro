@@ -104,6 +104,45 @@ export type Database = {
         }
         Relationships: []
       }
+      api_keys: {
+        Row: {
+          api_key: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          service_name: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          api_key: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          service_name: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          api_key?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          service_name?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           archived: boolean | null
@@ -421,6 +460,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string | null
+          id: string
+          role: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string | null
+          id?: string
+          role: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string | null
+          id?: string
+          role?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       cleanup_logs: {
         Row: {
@@ -2017,9 +2086,9 @@ export type Database = {
           benefits_data: Json | null
           benefits_section_subtitle: string | null
           benefits_section_title: string | null
-          default_budget_validity_days: number
           created_at: string
           cta_button_text: string
+          default_budget_validity_days: number
           dev_warning_message: string | null
           dev_warning_title: string | null
           faq_data: Json | null
@@ -2054,9 +2123,9 @@ export type Database = {
           benefits_data?: Json | null
           benefits_section_subtitle?: string | null
           benefits_section_title?: string | null
-          default_budget_validity_days?: number
           created_at?: string
           cta_button_text?: string
+          default_budget_validity_days?: number
           dev_warning_message?: string | null
           dev_warning_title?: string | null
           faq_data?: Json | null
@@ -2091,9 +2160,9 @@ export type Database = {
           benefits_data?: Json | null
           benefits_section_subtitle?: string | null
           benefits_section_title?: string | null
-          default_budget_validity_days?: number
           created_at?: string
           cta_button_text?: string
+          default_budget_validity_days?: number
           dev_warning_message?: string | null
           dev_warning_title?: string | null
           faq_data?: Json | null
@@ -2385,6 +2454,42 @@ export type Database = {
           metric_value?: number
           recorded_at?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_api_keys: {
+        Row: {
+          created_at: string | null
+          encrypted_key: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          key_hint: string | null
+          service_name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          encrypted_key: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_hint?: string | null
+          service_name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          encrypted_key?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_hint?: string | null
+          service_name?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -3659,6 +3764,36 @@ export type Database = {
         }[]
       }
       get_allowed_redirect_domains: { Args: never; Returns: string[] }
+      get_api_key: { Args: { service_name: string }; Returns: string }
+      get_budget_details_by_email: {
+        Args: { target_budget_id: string; user_email: string }
+        Returns: {
+          budget_id: string
+          client_name: string
+          client_phone: string
+          created_at: string
+          device_model: string
+          device_type: string
+          issue: string
+          parts: Json
+          sequential_number: number
+          status: string
+          total_price: number
+          workflow_status: string
+        }[]
+      }
+      get_budget_with_parts: {
+        Args: { p_device_model: string; p_part_type: string; p_user_id: string }
+        Returns: {
+          company_name: string
+          custom_services: string
+          device_model: string
+          notes: string
+          part_type: string
+          parts: Json
+          valid_until: string
+        }[]
+      }
       get_budgets_with_part_quality: {
         Args: { p_user_id: string }
         Returns: {
@@ -3683,9 +3818,28 @@ export type Database = {
           workflow_status: string
         }[]
       }
+      get_budgets_with_parts: {
+        Args: { p_limit?: number; p_search_term?: string; p_user_id: string }
+        Returns: {
+          created_at: string
+          custom_services: string
+          device_model: string
+          device_type: string
+          id: string
+          notes: string
+          part_type: string
+          parts: Json
+          sequential_number: number
+          valid_until: string
+        }[]
+      }
       get_cleanup_preview: { Args: never; Returns: Json }
       get_cleanup_statistics: { Args: never; Returns: Json }
       get_client_budget_count: { Args: { client_id: string }; Returns: number }
+      get_client_service_order_count: {
+        Args: { client_id: string }
+        Returns: number
+      }
       get_company_info: {
         Args: { p_owner_id?: string }
         Returns: {
@@ -4150,6 +4304,43 @@ export type Database = {
           last_event: string
           successful_events: number
           total_events: number
+        }[]
+      }
+      get_user_budgets_by_email: {
+        Args: { user_email: string }
+        Returns: {
+          budget_id: string
+          client_name: string
+          client_phone: string
+          created_at: string
+          device_model: string
+          device_type: string
+          parts_count: number
+          sequential_number: number
+          status: string
+          total_price: number
+          workflow_status: string
+        }[]
+      }
+      get_user_by_email: {
+        Args: { input_email: string }
+        Returns: {
+          created_at: string
+          email: string
+          id: string
+        }[]
+      }
+      get_user_clients_by_email: {
+        Args: { user_email: string }
+        Returns: {
+          budgets_count: number
+          city: string
+          client_id: string
+          created_at: string
+          email: string
+          name: string
+          phone: string
+          state: string
         }[]
       }
       get_user_license_details: { Args: { p_user_id: string }; Returns: Json }
