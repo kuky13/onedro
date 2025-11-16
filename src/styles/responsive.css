@@ -1,0 +1,708 @@
+/* Enhanced Responsive Design Utilities */
+
+/* Smooth scrolling and performance optimizations */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Smooth scrolling for all elements */
+* {
+  scroll-behavior: smooth;
+}
+
+/* Enhanced scroll styles for form containers */
+.scroll-smooth {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Custom scrollbar for webkit browsers */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+/* Mobile scroll optimization */
+@media (max-width: 768px) {
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  /* Hide scrollbar on mobile for cleaner look */
+  .overflow-y-auto::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+  }
+}
+
+/* Form container scroll enhancements */
+.form-scroll-container {
+  scroll-padding-top: 1rem;
+  scroll-padding-bottom: 1rem;
+}
+
+/* Scroll snap for better mobile experience */
+@media (max-width: 640px) {
+  .form-scroll-container {
+    scroll-snap-type: y proximity;
+  }
+  
+  .form-scroll-container > * {
+    scroll-snap-align: start;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast support */
+@media (prefers-contrast: high) {
+  .glass-card,
+  .backdrop-blur-sm,
+  .backdrop-blur-xl {
+    backdrop-filter: none !important;
+    background: var(--background) !important;
+    border: 2px solid var(--border) !important;
+  }
+}
+
+/* iOS Safe Area Support - Enhanced for Face ID and Dynamic Island */
+.safe-area-top {
+  padding-top: max(env(safe-area-inset-top), 20px);
+}
+
+.safe-area-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 20px);
+}
+
+.safe-area-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right);
+}
+
+.safe-area-inset {
+  padding-top: max(env(safe-area-inset-top), 20px);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: max(env(safe-area-inset-bottom), 20px);
+  padding-left: env(safe-area-inset-left);
+}
+
+/* Enhanced Safe Area Classes for Better Device Support */
+.safe-area-margin-top {
+  margin-top: max(env(safe-area-inset-top), 20px);
+}
+
+.safe-area-margin-bottom {
+  margin-bottom: max(env(safe-area-inset-bottom), 20px);
+}
+
+.safe-area-height {
+  height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+/* Dynamic Island and Notch Specific Support */
+@supports (padding: max(0px)) {
+  .notch-safe {
+    padding-top: max(env(safe-area-inset-top), 44px);
+  }
+  
+  .dynamic-island-safe {
+    padding-top: max(env(safe-area-inset-top), 59px);
+  }
+}
+
+/* iPhone 14 Pro/Pro Max Dynamic Island */
+@media screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3),
+       screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) {
+  .header-safe, .nav-safe {
+    padding-top: max(env(safe-area-inset-top), 59px);
+  }
+}
+
+/* iPhone 15 Pro/Pro Max */
+@media screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3),
+       screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) {
+  .modern-iphone {
+    --safe-top: max(env(safe-area-inset-top), 59px);
+    --safe-bottom: max(env(safe-area-inset-bottom), 34px);
+  }
+}
+
+/* Enhanced scrollbar styling */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--border));
+  border-radius: 3px;
+  border: 1px solid transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--border) / 0.8);
+}
+
+/* Responsive container utilities */
+.container-responsive {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-responsive {
+    max-width: 640px;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* Enhanced button footer styles */
+.button-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .button-footer {
+    background: rgba(0, 0, 0, 0.95);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Extra small breakpoint for better mobile control */
+@media (min-width: 475px) {
+  .xs\:flex-row {
+    flex-direction: row;
+  }
+  
+  .xs\:flex-none {
+    flex: none;
+  }
+  
+  .xs\:min-w-\[120px\] {
+    min-width: 120px;
+  }
+  
+  .xs\:min-w-\[160px\] {
+    min-width: 160px;
+  }
+  
+  .xs\:inline {
+    display: inline;
+  }
+  
+  .xs\:hidden {
+    display: none;
+  }
+}
+
+/* Button interaction improvements */
+.button-enhanced {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+}
+
+.button-enhanced:active {
+  transform: scale(0.98);
+}
+
+.button-enhanced:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Improved touch targets for mobile */
+@media (max-width: 768px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container-responsive {
+    max-width: 768px;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-responsive {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container-responsive {
+    max-width: 1280px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .container-responsive {
+    max-width: 1536px;
+  }
+}
+
+/* Adaptive grid utilities */
+.grid-adaptive {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .grid-adaptive {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .grid-adaptive {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-adaptive {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Compact height adjustments */
+@media (max-height: 600px) {
+  .compact-height-spacing > * + * {
+    margin-top: 0.5rem !important;
+  }
+  
+  .compact-height-padding {
+    padding: 0.5rem !important;
+  }
+  
+  .compact-height-nav {
+    height: 3rem !important;
+  }
+}
+
+/* Touch-friendly interactive elements */
+@media (hover: none) and (pointer: coarse) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  button,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px;
+  }
+}
+
+/* Landscape tablet optimizations */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .landscape-tablet-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .landscape-tablet-nav {
+    flex-direction: row;
+    justify-content: space-around;
+  }
+}
+
+/* Portrait tablet optimizations */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .portrait-tablet-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .portrait-tablet-nav {
+    flex-direction: column;
+  }
+}
+
+/* Ultra-wide screen optimizations */
+@media (min-width: 1920px) {
+  .ultra-wide-container {
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  
+  .ultra-wide-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* Performance optimizations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-scroll {
+  will-change: scroll-position;
+}
+
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Enhanced Mobile Touch and Interaction */
+.touch-optimized {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.touch-target-large {
+  min-height: 56px;
+  min-width: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Improved Button Touch Targets */
+.btn-touch {
+  min-height: 48px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+/* Mobile-First Input Styling */
+.input-mobile {
+  font-size: 16px; /* Prevents zoom on iOS */
+  padding: 12px 16px;
+  border-radius: 8px;
+  min-height: 48px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Enhanced Viewport Classes */
+.vh-safe {
+  height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+.min-vh-safe {
+  min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+.max-vh-safe {
+  max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+/* PWA Specific Classes */
+.pwa-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+  padding-top: max(env(safe-area-inset-top), 20px);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+.pwa-content {
+  padding-top: calc(60px + max(env(safe-area-inset-top), 20px));
+  padding-bottom: max(env(safe-area-inset-bottom), 20px);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+.pwa-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: var(--background);
+  border-top: 1px solid var(--border);
+  padding-bottom: max(env(safe-area-inset-bottom), 20px);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Focus management for accessibility */
+.focus-visible:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Smooth transitions with performance considerations */
+.smooth-transition {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.smooth-transition-fast {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.smooth-transition-slow {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Responsive text utilities */
+.text-responsive {
+  font-size: clamp(0.875rem, 2.5vw, 1.125rem);
+}
+
+.text-responsive-lg {
+  font-size: clamp(1.125rem, 3vw, 1.5rem);
+}
+
+.text-responsive-xl {
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+}
+
+/* Adaptive spacing utilities */
+.spacing-adaptive {
+  margin: clamp(0.5rem, 2vw, 1.5rem);
+}
+
+.spacing-adaptive-lg {
+  margin: clamp(1rem, 3vw, 2.5rem);
+}
+
+/* Enhanced Orientation Support */
+@media (orientation: landscape) {
+  .landscape-only {
+    display: block;
+  }
+  
+  .portrait-only {
+    display: none;
+  }
+  
+  .landscape-padding {
+    padding-left: max(env(safe-area-inset-left), 20px);
+    padding-right: max(env(safe-area-inset-right), 20px);
+  }
+  
+  .landscape-header {
+    padding-top: max(env(safe-area-inset-top), 10px);
+    height: auto;
+    min-height: 50px;
+  }
+}
+
+@media (orientation: portrait) {
+  .portrait-only {
+    display: block;
+  }
+  
+  .landscape-only {
+    display: none;
+  }
+  
+  .portrait-padding {
+    padding-top: max(env(safe-area-inset-top), 20px);
+    padding-bottom: max(env(safe-area-inset-bottom), 20px);
+  }
+}
+
+/* Android Specific Support */
+@media screen and (max-width: 768px) {
+  .android-safe {
+    padding-top: max(env(safe-area-inset-top), 24px);
+    padding-bottom: max(env(safe-area-inset-bottom), 16px);
+  }
+  
+  .android-navigation {
+    padding-bottom: max(env(safe-area-inset-bottom), 48px);
+  }
+}
+
+/* Foldable Device Support */
+@media (spanning: single-fold-vertical) {
+  .foldable-content {
+    flex-direction: row;
+  }
+  
+  .foldable-sidebar {
+    width: 50%;
+    border-right: 1px solid var(--border);
+  }
+}
+
+@media (spanning: single-fold-horizontal) {
+  .foldable-content {
+    flex-direction: column;
+  }
+  
+  .foldable-header {
+    height: 50%;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+/* Enhanced Device-Specific Classes */
+.mobile-optimized {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}
+
+.desktop-only {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .desktop-only {
+    display: block;
+  }
+  
+  .mobile-only {
+    display: none;
+  }
+}
+
+/* Improved Scroll Handling */
+.scroll-container {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-padding-top: max(env(safe-area-inset-top), 20px);
+}
+
+.scroll-snap-container {
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+}
+
+.scroll-snap-item {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  * {
+    background: transparent !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  a, a:visited {
+    text-decoration: underline;
+  }
+  
+  a[href]:after {
+    content: " (" attr(href) ")";
+  }
+  
+  abbr[title]:after {
+    content: " (" attr(title) ")";
+  }
+  
+  .ir a:after, a[href^="javascript:"]:after, a[href^="#"]:after {
+    content: "";
+  }
+  
+  pre, blockquote {
+    border: 1px solid #999;
+    page-break-inside: avoid;
+  }
+  
+  thead {
+    display: table-header-group;
+  }
+  
+  tr, img {
+    page-break-inside: avoid;
+  }
+  
+  img {
+    max-width: 100% !important;
+  }
+  
+  @page {
+    margin: 0.5cm;
+  }
+  
+  p, h2, h3 {
+    orphans: 3;
+    widows: 3;
+  }
+  
+  h2, h3 {
+    page-break-after: avoid;
+  }
+}

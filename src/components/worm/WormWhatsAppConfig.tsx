@@ -1,0 +1,181 @@
+import React, { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { useWhatsAppTemplates, useDeleteTemplate, useUpdateTemplate, useEnsureDefaultTemplate, useResetDefaultTemplate } from '@/hooks/worm/useWhatsAppMessageTemplates';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { MessageSquare, Plus, Loader2, Star, Edit, Copy, Trash2, RotateCcw } from 'lucide-react';
+import { WhatsAppTemplateEditor } from './WhatsAppTemplateEditor';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
+export const WormWhatsAppConfig = () => {
+  const {
+    user
+  } = useAuth();
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<any>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const {
+    data: templates = [],
+    isLoading
+  } = useWhatsAppTemplates(user?.id);
+  const deleteTemplate = useDeleteTemplate();
+  const updateTemplate = useUpdateTemplate();
+  const ensureDefault = useEnsureDefaultTemplate(user?.id);
+  const resetDefault = useResetDefaultTemplate();
+
+  // Criar template padrão ao montar se não existir
+  React.useEffect(() => {
+    if (user?.id && templates.length === 0 && !isLoading) {
+      ensureDefault.mutate();
+    }
+  }, [user?.id, templates.length, isLoading]);
+  const handleNewTemplate = () => {
+    setEditingTemplate(null);
+    setIsEditorOpen(true);
+  };
+  const handleEditTemplate = (template: any) => {
+    setEditingTemplate(template);
+    setIsEditorOpen(true);
+  };
+  const handleDuplicateTemplate = async (template: any) => {
+    setEditingTemplate({
+      template_name: `${template.template_name} (Cópia)`,
+      message_template: template.message_template,
+      is_default: false
+    });
+    setIsEditorOpen(true);
+  };
+  const handleSetDefault = async (templateId: string) => {
+    if (!user?.id) return;
+    await updateTemplate.mutateAsync({
+      id: templateId,
+      userId: user.id,
+      updates: {
+        is_default: true
+      }
+    });
+  };
+  const handleDeleteTemplate = async (templateId: string) => {
+    if (!user?.id) return;
+    await deleteTemplate.mutateAsync({
+      id: templateId,
+      userId: user.id
+    });
+    setDeletingId(null);
+  };
+  if (isLoading || ensureDefault.isPending) {
+    return <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>;
+  }
+  return <>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Configurações do WhatsApp</h2>
+            <p className="text-muted-foreground text-sm mt-1">
+              Personalize a mensagen de orçamento
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => user?.id && resetDefault.mutate(user.id)}
+              disabled={resetDefault.isPending}
+            >
+              {resetDefault.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <RotateCcw className="h-4 w-4 mr-2" />
+              )}
+              Reset
+            </Button>
+            
+          </div>
+        </div>
+
+        {templates.length === 0 ? <Card>
+            <CardContent className="py-12 text-center">
+              <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                <MessageSquare className="h-10 w-10 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Nenhum template encontrado</h3>
+              <p className="text-muted-foreground mb-4">
+                Crie seu primeiro template de mensagem
+              </p>
+              <Button onClick={handleNewTemplate}>
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Template
+              </Button>
+            </CardContent>
+          </Card> : <div className="grid gap-4">
+            {templates.map(template => <Card key={template.id} className="border-border/50">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-lg">
+                          {template.template_name}
+                        </CardTitle>
+                        {template.is_default}
+                      </div>
+                      <CardDescription className="mt-1">
+                        Criado em {new Date(template.created_at).toLocaleDateString('pt-BR')}
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleEditTemplate(template)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDuplicateTemplate(template)}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      {!template.is_default && <Button variant="ghost" size="sm" onClick={() => setDeletingId(template.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-muted/50 rounded-lg p-4 font-mono text-sm whitespace-pre-wrap">
+                    {template.message_template.substring(0, 200)}
+                    {template.message_template.length > 200 && '...'}
+                  </div>
+                  {!template.is_default && <div className="mt-4">
+                      <Button variant="outline" size="sm" onClick={() => handleSetDefault(template.id)}>
+                        <Star className="h-4 w-4 mr-2" />
+                        Definir como Padrão
+                      </Button>
+                    </div>}
+                </CardContent>
+              </Card>)}
+          </div>}
+      </div>
+
+      {/* Editor de Template */}
+      <Sheet open={isEditorOpen} onOpenChange={setIsEditorOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-3xl overflow-y-auto">
+          <WhatsAppTemplateEditor template={editingTemplate} onSuccess={() => setIsEditorOpen(false)} onCancel={() => setIsEditorOpen(false)} />
+        </SheetContent>
+      </Sheet>
+
+      {/* Dialog de Confirmação de Exclusão */}
+      <AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este template? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deletingId && handleDeleteTemplate(deletingId)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>;
+};

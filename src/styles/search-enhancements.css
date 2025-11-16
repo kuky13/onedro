@@ -1,0 +1,224 @@
+/* Search Enhancements - Melhorias visuais para funcionalidade de pesquisa */
+
+/* Animações suaves para o campo de pesquisa */
+.search-input-enhanced {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.search-input-enhanced:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Animação do ícone de pesquisa */
+.search-icon {
+  transition: all 0.2s ease-in-out;
+}
+
+.search-input-enhanced:focus + .search-icon {
+  color: rgb(59, 130, 246);
+  transform: scale(1.1);
+}
+
+/* Animação do botão de limpar */
+.clear-search-btn {
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.15s ease-in-out;
+}
+
+.clear-search-btn.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.clear-search-btn:hover {
+  transform: scale(1.1);
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* Animação do SearchButton */
+.search-button-enhanced {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.search-button-enhanced:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.search-button-enhanced:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Efeito ripple para o botão */
+.search-button-enhanced::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+}
+
+.search-button-enhanced:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Animações para os resultados de pesquisa */
+.search-results-container {
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animação para o badge de estatísticas */
+.search-stats-badge {
+  animation: fadeInScale 0.2s ease-out;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Indicador de carregamento personalizado */
+.search-loading-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search-loading-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: searchPulse 1.4s ease-in-out infinite both;
+}
+
+.search-loading-dot:nth-child(1) { animation-delay: -0.32s; }
+.search-loading-dot:nth-child(2) { animation-delay: -0.16s; }
+.search-loading-dot:nth-child(3) { animation-delay: 0s; }
+
+@keyframes searchPulse {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Melhorias responsivas */
+@media (max-width: 768px) {
+  .search-container-mobile {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .search-input-mobile {
+    width: 100%;
+  }
+  
+  .search-button-mobile {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-input-enhanced {
+    font-size: 16px; /* Previne zoom no iOS */
+  }
+}
+
+/* Estados de foco melhorados */
+.search-container:focus-within .search-icon {
+  color: rgb(59, 130, 246);
+}
+
+.search-container:focus-within {
+  transform: translateY(-1px);
+}
+
+/* Animação suave para mudanças de estado */
+.search-state-transition {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Efeito de highlight para resultados */
+.search-result-highlight {
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+  animation: highlightSweep 1.5s ease-in-out;
+}
+
+@keyframes highlightSweep {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 100% 0;
+  }
+}
+
+/* Melhorias de acessibilidade */
+.search-enhanced:focus-visible {
+  outline: 2px solid rgb(59, 130, 246);
+  outline-offset: 2px;
+}
+
+/* Redução de movimento para usuários sensíveis */
+@media (prefers-reduced-motion: reduce) {
+  .search-input-enhanced,
+  .search-button-enhanced,
+  .search-icon,
+  .clear-search-btn {
+    transition: none;
+    animation: none;
+  }
+  
+  .search-input-enhanced:focus {
+    transform: none;
+  }
+  
+  .search-button-enhanced:hover {
+    transform: none;
+  }
+}
+
+/* Tema escuro */
+@media (prefers-color-scheme: dark) {
+  .search-input-enhanced:focus {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(59, 130, 246, 0.2);
+  }
+  
+  .search-button-enhanced:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+}

@@ -1,0 +1,694 @@
+/* Desktop Grid System - Horizontal Layout Optimization */
+
+/* Global Desktop Layout Classes */
+.desktop-horizontal-layout {
+  --desktop-sidebar-width: 280px;
+  --desktop-sidebar-collapsed-width: 60px;
+  --desktop-header-height: 80px;
+  --desktop-content-padding: 2rem;
+  --desktop-wrapper-padding: 2rem;
+  --desktop-grid-gap: 1.5rem;
+  --desktop-card-min-width: 320px;
+  --desktop-section-spacing: 2.5rem;
+  --desktop-card-padding: 1.5rem;
+  --desktop-form-gap: 1.25rem;
+  --desktop-button-spacing: 0.75rem;
+  --desktop-border-radius: 16px;
+  --desktop-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --desktop-shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --desktop-shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --desktop-shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --desktop-transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Enhanced Colors and Shadows */
+  --desktop-bg-color: hsl(var(--background));
+  --desktop-content-bg: hsl(var(--card));
+  --desktop-header-bg: hsl(var(--background) / 0.98);
+  --desktop-border-color: hsl(var(--border) / 0.3);
+  --desktop-accent-color: hsl(var(--primary));
+  --desktop-muted-color: hsl(var(--muted));
+  --desktop-content-shadow: var(--desktop-shadow-md);
+  --desktop-hover-shadow: var(--desktop-shadow-lg);
+  --desktop-card-shadow: var(--desktop-shadow-sm);
+  --desktop-card-hover-shadow: var(--desktop-shadow-md);
+}
+
+/* Desktop Main Container */
+.desktop-main-container {
+  display: grid;
+  grid-template-columns: var(--desktop-sidebar-width) 1fr;
+  grid-template-rows: 1fr;
+  height: 100vh;
+  width: 100vw;
+  gap: 0;
+  overflow: hidden;
+  background: var(--desktop-bg-color);
+  transition: all var(--desktop-transition-duration) var(--desktop-transition-timing);
+  position: relative;
+}
+
+/* Desktop Content Area */
+.desktop-content-area {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--desktop-content-bg);
+  border-radius: var(--desktop-border-radius) 0 0 0;
+  box-shadow: var(--desktop-content-shadow);
+  transition: all var(--desktop-transition-duration) var(--desktop-transition-timing);
+  position: relative;
+  z-index: 1;
+}
+
+/* Desktop Header */
+.desktop-header {
+  flex-shrink: 0;
+  height: var(--desktop-header-height);
+  background: var(--desktop-header-bg);
+  border-bottom: 1px solid var(--desktop-border-color);
+  backdrop-filter: blur(12px);
+  z-index: 50;
+  transition: all var(--desktop-transition-duration) var(--desktop-transition-timing);
+  position: sticky;
+  top: 0;
+  overflow: hidden;
+}
+
+/* Desktop Main Content */
+.desktop-main-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--desktop-content-padding);
+  background: var(--desktop-content-bg);
+  transition: all var(--desktop-transition-duration) var(--desktop-transition-timing);
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+}
+
+/* Custom Scrollbar for Webkit browsers */
+.desktop-main-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.desktop-main-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.desktop-main-content::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.desktop-main-content::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Desktop Content Wrapper */
+.desktop-content-wrapper {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: var(--desktop-wrapper-padding);
+  transition: all var(--desktop-transition-duration) var(--desktop-transition-timing);
+  min-height: calc(100vh - var(--desktop-header-height));
+  overflow: visible;
+}
+
+/* Desktop Page Content */
+.desktop-page-content {
+  display: grid;
+  gap: var(--desktop-section-spacing);
+  width: 100%;
+  grid-template-columns: 1fr;
+}
+
+/* Desktop Grid Layouts */
+.desktop-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--desktop-grid-gap);
+  align-items: start;
+}
+
+.desktop-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--desktop-grid-gap);
+  align-items: start;
+}
+
+.desktop-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--desktop-grid-gap);
+  align-items: start;
+}
+
+.desktop-grid-auto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--desktop-card-min-width), 1fr));
+  gap: var(--desktop-grid-gap);
+  align-items: start;
+}
+
+/* Desktop Flex Layouts */
+.desktop-flex-row {
+  display: flex;
+  gap: var(--desktop-grid-gap);
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.desktop-flex-row > * {
+  flex: 1;
+  min-width: var(--desktop-card-min-width);
+}
+
+/* Desktop Card Enhancements */
+.desktop-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / 0.3);
+  border-radius: var(--desktop-border-radius);
+  padding: var(--desktop-card-padding);
+  box-shadow: var(--desktop-card-shadow);
+  transition: all var(--desktop-transition);
+  margin-bottom: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.desktop-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.3), transparent);
+  opacity: 0;
+  transition: opacity var(--desktop-transition);
+}
+
+.desktop-card:hover {
+  box-shadow: var(--desktop-card-hover-shadow);
+  transform: translateY(-2px);
+  border-color: hsl(var(--border) / 0.5);
+}
+
+.desktop-card:hover::before {
+  opacity: 1;
+}
+
+/* Desktop Section Headers */
+.desktop-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.desktop-section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+/* Desktop Stats Grid */
+.desktop-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--desktop-grid-gap);
+  margin-bottom: 2.5rem;
+}
+
+/* Desktop Dashboard Specific */
+.desktop-dashboard-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.desktop-dashboard-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.desktop-dashboard-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Desktop Form Layouts */
+.desktop-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--desktop-form-gap);
+  align-items: start;
+  margin-bottom: 1.5rem;
+}
+
+.desktop-form-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.desktop-form-full {
+  grid-column: 1 / -1;
+}
+
+/* Desktop Table Enhancements */
+.desktop-table-container {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px hsl(var(--shadow) / 0.1);
+}
+
+/* Desktop Modal Enhancements */
+.desktop-modal {
+  max-width: 90vw;
+  max-height: 90vh;
+  width: auto;
+  min-width: 600px;
+}
+
+.desktop-modal-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  padding: 2rem;
+}
+
+/* Desktop Responsive Breakpoints */
+@media (min-width: 1200px) {
+  .desktop-content-wrapper {
+    padding: 3rem;
+  }
+  
+  .desktop-grid-gap {
+    --desktop-grid-gap: 2rem;
+  }
+  
+  .desktop-section-spacing {
+    --desktop-section-spacing: 4rem;
+  }
+}
+
+@media (min-width: 1600px) {
+  .desktop-dashboard-layout {
+    grid-template-columns: 3fr 1fr;
+  }
+  
+  .desktop-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Modal and Form Specific Styles */
+.desktop-modal {
+  width: 90vw;
+  max-width: 1200px;
+  max-height: 85vh;
+}
+
+.desktop-form-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.desktop-view-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  align-items: start;
+}
+
+.desktop-form-section {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.desktop-card-content {
+  padding: 1.5rem;
+}
+
+.desktop-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.desktop-card-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+/* Desktop Sidebar Styles */
+.desktop-sidebar {
+  width: var(--desktop-sidebar-width);
+  border-right: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+}
+
+.desktop-sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid hsl(var(--border));
+  background: hsl(var(--muted) / 0.3);
+}
+
+.desktop-sidebar-content {
+  padding: 1rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.desktop-sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.desktop-sidebar-item {
+  margin-bottom: 0.25rem;
+}
+
+.desktop-sidebar-button {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.desktop-sidebar-button:hover {
+  background: hsl(var(--accent));
+  transform: translateX(2px);
+}
+
+.desktop-sidebar-footer {
+  padding: 1.5rem 1rem;
+  border-top: 1px solid hsl(var(--border) / 0.3);
+  background: linear-gradient(180deg, transparent, hsl(var(--muted) / 0.2));
+  transition: all var(--desktop-transition-duration) var(--desktop-transition-timing);
+  position: relative;
+}
+
+.desktop-sidebar-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 1rem;
+  right: 1rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(var(--border) / 0.5), transparent);
+}
+
+.desktop-avatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+}
+
+.desktop-user-name {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.desktop-user-email {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+/* Desktop Header Navigation */
+.desktop-header-nav {
+  height: var(--desktop-header-height);
+  padding: 0 2rem;
+  background: hsl(var(--card) / 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.desktop-header-left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.desktop-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.desktop-logo-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.desktop-logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  transition: transform 0.2s ease;
+}
+
+.desktop-logo:hover {
+  transform: scale(1.05);
+}
+
+.desktop-app-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+}
+
+.desktop-nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 2rem;
+}
+
+.desktop-nav-button {
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border-radius: 0.5rem;
+}
+
+.desktop-nav-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px hsl(var(--primary) / 0.15);
+}
+
+.desktop-user-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.desktop-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+}
+
+.desktop-primary-button {
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px hsl(var(--primary) / 0.25);
+}
+
+.desktop-primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px hsl(var(--primary) / 0.35);
+}
+
+/* Desktop Animation Enhancements */
+.desktop-animate-in {
+  animation: desktopSlideIn 0.3s ease-out;
+}
+
+.desktop-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.desktop-slide-in {
+  animation: slideIn 0.4s ease-out;
+}
+
+@keyframes desktopSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Desktop Utility Classes */
+.desktop-full-width {
+  width: 100%;
+}
+
+.desktop-max-content {
+  width: max-content;
+}
+
+.desktop-min-content {
+  width: min-content;
+}
+
+.desktop-space-x-lg > * + * {
+  margin-left: 2rem;
+}
+
+.desktop-space-y-lg > * + * {
+  margin-top: 2rem;
+}
+
+/* Desktop Responsive Breakpoints */
+@media (max-width: 1400px) {
+  .desktop-horizontal-layout {
+    --desktop-content-padding: 1.5rem;
+    --desktop-grid-gap: 1.25rem;
+    --desktop-card-min-width: 280px;
+    --desktop-section-spacing: 2rem;
+  }
+  
+  .desktop-grid-4 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .desktop-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  .desktop-horizontal-layout {
+    --desktop-sidebar-width: 260px;
+    --desktop-content-padding: 1.25rem;
+    --desktop-grid-gap: 1rem;
+    --desktop-card-min-width: 260px;
+  }
+  
+  .desktop-grid-4,
+  .desktop-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .desktop-dashboard-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .desktop-header {
+    padding: 1rem 1.5rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .desktop-horizontal-layout {
+    --desktop-sidebar-width: 240px;
+    --desktop-content-padding: 1rem;
+    --desktop-grid-gap: 0.75rem;
+    --desktop-card-min-width: 240px;
+  }
+  
+  .desktop-grid-4,
+  .desktop-grid-3,
+  .desktop-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .desktop-stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+  
+  .desktop-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Desktop Container Queries */
+@container (max-width: 800px) {
+  .desktop-grid-auto {
+    grid-template-columns: 1fr;
+  }
+  
+  .desktop-flex-row {
+    flex-direction: column;
+  }
+  
+  .desktop-flex-row > * {
+    min-width: auto;
+  }
+}
+
+@container (max-width: 600px) {
+  .desktop-card {
+    padding: 1rem;
+  }
+  
+  .desktop-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}
+
+/* Desktop Print Styles */
+@media print {
+  .desktop-horizontal-layout {
+    display: block;
+  }
+  
+  .desktop-main-container {
+    display: block;
+  }
+  
+  .desktop-grid-2,
+  .desktop-grid-3,
+  .desktop-grid-4 {
+    display: block;
+  }
+  
+  .desktop-card {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+}

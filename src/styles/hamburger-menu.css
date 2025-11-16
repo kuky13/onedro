@@ -1,0 +1,377 @@
+/* Professional Desktop Navigation - Hamburger Menu Styles */
+
+/* Optimized sidebar */
+.desktop-sidebar {
+  transition: width 0.1s ease;
+  background: rgba(255, 255, 255, 0.02);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Optimized hamburger trigger button */
+[data-sidebar="trigger"] {
+  transition: background-color 0.08s ease;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-sidebar="trigger"]:hover {
+  background: hsl(var(--primary) / 0.1);
+  border-color: hsl(var(--primary) / 0.2);
+}
+
+[data-sidebar="trigger"]:active {
+  background: hsl(var(--primary) / 0.15);
+}
+
+/* Removed ripple effect */
+
+/* Optimized sidebar content */
+.desktop-sidebar-content {
+  transition: opacity 0.08s ease;
+}
+
+/* When sidebar is collapsed, hide text with smooth transition */
+[data-state="collapsed"] .desktop-sidebar-content {
+  opacity: 0;
+}
+
+[data-state="expanded"] .desktop-sidebar-content {
+  opacity: 1;
+}
+
+/* Optimized menu button hover effects */
+.desktop-sidebar-button {
+  transition: background-color 0.08s ease;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Simplified hover state */
+.desktop-sidebar-button:hover {
+  background: hsl(var(--primary) / 0.08);
+  border-color: hsl(var(--primary) / 0.15);
+}
+
+/* Simplified active state */
+.desktop-sidebar-button:active {
+  background: hsl(var(--primary) / 0.12);
+}
+
+/* Simplified desktop layout */
+.desktop-horizontal-layout {
+  gap: 0;
+}
+
+.desktop-main-container {
+  min-height: 100vh;
+}
+
+/* Simplified content area */
+.desktop-content-area {
+  background: rgba(255, 255, 255, 0.01);
+}
+
+/* Responsive sidebar width adjustments */
+@media (min-width: 768px) {
+  [data-state="collapsed"] + .desktop-content-area {
+    margin-left: 0;
+    transform: translateX(0);
+  }
+  
+  [data-state="expanded"] + .desktop-content-area {
+    margin-left: 0;
+    transform: translateX(0);
+  }
+  
+  /* Enhanced sidebar spacing */
+  .desktop-sidebar-menu {
+    padding: 0.5rem;
+    gap: 0.25rem;
+  }
+  
+  .desktop-sidebar-item {
+    margin-bottom: 0.25rem;
+  }
+}
+
+/* Professional header styling */
+.desktop-header {
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.5rem 2rem;
+}
+
+/* Optimized sidebar rail */
+[data-sidebar="rail"] {
+  transition: background-color 0.08s ease;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+[data-sidebar="rail"]:hover {
+  background: hsl(var(--primary) / 0.06);
+}
+
+/* Simplified active state indicators */
+.desktop-sidebar-item [data-active="true"] {
+  background: hsl(var(--primary) / 0.1);
+  border: 1px solid hsl(var(--primary) / 0.2);
+  border-left: 3px solid hsl(var(--primary));
+  font-weight: 600;
+  color: hsl(var(--primary));
+}
+
+/* Optimized icon animations */
+.desktop-sidebar-button svg {
+  transition: color 0.08s ease;
+}
+
+.desktop-sidebar-button:hover svg {
+  color: hsl(var(--primary));
+}
+
+/* Simplified active item icons */
+.desktop-sidebar-item [data-active="true"] svg {
+  color: hsl(var(--primary));
+}
+
+/* Simplified footer styling */
+.desktop-sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.01);
+}
+
+/* Optimized user avatar */
+.desktop-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  transition: border-color 0.08s ease;
+}
+
+.desktop-avatar:hover {
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+/* Simplified text animations for state transitions */
+[data-state="collapsed"] .desktop-user-name,
+[data-state="collapsed"] .desktop-user-email {
+  opacity: 0;
+}
+
+[data-state="expanded"] .desktop-user-name,
+[data-state="expanded"] .desktop-user-email {
+  opacity: 1;
+}
+
+/* Simplified typography for user info */
+.desktop-user-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: hsl(var(--foreground));
+}
+
+.desktop-user-email {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  opacity: 0.8;
+}
+
+/* ===== MOBILE HAMBURGER MENU STYLES ===== */
+
+/* Optimized mobile menu backdrop */
+.mobile-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 50;
+  transition: opacity 0.1s ease;
+}
+
+/* Optimized mobile menu panel */
+.mobile-menu-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 280px;
+  background: rgba(0, 0, 0, 0.95);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  transform: translateX(-100%);
+  transition: transform 0.1s ease;
+  z-index: 51;
+  overflow-y: auto;
+}
+
+/* Simplified mobile menu header */
+.mobile-menu-header {
+  padding: 1.5rem 1rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Optimized mobile user profile section */
+.mobile-user-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  margin: 0.5rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background-color 0.08s ease;
+}
+
+.mobile-user-profile:hover {
+  background: hsl(var(--primary) / 0.08);
+  border-color: hsl(var(--primary) / 0.15);
+}
+
+/* Optimized mobile avatar */
+.mobile-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: border-color 0.08s ease;
+}
+
+.mobile-user-profile:hover .mobile-avatar {
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+/* Optimized mobile search bar */
+.mobile-search-container {
+  padding: 0 1rem;
+  margin-bottom: 1rem;
+}
+
+.mobile-search-bar {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  transition: border-color 0.08s ease;
+}
+
+.mobile-search-bar:focus {
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+/* Optimized mobile navigation items */
+.mobile-nav-item {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  margin: 0.5rem 1rem;
+  transition: background-color 0.08s ease;
+}
+
+.mobile-nav-item:hover {
+  background: hsl(var(--primary) / 0.1);
+  border-color: hsl(var(--primary) / 0.15);
+}
+
+.mobile-nav-item:active {
+  background: hsl(var(--primary) / 0.15);
+}
+
+/* Simplified mobile navigation icons */
+.mobile-nav-icon {
+  transition: color 0.15s ease;
+}
+
+.mobile-nav-item:hover .mobile-nav-icon {
+  color: hsl(var(--primary));
+}
+
+/* Simplified mobile logout button */
+.mobile-logout-button {
+  margin: 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  transition: background-color 0.15s ease;
+}
+
+.mobile-logout-button:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.mobile-logout-button:active {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* Mobile typography enhancements */
+.mobile-user-name {
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: hsl(var(--foreground));
+}
+
+.mobile-user-email {
+  font-weight: 400;
+  letter-spacing: 0.025em;
+  color: hsl(var(--muted-foreground) / 0.7);
+}
+
+.mobile-nav-text {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  transition: color 0.15s ease;
+}
+
+.mobile-nav-item:hover .mobile-nav-text {
+  color: hsl(var(--primary));
+  font-weight: 600;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 767px) {
+  .desktop-sidebar,
+  .desktop-sidebar-content,
+  .desktop-sidebar-button,
+  .desktop-main-container {
+    transition: none;
+  }
+  
+  /* Ensure mobile menu takes full height */
+  .mobile-menu-panel {
+    min-height: 100vh;
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+  
+  /* Optimize mobile animations for performance */
+  .mobile-nav-item,
+  .mobile-user-avatar,
+  .mobile-search-bar {
+    will-change: transform;
+  }
+}
+
+/* Dark mode support for mobile menu */
+@media (prefers-color-scheme: dark) {
+  .mobile-menu-panel {
+    background: rgba(0, 0, 0, 0.95);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .mobile-user-profile {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .mobile-nav-item {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .mobile-search-bar {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}

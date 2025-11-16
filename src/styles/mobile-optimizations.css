@@ -1,0 +1,291 @@
+/* Mobile Optimizations CSS */
+/* Safe Area Support e Gesture Prevention para iOS/Android */
+
+/* Variables CSS para safe areas */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  
+  /* Variáveis para hitboxes móveis */
+  --mobile-min-hitbox: 44px;
+  --mobile-preferred-hitbox: 48px;
+  --mobile-large-hitbox: 56px;
+}
+
+/* Gesture Prevention - Previne zoom, scroll e outros gestos indesejados */
+.game-container-mobile {
+  /* Previne zoom duplo-toque */
+  touch-action: manipulation;
+  
+  /* Previne seleção de texto */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  
+  /* Previne callouts do iOS */
+  -webkit-touch-callout: none;
+  
+  /* Previne highlight de toque */
+  -webkit-tap-highlight-color: transparent;
+  
+  /* Previne scroll bounce no iOS */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
+  
+  /* Otimizações de performance */
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Safe Area Layout para o jogo */
+.game-safe-area {
+  padding-top: var(--safe-area-inset-top);
+  padding-right: var(--safe-area-inset-right);
+  padding-bottom: var(--safe-area-inset-bottom);
+  padding-left: var(--safe-area-inset-left);
+  
+  /* Garantir que o conteúdo não fique atrás de notches/barras */
+  min-height: calc(100vh - var(--safe-area-inset-top) - var(--safe-area-inset-bottom));
+  min-height: calc(100dvh - var(--safe-area-inset-top) - var(--safe-area-inset-bottom));
+}
+
+/* Otimizações para componentes de bug */
+.bug-component-optimized {
+  /* Garantir hitbox mínimo em mobile */
+  min-width: var(--mobile-min-hitbox);
+  min-height: var(--mobile-min-hitbox);
+  
+  /* Otimizações de performance */
+  will-change: transform;
+  transform: translateZ(0);
+  
+  /* Previne gestos indesejados */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Estilos específicos para mobile */
+.bug-component-optimized.mobile-optimized {
+  min-width: var(--mobile-preferred-hitbox);
+  min-height: var(--mobile-preferred-hitbox);
+  
+  /* Aumentar área de toque visual */
+  padding: 2px;
+  
+  /* Feedback visual mais claro */
+  border-width: 2px;
+  transition: all 0.15s ease-out;
+}
+
+/* Estados de interação otimizados para mobile */
+.bug-component-optimized.mobile-optimized:active {
+  transform: translate(-50%, -50%) scale(0.95) translateZ(0);
+  transition: transform 0.1s ease-out;
+}
+
+/* Estilos para diferentes tipos de bug em mobile */
+.mobile-optimized.bug-boss-bug {
+  min-width: var(--mobile-large-hitbox);
+  min-height: var(--mobile-large-hitbox);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+}
+
+.mobile-optimized.bug-critical-bug {
+  box-shadow: 0 0 8px rgba(249, 115, 22, 0.3);
+}
+
+.mobile-optimized.bug-speed-bug {
+  box-shadow: 0 0 6px rgba(234, 179, 8, 0.3);
+}
+
+.mobile-optimized.bug-memory-leak {
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.3);
+}
+
+/* Game Board otimizações mobile */
+.game-board-mobile {
+  /* Previne scroll acidental */
+  overflow: hidden;
+  
+  /* Otimizações de performance */
+  contain: layout style paint;
+  will-change: contents;
+  
+  /* Safe area para landscape */
+  padding-left: max(var(--safe-area-inset-left), 8px);
+  padding-right: max(var(--safe-area-inset-right), 8px);
+}
+
+/* HUD e UI otimizados para mobile */
+.game-hud-mobile {
+  /* Safe area para o topo */
+  padding-top: max(var(--safe-area-inset-top), 12px);
+  
+  /* Garantir que controles sejam acessíveis */
+  min-height: var(--mobile-preferred-hitbox);
+  
+  /* Prevenir interferência com o jogo */
+  pointer-events: none;
+}
+
+.game-hud-mobile > * {
+  pointer-events: auto;
+}
+
+/* Controles de jogo otimizados */
+.game-controls-mobile {
+  /* Safe area para o bottom */
+  padding-bottom: max(var(--safe-area-inset-bottom), 12px);
+  
+  /* Espaçamento adequado entre botões */
+  gap: 12px;
+}
+
+.game-controls-mobile button {
+  min-width: var(--mobile-preferred-hitbox);
+  min-height: var(--mobile-preferred-hitbox);
+  
+  /* Feedback tátil visual */
+  transition: all 0.15s ease-out;
+  
+  /* Prevenir gestos indesejados */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+
+.game-controls-mobile button:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease-out;
+}
+
+/* Viewport otimizações */
+@media screen and (max-width: 768px) {
+  .game-container-mobile {
+    /* Usar toda a altura disponível */
+    height: 100vh;
+    height: 100dvh;
+    
+    /* Prevenir zoom */
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  /* Ajustar tamanhos de fonte para mobile */
+  .game-score-mobile {
+    font-size: 1.125rem; /* 18px */
+  }
+  
+  .game-level-mobile {
+    font-size: 1rem; /* 16px */
+  }
+  
+  .game-lives-mobile {
+    font-size: 1rem; /* 16px */
+  }
+}
+
+/* Landscape mobile otimizações */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .game-safe-area {
+    /* Reduzir padding em landscape */
+    padding-top: max(var(--safe-area-inset-top), 4px);
+    padding-bottom: max(var(--safe-area-inset-bottom), 4px);
+  }
+  
+  .game-hud-mobile {
+    padding-top: max(var(--safe-area-inset-top), 6px);
+    font-size: 0.875rem; /* 14px */
+  }
+  
+  .game-controls-mobile {
+    padding-bottom: max(var(--safe-area-inset-bottom), 6px);
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .bug-component-optimized {
+    /* Ajustar para displays de alta densidade */
+    border-width: 1px;
+  }
+  
+  .mobile-optimized {
+    border-width: 1.5px;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .bug-component-optimized,
+  .game-controls-mobile button {
+    transition: none;
+    animation: none;
+  }
+  
+  .bug-component-optimized:active,
+  .game-controls-mobile button:active {
+    transform: translate(-50%, -50%) translateZ(0);
+  }
+}
+
+/* Dark mode otimizações */
+@media (prefers-color-scheme: dark) {
+  .bug-component-optimized.mobile-optimized {
+    /* Melhor contraste em modo escuro */
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .bug-component-optimized.mobile-optimized:hover {
+    border-color: rgba(34, 197, 94, 0.5);
+  }
+}
+
+/* Animações de performance otimizada */
+@keyframes pulse-optimized {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+.memory-leak-pulse {
+  animation: pulse-optimized 2s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* Utility classes para debugging */
+.debug-hitbox {
+  outline: 1px dashed rgba(255, 0, 0, 0.3) !important;
+}
+
+.debug-safe-area {
+  background: rgba(0, 255, 0, 0.1) !important;
+}
+
+/* Performance hints para o browser */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.contain-layout {
+  contain: layout;
+}
+
+.contain-paint {
+  contain: paint;
+}
+
+.contain-strict {
+  contain: strict;
+}

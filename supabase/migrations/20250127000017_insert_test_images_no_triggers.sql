@@ -1,0 +1,90 @@
+-- Inserir imagens de teste desabilitando triggers temporariamente
+DO $$
+DECLARE
+    test_order_id UUID := '550e8400-e29b-41d4-a716-446655440002'::uuid;
+    existing_user_id UUID;
+BEGIN
+    -- Buscar um usuário existente
+    SELECT id INTO existing_user_id 
+    FROM auth.users 
+    WHERE deleted_at IS NULL
+    LIMIT 1;
+    
+    -- Se não houver usuário, usar um UUID padrão
+    IF existing_user_id IS NULL THEN
+        existing_user_id := '00000000-0000-0000-0000-000000000000'::uuid;
+    END IF;
+    
+    -- Desabilitar triggers temporariamente
+    ALTER TABLE service_order_images DISABLE TRIGGER ALL;
+    
+    -- Inserir imagens de teste
+    INSERT INTO service_order_images (
+        id,
+        service_order_id,
+        uploadthing_key,
+        uploadthing_url,
+        file_name,
+        storage_path,
+        file_size,
+        mime_type,
+        upload_order,
+        upload_status,
+        uploaded_by,
+        created_at
+    ) 
+    SELECT 
+        '550e8400-e29b-41d4-a716-446655440020'::uuid,
+        test_order_id,
+        'test-image-1-' || extract(epoch from now()),
+        'https://via.placeholder.com/400x300/0066cc/ffffff?text=Teste+Imagem+1',
+        'teste-imagem-1.jpg',
+        'https://via.placeholder.com/400x300/0066cc/ffffff?text=Teste+Imagem+1',
+        50000,
+        'image/jpeg',
+        1,
+        'completed',
+        existing_user_id,
+        NOW()
+    WHERE NOT EXISTS (
+        SELECT 1 FROM service_order_images 
+        WHERE id = '550e8400-e29b-41d4-a716-446655440020'::uuid
+    );
+    
+    INSERT INTO service_order_images (
+        id,
+        service_order_id,
+        uploadthing_key,
+        uploadthing_url,
+        file_name,
+        storage_path,
+        file_size,
+        mime_type,
+        upload_order,
+        upload_status,
+        uploaded_by,
+        created_at
+    ) 
+    SELECT 
+        '550e8400-e29b-41d4-a716-446655440021'::uuid,
+        test_order_id,
+        'test-image-2-' || extract(epoch from now()),
+        'https://via.placeholder.com/400x300/ff6600/ffffff?text=Teste+Imagem+2',
+        'teste-imagem-2.jpg',
+        'https://via.placeholder.com/400x300/ff6600/ffffff?text=Teste+Imagem+2',
+        75000,
+        'image/jpeg',
+        2,
+        'completed',
+        existing_user_id,
+        NOW()
+    WHERE NOT EXISTS (
+        SELECT 1 FROM service_order_images 
+        WHERE id = '550e8400-e29b-41d4-a716-446655440021'::uuid
+    );
+    
+    -- Reabilitar triggers
+    ALTER TABLE service_order_images ENABLE TRIGGER ALL;
+    
+    RAISE NOTICE 'Imagens de teste inseridas para ordem: %', test_order_id;
+END $$;
