@@ -12,25 +12,25 @@ export const useWormBudgets = (userId: string | undefined, filters: BudgetFilter
   return useQuery({
     queryKey: ['worm-budgets', userId, filters],
     queryFn: async () => {
-      if (!userId) return [];
+      try {
+        if (!userId) return [];
 
-      // Usar a função otimizada do banco que já suporta busca por sequential_number
-      const { data, error } = await supabase
-        .rpc('get_optimized_budgets', {
-          p_user_id: userId,
-          p_search_term: filters.search || null,
-          p_status_filter: filters.status || null,
-          p_limit: filters.limit || 50,
-          p_offset: filters.offset || 0,
-        });
+        const { data, error } = await supabase
+          .rpc('get_optimized_budgets', {
+            p_user_id: userId,
+            p_search_term: filters.search || null,
+            p_status_filter: filters.status || null,
+            p_limit: filters.limit || 50,
+            p_offset: filters.offset || 0,
+          });
 
-      if (error) {
-        throw error;
-      }
-      // Fallback: caso a função não esteja disponível, usar busca padrão
-      if (!data) {
+        if (!error && data) {
+          return data;
+        }
+
         const numericSearch = (filters.search || '').trim();
         const searchNum = numericSearch && /^\d+$/.test(numericSearch) ? parseInt(numericSearch, 10) : null;
+
         let query = supabase
           .from('budgets')
           .select('*')
@@ -51,25 +51,26 @@ export const useWormBudgets = (userId: string | undefined, filters: BudgetFilter
           query = query.eq('workflow_status', filters.status);
         }
 
-        if (filters.limit) {
+        if (typeof filters.offset === 'number') {
+          const limit = typeof filters.limit === 'number' ? filters.limit : 50;
+          query = query.range(filters.offset, filters.offset + limit - 1);
+        } else if (typeof filters.limit === 'number') {
           query = query.limit(filters.limit);
         }
 
-        if (filters.offset) {
-          query = query.range(filters.offset, filters.offset + (filters.limit || 50) - 1);
-        }
-
         const { data: fallbackData, error: fallbackError } = await query;
-        if (fallbackError) throw fallbackError;
+        if (fallbackError) {
+          return [];
+        }
         return fallbackData || [];
+      } catch {
+        return [];
       }
-
-      return data;
     },
     enabled: !!userId,
-    staleTime: 1000 * 60 * 5, // 5 minutos
-    gcTime: 1000 * 60 * 10, // 10 minutos
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
     refetchOnWindowFocus: false,
-    retry: 2
+    retry: 2,
   });
 };

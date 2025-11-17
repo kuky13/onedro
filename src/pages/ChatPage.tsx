@@ -454,8 +454,14 @@ REGRAS CRÍTICAS:
       setMessages(prev => [...prev, { id: assistantId, role: 'assistant', content: '' }])
       let final = ''
       
+      const history = [
+        { role: 'system', content: system },
+        ...messages.map(m => ({ role: m.role, content: m.content })),
+        { role: 'user', content: text }
+      ]
+      
       try {
-        await deepseekStream(history, 0.7, (chunk) => {
+        await deepseekStream(history as any, 0.7, (chunk) => {
           final += chunk
           setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: m.content + chunk } : m))
         })
