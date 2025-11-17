@@ -154,9 +154,9 @@ export async function getUserBudgets(userId: string, limit = 10) {
 }
 
 /**
- * Search budgets by device model or service type with semantic matching - Worm-style
+ * Enhanced search budgets with advanced filtering and semantic matching
  */
-export async function searchBudgets(userId: string, searchTerm: string, limit = 10) {
+export async function searchBudgets(userId: string, searchTerm: string, limit = 10, filters: any = {}) {
   try {
     const lowerSearchTerm = searchTerm.toLowerCase().trim()
     
@@ -183,8 +183,8 @@ export async function searchBudgets(userId: string, searchTerm: string, limit = 
       orConditions += `,sequential_number.eq.${searchNum}`
     }
     
-    // Search in device_model, device_type, issue, client_name and sequential_number
-    const { data, error } = await supabase
+    // Enhanced query with additional filters
+    let query = supabase
       .from('budgets')
       .select(`
         *,
@@ -195,8 +195,41 @@ export async function searchBudgets(userId: string, searchTerm: string, limit = 
       .neq('workflow_status', 'template')
       .neq('client_name', 'TEMPLATE')
       .is('deleted_at', null)
-      .order('created_at', { ascending: false })
-      .limit(limit)
+    
+    // Apply additional filters based on parsed intents
+    if (filters.dateFrom) {
+      query = query.gte('created_at', filters.dateFrom)
+    }
+    if (filters.dateTo) {
+      query = query.lte('created_at', filters.dateTo)
+    }
+    if (filters.minPrice) {
+      query = query.gte('cash_price', filters.minPrice)
+    }
+    if (filters.maxPrice) {
+      query = query.lte('cash_price', filters.maxPrice)
+    }
+    if (filters.status) {
+      query = query.eq('workflow_status', filters.status)
+    }
+    if (filters.clientName) {
+      query = query.ilike('client_name', `%${filters.clientName}%`)
+    }
+    
+    // Apply sorting based on search context
+    if (filters.sortBy === 'price_asc') {
+      query = query.order('cash_price', { ascending: true })
+    } else if (filters.sortBy === 'price_desc') {
+      query = query.order('cash_price', { ascending: false })
+    } else if (filters.sortBy === 'date_asc') {
+      query = query.order('created_at', { ascending: true })
+    } else {
+      query = query.order('created_at', { ascending: false })
+    }
+    
+    query = query.limit(limit)
+
+    const { data, error } = await query
 
     if (error) {
       console.error('Error searching budgets:', error)
@@ -350,26 +383,51 @@ export async function sendBudgetViaWhatsApp(budget: BudgetData, shopName: string
 export function parseBudgetCommand(text: string) {
   const lowerText = text.toLowerCase()
   
-  // Common device models and brands - enhanced patterns
+  // Enhanced device patterns with more precise matching
   const devicePatterns = [
-    /iphone\s*(\d+(?:\s*(?:pro|max|mini|plus))?)/i,
-    /samsung\s*(galaxy\s*[a-z]?\d+(?:\s*(?:plus|ultra|lite|fe))?)/i,
-    /xiaomi\s*(redmi\s*\w+|mi\s*\w+|poco\s*\w+)/i,
-    /motorola\s*(moto\s*\w+|edge\s*\w+|g\s*\d+)/i,
-    /lg\s*(\w+)/i,
-    /asus\s*(zenfone\s*\d+)/i,
-    /(a\d{2}|m\d{2}|s\d{2}|j\d{2}|note\s*\d+|galaxy\s*\w+)/i,  // Generic Samsung models
+    // iPhone models with storage and color variations
+    /iphone\s*(\d+(?:\s*(?:pro|max|mini|plus))?(?:\s*(?:\d+(?:gb|tb)))?(?:\s*(?:preto|branco|azul|vermelho|verde|roxo|dourado|prateado|cinza|rosa))?)/i,
+    /iphone\s*(se|xr|xs|11|12|13|14|15|16)(?:\s*(?:pro|max|mini|plus))?(?:\s*(?:\d+(?:gb|tb)))?(?:\s*(?:preto|branco|azul|vermelho|verde|roxo|dourado|prateado|cinzento))?/i,
+    
+    // Samsung Galaxy models with specific series
+    /samsung\s*(galaxy\s*[a-z]?\d+(?:\s*(?:plus|ultra|lite|fe|5g))?(?:\s*(?:\d+(?:gb)))?)/i,
+    /galaxy\s*(a\d{2}|s\d{2}|note\s*\d+|z\s*flip|z\s*fold)(?:\s*(?:plus|ultra|lite|fe|5g))?(?:\s*(?:\d+(?:gb)))?/i,
+    
+    // Xiaomi models with series differentiation
+    /xiaomi\s*(redmi\s*note?\s*\d+(?:\s*(?:pro|lite))?(?:\s*(?:\d+(?:gb)))?|mi\s*\d+(?:\s*(?:pro|lite|t|ultra))?(?:\s*(?:\d+(?:gb)))?|poco\s*[a-z]?\d+(?:\s*(?:pro))?(?:\s*(?:\d+(?:gb)))?)/i,
+    /redmi\s*(note?\s*\d+(?:\s*(?:pro|lite))?(?:\s*(?:\d+(?:gb)))?)/i,
+    /mi\s*(\d+(?:\s*(?:pro|lite|t|ultra))?(?:\s*(?:\d+(?:gb)))?)/i,
+    /poco\s*([a-z]?\d+(?:\s*(?:pro))?(?:\s*(?:\d+(?:gb)))?)/i,
+    
+    // Motorola models
+    /motorola\s*(moto\s*[a-z]?\d+(?:\s*(?:plus|play|power))?(?:\s*(?:\d+(?:gb)))?|edge\s*\d+(?:\s*(?:plus|lite))?(?:\s*(?:\d+(?:gb)))?)/i,
+    /moto\s*([a-z]?\d+(?:\s*(?:plus|play|power))?(?:\s*(?:\d+(?:gb)))?)/i,
+    /edge\s*(\d+(?:\s*(?:plus|lite))?(?:\s*(?:\d+(?:gb)))?)/i,
+    
+    // Other brands
+    /lg\s*([a-z]?\d+(?:\s*(?:plus|pro))?(?:\s*(?:\d+(?:gb)))?)/i,
+    /asus\s*(zenfone\s*\d+(?:\s*(?:pro|lite))?(?:\s*(?:\d+(?:gb)))?|rog\s*phone\s*\d+?)/i,
+    /oneplus\s*(\d+(?:\s*(?:pro|t))?(?:\s*(?:\d+(?:gb)))?)/i,
+    /realme\s*([a-z]?\d+(?:\s*(?:pro|lite))?(?:\s*(?:\d+(?:gb)))?)/i,
+    /nothing\s*(phone\s*(?:\d+)?(?:\s*(?:\d+(?:gb)))?)/i,
+    
+    // Generic patterns for common models
+    /(a\d{2}|m\d{2}|s\d{2}|j\d{2}|note\s*\d+|galaxy\s*\w+)/i,  // Generic Samsung
     /(iphone\s*[a-z]?\d*)/i,  // Generic iPhone
     /(redmi\s*\w+|mi\s*\w+)/i,  // Generic Xiaomi
     /(moto\s*\w+|edge\s*\w+)/i,  // Generic Motorola
-    /(zenfone\s*\d+)/i  // Generic Asus
+    /(zenfone\s*\d+|rog\s*phone)/i  // Generic Asus
   ]
   
-  // Service types and issues - enhanced patterns
+  // Enhanced service patterns with more specific matching
   const servicePatterns = [
+    // Screen/display related - comprehensive patterns
     /troca?\s*de?\s*tela/i,
     /troca?\s*de?\s*display/i,
     /troca?\s*de?\s*lcd/i,
+    /troca?\s*de?\s*touch/i,
+    /troca?\s*de?\s*vidro/i,
+    /troca?\s*de?\s*digitalizador/i,
     /tela\s*quebrada/i,
     /tela\s*rachada/i,
     /tela\s*trincada/i,
@@ -377,38 +435,187 @@ export function parseBudgetCommand(text: string) {
     /tela\s*queimada/i,
     /tela\s*travada/i,
     /tela\s*preta/i,
+    /tela\s*branca/i,
+    /tela\s*piscando/i,
+    /tela\s*com\s*linhas/i,
+    /tela\s*com\s*manchas/i,
+    /touch\s*quebrado/i,
+    /touch\s*nao\s*funciona/i,
+    /display\s*quebrado/i,
+    /lcd\s*quebrado/i,
+    /vidro\s*quebrado/i,
+    /vidro\s*estourado/i,
+    
+    // Battery related - comprehensive patterns
     /bateria/i,
     /troca?\s*de?\s*bateria/i,
     /bateria\s*fraca/i,
     /bateria\s*viciada/i,
     /bateria\s*estourada/i,
+    /bateria\s*inchada/i,
+    /bateria\s*queimada/i,
+    /bateria\s*nao\s*carrega/i,
+    /bateria\s*descarrega\s*rapido/i,
+    /bateria\s*acaba\s*rapido/i,
+    /bateria\s*esquenta/i,
+    /bateria\s*aquece/i,
+    /autonomia\s*baixa/i,
+    
+    // Charging/port related - comprehensive patterns
     /carregador/i,
     /porta\s*de?\s*carregador/i,
     /conector\s*de?\s*carga/i,
     /entrada\s*de?\s*carregador/i,
+    /pino\s*de?\s*carregador/i,
+    /base\s*de?\s*carregador/i,
+    /dock\s*de?\s*carregador/i,
+    /carregador\s*nao\s*funciona/i,
+    /nao\s*carrega/i,
+    /carrega\s*devagar/i,
+    /carrega\s*lento/i,
+    /carregamento\s*intermitente/i,
+    /carregamento\s*fraco/i,
+    
+    // Camera related - comprehensive patterns
     /camera/i,
+    /cameras/i,
+    /câmera/i,
+    /câmeras/i,
     /troca?\s*de?\s*camera/i,
+    /troca?\s*de?\s*cameras/i,
     /camera\s*traseira/i,
     /camera\s*frontal/i,
+    /camera\s*selfie/i,
     /camera\s*quebrada/i,
-    /vibrador/i,
+    /camera\s*estourada/i,
+    /camera\s*travada/i,
+    /camera\s*nao\s*funciona/i,
+    /camera\s*desfocada/i,
+    /camera\s*com\s*manchas/i,
+    /camera\s*com\s*riscos/i,
+    /lente\s*da\s*camera/i,
+    /lente\s*de\s*camera/i,
+    /lente\s*quebrada/i,
+    
+    // Audio/speaker related - comprehensive patterns
+    /altofalante/i,
     /alto\s*falante/i,
     /alto\s*falantes/i,
     /caixa\s*de?\s*som/i,
+    /caixa\s*de?\s*audio/i,
+    /caixa\s*de?\s*musica/i,
+    /speaker/i,
+    /speakers/i,
+    /som\s*quebrado/i,
+    /som\s*estourado/i,
+    /som\s*fraco/i,
+    /som\s*baixo/i,
+    /som\s*nao\s*funciona/i,
+    /som\s*com\s*rufido/i,
+    /som\s*com\s*ranchido/i,
+    /audio\s*quebrado/i,
+    /audio\s*nao\s*funciona/i,
+    /vibrador/i,
+    /vibracao/i,
+    /vibração/i,
+    /vibrador\s*quebrado/i,
+    /vibrador\s*nao\s*funciona/i,
+    
+    // Microphone related - comprehensive patterns
     /microfone/i,
+    /mic/i,
+    /micro\s*fone/i,
     /microfone\s*quebrado/i,
+    /microfone\s*nao\s*funciona/i,
+    /microfone\s*com\s*ruido/i,
+    /microfone\s*com\s*chiado/i,
+    /nao\s*consigo\s*falar/i,
+    /nao\s*me\s*ouvem/i,
+    /voz\s*nao\s*sai/i,
+    
+    // System/software related - comprehensive patterns
     /sistema/i,
+    /android/i,
+    /ios/i,
     /atualização/i,
     /atualizacao/i,
     /software/i,
     /restauração/i,
     /restauracao/i,
     /formatar/i,
+    /reiniciar/i,
+    /resetar/i,
     /travando/i,
+    /trava/i,
+    /travado/i,
     /lento/i,
+    /lentidao/i,
+    /lentidão/i,
+    /demora/i,
     /memoria\s*cheia/i,
+    /memoria\s*lotada/i,
+    /espaco\s*insuficiente/i,
+    /espaço\s*insuficiente/i,
     /virus/i,
-    /vírus/i
+    /vírus/i,
+    /malware/i,
+    /app\s*nao\s*abre/i,
+    /aplicativo\s*nao\s*abre/i,
+    /programa\s*nao\s*abre/i,
+    
+    // Physical damage - comprehensive patterns
+    /queda/i,
+    /caiu/i,
+    /batida/i,
+    /batido/i,
+    /amassado/i,
+    /dobrado/i,
+    /torcido/i,
+    /rachado/i,
+    /trincado/i,
+    /quebrado/i,
+    /estragado/i,
+    /danificado/i,
+    /agua/i,
+    /água/i,
+    /molhou/i,
+    /molhado/i,
+    /umidade/i,
+    /oxidacao/i,
+    /oxidação/i,
+    
+    // Connectivity related
+    /wifi/i,
+    /wi\s*fi/i,
+    /wireless/i,
+    /bluetooth/i,
+    /bluetooh/i,
+    /conexao/i,
+    /conexão/i,
+    /sinal/i,
+    /rede/i,
+    /internet/i,
+    
+    // Buttons and sensors
+    /botao/i,
+    /botão/i,
+    /botoes/i,
+    /botões/i,
+    /power/i,
+    /botao\s*power/i,
+    /botão\s*power/i,
+    /volume/i,
+    /botao\s*volume/i,
+    /botão\s*volume/i,
+    /home/i,
+    /botao\s*home/i,
+    /botão\s*home/i,
+    /sensor/i,
+    /sensores/i,
+    /proximidade/i,
+    /sensor\s*de\s*proximidade/i,
+    /luminosidade/i,
+    /sensor\s*de\s*luminosidade/i
   ]
   
   // Enhanced intent recognition with more natural language patterns
@@ -418,11 +625,23 @@ export function parseBudgetCommand(text: string) {
     createBudget: /(criar|novo|novo orçamento|fazer orçamento|gerar orçamento|montar orçamento|preciso\s*de\s*um\s*orçamento)/i.test(lowerText),
     sendWhatsApp: /(enviar|mandar|whatsapp|zap|compartilhar|enviar\s*por|mandar\s*por).*?(orçamento|orcamento)/i.test(lowerText),
     budgetNumber: lowerText.match(/orçamento.*?(?:#|nº|número|numero|n\s*º)?\s*(\d+)/i) || 
-                  lowerText.match(/^(\d+)$/i), // Pure number search like WormBudgetList
+                  lowerText.match(/^(\d+)$/i) || // Pure number search like WormBudgetList
+                  lowerText.match(/orçamento\s+(\d+)/i),
     clientPhone: lowerText.match(/(?:telefone|fone|whatsapp|zap|tel|contato).*?(\d{10,11})/i),
     priceInfo: lowerText.match(/(?:preço|preco|valor|R\$|reais|R\$).*?(\d+(?:[.,]\d{1,2})?)/i),
-    urgent: /(urgente|rápido|rapido|imediatamente|hoje|agora)/i.test(lowerText),
-    specificDate: lowerText.match(/(?:dia|data|quando|até|ate)\s+(\d{1,2}\/\d{1,2}|\d{1,2}\s+de\s+[a-zç]+)/i)
+    urgent: /(urgente|rápido|rapido|imediatamente|hoje|agora|para\s*ontem|em\s*caráter\s*urgente)/i.test(lowerText),
+    specificDate: lowerText.match(/(?:dia|data|quando|até|ate)\s+(\d{1,2}\/\d{1,2}|\d{1,2}\s+de\s+[a-zç]+)/i),
+    
+    // New enhanced intents for better precision
+    recentBudgets: /(orçamentos\s+recentes|últimos\s+orçamentos|orçamentos\s+de\s+hoje|orçamentos\s+da\s+semana)/i.test(lowerText),
+    budgetByClient: /(cliente|para|de)\s+([a-zA-ZçÇãÃõÕáÁéÉíÍóÓúÚâÂêÊîÎôÔûÛ\s]+)/i.test(lowerText),
+    budgetByDate: /(orçamento\s+do\s+dia|orçamento\s+de\s+(\d{1,2}\/\d{1,2})|orçamento\s+de\s+ontem|orçamento\s+de\s+hoje)/i.test(lowerText),
+    budgetByPrice: /(orçamento\s+mais\s+barato|orçamento\s+mais\s+caro|orçamento\s+acima\s+de|orçamento\s+abaixo\s+de)/i.test(lowerText),
+    budgetStatus: /(orçamento\s+aprovado|orçamento\s+reprovado|orçamento\s+pendente|orçamento\s+expirado)/i.test(lowerText),
+    
+    // Contextual search patterns
+    budgetComparison: /(comparar\s+orçamentos|diferença\s+entre\s+orçamentos|qual\s+orçamento\s+é\s+melhor)/i.test(lowerText),
+    budgetSummary: /(resumo\s+do\s+orçamento|detalhes\s+do\s+orçamento|informações\s+do\s+orçamento)/i.test(lowerText)
   }
   
   // Find device model with better matching

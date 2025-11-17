@@ -247,96 +247,154 @@ function formatSingleBudgetDetailed(budget: BudgetData): string {
 }
 
 /**
- * Enhanced beautiful format for budget messages using actual WhatsApp templates
+ * Enhanced beautiful format for budget messages using actual WhatsApp templates with perfect precision
  */
 export async function formatSingleBudgetBeautiful(budget: BudgetData, userId?: string, companyName?: string): Promise<string> {
   const remainingDays = calculateRemainingDays(budget.created_at)
   const createdDate = new Date(budget.created_at).toLocaleDateString('pt-BR')
   
-  // Get the actual WhatsApp template from the user
+  // Get the actual WhatsApp template from the user with enhanced error handling
   let template = null
+  let templateError = null
+  
   if (userId) {
-    const { template: userTemplate } = await getUserDefaultTemplate(userId)
-    template = userTemplate
+    try {
+      const { template: userTemplate, error } = await getUserDefaultTemplate(userId)
+      template = userTemplate
+      templateError = error
+    } catch (error) {
+      console.error('Error fetching user template:', error)
+      templateError = error
+    }
   }
   
-  // Use the template system instead of creating fake data
+  // Enhanced template processing with fallback options
   let whatsappMessage = ''
+  
   if (template && template.message_template) {
-    // Use the proper template processing with placeholders
-    whatsappMessage = generateWhatsAppMessageFromTemplate(
-      template.message_template,
-      budget,
-      companyName || 'OneDrip',
-      30 // Default warning days
-    )
-  } else {
-    // Fallback to simple format if no template exists
-    whatsappMessage = generateWhatsAppMessageFromTemplate(
-      `📱 *{nome_empresa}* 
-
-*Aparelho:* {modelo_dispositivo} 
-*Serviço:* {nome_reparo} 
-
-{qualidades_inicio}*{qualidade_nome}* – {peca_garantia_meses} meses de garantia 
-💰 À vista {peca_preco_vista} ou {peca_preco_parcelado} no cartão em até {peca_parcelas}x de {peca_valor_parcela} 
-
-{qualidades_fim} 
-*📦 Serviços Inclusos:* 
-{servicos_inclusos} 
-
-🚫 Não cobre danos por água ou molhado 
-
-📝 *Observações* 
-{observacoes} 
-
-📅 Válido até: {data_validade}`,
-      budget,
-      companyName || 'OneDrip',
-      30
-    )
+    try {
+      // Use the proper template processing with placeholders and enhanced data
+      whatsappMessage = generateWhatsAppMessageFromTemplate(
+        template.message_template,
+        budget,
+        companyName || 'OneDrip',
+        30 // Default warning days
+      )
+    } catch (error) {
+      console.error('Error generating template message:', error)
+      // Fallback to default template if user template fails
+      template = null
+    }
   }
   
-  // Elegant header with actual budget data
+  // If no template or template failed, use enhanced default template
+  if (!whatsappMessage) {
+    try {
+      whatsappMessage = generateWhatsAppMessageFromTemplate(
+        `📱 *{nome_empresa}* 
+
+*💎 Orçamento Exclusivo #{numero_orcamento}*
+
+*👤 Cliente:* {nome_cliente} 
+*📱 Aparelho:* {modelo_dispositivo} ({tipo_dispositivo})
+*🔧 Serviço:* {nome_reparo}
+
+{qualidades_inicio}✨ *{qualidade_nome}* 
+💰 À vista: {peca_preco_vista} 
+💳 Parcelado: {peca_preco_parcelado} em {peca_parcelas}x de {peca_valor_parcela}
+🛡️ Garantia: {peca_garantia_meses} meses
+{qualidades_fim}
+
+*📦 Serviços Inclusos:* 
+{servicos_inclusos}
+
+⚠️ *Importante:* 
+• Não cobre danos por água ou molhado
+• Válido por 30 dias
+
+📝 *Observações:* 
+{observacoes}
+
+📅 *Validade:* {data_validade}
+
+💡 *Dúvidas?* Estamos aqui para ajudar!`,
+        budget,
+        companyName || 'OneDrip',
+        30
+      )
+    } catch (error) {
+      console.error('Error generating default template message:', error)
+      // Ultimate fallback to simple format
+      whatsappMessage = `📱 *${companyName || 'OneDrip'}*
+
+*Orçamento #${budget.sequential_number}*
+👤 *Cliente:* ${budget.client_name}
+📱 *Aparelho:* ${budget.device_model}
+🔧 *Serviço:* ${budget.issue || 'Serviço não especificado'}
+💰 *À vista:* ${formatCurrency(budget.cash_price)}
+📅 *Validade:* ${remainingDays} dias`
+    }
+  }
+  
+  // Professional header with enhanced formatting
   let result = `✨ **ORÇAMENTO EXCLUSIVO** ✨\n\n`
   result += `🎯 **Número:** #${budget.sequential_number.toString().padStart(4, '0')}\n`
   result += `📊 **Status:** ${remainingDays > 0 ? '✅ Válido' : '⚠️ Expirado'} (${remainingDays} dias restantes)\n`
   result += `📅 **Emitido em:** ${createdDate}\n\n`
   
-  // Client section with real data
+  // Enhanced client section with complete information
   result += `👑 **CLIENTE ESPECIAL**\n`
   result += `└─ 🧑‍💼 **Nome:** ${budget.client_name}\n`
   if (budget.client_phone) {
     result += `└─ 📱 **Contato:** ${budget.client_phone}\n`
   }
+  if (parsedCommand.clientName && parsedCommand.clientName !== budget.client_name) {
+    result += `└─ 🔍 **Buscado como:** ${parsedCommand.clientName}\n`
+  }
   result += `\n`
   
-  // Device section with real data
+  // Enhanced device section with detailed information
   result += `📱 **DISPOSITIVO**\n`
   result += `└─ 🏷️ **Tipo:** ${budget.device_type}\n`
   result += `└─ 📲 **Modelo:** ${budget.device_model}\n`
-  result += `└─ 🔧 **Serviço:** ${budget.part_quality || budget.part_type || budget.issue || 'Serviço não especificado'}\n\n`
+  result += `└─ 🔧 **Serviço/Sintoma:** ${budget.part_quality || budget.part_type || budget.issue || 'Serviço não especificado'}\n`
+  if (parsedCommand.deviceModel) {
+    result += `└─ 🔍 **Buscado como:** ${parsedCommand.deviceModel}\n`
+  }
+  if (parsedCommand.serviceType) {
+    result += `└─ 🎯 **Tipo de serviço:** ${parsedCommand.serviceType}\n`
+  }
+  result += `\n`
   
-  // Financial section with real calculations
-  const totalValue = budget.cash_price + (budget.budget_parts?.reduce((sum, part) => sum + part.cash_price, 0) || 0)
+  // Enhanced financial section with detailed calculations
+  const partsTotal = budget.budget_parts?.reduce((sum, part) => sum + part.cash_price, 0) || 0
+  const totalValue = budget.cash_price + partsTotal
+  
   result += `💰 **INVESTIMENTO**\n`
   result += `└─ 💵 **À Vista:** ${formatCurrency(budget.cash_price)}\n`
   if (budget.installment_price > 0) {
     result += `└─ 📈 **Parcelado:** ${formatCurrency(budget.installment_price)}\n`
   }
+  if (partsTotal > 0) {
+    result += `└─ 🔧 **Peças:** ${formatCurrency(partsTotal)}\n`
+  }
   if (budget.budget_parts && budget.budget_parts.length > 0) {
-    result += `└─ 🔧 **Peças:** ${formatCurrency(budget.budget_parts.reduce((sum, part) => sum + part.cash_price, 0))}\n`
+    result += `└─ 📋 **Detalhes das Peças:**\n`
+    budget.budget_parts.forEach((part, index) => {
+      const connector = index === budget.budget_parts!.length - 1 ? '   └─' : '   ├─'
+      result += `${connector} ${part.name}: ${formatCurrency(part.cash_price)} (${part.warranty_months} meses garantia)\n`
+    })
   }
   result += `└─ 💎 **Total:** ${formatCurrency(totalValue)}\n\n`
   
-  // Additional services with real data
+  // Enhanced additional services with real data
   const additionalServices = []
   if (budget.includes_delivery) additionalServices.push('🚚 Entrega Inclusa')
-  if (budget.includes_screen_protector) additionalServices.push('📱 Película Protetora')
+  if (budget.includes_screen_protector) additionalServices.push('📱 Película Protetora de Brinde')
   if (budget.warranty_months > 0) additionalServices.push(`🛡️ Garantia ${budget.warranty_months} meses`)
   
   if (additionalServices.length > 0) {
-    result += `🎁 **SERVIÇOS ESPECIAIS**\n`
+    result += `🎁 **SERVIÇOS ESPECIAIS INCLUSOS**\n`
     additionalServices.forEach((service, index) => {
       const connector = index === additionalServices.length - 1 ? '└─' : '├─'
       result += `${connector} ${service}\n`
@@ -344,19 +402,27 @@ export async function formatSingleBudgetBeautiful(budget: BudgetData, userId?: s
     result += `\n`
   }
   
-  // Notes section with real data
+  // Enhanced notes section with professional formatting
   if (budget.notes) {
     result += `📝 **OBSERVAÇÕES IMPORTANTES**\n`
     result += `└─ ${budget.notes}\n\n`
   }
   
-  // WhatsApp template section using the actual template
-  result += `📲 **MENSAGEM PARA WHATSAPP**\n`
+  // Template section with professional WhatsApp formatting
+  result += `📲 **MENSAGEM PRONTA PARA WHATSAPP**\n`
   result += `${whatsappMessage}\n\n`
   
-  // Professional closing
-  result += `✨ **OBRIGADO POR ESCOLHER A ONEDRIP!** ✨\n`
-  result += `💡 *Dúvidas? Estamos aqui para ajudar!*`
+  // Enhanced action suggestions
+  result += `🔧 **AÇÕES DISPONÍVEIS:**\n`
+  result += `• "Enviar orçamento #${budget.sequential_number} via WhatsApp"\n`
+  result += `• "Editar orçamento #${budget.sequential_number}"\n`
+  result += `• "Duplicar orçamento #${budget.sequential_number}"\n`
+  result += `• "Excluir orçamento #${budget.sequential_number}"\n\n`
+  
+  // Professional closing with company branding
+  result += `✨ **AGRADECEMOS A CONFIANÇA!** ✨\n`
+  result += `💡 *${companyName || 'OneDrip'} - Sua melhor escolha em assistência técnica*\n`
+  result += `📞 *Dúvidas? Estamos sempre à disposição!*`
   
   return result
 }

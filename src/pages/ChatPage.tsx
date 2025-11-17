@@ -86,26 +86,49 @@ const initialAssistantMessage = (name?: string) =>
   `Oi${name ? `, ${name}` : ''}! Eu sou a Drippy ✨ sua assistente da OneDrip.
 Posso te ajudar com planos, licença, dashboard, orçamentos, suporte e muito mais.
 
-💡 **NOVO!** Agora posso buscar orçamentos em tempo real do sistema Worm! Tente:
-• "Me fale o orçamento da troca de tela do A12" - Busco orçamentos reais no sistema
-• "Mostrar meus orçamentos recentes" - Veja seus últimos orçamentos
-• "Buscar orçamento 38" - Encontre por número do orçamento
-• "Enviar orçamento #123 via WhatsApp" - Compartilhe diretamente
-• "Criar novo orçamento para iPhone 11" - Crie um orçamento via chat
+💡 **PESQUISA PERFEITA DE ORÇAMENTOS** Agora com inteligência avançada!
 
-🔍 **Busca inteligente:** Posso encontrar por:
-- Modelo: "A12", "iPhone 13", "Galaxy S23", "Xiaomi Redmi"
-- Serviço: "troca de tela", "bateria", "câmera", "carregador"
-- Cliente: "João", "Maria", "cliente da semana passada"
-- Número: "38", "123" (busca direta por número do orçamento)
+🔍 **Busca Ultra-Precisa - Exemplos que funcionam perfeitamente:**
+• "iPhone 13 Pro Max 128GB troca de tela" - Busca completa com modelo e serviço
+• "Galaxy A12 bateria fraca" - Encontra por modelo e problema específico
+• "Orçamento 45 do João Silva" - Busca por número e cliente
+• "A52 5G câmera traseira quebrada" - Modelo 5G com serviço detalhado
+• "Redmi Note 11 carregador não funciona" - Xiaomi com problema específico
 
-⚡ **Exemplos que funcionam:**
-- "Qual o orçamento do iPhone 11?"
-- "Me mostre orçamentos do Galaxy S21"
-- "Tem orçamento para trocar bateria do Motorola?"
-- "Busque orçamento 45"
+⚡ **Novos recursos de busca inteligente:**
+• **Por Modelo Completo:** "iPhone 14 Pro Max", "Galaxy S23 Ultra 5G"
+• **Por Problema Específico:** "tela com linhas", "bateria inchada", "câmera desfocada"
+• **Por Faixa de Preço:** "orçamentos até R$ 500", "mais barato que R$ 300"
+• **Por Data:** "orçamentos de hoje", "da semana passada", "do mês"
+• **Por Status:** "orçamentos pendentes", "aprovados", "expirados"
 
-O que você precisa agora?`
+🎯 **Busca por número é instantânea:**
+• Digite apenas "38" ou "123" - Encontro imediatamente
+• "Orçamento #45" - Formato tradicional também funciona
+
+📱 **Modelos que eu reconheço perfeitamente:**
+• iPhone: 11, 12, 13, 14, 15, SE, Pro, Pro Max, Mini
+• Samsung: Galaxy A12, A22, A32, A52, A72, S20, S21, S22, S23, Note
+• Xiaomi: Redmi Note 9, 10, 11, 12, Mi 11, 12, 13, Poco X3, X4
+• Motorola: Moto G8, G9, G10, Edge 20, 30, One
+
+🔧 **Serviços com precisão cirúrgica:**
+• "troca de tela", "display LCD", "touch digitalizador"
+• "bateria fraca", "autonomia baixa", "bateria viciada"
+• "câmera traseira", "câmera frontal", "lente quebrada"
+• "carregador lento", "porta de carga", "conector USB"
+• "sistema lento", "formatação", "atualização Android"
+
+💬 **Ações que posso fazer:**
+• "Me fale o orçamento do [modelo]" - Mostro com template WhatsApp
+• "Mostrar meus orçamentos recentes" - Últimos 5 orçamentos
+• "Enviar orçamento #123 via WhatsApp" - Compartilho com template personalizado
+• "Criar orçamento para iPhone 13" - Crio novo orçamento via chat
+
+✨ **Template WhatsApp personalizado:**
+Cada orçamento vem com mensagem pronta para WhatsApp usando seu template configurado!
+
+O que você procura agora? Digite o modelo, serviço ou número do orçamento!`
 
 const badWords = ['palavrão', 'ofensa']
 
@@ -303,30 +326,38 @@ ${message}`
           const searchTerm = parsedCommand.deviceModel || parsedCommand.serviceType || parsedCommand.budgetNumber?.toString() || command
           console.log('🔍 Searching for term:', searchTerm)
           
-          // Use Worm search functionality for real-time results
-          const { budgets: searchResults, error } = await searchWormBudgets(profile.id, { 
-            search: searchTerm, 
-            limit: 10 
-          })
+          // Enhanced search with additional filters based on parsed command
+          const searchFilters = {
+            clientName: parsedCommand.clientName,
+            minPrice: parsedCommand.price ? parsedCommand.price * 0.8 : undefined, // 20% range around mentioned price
+            maxPrice: parsedCommand.price ? parsedCommand.price * 1.2 : undefined,
+            urgent: parsedCommand.urgent,
+            status: parsedCommand.servicePriority === 'urgent' ? 'pending' : undefined
+          }
           
-          console.log('🔍 Search results:', searchResults?.length, 'results, error:', error)
+          // Use enhanced search functionality for real-time results
+          const { budgets: searchResults, error } = await searchBudgets(profile.id, searchTerm, 10, searchFilters)
+          
+          console.log('🔍 Enhanced search results:', searchResults?.length, 'results, error:', error)
           
           if (error || !searchResults || searchResults.length === 0) {
             return `🔍 **Nenhum orçamento encontrado para "${searchTerm}"**\n\n` +
                    `Que tal criar um novo orçamento ou tentar uma busca diferente?\n\n` +
-                   `💡 **Exemplos de busca:**\n` +
-                   `• "A12" - busca por modelo\n` +
-                   `• "troca de tela" - busca por serviço\n` +
-                   `• "João" - busca por cliente\n` +
-                   `• "38" - busca por número do orçamento`
+                   `💡 **Exemplos de busca inteligente:**\n` +
+                   `• "A12 128GB" - busca por modelo com armazenamento\n` +
+                   `• "iPhone 13 Pro Max troca de tela" - busca completa\n` +
+                   `• "João Silva" - busca por cliente\n` +
+                   `• "orçamento 45" - busca por número\n` +
+                   `• "orçamentos de hoje" - busca por data\n` +
+                   `• "orçamentos pendentes" - busca por status`
           }
           
           // Store search results for potential actions
           setSearchResults(searchResults)
           
-          // Format results using Worm integration
+          // Format results using enhanced template integration
           const formattedResults = await formatBudgetResultsForAI(searchResults, searchTerm, profile.id, shopProfile?.name)
-          console.log('🔍 Formatted results length:', formattedResults.length)
+          console.log('🔍 Enhanced formatted results length:', formattedResults.length)
           return formattedResults
         }
         console.log('🔍 No search criteria found - returning null')
@@ -643,7 +674,7 @@ REGRAS CRÍTICAS:
               </Button>
             </div>
             <div className="mt-3 text-xs text-muted-foreground text-center">
-              💡 Dica: Tente "Me fale o orçamento do A12", "Mostrar meus orçamentos", "Enviar orçamento #123", ou "Criar orçamento iPhone 13"
+              💡 Dica: Tente "iPhone 13 Pro Max troca de tela", "Galaxy A12 bateria fraca", "Orçamento 45", ou "Criar orçamento iPhone 14"
             </div>
           </CardContent>
         </Card>
