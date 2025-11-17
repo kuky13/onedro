@@ -162,7 +162,7 @@ const SistemaPage = () => {
       <Dialog open={isServiceOrdersOpen} onOpenChange={setIsServiceOrdersOpen}>
         <DialogContent className="sm:max-w-[95vw] w-[95vw] h-[85vh] p-0">
           <DialogHeader className="px-6 py-4">
-            <DialogTitle>Ordens de Serviço</DialogHeader>
+            <DialogTitle>Ordens de Serviço</DialogTitle>
           </DialogHeader>
           <div className="h-[calc(85vh-64px)] overflow-hidden">
             <ServiceOrdersPageSimple />
