@@ -428,35 +428,27 @@ ${message}`
       console.log('📊 Budget response:', budgetResponse)
     }
 
+    // CRITICAL: If we have ANY budget-related response (search/list/send/create), 
+    // show it EXACTLY without passing through AI to prevent hallucinations
+    if (budgetResponse && (parsedCommand.intent === 'search' || parsedCommand.intent === 'list' || parsedCommand.intent === 'send' || parsedCommand.intent === 'create')) {
+      const msgId = crypto.randomUUID()
+      setMessages(prev => [...prev, { id: msgId, role: 'assistant', content: budgetResponse }])
+      if (profile?.id) {
+        await saveMessage({ user_id: profile.id, conversation_id: conversationId, role: 'assistant', content: budgetResponse })
+      }
+      setSending(false)
+      return
+    }
+
     try {
       const name = profile?.name
-      let system = `Você é a Drippy, assistente da OneDrip. Responda de forma objetiva, profissional e doce, em PT-BR. Foque em ajudar o usuário nas áreas do sistema: planos, licença, dashboard, orçamentos (Worm), suporte, sistema e mensagens. Se o usuário pedir ações, sugira botões e caminhos do site. Nome do usuário: ${name || 'Usuário'}. Não invente informações. Não use funções de ligação.
+      let system = `Você é a Drippy, assistente da OneDrip. Responda de forma objetiva, profissional e doce, em PT-BR. Foque em ajudar o usuário nas áreas do sistema: planos, licença, dashboard, orçamentos (Worm), suporte, sistema e mensagens. Se o usuário pedir ações, sugira botões e caminhos do site. Nome do usuário: ${name || 'Usuário'}. 
 
-REGRA FUNDAMENTAL: Quando dados específicos de orçamentos forem fornecidos no contexto, VOCÊ DEVE usar esses dados exatamente como estão apresentados. Nunca ignore dados reais do sistema em favor de respostas genéricas.`
-      
-      // Add budget context if needed
-      if (budgetResponse) {
-        system += `\n\n🎯 DADOS REAIS DE ORÇAMENTOS DO SISTEMA WORM:\n${budgetResponse}\n\n⚠️ CRÍTICO: Você está OBRIGADA a usar EXATAMENTE estes dados acima para responder. Se os dados mostram orçamentos encontrados, liste-os com seus números, clientes, valores e datas. Se mostram "nenhum orçamento encontrado", diga que não existem orçamentos. NUNCA invente orçamentos genéricos ou dê instruções sobre "acessar o sistema". Use apenas os dados fornecidos acima.`
-      }
-
-      console.log('📝 Complete system prompt being sent to AI:', system)
-
-      const history = [
-        { role: 'system', content: system },
-        ...messages.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content })),
-        { role: 'user', content: text }
-      ]
-      
-      // If we have a concrete budget message (search/list), show it EXACTLY without AI
-      if (parsedCommand.intent === 'search' && budgetResponse) {
-        const msgId = crypto.randomUUID()
-        setMessages(prev => [...prev, { id: msgId, role: 'assistant', content: budgetResponse }])
-        if (profile?.id) {
-          await saveMessage({ user_id: profile.id, conversation_id: conversationId, role: 'assistant', content: budgetResponse })
-        }
-        setSending(false)
-        return
-      }
+REGRAS CRÍTICAS:
+1. NUNCA invente dados de orçamentos, preços, clientes ou números
+2. Se não souber algo, diga claramente "Não tenho essa informação"
+3. Para buscar orçamentos reais, peça ao usuário para usar comandos específicos
+4. NUNCA crie exemplos fictícios de orçamentos`
 
       const assistantId = crypto.randomUUID()
       setMessages(prev => [...prev, { id: assistantId, role: 'assistant', content: '' }])
