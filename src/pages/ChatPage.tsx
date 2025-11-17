@@ -440,6 +440,19 @@ ${message}`
       return
     }
 
+    // Fallback: tentar busca Worm mesmo quando a intenção é desconhecida
+    if (parsedCommand.intent === 'unknown' && profile?.id) {
+      const { budgets: fallbackBudgets } = await searchWormBudgets(profile.id, { search: text, limit: 5 })
+      if (fallbackBudgets && fallbackBudgets.length > 0) {
+        const formatted = await formatBudgetResultsForAI(fallbackBudgets, text, profile.id, shopProfile?.name)
+        const msgId = crypto.randomUUID()
+        setMessages(prev => [...prev, { id: msgId, role: 'assistant', content: formatted }])
+        await saveMessage({ user_id: profile.id, conversation_id: conversationId, role: 'assistant', content: formatted })
+        setSending(false)
+        return
+      }
+    }
+
     try {
       const name = profile?.name
       let system = `Você é a Drippy, assistente da OneDrip. Responda de forma objetiva, profissional e doce, em PT-BR. Foque em ajudar o usuário nas áreas do sistema: planos, licença, dashboard, orçamentos (Worm), suporte, sistema e mensagens. Se o usuário pedir ações, sugira botões e caminhos do site. Nome do usuário: ${name || 'Usuário'}. 

@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client'
-import { generateWhatsAppMessage, shareViaWhatsApp } from '@/utils/whatsappUtils'
+import { generateWhatsAppMessage, openWhatsApp } from '@/utils/whatsappUtils'
 import { generateWhatsAppMessageFromTemplate } from '@/utils/whatsappTemplateUtils'
 import { useWhatsAppMessageTemplates } from '@/hooks/worm/useWhatsAppMessageTemplates'
 
@@ -334,8 +334,8 @@ export async function sendBudgetViaWhatsApp(budget: BudgetData, shopName: string
       return { success: false, error: 'Telefone do cliente não informado' }
     }
 
-    // Open WhatsApp with the message
-    shareViaWhatsApp(budget.client_phone, message)
+    // Open WhatsApp with the client's phone and the message
+    openWhatsApp(budget.client_phone, message)
     
     return { success: true, error: null }
   } catch (error) {
