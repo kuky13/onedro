@@ -15,19 +15,6 @@ export const useWormBudgets = (userId: string | undefined, filters: BudgetFilter
       try {
         if (!userId) return [];
 
-        const { data, error } = await supabase
-          .rpc('get_optimized_budgets', {
-            p_user_id: userId,
-            p_search_term: filters.search || null,
-            p_status_filter: filters.status || null,
-            p_limit: filters.limit || 50,
-            p_offset: filters.offset || 0,
-          });
-
-        if (!error && data) {
-          return data;
-        }
-
         const numericSearch = (filters.search || '').trim();
         const searchNum = numericSearch && /^\d+$/.test(numericSearch) ? parseInt(numericSearch, 10) : null;
 
@@ -41,7 +28,8 @@ export const useWormBudgets = (userId: string | undefined, filters: BudgetFilter
           .order('created_at', { ascending: false });
 
         if (filters.search) {
-          const baseOr = `client_name.ilike.%${filters.search}%,device_model.ilike.%${filters.search}%,device_type.ilike.%${filters.search}%`;
+          const term = filters.search.replace(/,/g, ' ');
+          const baseOr = `client_name.ilike.%${term}%,device_model.ilike.%${term}%,device_type.ilike.%${term}%`;
           query = searchNum != null
             ? query.or(`${baseOr},sequential_number.eq.${searchNum}`)
             : query.or(baseOr);
@@ -58,11 +46,9 @@ export const useWormBudgets = (userId: string | undefined, filters: BudgetFilter
           query = query.limit(filters.limit);
         }
 
-        const { data: fallbackData, error: fallbackError } = await query;
-        if (fallbackError) {
-          return [];
-        }
-        return fallbackData || [];
+        const { data, error } = await query;
+        if (error) return [];
+        return data || [];
       } catch {
         return [];
       }

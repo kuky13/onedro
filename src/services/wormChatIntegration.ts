@@ -27,28 +27,7 @@ interface WormSearchFilters {
 export async function searchWormBudgets(userId: string, filters: WormSearchFilters = {}) {
   try {
     if (!userId) return { budgets: [], error: null }
-
-    // Use the same optimized function as WormBudgetList
-    const { data, error } = await supabase
-      .rpc('get_optimized_budgets', {
-        p_user_id: userId,
-        p_search_term: filters.search || null,
-        p_status_filter: filters.status || null,
-        p_limit: filters.limit || 10,
-        p_offset: filters.offset || 0,
-      })
-
-    if (error) {
-      console.error('Error searching Worm budgets:', error)
-      return { budgets: [], error }
-    }
-
-    // Fallback to manual search if RPC is not available
-    if (!data) {
-      return await searchWormBudgetsFallback(userId, filters)
-    }
-
-    return { budgets: data || [], error: null }
+    return await searchWormBudgetsFallback(userId, filters)
   } catch (error) {
     console.error('Exception searching Worm budgets:', error)
     return { budgets: [], error }
