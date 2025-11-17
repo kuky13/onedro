@@ -9,8 +9,9 @@ import { useWhatsAppMessageTemplates } from '@/hooks/worm/useWhatsAppMessageTemp
 function generateSemanticSearchTerms(searchTerm: string): string[] {
   const terms = [searchTerm]
   
-  // Device model synonyms
+  // Device model synonyms - EXPANDIDO
   const deviceSynonyms: { [key: string]: string[] } = {
+    // Samsung Galaxy A
     'a12': ['galaxy a12', 'samsung a12', 'a 12'],
     'a13': ['galaxy a13', 'samsung a13', 'a 13'],
     'a22': ['galaxy a22', 'samsung a22', 'a 22'],
@@ -21,33 +22,56 @@ function generateSemanticSearchTerms(searchTerm: string): string[] {
     'a53': ['galaxy a53', 'samsung a53', 'a 53'],
     'a72': ['galaxy a72', 'samsung a72', 'a 72'],
     'a73': ['galaxy a73', 'samsung a73', 'a 73'],
+    // Samsung Galaxy S
     's10': ['galaxy s10', 'samsung s10', 's 10'],
     's20': ['galaxy s20', 'samsung s20', 's 20'],
     's21': ['galaxy s21', 'samsung s21', 's 21'],
     's22': ['galaxy s22', 'samsung s22', 's 22'],
     's23': ['galaxy s23', 'samsung s23', 's 23'],
+    's24': ['galaxy s24', 'samsung s24', 's 24'],
+    // Samsung Note
     'note10': ['galaxy note 10', 'note 10', 'note10'],
     'note20': ['galaxy note 20', 'note 20', 'note20'],
-    'iphone11': ['iphone 11', '11'],
-    'iphone12': ['iphone 12', '12'],
-    'iphone13': ['iphone 13', '13'],
-    'iphone14': ['iphone 14', '14'],
-    'iphone15': ['iphone 15', '15'],
+    // iPhone
+    'iphone11': ['iphone 11', '11', 'ip11'],
+    'iphone12': ['iphone 12', '12', 'ip12'],
+    'iphone13': ['iphone 13', '13', 'ip13'],
+    'iphone14': ['iphone 14', '14', 'ip14'],
+    'iphone15': ['iphone 15', '15', 'ip15'],
+    'iphonese': ['iphone se', 'se', 'ipse'],
+    // Xiaomi Redmi
     'redmi9': ['redmi 9', 'xiaomi redmi 9'],
     'redmi10': ['redmi 10', 'xiaomi redmi 10'],
     'redmi11': ['redmi 11', 'xiaomi redmi 11'],
+    'redmi12': ['redmi 12', 'xiaomi redmi 12'],
+    'redminote': ['redmi note', 'note'],
+    // Xiaomi Mi/Poco
     'mi11': ['mi 11', 'xiaomi mi 11'],
     'mi12': ['mi 12', 'xiaomi mi 12'],
-    'mi13': ['mi 13', 'xiaomi mi 13']
+    'mi13': ['mi 13', 'xiaomi mi 13'],
+    'poco': ['poco', 'pocophone'],
+    // Motorola
+    'moto': ['moto', 'motorola'],
+    'motog': ['moto g', 'motog'],
+    'motoe': ['moto e', 'motoe'],
+    'edge': ['edge', 'moto edge'],
+    // Outros
+    'realme': ['realme'],
+    'oneplus': ['oneplus', 'one plus'],
+    'nothing': ['nothing', 'nothing phone']
   }
   
-  // Service synonyms
+  // Service synonyms - EXPANDIDO
   const serviceSynonyms: { [key: string]: string[] } = {
-    'tela': ['display', 'lcd', 'monitor', 'vidro'],
-    'bateria': ['bateria', 'baterias', 'pilha', 'energia'],
-    'camera': ['camera', 'cameras', 'lente', 'fotografia'],
-    'carregador': ['carregador', 'carregadores', 'cabo', 'conector', 'porta'],
-    'sistema': ['sistema', 'software', 'android', 'ios', 'atualização', 'atualizacao', 'restauração', 'restauracao']
+    'tela': ['display', 'lcd', 'monitor', 'vidro', 'frontal', 'touch', 'visor', 'digitalizador'],
+    'bateria': ['bateria', 'baterias', 'pilha', 'energia', 'autonomia', 'carga'],
+    'camera': ['camera', 'cameras', 'câmera', 'lente', 'fotografia', 'traseira', 'selfie', 'frontal'],
+    'carregador': ['carregador', 'carregadores', 'cabo', 'conector', 'porta', 'usb', 'entrada', 'carga'],
+    'sistema': ['sistema', 'software', 'android', 'ios', 'atualização', 'atualizacao', 'restauração', 'restauracao'],
+    'altofalante': ['alto-falante', 'altofalante', 'audio', 'som', 'speaker'],
+    'microfone': ['microfone', 'mic', 'audio'],
+    'placa': ['placa', 'módulo', 'ci', 'chip', 'placa-mãe'],
+    'traseira': ['traseira', 'tampa', 'capa', 'back', 'parte de trás']
   }
   
   // Check for device model synonyms
