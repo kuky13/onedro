@@ -2902,6 +2902,44 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_sends: {
+        Row: {
+          budget_id: string | null
+          created_at: string | null
+          id: string
+          message: string
+          phone: string
+          sent_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          budget_id?: string | null
+          created_at?: string | null
+          id?: string
+          message: string
+          phone: string
+          sent_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          budget_id?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string
+          phone?: string
+          sent_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_sends_budget_id_fkey"
+            columns: ["budget_id"]
+            isOneToOne: false
+            referencedRelation: "budgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       admin_license_expiration_monitor: {
@@ -3952,35 +3990,20 @@ export type Database = {
               p_limit?: number
               p_offset?: number
               p_search_term?: string
-              p_user_id: string
-            }
-            Returns: {
-              client_name: string
-              client_phone: string
-              created_at: string
-              device_model: string
-              device_type: string
-              id: string
-              total_price: number
-              updated_at: string
-              workflow_status: string
-            }[]
-          }
-        | {
-            Args: {
-              p_limit?: number
-              p_offset?: number
-              p_search_term?: string
               p_status_filter?: string
               p_user_id: string
             }
             Returns: {
+              approved_at: string
               cash_price: number
               client_id: string
               client_name: string
               client_phone: string
               created_at: string
               custom_services: string
+              deleted_at: string
+              deleted_by: string
+              delivery_confirmed_at: string
               delivery_date: string
               device_model: string
               device_type: string
@@ -3994,14 +4017,37 @@ export type Database = {
               is_paid: boolean
               issue: string
               notes: string
+              owner_id: string
               part_quality: string
+              part_type: string
               payment_condition: string
+              payment_confirmed_at: string
               sequential_number: number
               status: string
               total_price: number
               updated_at: string
+              updated_by: string
               valid_until: string
               warranty_months: number
+              workflow_status: string
+            }[]
+          }
+        | {
+            Args: {
+              p_limit?: number
+              p_offset?: number
+              p_search_term?: string
+              p_user_id: string
+            }
+            Returns: {
+              client_name: string
+              client_phone: string
+              created_at: string
+              device_model: string
+              device_type: string
+              id: string
+              total_price: number
+              updated_at: string
               workflow_status: string
             }[]
           }
