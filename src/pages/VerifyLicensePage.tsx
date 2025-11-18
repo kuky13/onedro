@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle, XCircle, AlertTriangle, ArrowLeft, Clock, Calendar, Shield, MessageCircle, Phone, Mail, MapPin, Copy, Check, RefreshCw, AlertCircle, User } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, AlertTriangle, ArrowLeft, Clock, Calendar, Shield, MessageCircle, Phone, Mail, MapPin, Copy, Check, RefreshCw, AlertCircle, User, Crown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLicenseVerificationOptimized } from '@/hooks/useLicenseVerificationOptimized';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -258,11 +258,14 @@ export default function VerifyLicensePage() {
 
             {/* Botões de Ação */}
             <div className="flex flex-col sm:flex-row gap-3 mt-6">
-              <Button variant="outline" onClick={() => navigate('/painel')} className="flex-1">
+              <Button variant="outline" onClick={() => navigate(-1)} className="flex-1">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Voltar ao Painel
+                Voltar
               </Button>
-              
+              <Button onClick={() => navigate('/plans')} className="flex-1">
+                <Crown className="h-4 w-4 mr-2" />
+                Ver Planos
+              </Button>
               <Button onClick={refetch} disabled={isLoading} className="flex-1">
                 {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : 'Verificar Novamente'}
               </Button>

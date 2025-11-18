@@ -3,9 +3,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCompanyDataLoader } from '@/hooks/useCompanyDataLoader';
 import { useGenerateBudgetFromTemplate } from '@/hooks/worm/useGenerateBudgetFromTemplate';
 import { useWhatsAppTemplates } from '@/hooks/worm/useWhatsAppMessageTemplates';
-import { generateServiceWhatsAppMessage } from '@/utils/whatsappUtils';
+import { generateServiceWhatsAppMessage, copyTextToClipboard, openWhatsApp } from '@/utils/whatsappUtils';
 import { generateWhatsAppMessageFromTemplate } from '@/utils/whatsappTemplateUtils';
-import { openWhatsApp } from '@/utils/whatsappUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -106,14 +105,23 @@ export const WormQuickBudgetGenerator = ({ service, onSuccess, onCancel }: WormQ
     });
   };
 
-  const handleCopyMessage = () => {
-    navigator.clipboard.writeText(generatedMessage);
-    toast.success('Mensagem copiada para área de transferência');
+  const handleCopyMessage = async () => {
+    const ok = await copyTextToClipboard(generatedMessage);
+    if (ok) {
+      toast.success('Mensagem copiada para área de transferência');
+    } else {
+      toast.error('Não foi possível copiar a mensagem');
+    }
   };
 
   const handleSendWhatsApp = () => {
     if (clientPhone) {
-      openWhatsApp(clientPhone, generatedMessage);
+      try {
+        openWhatsApp(clientPhone, generatedMessage);
+        toast.success('Abrindo WhatsApp...');
+      } catch (e) {
+        toast.error('Falha ao abrir o WhatsApp');
+      }
     } else {
       toast.error('Adicione o telefone do cliente para enviar via WhatsApp');
     }

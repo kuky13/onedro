@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { HelpCircle, Search, FileText, ClipboardList, Crown, Trash2, Settings, Play, ChevronDown, ChevronRight, ExternalLink, BookOpen, Users, Calculator, Wrench, Shield, Building, Home, Download, Lightbulb, MessageCircle } from 'lucide-react';
-import SupportButton from '@/components/SupportButton';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 interface HelpSection {
   id: string;
@@ -410,7 +409,7 @@ const HelpCenterPage = () => {
           </CardContent>
         </Card>
       </div>
-      <SupportButton variant="floating" />
+      {/* Support Button removido */}
     </div>;
 };
 export default HelpCenterPage;

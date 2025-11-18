@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Check, Copy, MessageCircle } from 'lucide-react';
-import { generateWhatsAppMessage, shareViaWhatsApp } from '@/utils/whatsappUtils';
+import { generateWhatsAppMessage, shareViaWhatsApp, copyTextToClipboard } from '@/utils/whatsappUtils';
 import { generateWhatsAppMessageFromTemplate } from '@/utils/whatsappTemplateUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -137,8 +137,10 @@ export const WormWhatsAppSelector: React.FC<WormWhatsAppSelectorProps> = ({ budg
         ? generateWhatsAppMessageFromTemplate(defaultTemplate.message_template, budgetData, companyName, profile?.budget_warning_days)
         : generateWhatsAppMessage(budgetData, profile?.budget_warning_days);
       
-      // Copiar para área de transferência
-      await navigator.clipboard.writeText(message);
+      const ok = await copyTextToClipboard(message);
+      if (!ok) {
+        throw new Error('clipboard-failed');
+      }
       
       setCopiedActions(prev => new Set([...prev, 'copy']));
       toast.success('Mensagem copiada para a área de transferência!');
@@ -220,11 +222,8 @@ export const WormWhatsAppSelector: React.FC<WormWhatsAppSelectorProps> = ({ budg
         ? generateWhatsAppMessageFromTemplate(defaultTemplate.message_template, budgetData, companyName, profile?.budget_warning_days)
         : generateWhatsAppMessage(budgetData, profile?.budget_warning_days);
       
-      // Construir URL do WhatsApp para compartilhamento geral
-      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
-      
-      // Abrir WhatsApp
-      window.open(whatsappUrl, '_blank');
+      // Abrir WhatsApp com utilitário robusto para iOS
+      shareViaWhatsApp(message);
       
       setCopiedActions(prev => new Set([...prev, 'send']));
       toast.success('Redirecionando para o WhatsApp...');

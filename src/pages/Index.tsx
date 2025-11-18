@@ -9,7 +9,6 @@ import { FadeInUp, ScaleOnHover, StaggerList } from '@/components/ui/animations'
 import { Heading, Text } from '@/components/ui/typography';
 import { useAppInfo, useMarketingConfig } from '@/hooks/useAppConfig';
 import { useCompanyDataLoader } from '@/hooks/useCompanyDataLoader';
-import SupportButton from '@/components/SupportButton';
 
 // Função para abrir WhatsApp
 const openWhatsApp = (url: string) => {
@@ -209,8 +208,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Support Button for non-logged users */}
-      {!user && <SupportButton variant="floating" />}
+      {/* Support Button removido */}
 
       {/* Footer */}
       <footer className="bg-gradient-to-t from-muted/20 to-background border-t border-border/30 py-12 px-4 sm:px-6 lg:px-8">

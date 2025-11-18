@@ -16,7 +16,6 @@ import { LayoutProvider } from '@/contexts/LayoutContext';
 import { useBudgetData } from '@/hooks/useBudgetData';
 import { PageTransition } from '@/components/ui/animations/page-transitions';
 import { IOSSpinner } from '@/components/ui/animations/loading-states';
-import SupportButton from '@/components/SupportButton';
 import { UpdatePopup } from '@/components/UpdatePopup';
 
 export const DashboardLite = () => {
@@ -266,7 +265,6 @@ export const DashboardLite = () => {
             onTabChange={setActiveTab}
           >
             {renderContent()}
-            <SupportButton variant="floating" />
             <UpdatePopup />
           </AdaptiveLayout>
         </LayoutProvider>

@@ -1,4 +1,32 @@
 // WhatsApp utility functions
+const isIOS = (): boolean => {
+  try {
+    const ua = navigator.userAgent || '';
+    const platform = (navigator as any).platform || '';
+    const maxTP = (navigator as any).maxTouchPoints || 0;
+    return /iPad|iPhone|iPod/.test(ua) || (platform === 'MacIntel' && maxTP > 1);
+  } catch {
+    return false;
+  }
+};
+
+const buildWhatsAppUrl = (phone?: string, message?: string): string => {
+  const hasPhone = Boolean(phone && phone.replace(/\D/g, ''));
+  const cleanPhone = hasPhone ? String(phone).replace(/\D/g, '') : undefined;
+  const encodedText = message ? encodeURIComponent(message) : undefined;
+  // iOS Safari is more reliable with api.whatsapp.com
+  if (isIOS()) {
+    if (hasPhone) {
+      return `https://api.whatsapp.com/send?phone=${cleanPhone}${encodedText ? `&text=${encodedText}` : ''}`;
+    }
+    return `https://api.whatsapp.com/send${encodedText ? `?text=${encodedText}` : ''}`;
+  }
+  // Generic cross-platform
+  if (hasPhone) {
+    return `https://wa.me/${cleanPhone}${encodedText ? `?text=${encodedText}` : ''}`;
+  }
+  return `https://wa.me/${encodedText ? `?text=${encodedText}` : ''}`;
+};
 interface Budget {
   title?: string;
   description?: string;
@@ -197,22 +225,60 @@ export const generateWhatsAppMessage = (budget: Budget, budgetWarningDays?: numb
 };
 
 export const shareViaWhatsApp = (message: string): void => {
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-  window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+  const whatsappUrl = buildWhatsAppUrl(undefined, message);
+  try {
+    if (isIOS()) {
+      window.location.href = whatsappUrl;
+    } else {
+      const w = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+      if (!w) window.location.href = whatsappUrl;
+    }
+  } catch {
+    window.location.href = whatsappUrl;
+  }
 };
 
 export const openWhatsApp = (phone?: string, message?: string): void => {
-  let whatsappUrl = 'https://wa.me/';
-  
-  if (phone) {
-    // Remove any non-numeric characters
-    const cleanPhone = phone.replace(/\D/g, '');
-    whatsappUrl += cleanPhone;
+  const whatsappUrl = buildWhatsAppUrl(phone, message);
+  try {
+    if (isIOS()) {
+      window.location.href = whatsappUrl;
+    } else {
+      const w = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+      if (!w) window.location.href = whatsappUrl;
+    }
+  } catch {
+    window.location.href = whatsappUrl;
   }
-  
-  if (message) {
-    whatsappUrl += `?text=${encodeURIComponent(message)}`;
+};
+
+export const copyTextToClipboard = async (text: string): Promise<boolean> => {
+  try {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {}
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.top = '0';
+    textarea.style.left = '0';
+    textarea.style.width = '1px';
+    textarea.style.height = '1px';
+    textarea.style.padding = '0';
+    textarea.style.border = 'none';
+    textarea.style.outline = 'none';
+    textarea.style.boxShadow = 'none';
+    textarea.style.background = 'transparent';
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    const ok = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return ok;
+  } catch {
+    return false;
   }
-  
-  window.open(whatsappUrl, '_blank');
 };
