@@ -1,5 +1,5 @@
 // WhatsApp utility functions
-const isIOS = (): boolean => {
+export const isIOS = (): boolean => {
   try {
     const ua = navigator.userAgent || '';
     const platform = (navigator as any).platform || '';
