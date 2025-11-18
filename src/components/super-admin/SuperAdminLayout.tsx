@@ -10,7 +10,8 @@ import {
   X,
   Shield,
   Home,
-  Bell
+  Bell,
+  Film
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -37,6 +38,12 @@ const navigationItems = [
     href: '/supadmin/notifications',
     icon: Bell,
     description: 'Gerenciar notificações push'
+  },
+  {
+    name: 'Películas',
+    href: '/supadmin/p',
+    icon: Film,
+    description: 'Gerenciar películas compatíveis'
   },
   {
     name: 'Dados',

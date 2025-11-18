@@ -5,6 +5,7 @@ import { Dashboard } from '@/components/super-admin/Dashboard';
 import { UserManagement } from '@/components/UserManagement';
 import { DataManagement } from '@/components/super-admin/DataManagement';
 import { PushNotificationPanel } from '@/components/super-admin/PushNotificationPanel';
+import { PeliculasManagement } from '@/components/super-admin/PeliculasManagement';
 
 export function SuperAdminPage() {
   return (
@@ -22,6 +23,9 @@ export function SuperAdminPage() {
           
           {/* Gerenciamento de notificações push */}
           <Route path="notifications" element={<PushNotificationPanel />} />
+          
+          {/* Gerenciamento de películas compatíveis */}
+          <Route path="p" element={<PeliculasManagement />} />
           
           {/* Redirecionar rotas não encontradas para o dashboard */}
           <Route path="*" element={<Navigate to="/supadmin" replace />} />
