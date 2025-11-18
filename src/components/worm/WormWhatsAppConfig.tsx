@@ -79,16 +79,8 @@ export const WormWhatsAppConfig = () => {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => user?.id && resetDefault.mutate(user.id)}
-              disabled={resetDefault.isPending}
-            >
-              {resetDefault.isPending ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <RotateCcw className="h-4 w-4 mr-2" />
-              )}
+            <Button variant="outline" onClick={() => user?.id && resetDefault.mutate(user.id)} disabled={resetDefault.isPending}>
+              {resetDefault.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RotateCcw className="h-4 w-4 mr-2" />}
               Reset
             </Button>
             
@@ -128,9 +120,7 @@ export const WormWhatsAppConfig = () => {
                       <Button variant="ghost" size="sm" onClick={() => handleEditTemplate(template)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDuplicateTemplate(template)}>
-                        <Copy className="h-4 w-4" />
-                      </Button>
+                      
                       {!template.is_default && <Button variant="ghost" size="sm" onClick={() => setDeletingId(template.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>}
