@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Check, Copy, MessageCircle } from 'lucide-react';
-import { generateWhatsAppMessage, shareViaWhatsApp, copyTextToClipboard } from '@/utils/whatsappUtils';
+import { generateWhatsAppMessage, shareViaWhatsApp, copyTextToClipboard, isIOS } from '@/utils/whatsappUtils';
 import { generateWhatsAppMessageFromTemplate } from '@/utils/whatsappTemplateUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,6 +19,9 @@ export const WormWhatsAppSelector: React.FC<WormWhatsAppSelectorProps> = ({ budg
   const [copiedActions, setCopiedActions] = useState<Set<string>>(new Set());
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [defaultTemplate, setDefaultTemplate] = useState<any>(null);
+  const [previewMessage, setPreviewMessage] = useState<string>('');
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const isiOS = isIOS();
   
   // Fetch budget parts data
   const { data: budgetParts = [] } = useBudgetParts(budget?.id);
@@ -45,6 +48,75 @@ export const WormWhatsAppSelector: React.FC<WormWhatsAppSelectorProps> = ({ budg
 
     fetchDefaultTemplate();
   }, [user?.id]);
+
+  useEffect(() => {
+    const prepareMessage = async () => {
+      if (!user?.id) return;
+      let companyName = 'Nossa Loja';
+      try {
+        const { data: companyData } = await supabase
+          .from('company_info')
+          .select('name')
+          .eq('owner_id', user.id)
+          .maybeSingle();
+        if (companyData?.name) companyName = companyData.name;
+      } catch {}
+      if (companyName === 'Nossa Loja') {
+        try {
+          const { data: shopData } = await supabase
+            .from('shop_profiles')
+            .select('shop_name')
+            .eq('user_id', user?.id)
+            .maybeSingle();
+          if (shopData?.shop_name) companyName = shopData.shop_name;
+        } catch {}
+      }
+      const budgetData = {
+        id: budget.id,
+        client_name: budget.client_name || 'Cliente',
+        client_phone: budget.client_phone || 'Não informado',
+        device_model: budget.device_model || 'Dispositivo',
+        device_type: budget.device_type || 'Smartphone',
+        issue: budget.issue || 'Não informado',
+        part_type: budget.part_type || 'Serviço',
+        part_quality: budget.part_quality || budget.part_type || 'Padrão',
+        cash_price: budget.cash_price || budget.total_price || 0,
+        installment_price: budget.installment_price || budget.cash_price || budget.total_price || 0,
+        installments: budget.installments || 1,
+        installments_count: budget.installments_count || 0,
+        total_price: budget.total_price || budget.cash_price || 0,
+        warranty_months: budget.warranty_months || 3,
+        payment_condition: budget.payment_condition || 'Não especificado',
+        shop_name: companyName,
+        includes_delivery: budget.includes_delivery || false,
+        includes_screen_protector: budget.includes_screen_protector || false,
+        custom_services: budget.custom_services || '',
+        delivery_date: budget.delivery_date,
+        notes: budget.notes || '',
+        status: budget.status || 'pending',
+        workflow_status: budget.workflow_status || 'pending',
+        created_at: budget.created_at,
+        valid_until: budget.valid_until || budget.expires_at || new Date(Date.now() + (profile?.budget_warning_days || 15) * 24 * 60 * 60 * 1000).toISOString(),
+        expires_at: budget.expires_at,
+        parts: budgetParts.map(part => ({
+          name: part.part_type || part.name || 'Peça',
+          quantity: part.quantity || 1,
+          price: part.price ? (part.price / 100) : 0,
+          cash_price: part.cash_price ? (part.cash_price / 100) : (part.price ? (part.price / 100) : 0),
+          installment_price: part.installment_price ? (part.installment_price / 100) : (part.price ? (part.price / 100) : 0),
+          installment_count: part.installment_count ?? part.installments_count ?? part.installments ?? null,
+          warranty_months: part.warranty_months || budget.warranty_months || 3
+        }))
+      } as any;
+      const message = defaultTemplate 
+        ? generateWhatsAppMessageFromTemplate(defaultTemplate.message_template, budgetData, companyName, profile?.budget_warning_days)
+        : generateWhatsAppMessage(budgetData, profile?.budget_warning_days);
+      setPreviewMessage(message);
+    };
+    if (isiOS) {
+      prepareMessage();
+    }
+  }, [isiOS, user?.id, defaultTemplate, budgetParts]);
 
   const handleCopyMessage = async () => {
     if (isProcessing) return;
@@ -136,7 +208,15 @@ export const WormWhatsAppSelector: React.FC<WormWhatsAppSelectorProps> = ({ budg
       const message = defaultTemplate 
         ? generateWhatsAppMessageFromTemplate(defaultTemplate.message_template, budgetData, companyName, profile?.budget_warning_days)
         : generateWhatsAppMessage(budgetData, profile?.budget_warning_days);
-      
+      if (isiOS) {
+        setPreviewMessage(message);
+        setTimeout(() => {
+          textareaRef.current?.focus();
+          textareaRef.current?.select();
+        }, 100);
+        toast.info('Selecione o texto e copie manualmente');
+        return;
+      }
       const ok = await copyTextToClipboard(message);
       if (!ok) {
         throw new Error('clipboard-failed');
@@ -270,6 +350,28 @@ export const WormWhatsAppSelector: React.FC<WormWhatsAppSelectorProps> = ({ budg
           )}
         </div>
 
+        {isiOS && (
+          <div className="space-y-2">
+            <div className="text-sm text-muted-foreground">Selecione o texto abaixo e copie</div>
+            <textarea
+              ref={textareaRef}
+              readOnly
+              value={previewMessage}
+              className="w-full h-40 rounded-md border bg-background p-3 text-sm font-mono"
+            />
+            <Button
+              variant="outline"
+              onClick={() => {
+                textareaRef.current?.focus();
+                textareaRef.current?.select();
+              }}
+              className="w-full"
+            >
+              Selecionar texto
+            </Button>
+          </div>
+        )}
+
         <div className="space-y-3">
           {/* Copiar Mensagem */}
           <Button 
@@ -291,7 +393,7 @@ export const WormWhatsAppSelector: React.FC<WormWhatsAppSelectorProps> = ({ budg
               <div className="text-left">
                 <div className="font-medium">Copiar Mensagem</div>
                 <div className="text-sm text-muted-foreground">
-                  Copiar texto para enviar manualmente
+                  {isiOS ? 'Selecionar texto para copiar manualmente' : 'Copiar texto para enviar manualmente'}
                 </div>
               </div>
             </div>
