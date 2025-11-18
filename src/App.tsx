@@ -62,6 +62,7 @@ import UpdateDetailsPage from "./pages/UpdateDetailsPage";
 import { SuperAdminPage } from "./pages/SuperAdminPage";
 import { UserSettingsPage } from "./pages/UserSettingsPage";
 import { setSecureItem, getSecureItem } from "@/utils/secureStorage";
+import PeliculasCompatibilityPage from "./pages/PeliculasCompatibilityPage";
 
 // Wrapper component para capturar o parâmetro id da URL e passar como serviceOrderId
 const ServiceOrderEditWrapper = () => {
@@ -186,6 +187,16 @@ const AppContent = () => {
             <MaintenanceGuard>
               <UnifiedProtectionGuard>
                 <DashboardLite />
+              </UnifiedProtectionGuard>
+            </MaintenanceGuard>
+          } 
+        />
+        <Route 
+          path="/p" 
+          element={
+            <MaintenanceGuard>
+              <UnifiedProtectionGuard>
+                <PeliculasCompatibilityPage />
               </UnifiedProtectionGuard>
             </MaintenanceGuard>
           } 

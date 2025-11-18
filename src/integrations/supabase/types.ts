@@ -1188,6 +1188,30 @@ export type Database = {
         }
         Relationships: []
       }
+      peliculas_compatíveis: {
+        Row: {
+          compatibilidades: string[]
+          created_at: string | null
+          id: string
+          modelo: string
+          updated_at: string | null
+        }
+        Insert: {
+          compatibilidades: string[]
+          created_at?: string | null
+          id?: string
+          modelo: string
+          updated_at?: string | null
+        }
+        Update: {
+          compatibilidades?: string[]
+          created_at?: string | null
+          id?: string
+          modelo?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       persistent_sessions: {
         Row: {
           created_at: string
