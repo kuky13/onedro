@@ -53,21 +53,35 @@ export const generateServiceWhatsAppMessage = (
   message += `*Serviço:* ${serviceName}\n\n`;
 
   // Listar cada opção de serviço/qualidade selecionada
-  budgets.forEach((budget: any) => {
+    budgets.forEach((budget: any) => {
     const optionName = budget.issue || budget.part_quality || budget.part_type || 'Opção';
     const warranty = budget.warranty_months || 0;
     const cashPrice = budget.cash_price ? budget.cash_price / 100 : 0;
     const installmentPrice = budget.installment_price ? budget.installment_price / 100 : cashPrice;
     const installments = (budget as any).installments_count || budget.installments || 0;
-    const totalInstallment = installmentPrice > cashPrice ? installmentPrice : installmentPrice * installments;
-    const monthlyValue = installments > 0 ? (installmentPrice > cashPrice ? installmentPrice / installments : installmentPrice) : installmentPrice;
+    
+    // Validação: installments deve ser numérico e maior que zero
+    const validInstallments = installments > 0 ? installments : 0;
+    
+    // Cálculo correto do valor total e parcela mensal
+    let totalInstallment: number;
+    let monthlyValue: number;
+    
+    if (validInstallments > 0) {
+      totalInstallment = installmentPrice > cashPrice ? installmentPrice : installmentPrice * validInstallments;
+      // CORREÇÃO: Sempre dividir o valor total pelo número de parcelas
+      monthlyValue = totalInstallment / validInstallments;
+    } else {
+      totalInstallment = installmentPrice;
+      monthlyValue = installmentPrice;
+    }
 
     // Nome da peça/qualidade com garantia
     message += `*${optionName}*${warranty > 0 ? ` – ${warranty} meses de garantia` : ''}\n`;
 
     // Preços formatados
-    if (installmentPrice && installments > 0 && installmentPrice !== cashPrice) {
-      message += `💰 À vista ${formatCurrency(cashPrice)} ou ${formatCurrency(totalInstallment)} no cartão em ${installments}x de ${formatCurrency(monthlyValue)}\n\n`;
+    if (installmentPrice && validInstallments > 0 && installmentPrice !== cashPrice) {
+      message += `💰 À vista ${formatCurrency(cashPrice)} ou ${formatCurrency(totalInstallment)} no cartão em ${validInstallments}x de ${formatCurrency(monthlyValue)}\n\n`;
     } else {
       message += `💰 À vista ${formatCurrency(cashPrice)}\n\n`;
     }
@@ -149,10 +163,17 @@ export const generateWhatsAppMessage = (budget: Budget, budgetWarningDays?: numb
         const installmentCount = (budget as any).installments_count || (budget as any).installments || 0;
         const ip = installmentPrice;
         const cp = cashPrice;
-        const totalInstallment = ip > cp ? ip : ip * installmentCount;
-        const monthlyValue = ip > cp ? ip / installmentCount : ip;
+        
+        // Validação: installmentCount deve ser maior que zero
+        const validCount = installmentCount > 0 ? installmentCount : 1;
+        
+        // Cálculo correto do valor total e parcela mensal
+        const totalInstallment = ip > cp ? ip : ip * validCount;
+        // CORREÇÃO: Sempre dividir o valor total pelo número de parcelas
+        const monthlyValue = totalInstallment / validCount;
+        
         if (installmentCount > 0) {
-          message += `💰 À vista ${formatCurrency(cashPrice)} ou ${formatCurrency(totalInstallment)} no cartão em ${installmentCount}x de ${formatCurrency(monthlyValue)}`;
+          message += `💰 À vista ${formatCurrency(cashPrice)} ou ${formatCurrency(totalInstallment)} no cartão em ${validCount}x de ${formatCurrency(monthlyValue)}`;
         } else {
           message += `💰 À vista ${formatCurrency(cashPrice)}`;
         }

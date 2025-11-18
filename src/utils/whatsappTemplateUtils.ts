@@ -213,12 +213,20 @@ export function generateWhatsAppMessageFromTemplate(
       
       // Preços (formato limpo)
       if (price > 0) {
-        if (installmentCount > 0 && installmentPrice && installmentPrice !== price) {
-          const ip = installmentPrice as number;
-          const cp = price as number;
-          const totalInstallment = ip > cp ? ip : ip * installmentCount;
-          const monthlyValue = ip > cp ? ip / installmentCount : ip;
-          partsText += `💰 À vista ${formatSmart(price)} | no cartão (crédito) ${formatSmart(totalInstallment)} ${installmentCount}x de ${formatSmartWithRef(monthlyValue, totalInstallment)}\n`;
+      if (installmentCount > 0 && installmentPrice && installmentPrice !== price) {
+        const ip = installmentPrice as number;
+        const cp = price as number;
+        
+        // Validação: verificar se installmentCount é numérico e maior que zero
+        const validInstallments = installmentCount > 0 ? installmentCount : 1;
+        
+        // Cálculo correto do valor total e parcela mensal
+        const totalInstallment = ip > cp ? ip : ip * validInstallments;
+        
+        // CORREÇÃO: Dividir o valor total pelo número de parcelas
+        const monthlyValue = totalInstallment / validInstallments;
+        
+        partsText += `💰 À vista ${formatSmart(price)} | no cartão (crédito) ${formatSmart(totalInstallment)} ${validInstallments}x de ${formatSmartWithRef(monthlyValue, totalInstallment)}\n`;
         } else if (price) {
           partsText += `💰 À vista ${formatSmart(price)}\n`;
         }
@@ -310,8 +318,26 @@ export function generateWhatsAppMessageFromTemplate(
           );
           const ip = installmentPrice as number;
           const base = price as number;
-          const totalInstallment = installmentCount > 0 ? (ip > base ? ip : ip * installmentCount) : ip;
-          const monthlyValue = installmentCount > 0 ? (ip > base ? ip / installmentCount : ip) : ip;
+          
+          // Validações: installmentCount deve ser numérico, positivo e maior que zero
+          const validInstallmentCount = installmentCount > 0 ? installmentCount : 0;
+          
+          // Cálculo correto: sempre dividir o valor total pelo número de parcelas
+          let totalInstallment: number;
+          let monthlyValue: number;
+          
+          if (validInstallmentCount > 0) {
+            // Se ip > base, ip é o valor total parcelado
+            // Se ip <= base, ip * installmentCount é o valor total parcelado
+            totalInstallment = ip > base ? ip : ip * validInstallmentCount;
+            
+            // CORREÇÃO: Sempre dividir o valor total pelo número de parcelas
+            monthlyValue = totalInstallment / validInstallmentCount;
+          } else {
+            // Sem parcelamento
+            totalInstallment = ip;
+            monthlyValue = ip;
+          }
           
           // Placeholders específicos para cada peça no bloco
           const partReplacements: Record<string, string> = {
