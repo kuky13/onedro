@@ -433,6 +433,16 @@ export const WormWhatsAppSelector: React.FC<WormWhatsAppSelectorProps> = ({ budg
               </span>
             )}
           </Button>
+
+          {isiOS && (
+            <Button
+              variant="ghost"
+              onClick={onClose}
+              className="w-full"
+            >
+              Fechar
+            </Button>
+          )}
         </div>
       </div>
     </div>

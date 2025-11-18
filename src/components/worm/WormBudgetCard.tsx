@@ -382,21 +382,42 @@ export const WormBudgetCard = ({
 
       {/* Modal de edição */}
       <Sheet open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-2xl lg:max-w-3xl overflow-y-auto">
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-2xl lg:max-w-3xl overflow-y-auto"
+          style={{
+            paddingTop: 'max(env(safe-area-inset-top, 0px), 16px)',
+            paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)'
+          }}
+        >
           <WormBudgetForm budget={budget} onSuccess={handleEditSuccess} onCancel={() => setIsEditOpen(false)} />
         </SheetContent>
       </Sheet>
 
       {/* Modal de ações (PDF) */}
       <Sheet open={isActionsOpen} onOpenChange={setIsActionsOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-md">
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-md"
+          style={{
+            paddingTop: 'max(env(safe-area-inset-top, 0px), 16px)',
+            paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)'
+          }}
+        >
           <WormBudgetActions budget={budget} onClose={() => setIsActionsOpen(false)} />
         </SheetContent>
       </Sheet>
 
       {/* Modal de WhatsApp */}
       <Sheet open={isWhatsAppSelectorOpen} onOpenChange={setIsWhatsAppSelectorOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-md">
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-md"
+          style={{
+            paddingTop: 'max(env(safe-area-inset-top, 0px), 16px)',
+            paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)'
+          }}
+        >
           <WormWhatsAppSelector budget={budget} onClose={() => setIsWhatsAppSelectorOpen(false)} />
         </SheetContent>
       </Sheet>
@@ -406,7 +427,14 @@ export const WormBudgetCard = ({
 
       {/* Modal de novo orçamento (preenchido com dados do atual) */}
       <Sheet open={isNewBudgetWithDataOpen} onOpenChange={setIsNewBudgetWithDataOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-2xl lg:max-w-3xl overflow-y-auto">
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-2xl lg:max-w-3xl overflow-y-auto"
+          style={{
+            paddingTop: 'max(env(safe-area-inset-top, 0px), 16px)',
+            paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)'
+          }}
+        >
           <WormBudgetForm initialData={initialNewBudgetData} onSuccess={handleNewBudgetSuccess} onCancel={() => setIsNewBudgetWithDataOpen(false)} />
         </SheetContent>
       </Sheet>

@@ -3,6 +3,7 @@ import { MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { isIOS } from '@/utils/whatsappUtils';
 import { WormWhatsAppConfig } from './WormWhatsAppConfig';
 export const WormHeader = () => {
   const navigate = useNavigate();
@@ -38,9 +39,30 @@ export const WormHeader = () => {
 
         {/* Config Sheet */}
         <Sheet open={isConfigOpen} onOpenChange={setIsConfigOpen}>
-          <SheetContent side="right" className="w-full sm:max-w-3xl overflow-y-auto pt-16">
+          <SheetContent
+            side="right"
+            className="w-full sm:max-w-3xl overflow-y-auto"
+            style={{
+              paddingTop: 'max(env(safe-area-inset-top, 0px), 16px)',
+              paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)'
+            }}
+          >
             <SheetTitle className="sr-only">Templates WhatsApp</SheetTitle>
+            {isIOS() && (
+              <div className="sticky top-0 z-10 flex justify-end pb-2 bg-background/80 backdrop-blur-sm">
+                <Button variant="outline" size="sm" onClick={() => setIsConfigOpen(false)}>
+                  Fechar
+                </Button>
+              </div>
+            )}
             <WormWhatsAppConfig />
+            {isIOS() && (
+              <div className="mt-4">
+                <Button variant="outline" className="w-full" onClick={() => setIsConfigOpen(false)}>
+                  Fechar
+                </Button>
+              </div>
+            )}
           </SheetContent>
         </Sheet>
       </div>
