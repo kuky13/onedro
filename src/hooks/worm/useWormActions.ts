@@ -66,10 +66,23 @@ export const useWormActions = () => {
         defaultTemplate = template;
       }
 
-      // Buscar dados completos do orçamento
+      // Buscar dados completos do orçamento com budget_parts
       const { data: fullBudget, error } = await supabase
         .from('budgets')
-        .select('*')
+        .select(`
+          *,
+          budget_parts (
+            id,
+            name,
+            price,
+            cash_price,
+            installment_price,
+            installment_count,
+            quantity,
+            warranty_months,
+            part_type
+          )
+        `)
         .eq('id', budget.id)
         .single();
 
