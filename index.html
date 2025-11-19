@@ -174,7 +174,20 @@
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
       (function(){
-        if (window.location.pathname.startsWith('/dashboard')) {
+        const isInstalled = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
+        const onDashboard = window.location.pathname.startsWith('/dashboard');
+        if ('serviceWorker' in navigator) {
+          const sendInstalledFlag = () => {
+            try {
+              if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({ type: 'SET_PWA_INSTALLED', value: isInstalled });
+              }
+            } catch {}
+          };
+          sendInstalledFlag();
+          window.addEventListener('load', sendInstalledFlag);
+        }
+        if (onDashboard && isInstalled) {
           if (!window.__ONESIGNAL_INIT__) {
             window.__ONESIGNAL_INIT__ = true;
             window.OneSignalDeferred = window.OneSignalDeferred || [];

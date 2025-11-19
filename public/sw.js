@@ -1,4 +1,5 @@
 importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
+self.__PWA_INSTALLED__ = false;
 const CACHE_NAME = 'one-drip-pwa-v2.9.0';
 const STATIC_CACHE_NAME = 'one-drip-static-v2.9.0';
 const DYNAMIC_CACHE_NAME = 'one-drip-dynamic-v2.9.0';
@@ -343,6 +344,10 @@ function isNavigationRequest(request) {
 
 // Limpeza periódica do cache e gerenciamento de notificações
 self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SET_PWA_INSTALLED') {
+    self.__PWA_INSTALLED__ = Boolean(event.data.value);
+    return;
+  }
   if (event.data && event.data.type === 'CLEAN_CACHE') {
     cleanOldCaches();
   }
@@ -462,6 +467,17 @@ async function handleBackgroundSync() {
 
 // Push notifications melhoradas
 self.addEventListener('push', event => {
+  try {
+    if (!self.__PWA_INSTALLED__) {
+      console.log('🔔 [SW] Push recebido, mas PWA não está instalado — ignorando exibição');
+      return;
+    }
+    // Evitar duplicidade quando OneSignal já está gerenciando
+    if (typeof self.OneSignal !== 'undefined') {
+      console.log('🔔 [SW] OneSignal ativo — deixando o SDK gerenciar a notificação');
+      return;
+    }
+  } catch (e) {}
   console.log('🔔 [SW] Push message received');
   
   let notificationData = {
