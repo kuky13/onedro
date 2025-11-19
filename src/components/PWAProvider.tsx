@@ -1,7 +1,6 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { usePWA } from '@/hooks/usePWA';
 import PWAInstallPrompt from './PWAInstallPrompt';
-import PWAUpdateNotification from './PWAUpdateNotification';
 import PWAOfflineIndicator from './PWAOfflineIndicator';
 
 interface PWAContextType {
@@ -37,7 +36,6 @@ export const PWAProvider: React.FC<PWAProviderProps> = ({ children }) => {
     <PWAContext.Provider value={pwaData}>
       {children}
       <PWAInstallPrompt />
-      <PWAUpdateNotification />
       <PWAOfflineIndicator />
     </PWAContext.Provider>
   );
