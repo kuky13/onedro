@@ -1,3 +1,4 @@
+importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
 const CACHE_NAME = 'one-drip-pwa-v2.9.0';
 const STATIC_CACHE_NAME = 'one-drip-static-v2.9.0';
 const DYNAMIC_CACHE_NAME = 'one-drip-dynamic-v2.9.0';
