@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PlusCircle, List, Settings, Shield, Database, Users, Wrench, Download } from 'lucide-react';
+import { PlusCircle, List, Settings, Shield, Database, Users, Wrench, Download, Smartphone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { GlassCard, RippleButton } from '@/components/ui/animations/micro-interactions';
@@ -63,6 +63,14 @@ const quickAccessActions: QuickAccessAction[] = [{
   gradient: 'from-primary to-amber-500',
   iconColor: 'text-primary'
 }, {
+  id: 'peliculas',
+  label: 'Peliculas',
+  icon: Smartphone,
+  tab: 'peliculas',
+  permission: null,
+  gradient: 'from-pink-500 to-fuchsia-500',
+  iconColor: 'text-pink-600'
+}, {
   id: 'settings',
   label: 'Configurações',
   icon: Settings,
@@ -100,6 +108,8 @@ export const DashboardLiteQuickAccessEnhanced = ({
       navigate('/worm');
     } else if (action.id === 'service-orders') {
       navigate('/service-orders');
+    } else if (action.id === 'peliculas') {
+      navigate('/p');
     } else if (action.id === 'settings') {
       navigate('/settings');
     } else {

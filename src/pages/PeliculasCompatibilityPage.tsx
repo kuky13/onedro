@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { UniversalSearchInput } from "@/components/ui/ios-optimized/UniversalSearchInput";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Smartphone, Search as SearchIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -16,6 +18,7 @@ interface PeliculaCompativel {
 }
 
 const PeliculasCompatibilityPage = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: peliculas, isLoading } = useQuery({
@@ -78,6 +81,15 @@ const PeliculasCompatibilityPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-4">
+          <button
+            className="inline-flex items-center px-4 py-2 rounded-md border border-border/50 bg-background hover:bg-accent hover:text-accent-foreground transition"
+            onClick={() => navigate('/dashboard')}
+          >
+            <Smartphone className="h-4 w-4 mr-2" />
+            Voltar
+          </button>
+        </div>
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
@@ -164,6 +176,12 @@ const PeliculasCompatibilityPage = () => {
               <p className="text-muted-foreground">
                 Tente buscar por outro modelo ou verifique a ortografia
               </p>
+              <div className="mt-6 space-y-2">
+                <p className="text-sm text-muted-foreground">Não encontrou seu modelo? Envie sua sugestão para adicionarmos.</p>
+                <Button onClick={() => navigate('/p/edit')} className="inline-flex items-center">
+                  Sugerir modelo
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (

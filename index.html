@@ -174,7 +174,7 @@
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
       (function(){
-        const isInstalled = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
+        const isInstalled = window.matchMedia('(display-mode: standalone)').matches || (('standalone' in window.navigator) && (window.navigator.standalone === true));
         const onDashboard = window.location.pathname.startsWith('/dashboard');
         if ('serviceWorker' in navigator) {
           const sendInstalledFlag = () => {

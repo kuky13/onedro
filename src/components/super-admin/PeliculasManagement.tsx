@@ -180,6 +180,35 @@ export function PeliculasManagement() {
     p.compatibilidades.some(c => c.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const { data: suggestions, isLoading: loadingSuggestions } = useQuery({
+    queryKey: ['peliculas_suggestions'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('peliculas_suggestions')
+        .select('id, user_id, model, brand, notes, created_at')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as Array<{ id: string; user_id: string; model: string; brand: string | null; notes: string | null; created_at: string }>;
+    }
+  });
+
+  const deleteSuggestionMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('peliculas_suggestions')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['peliculas_suggestions'] });
+      toast.success('Sugestão removida');
+    },
+    onError: (error: Error) => {
+      toast.error('Erro ao remover sugestão: ' + error.message);
+    }
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -307,6 +336,56 @@ export function PeliculasManagement() {
                 <p>Nenhuma película cadastrada no sistema</p>
               )}
             </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Sugestões de Modelos dos Usuários</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loadingSuggestions ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : suggestions && suggestions.length > 0 ? (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Modelo</TableHead>
+                    <TableHead>Marca</TableHead>
+                    <TableHead>Notas</TableHead>
+                    <TableHead>Usuário</TableHead>
+                    <TableHead>Enviado em</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {suggestions.map((s) => (
+                    <TableRow key={s.id}>
+                      <TableCell className="font-medium">{s.model}</TableCell>
+                      <TableCell>{s.brand || '-'}</TableCell>
+                      <TableCell className="max-w-md truncate">{s.notes || '-'}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{s.user_id}</TableCell>
+                      <TableCell>{new Date(s.created_at).toLocaleString()}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteSuggestionMutation.mutate(s.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">Nenhuma sugestão enviada</div>
           )}
         </CardContent>
       </Card>
