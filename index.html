@@ -190,17 +190,17 @@
             .then(registration => {
               console.log('SW registrado com sucesso:', registration.scope);
               
-              // Check for updates
+              // Check for updates (sem prompt repetitivo)
               registration.addEventListener('updatefound', () => {
                 const newWorker = registration.installing;
                 if (newWorker) {
                   newWorker.addEventListener('statechange', () => {
                     if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                      console.log('Nova versão disponível!');
-                      // Notify user about update
-                      if (window.confirm('Nova versão disponível! Deseja atualizar?')) {
-                        newWorker.postMessage({ type: 'SKIP_WAITING' });
-                        window.location.reload();
+                      if (!window.__SW_UPDATE_PROMPTED__) {
+                        window.__SW_UPDATE_PROMPTED__ = true;
+                        console.log('Atualização disponível para o app');
+                        const event = new CustomEvent('sw-update-available');
+                        window.dispatchEvent(event);
                       }
                     }
                   });
@@ -212,10 +212,7 @@
             });
         });
 
-        // Handle controllerchange event
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          window.location.reload();
-        });
+        // controllerchange será tratado pelo hook de PWA quando o usuário aceitar atualizar
       }
 
       // iOS Standalone Detection
