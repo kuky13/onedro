@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Smartphone, Search as SearchIcon } from "lucide-react";
 import { toast } from "sonner";
-
 interface PeliculaCompativel {
   id: string;
   modelo: string;
@@ -16,77 +15,70 @@ interface PeliculaCompativel {
   created_at: string;
   updated_at: string;
 }
-
 const PeliculasCompatibilityPage = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-
-  const { data: peliculas, isLoading } = useQuery({
+  const {
+    data: peliculas,
+    isLoading
+  } = useQuery({
     queryKey: ["peliculas-compativeis"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("peliculas_compatíveis")
-        .select("*")
-        .order("modelo", { ascending: true });
-
+      const {
+        data,
+        error
+      } = await supabase.from("peliculas_compatíveis").select("*").order("modelo", {
+        ascending: true
+      });
       if (error) {
         toast.error("Erro ao carregar películas compatíveis");
         throw error;
       }
-
       return data as PeliculaCompativel[];
-    },
+    }
   });
 
   // Busca inteligente: busca no modelo principal e nas compatibilidades
-  const filteredPeliculas = peliculas?.filter((pelicula) => {
+  const filteredPeliculas = peliculas?.filter(pelicula => {
     if (!searchQuery.trim()) return true;
-
     const query = searchQuery.toLowerCase();
     const modeloMatch = pelicula.modelo.toLowerCase().includes(query);
-    const compatibilidadesMatch = pelicula.compatibilidades.some((comp) =>
-      comp.toLowerCase().includes(query)
-    );
-
+    const compatibilidadesMatch = pelicula.compatibilidades.some(comp => comp.toLowerCase().includes(query));
     return modeloMatch || compatibilidadesMatch;
   });
 
   // Agrupa resultados: se buscar por um modelo compatível, mostra qual película usar
   const getSearchResults = () => {
     if (!searchQuery.trim()) return filteredPeliculas;
-
     const query = searchQuery.toLowerCase();
-    const results: Array<PeliculaCompativel & { matchType: "exact" | "compatible" }> = [];
-
-    filteredPeliculas?.forEach((pelicula) => {
+    const results: Array<PeliculaCompativel & {
+      matchType: "exact" | "compatible";
+    }> = [];
+    filteredPeliculas?.forEach(pelicula => {
       const modeloMatch = pelicula.modelo.toLowerCase().includes(query);
-      
       if (modeloMatch) {
-        results.push({ ...pelicula, matchType: "exact" });
+        results.push({
+          ...pelicula,
+          matchType: "exact"
+        });
       } else {
-        const compatMatch = pelicula.compatibilidades.some((comp) =>
-          comp.toLowerCase().includes(query)
-        );
+        const compatMatch = pelicula.compatibilidades.some(comp => comp.toLowerCase().includes(query));
         if (compatMatch) {
-          results.push({ ...pelicula, matchType: "compatible" });
+          results.push({
+            ...pelicula,
+            matchType: "compatible"
+          });
         }
       }
     });
-
     return results;
   };
-
   const searchResults = getSearchResults();
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-4">
-          <button
-            className="inline-flex items-center px-4 py-2 rounded-md border border-border/50 bg-background hover:bg-accent hover:text-accent-foreground transition"
-            onClick={() => navigate('/dashboard')}
-          >
-            <Smartphone className="h-4 w-4 mr-2" />
+          <button className="inline-flex items-center px-4 py-2 rounded-md border border-border/50 bg-background hover:bg-accent hover:text-accent-foreground transition" onClick={() => navigate('/dashboard')}>
+            
             Voltar
           </button>
         </div>
@@ -97,28 +89,19 @@ const PeliculasCompatibilityPage = () => {
             <h1 className="text-3xl font-bold">Películas Compatíveis</h1>
           </div>
           <p className="text-muted-foreground">
-            Busque por modelo e descubra quais películas são compatíveis
+            Busque pelo modelo e descubra quais películas são compatíveis com ele             
           </p>
         </div>
 
         {/* Barra de Pesquisa */}
         <div className="mb-8">
-          <UniversalSearchInput
-            value={searchQuery}
-            onChange={setSearchQuery}
-            onClear={() => setSearchQuery("")}
-            placeholder="Digite o modelo do aparelho (ex: A12, iPhone 13, Redmi Note 10)"
-            id="pelicula-search"
-          />
+          <UniversalSearchInput value={searchQuery} onChange={setSearchQuery} onClear={() => setSearchQuery("")} placeholder="Digite o modelo do aparelho (ex: A12, iPhone 13, Redmi Note 10)" id="pelicula-search" />
         </div>
 
         {/* Resultados */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
+        {isLoading ? <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        ) : searchResults && searchResults.length > 0 ? (
-          <div className="space-y-4">
+          </div> : searchResults && searchResults.length > 0 ? <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
               <SearchIcon className="h-4 w-4" />
               <span>
@@ -127,19 +110,16 @@ const PeliculasCompatibilityPage = () => {
               </span>
             </div>
 
-            {searchResults.map((pelicula) => (
-              <Card key={pelicula.id} className="overflow-hidden transition-all hover:shadow-md">
+            {searchResults.map(pelicula => <Card key={pelicula.id} className="overflow-hidden transition-all hover:shadow-md">
                 <CardHeader className="bg-muted/30">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <Smartphone className="h-5 w-5 text-primary" />
                       {pelicula.modelo}
                     </CardTitle>
-                    {"matchType" in pelicula && pelicula.matchType === "compatible" && (
-                      <Badge variant="secondary" className="ml-2">
+                    {"matchType" in pelicula && pelicula.matchType === "compatible" && <Badge variant="secondary" className="ml-2">
                         Compatível
-                      </Badge>
-                    )}
+                      </Badge>}
                   </div>
                 </CardHeader>
                 <CardContent className="pt-6">
@@ -148,28 +128,14 @@ const PeliculasCompatibilityPage = () => {
                       Esta película também serve para:
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {pelicula.compatibilidades.map((comp, idx) => (
-                        <Badge
-                          key={idx}
-                          variant={
-                            searchQuery.trim() &&
-                            comp.toLowerCase().includes(searchQuery.toLowerCase())
-                              ? "default"
-                              : "outline"
-                          }
-                          className="text-xs"
-                        >
+                      {pelicula.compatibilidades.map((comp, idx) => <Badge key={idx} variant={searchQuery.trim() && comp.toLowerCase().includes(searchQuery.toLowerCase()) ? "default" : "outline"} className="text-xs">
                           {comp}
-                        </Badge>
-                      ))}
+                        </Badge>)}
                     </div>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : searchQuery.trim() ? (
-          <Card className="text-center py-12">
+              </Card>)}
+          </div> : searchQuery.trim() ? <Card className="text-center py-12">
             <CardContent>
               <SearchIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">Nenhum resultado encontrado</h3>
@@ -183,9 +149,7 @@ const PeliculasCompatibilityPage = () => {
                 </Button>
               </div>
             </CardContent>
-          </Card>
-        ) : (
-          <Card className="text-center py-12">
+          </Card> : <Card className="text-center py-12">
             <CardContent>
               <Smartphone className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">Digite um modelo para buscar</h3>
@@ -193,11 +157,8 @@ const PeliculasCompatibilityPage = () => {
                 Encontre rapidamente películas compatíveis com seu aparelho
               </p>
             </CardContent>
-          </Card>
-        )}
+          </Card>}
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default PeliculasCompatibilityPage;
