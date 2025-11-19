@@ -18,6 +18,13 @@ import { PageTransition } from '@/components/ui/animations/page-transitions';
 import { IOSSpinner } from '@/components/ui/animations/loading-states';
 import { UpdatePopup } from '@/components/UpdatePopup';
 
+declare global {
+  interface Window {
+    OneSignalDeferred?: any[];
+    __ONESIGNAL_INIT__?: boolean;
+  }
+}
+
 export const DashboardLite = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isRestoringState, setIsRestoringState] = useState(true);
@@ -33,6 +40,17 @@ export const DashboardLite = () => {
   // Memoização da verificação de iOS para evitar recálculos
   const isiOSDevice = useMemo(() => {
     return /iPad|iPhone|iPod/.test(navigator.userAgent) || navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  }, []);
+
+  useEffect(() => {
+    const shouldInit = typeof Notification === 'undefined' || Notification.permission !== 'granted';
+    if (!shouldInit) return;
+    if (window.__ONESIGNAL_INIT__) return;
+    window.__ONESIGNAL_INIT__ = true;
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async function(OneSignal: any) {
+      await OneSignal.init({ appId: '0dc51c5c-74a5-4076-9b12-331c65cae23b' });
+    });
   }, []);
 
   // Restaurar estado de navegação ao carregar

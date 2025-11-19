@@ -173,12 +173,19 @@
     <script type="module" src="/src/main.tsx"></script>
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.init({
-          appId: "0dc51c5c-74a5-4076-9b12-331c65cae23b",
-        });
-      });
+      (function(){
+        if (window.location.pathname.startsWith('/dashboard')) {
+          if (!window.__ONESIGNAL_INIT__) {
+            window.__ONESIGNAL_INIT__ = true;
+            window.OneSignalDeferred = window.OneSignalDeferred || [];
+            window.OneSignalDeferred.push(async function(OneSignal) {
+              await OneSignal.init({
+                appId: "0dc51c5c-74a5-4076-9b12-331c65cae23b",
+              });
+            });
+          }
+        }
+      })();
     </script>
     
     <!-- PWA Registration Script -->
