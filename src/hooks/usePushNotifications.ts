@@ -43,13 +43,9 @@ export function usePushNotifications() {
   const [subscription, setSubscription] = useState<PushSubscription | null>(null);
   const [userSubscriptions, setUserSubscriptions] = useState<UserPushSubscription[]>([]);
 
-  // Chave pública VAPID - obtida do service worker
-  const [vapidPublicKey, setVapidPublicKey] = useState<string | null>(null);
-
   // Verificar suporte e estado inicial
   useEffect(() => {
     checkNotificationSupport();
-    getVapidPublicKey();
   }, []);
 
   // Registrar service worker quando o usuário fizer login
@@ -59,43 +55,6 @@ export function usePushNotifications() {
       loadUserSubscriptions();
     }
   }, [user, permissionState.isSupported, loadUserSubscriptions]);
-
-  // Obter chave VAPID do service worker
-  const getVapidPublicKey = useCallback(async () => {
-    try {
-      if ('serviceWorker' in navigator) {
-        const registration = await navigator.serviceWorker.ready;
-        if (registration.active) {
-          // Enviar mensagem para o service worker para obter a chave VAPID
-          const messageChannel = new MessageChannel();
-          
-          return new Promise<void>((resolve) => {
-            messageChannel.port1.onmessage = (event) => {
-              if (event.data.type === 'VAPID_PUBLIC_KEY') {
-                setVapidPublicKey(event.data.key);
-              }
-              resolve();
-            };
-            
-            registration.active?.postMessage(
-              { type: 'GET_VAPID_PUBLIC_KEY' },
-              [messageChannel.port2]
-            );
-            
-            // Timeout fallback
-            setTimeout(() => {
-              setVapidPublicKey('BBikWhiEPVxccA6_hoorX6muVS7FdjnwEgj52mrZnQF6OAqoAMUjTpfwSJZmLBdnkarZgk-KEJBWp92lv9Zhr3E');
-              resolve();
-            }, 1000);
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao obter chave VAPID:', error);
-      // Fallback para chave padrão
-      setVapidPublicKey('BBikWhiEPVxccA6_hoorX6muVS7FdjnwEgj52mrZnQF6OAqoAMUjTpfwSJZmLBdnkarZgk-KEJBWp92lv9Zhr3E');
-    }
-  }, []);
 
   // Carregar subscriptions do usuário
   const loadUserSubscriptions = useCallback(async () => {
@@ -276,17 +235,18 @@ export function usePushNotifications() {
       console.log('🔔 [PushNotifications] Obtendo Service Worker registration...');
       const registration = await navigator.serviceWorker.ready;
       
-      if (!vapidPublicKey) {
+      const vapidKey = getVapidPublicKey();
+      if (!vapidKey || !isVapidConfigured()) {
         console.error('❌ [PushNotifications] Chave VAPID não disponível');
         throw new Error('Chave VAPID não disponível');
       }
       
-      console.log('🔔 [PushNotifications] Chave VAPID:', vapidPublicKey.substring(0, 20) + '...');
+      console.log('🔔 [PushNotifications] Chave VAPID:', vapidKey.substring(0, 20) + '...');
 
       console.log('🔔 [PushNotifications] Criando subscription...');
       const pushSubscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+        applicationServerKey: urlBase64ToUint8Array(vapidKey),
       });
       
       console.log('✅ [PushNotifications] Subscription criada:', pushSubscription.endpoint);
@@ -321,7 +281,7 @@ export function usePushNotifications() {
     } finally {
       setIsLoading(false);
     }
-  }, [user, permissionState, vapidPublicKey, requestPermission, saveSubscriptionToDatabase]);
+  }, [user, permissionState, requestPermission, saveSubscriptionToDatabase]);
 
   const unsubscribe = useCallback(async () => {
     if (!subscription || !user) {
