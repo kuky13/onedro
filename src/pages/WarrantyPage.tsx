@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search } from 'lucide-react';
 import WarrantyCreateDialog from '@/components/warranty/WarrantyCreateDialog';
-import { PlusCircle, CheckCircle, Truck, RotateCcw, ArrowLeft, Trash2 } from 'lucide-react';
+import { PlusCircle, CheckCircle, Truck, RotateCcw, ArrowLeft, Trash2, Smartphone, ChevronDown, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MobileHamburgerButton } from '@/components/mobile/MobileHamburgerButton';
@@ -15,6 +15,8 @@ import { useMobileMenuContext } from '@/components/mobile/MobileMenuProvider';
 import { MobileMenuProvider } from '@/components/mobile/MobileMenuProvider';
 import { MobileHamburgerMenu } from '@/components/mobile/MobileHamburgerMenu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { DeviceChecklist, DeviceChecklistData } from '@/components/service-orders/DeviceChecklist';
 const WarrantyPageContent = () => {
   const {
     user
