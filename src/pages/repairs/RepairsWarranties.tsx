@@ -11,11 +11,13 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   Search, PlusCircle, CheckCircle, Truck, RotateCcw, Trash2, 
-  Smartphone, Wrench, User, DollarSign, Shield, Hash 
+  Smartphone, Wrench, User, DollarSign, Shield, Hash, ChevronDown, ChevronRight 
 } from 'lucide-react';
 import { formatCurrencyFromReais } from '@/utils/currency';
+import { DeviceChecklist, DeviceChecklistData } from '@/components/service-orders/DeviceChecklist';
 
 type RepairServiceForWarranty = {
   id: string;
@@ -56,7 +58,10 @@ const RepairsWarranties = () => {
     createWarranty, isCreating,
     updateStatus, isUpdating,
     deleteWarranty, isDeleting,
+    updateDeviceChecklist, isUpdatingChecklist,
   } = useWarranties(user?.id, filters);
+
+  const [expandedChecklist, setExpandedChecklist] = useState<string | null>(null);
 
   // Search repair services (all months, including archived)
   useEffect(() => {
@@ -288,6 +293,22 @@ const RepairsWarranties = () => {
                 </Button>
               </div>
             </div>
+
+            {/* Checklist de Funcionamento */}
+            <Collapsible open={expandedChecklist === w.id} onOpenChange={(open) => setExpandedChecklist(open ? w.id : null)}>
+              <CollapsibleTrigger className="flex items-center gap-2 w-full text-xs text-muted-foreground hover:text-foreground transition-colors pt-1">
+                {expandedChecklist === w.id ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                <Smartphone className="h-3.5 w-3.5" />
+                Checklist de Funcionamento
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-3">
+                <DeviceChecklist
+                  value={w.device_checklist as DeviceChecklistData | null}
+                  onChange={(data) => updateDeviceChecklist({ id: w.id, device_checklist: data })}
+                  disabled={isUpdatingChecklist}
+                />
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         ))}
         {warranties.length === 0 && !isLoading && (

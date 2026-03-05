@@ -4551,6 +4551,7 @@ export type Database = {
           cost_amount: number | null
           created_at: string | null
           deleted_at: string | null
+          device_checklist: Json | null
           device_name: string | null
           id: string
           imei_serial: string | null
@@ -4571,6 +4572,7 @@ export type Database = {
           cost_amount?: number | null
           created_at?: string | null
           deleted_at?: string | null
+          device_checklist?: Json | null
           device_name?: string | null
           id?: string
           imei_serial?: string | null
@@ -4591,6 +4593,7 @@ export type Database = {
           cost_amount?: number | null
           created_at?: string | null
           deleted_at?: string | null
+          device_checklist?: Json | null
           device_name?: string | null
           id?: string
           imei_serial?: string | null

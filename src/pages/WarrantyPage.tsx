@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search } from 'lucide-react';
 import WarrantyCreateDialog from '@/components/warranty/WarrantyCreateDialog';
-import { PlusCircle, CheckCircle, Truck, RotateCcw, ArrowLeft, Trash2 } from 'lucide-react';
+import { PlusCircle, CheckCircle, Truck, RotateCcw, ArrowLeft, Trash2, Smartphone, ChevronDown, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MobileHamburgerButton } from '@/components/mobile/MobileHamburgerButton';
@@ -15,6 +15,8 @@ import { useMobileMenuContext } from '@/components/mobile/MobileMenuProvider';
 import { MobileMenuProvider } from '@/components/mobile/MobileMenuProvider';
 import { MobileHamburgerMenu } from '@/components/mobile/MobileHamburgerMenu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { DeviceChecklist, DeviceChecklistData } from '@/components/service-orders/DeviceChecklist';
 const WarrantyPageContent = () => {
   const {
     user
@@ -60,8 +62,12 @@ const WarrantyPageContent = () => {
     reopenWarranty,
     isReopening,
     deleteWarranty,
-    isDeleting
+    isDeleting,
+    updateDeviceChecklist,
+    isUpdatingChecklist
   } = useWarranties(user?.id, filters);
+
+  const [expandedChecklist, setExpandedChecklist] = useState<string | null>(null);
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'in_progress':
@@ -183,6 +189,22 @@ const WarrantyPageContent = () => {
                   Excluir
                 </Button>
               </div>
+
+              {/* Checklist de Funcionamento */}
+              <Collapsible open={expandedChecklist === w.id} onOpenChange={(open) => setExpandedChecklist(open ? w.id : null)}>
+                <CollapsibleTrigger className="flex items-center gap-2 w-full text-xs text-muted-foreground hover:text-foreground transition-colors pt-1">
+                  {expandedChecklist === w.id ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                  <Smartphone className="h-3.5 w-3.5" />
+                  Checklist de Funcionamento
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-3">
+                  <DeviceChecklist
+                    value={w.device_checklist as DeviceChecklistData | null}
+                    onChange={(data) => updateDeviceChecklist({ id: w.id, device_checklist: data })}
+                    disabled={isUpdatingChecklist}
+                  />
+                </CollapsibleContent>
+              </Collapsible>
             </div>)}
           {warranties.length === 0 && !isLoading && <div className="text-center py-12 text-muted-foreground rounded-2xl border border-border/30 bg-muted/5">
               <p className="font-medium">Nenhuma garantia encontrada</p>

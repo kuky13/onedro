@@ -24,6 +24,7 @@ export type Warranty = {
   charged_amount: number | null;
   cost_amount: number | null;
   reopen_count: number;
+  device_checklist: any | null;
   service_order: {
     sequential_number: number | null;
   } | null;
@@ -224,6 +225,28 @@ export const useWarranties = (userId: string | undefined, filters: WarrantyFilte
     onError: (e: any) => toast.error(e.message || 'Erro ao remover garantia')
   });
 
+  const updateDeviceChecklistMutation = useMutation({
+    mutationFn: async ({ id, device_checklist }: { id: string; device_checklist: any }) => {
+      if (!userId) throw new Error('Usuário não autenticado');
+      
+      const { data, error } = await supabase
+        .from('warranties')
+        .update({ device_checklist, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('owner_id', userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as unknown as Warranty;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['warranties'] });
+      toast.success('Checklist salvo com sucesso');
+    },
+    onError: (e: any) => toast.error(e.message || 'Erro ao salvar checklist')
+  });
+
   return {
     warranties: warrantiesQuery.data || [],
     isLoading: warrantiesQuery.isLoading,
@@ -236,6 +259,8 @@ export const useWarranties = (userId: string | undefined, filters: WarrantyFilte
     reopenWarranty: reopenWarrantyMutation.mutate,
     isReopening: reopenWarrantyMutation.isPending,
     deleteWarranty: deleteWarrantyMutation.mutate,
-    isDeleting: deleteWarrantyMutation.isPending
+    isDeleting: deleteWarrantyMutation.isPending,
+    updateDeviceChecklist: updateDeviceChecklistMutation.mutate,
+    isUpdatingChecklist: updateDeviceChecklistMutation.isPending
   };
 };
