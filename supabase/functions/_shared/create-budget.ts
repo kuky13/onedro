@@ -33,6 +33,7 @@ export async function createBudget(
     .from("budgets")
     .select("sequential_number")
     .eq("owner_id", userId)
+    .eq("device_model", params.device_model)
     .order("sequential_number", { ascending: false })
     .limit(1)
     .maybeSingle();
