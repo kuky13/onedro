@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { AutoSaveIndicatorCompact } from '@/components/ui/auto-save-indicator';
 import { DevicePasswordSection } from '@/components/service-orders/DevicePasswordSection';
-import { DeviceTestIntegration } from '@/components/service-orders/DeviceTestIntegration';
+import { DeviceChecklist } from '@/components/service-orders/DeviceChecklist';
 import { UnifiedSpinner } from '@/components/ui/UnifiedSpinner';
 
 import { ArrowLeft, Save, Wrench, User, Smartphone, Calendar, Search, X, DollarSign, CheckCircle, Clock } from 'lucide-react';
@@ -445,13 +445,13 @@ export const ServiceOrderFormPage = () => {
             </CardContent>
           </Card>
 
-          {/* Device Test Integration - Sistema Interativo */}
-          {formData.id && (
-            <DeviceTestIntegration
-              serviceOrderId={formData.id}
-              disabled={isSubmitting}
-            />
-          )}
+          {/* Checklist de Funcionamento do Aparelho */}
+          <DeviceChecklist
+            value={formData.deviceChecklist}
+            onChange={(data) => updateFormData('deviceChecklist', data)}
+            disabled={isSubmitting}
+            serviceOrderId={formData.id}
+          />
 
           {/* Status de Pagamento */}
           <Card className="border-border/50">

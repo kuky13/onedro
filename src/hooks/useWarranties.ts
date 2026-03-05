@@ -24,6 +24,7 @@ export type Warranty = {
   charged_amount: number | null;
   cost_amount: number | null;
   reopen_count: number;
+  device_checklist: any | null;
   service_order: {
     sequential_number: number | null;
   } | null;

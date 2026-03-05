@@ -38,7 +38,7 @@ import {
 import { useServiceOrderEdit } from '@/hooks/useServiceOrderEdit';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { DevicePasswordSection } from './DevicePasswordSection';
-import { DeviceTestIntegration } from './DeviceTestIntegration';
+import { DeviceChecklist } from './DeviceChecklist';
 import { ImageUploadSection } from './ImageUploadSection';
 import { MiniToastWithArrow } from '../lite/MiniToastWithArrow';
 
@@ -495,13 +495,13 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
             </CardContent>
           </Card>
 
-          {/* Device Test Integration - Sistema Interativo */}
-          {formData.id && (
-            <DeviceTestIntegration
-              serviceOrderId={formData.id}
-              disabled={isSubmitting}
-            />
-          )}
+          {/* Checklist de Funcionamento do Aparelho */}
+          <DeviceChecklist
+            value={formData.deviceChecklist}
+            onChange={(data) => updateFormData('deviceChecklist', data)}
+            disabled={isSubmitting}
+            serviceOrderId={formData.id}
+          />
 
 
 
