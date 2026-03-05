@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Plus, RefreshCw, Smartphone, FileText, MessageCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { isIOS } from '@/utils/whatsappUtils';
 import { useSupabaseRealtime } from '@/hooks/useSupabaseRealtime';
 import { useQueryClient } from '@tanstack/react-query';
