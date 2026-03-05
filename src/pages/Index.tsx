@@ -218,8 +218,9 @@ const InfiniteBrandCarousel = () => {
                 alt={brand.name}
                 className="h-full w-auto object-contain max-h-5 lg:max-h-8 opacity-60"
                 loading="lazy"
-                width="100"
-                height="48"
+                decoding="async"
+                width="35"
+                height="35"
                 />
 
                 </div>

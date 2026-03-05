@@ -23,15 +23,24 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: (id) => {
           if (id.includes("node_modules")) {
-            // Separar apenas bibliotecas muito grandes e independentes para evitar chunks gigantes
             if (id.includes("jspdf") || id.includes("html2canvas") || id.includes("pdf-lib") || id.includes("xlsx")) {
               return "vendor-pdf-excel";
             }
             if (id.includes("recharts")) {
               return "vendor-charts";
             }
-            // Manter React e libs de UI juntos para evitar erros de inicialização (forwardRef undefined)
-            // Otimização: Manter libs core juntas
+            if (id.includes("@supabase")) {
+              return "vendor-supabase";
+            }
+            if (id.includes("@radix-ui") || id.includes("cmdk") || id.includes("sonner") || id.includes("vaul") || id.includes("class-variance-authority") || id.includes("tailwind-merge") || id.includes("clsx")) {
+              return "vendor-ui";
+            }
+            if (id.includes("framer-motion")) {
+              return "vendor-motion";
+            }
+            if (id.includes("react-dom") || id.includes("react-router") || id.includes("/react/")) {
+              return "vendor-react";
+            }
             return "vendor";
           }
         },
