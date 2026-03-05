@@ -230,26 +230,28 @@
 </head>
 
   <body>
-    <div id="root"></div>
     <!-- Bot detection redirect para device test preview edge function -->
     <script>
       (function() {
-        var BOT_USER_AGENTS = [
+        const BOT_USER_AGENTS = [
           "facebookexternalhit", "whatsapp", "telegrambot", "slurp", "googlebot",
           "bingbot", "yandexbot", "duckduckbot", "baiduspider", "sogou", "exabot",
           "discordbot", "twitterbot", "linkedinbot", "skypeuripreview", "vkshare",
           "pinterest", "embedly", "quora", "rogerbot", "facebot", "oembed", "vimeo",
           "ico", "applebot", "metainspector"
         ];
-        var ua = navigator.userAgent.toLowerCase();
-        var isBot = BOT_USER_AGENTS.some(function(bot) { return ua.indexOf(bot) !== -1; });
-        var isTestRoute = window.location.pathname.indexOf('/testar/') === 0;
+        
+        const isBot = BOT_USER_AGENTS.some(bot => navigator.userAgent.toLowerCase().includes(bot));
+        const isTestRoute = window.location.pathname.startsWith('/testar/');
+        
         if (isBot && isTestRoute) {
-          var token = window.location.pathname.split('/testar/')[1];
-          window.location.replace('https://oghjlypdnmqecaavekyr.supabase.co/functions/v1/device-test-preview?token=' + encodeURIComponent(token));
+          const token = window.location.pathname.split('/testar/')[1];
+          // Redirecionar para edge function para gerar preview com og:tags
+          window.location.replace(`https://oghjlypdnmqecaavekyr.supabase.co/functions/v1/device-test-preview?token=${encodeURIComponent(token)}`);
         }
       })();
     </script>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
 
     <script>

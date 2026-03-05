@@ -23,75 +23,47 @@ import {
 "lucide-react";
 import { DashboardSkeleton } from "@/components/ui/loading-states";
 import { useAppInfo } from "@/hooks/useAppConfig";
-
+import { useCompanyDataLoader } from "@/hooks/useCompanyDataLoader";
 import { PWATestAccessButton } from "@/components/pwa/PWATestAccessButton";
 
-// Brand SVG components (inline to avoid 705KB of PNG downloads)
-const BrandLG = () => (
-  <svg viewBox="0 0 80 30" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
-    <text x="0" y="24" fontSize="28" fontWeight="bold" fontFamily="Arial" letterSpacing="1">LG</text>
-  </svg>
-);
-
-const BrandHuawei = () => (
-  <svg viewBox="0 0 120 40" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
-    <text x="0" y="30" fontSize="28" fontWeight="bold" fontFamily="Arial" letterSpacing="-1">HUAWEI</text>
-  </svg>
-);
-
-const BrandRealme = () => (
-  <svg viewBox="0 0 100 30" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
-    <text x="0" y="24" fontSize="24" fontWeight="bold" fontFamily="Arial" letterSpacing="-0.5">realme</text>
-  </svg>
-);
-
-const BrandSamsung = () => (
-  <svg viewBox="0 0 140 30" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
-    <text x="0" y="24" fontSize="24" fontWeight="bold" fontFamily="Arial" letterSpacing="2">SAMSUNG</text>
-  </svg>
-);
-
-const BrandXiaomi = () => (
-  <svg viewBox="0 0 100 30" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
-    <text x="0" y="24" fontSize="24" fontWeight="bold" fontFamily="Arial">Xiaomi</text>
-  </svg>
-);
-
-const BrandOppo = () => (
-  <svg viewBox="0 0 80 30" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
-    <text x="0" y="24" fontSize="26" fontWeight="bold" fontFamily="Arial" letterSpacing="2">OPPO</text>
-  </svg>
-);
-
-const BrandApple = () => (
-  <svg viewBox="0 0 814 1000" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
-    <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76.5 0-103.7 40.8-165.9 40.8s-105.6-57.8-155.5-127.4c-58.6-82-106.7-211.6-106.7-334.8 0-196.7 127.8-301.1 253.7-301.1 66.8 0 122.4 43.9 164.2 43.9 39.9 0 102-46.5 177.6-46.5 28.7 0 131.8 2.6 199.8 97.9zM554.1 159.4c31.1-36.9 53.1-88.1 53.1-139.4 0-7.1-.6-14.3-1.9-20.1-50.6 1.9-110.8 33.7-147.1 75.8-28.7 32.4-55.3 83.6-55.3 135.6 0 7.8.6 15.7 1.3 18.2 2.6.6 6.4 1.3 10.2 1.3 45.4 0 103-30.4 139.7-71.4z"/>
-  </svg>
-);
-
-const BrandVivo = () => (
-  <svg viewBox="0 0 70 30" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
-    <text x="0" y="24" fontSize="26" fontWeight="bold" fontFamily="Arial">vivo</text>
-  </svg>
-);
-
-const BrandMotorola = () => (
-  <svg viewBox="0 0 140 30" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
-    <text x="0" y="24" fontSize="22" fontWeight="bold" fontFamily="Arial" letterSpacing="1">MOTOROLA</text>
-  </svg>
-);
-
+// Logos das marcas para o carrossel
 const BRANDS = [
-  { name: "LG", Component: BrandLG },
-  { name: "Huawei", Component: BrandHuawei },
-  { name: "Realme", Component: BrandRealme },
-  { name: "Samsung", Component: BrandSamsung },
-  { name: "Xiaomi", Component: BrandXiaomi },
-  { name: "Oppo", Component: BrandOppo },
-  { name: "Apple", Component: BrandApple },
-  { name: "Vivo", Component: BrandVivo },
-  { name: "Motorola", Component: BrandMotorola },
-];
+{
+  name: "LG",
+  url: "/logos/LG_logo_(2014).svg.png"
+},
+{
+  name: "Huawei",
+  url: "/logos/Huawei_logo.png"
+},
+{
+  name: "Realme",
+  url: "/logos/Realme_logo.png"
+},
+{
+  name: "Samsung",
+  url: "/logos/Samsung_old_logo_before_year_2015.svg.png"
+},
+{
+  name: "Xiaomi",
+  url: "/logos/Xiaomi_logo_(2021-).svg.png"
+},
+{
+  name: "Oppo",
+  url: "/logos/OPPO_LOGO_2019.png"
+},
+{
+  name: "Apple",
+  url: "/logos/Apple_logo_white.svg.png"
+},
+{
+  name: "Vivo",
+  url: "/logos/Vivo_logo_2019.svg.png"
+},
+{
+  name: "Motorola",
+  url: "/logos/Motorola-logo-black-and-white.png"
+}];
 
 
 // Vantagens práticas para técnicos
@@ -236,16 +208,23 @@ const InfiniteBrandCarousel = () => {
         <div className="flex w-max animate-infinite-scroll [animation-duration:60s]">
           {[1, 2, 3, 4].map((copy) =>
           <div key={copy} className="flex items-center gap-8 lg:gap-16 px-4">
-              {BRANDS.map((brand, idx) => {
-                const BrandIcon = brand.Component;
-                return (
-                  <div
-                    key={`${brand.name}-${copy}-${idx}`}
-                    className="flex items-center justify-center min-w-[60px] lg:min-w-[100px] h-8 lg:h-12 text-foreground">
-                    <BrandIcon />
-                  </div>
-                );
-              })}
+              {BRANDS.map((brand, idx) =>
+            <div
+              key={`${brand.name}-${copy}-${idx}`}
+              className="flex items-center justify-center min-w-[60px] lg:min-w-[100px] h-8 lg:h-12">
+
+                  <img
+                src={brand.url}
+                alt={brand.name}
+                className="h-full w-auto object-contain max-h-5 lg:max-h-8 opacity-60"
+                loading="lazy"
+                decoding="async"
+                width="35"
+                height="35"
+                />
+
+                </div>
+            )}
             </div>
           )}
         </div>
@@ -256,8 +235,9 @@ const InfiniteBrandCarousel = () => {
 const Index = () => {
   const { user, loading } = useAuth();
   const { name, logo } = useAppInfo();
+  const { isLoading: companyLoading } = useCompanyDataLoader();
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
-  if (loading) {
+  if (loading || user && companyLoading) {
     return <DashboardSkeleton />;
   }
   if (user) {
