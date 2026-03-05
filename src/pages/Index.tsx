@@ -28,11 +28,8 @@ import { PWATestAccessButton } from "@/components/pwa/PWATestAccessButton";
 
 // Brand SVG components (inline to avoid 705KB of PNG downloads)
 const BrandLG = () => (
-  <svg viewBox="0 0 100 100" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
-    <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="6"/>
-    <text x="30" y="62" fontSize="36" fontWeight="bold" fontFamily="Arial">L</text>
-    <text x="52" y="62" fontSize="36" fontWeight="bold" fontFamily="Arial">G</text>
-    <circle cx="50" cy="30" r="4" fill="currentColor"/>
+  <svg viewBox="0 0 80 30" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
+    <text x="0" y="24" fontSize="28" fontWeight="bold" fontFamily="Arial" letterSpacing="1">LG</text>
   </svg>
 );
 
