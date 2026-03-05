@@ -26,44 +26,76 @@ import { useAppInfo } from "@/hooks/useAppConfig";
 
 import { PWATestAccessButton } from "@/components/pwa/PWATestAccessButton";
 
-// Logos das marcas para o carrossel
+// Brand SVG components (inline to avoid 705KB of PNG downloads)
+const BrandLG = () => (
+  <svg viewBox="0 0 100 100" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
+    <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="6"/>
+    <text x="30" y="62" fontSize="36" fontWeight="bold" fontFamily="Arial">L</text>
+    <text x="52" y="62" fontSize="36" fontWeight="bold" fontFamily="Arial">G</text>
+    <circle cx="50" cy="30" r="4" fill="currentColor"/>
+  </svg>
+);
+
+const BrandHuawei = () => (
+  <svg viewBox="0 0 120 40" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
+    <text x="0" y="30" fontSize="28" fontWeight="bold" fontFamily="Arial" letterSpacing="-1">HUAWEI</text>
+  </svg>
+);
+
+const BrandRealme = () => (
+  <svg viewBox="0 0 100 30" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
+    <text x="0" y="24" fontSize="24" fontWeight="bold" fontFamily="Arial" letterSpacing="-0.5">realme</text>
+  </svg>
+);
+
+const BrandSamsung = () => (
+  <svg viewBox="0 0 140 30" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
+    <text x="0" y="24" fontSize="24" fontWeight="bold" fontFamily="Arial" letterSpacing="2">SAMSUNG</text>
+  </svg>
+);
+
+const BrandXiaomi = () => (
+  <svg viewBox="0 0 100 30" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
+    <text x="0" y="24" fontSize="24" fontWeight="bold" fontFamily="Arial">Xiaomi</text>
+  </svg>
+);
+
+const BrandOppo = () => (
+  <svg viewBox="0 0 80 30" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
+    <text x="0" y="24" fontSize="26" fontWeight="bold" fontFamily="Arial" letterSpacing="2">OPPO</text>
+  </svg>
+);
+
+const BrandApple = () => (
+  <svg viewBox="0 0 30 36" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
+    <path d="M25.2 12.6c-0.1 0-2.5-0.1-2.5-0.1s0 0 0 0c0 0-1.7-1.5-1.9-1.7 0 0 0 0-0.1 0-0.1 0-0.2 0-0.3 0l0 0c0 0 0 0 0 0-0.7 0.2-3.8 1.2-3.8 1.2s-2.5-6.8-2.7-7.3c-0.1-0.2-0.2-0.3-0.3-0.3 0 0 0 0 0 0s0 0 0 0c-0.1 0-0.3 0.1-0.3 0.3C13 5.2 10.5 12 10.5 12s0 0 0 0c0 0 0 0 0 0l-2.5 0.1c-0.2 0-0.3 0.1-0.4 0.3-0.1 0.2 0 0.3 0.1 0.5l1.9 1.4c0 0 0 0 0 0l-0.7 2.2 0 0-0.5 1.7c-0.1 0.2 0 0.4 0.1 0.5 0.1 0.1 0.3 0.1 0.5 0l2-1.5 2 1.5c0.1 0.1 0.2 0.1 0.3 0.1 0.1 0 0.2 0 0.2-0.1 0.1-0.1 0.2-0.3 0.1-0.5L13 14.5l1.9-1.4c0.2-0.1 0.2-0.3 0.1-0.5C15 12.4 14.8 12.3 14.6 12.3z"/>
+    <path d="M15 0C15 0 17.3 0 18.4 2.5 18.4 2.5 15.8 3.5 15 0z"/>
+  </svg>
+);
+
+const BrandVivo = () => (
+  <svg viewBox="0 0 70 30" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
+    <text x="0" y="24" fontSize="26" fontWeight="bold" fontFamily="Arial">vivo</text>
+  </svg>
+);
+
+const BrandMotorola = () => (
+  <svg viewBox="0 0 140 30" className="h-full w-auto max-h-5 lg:max-h-8 opacity-60" fill="currentColor">
+    <text x="0" y="24" fontSize="22" fontWeight="bold" fontFamily="Arial" letterSpacing="1">MOTOROLA</text>
+  </svg>
+);
+
 const BRANDS = [
-{
-  name: "LG",
-  url: "/logos/LG_logo_(2014).svg.png"
-},
-{
-  name: "Huawei",
-  url: "/logos/Huawei_logo.png"
-},
-{
-  name: "Realme",
-  url: "/logos/Realme_logo.png"
-},
-{
-  name: "Samsung",
-  url: "/logos/Samsung_old_logo_before_year_2015.svg.png"
-},
-{
-  name: "Xiaomi",
-  url: "/logos/Xiaomi_logo_(2021-).svg.png"
-},
-{
-  name: "Oppo",
-  url: "/logos/OPPO_LOGO_2019.png"
-},
-{
-  name: "Apple",
-  url: "/logos/Apple_logo_white.svg.png"
-},
-{
-  name: "Vivo",
-  url: "/logos/Vivo_logo_2019.svg.png"
-},
-{
-  name: "Motorola",
-  url: "/logos/Motorola-logo-black-and-white.png"
-}];
+  { name: "LG", Component: BrandLG },
+  { name: "Huawei", Component: BrandHuawei },
+  { name: "Realme", Component: BrandRealme },
+  { name: "Samsung", Component: BrandSamsung },
+  { name: "Xiaomi", Component: BrandXiaomi },
+  { name: "Oppo", Component: BrandOppo },
+  { name: "Apple", Component: BrandApple },
+  { name: "Vivo", Component: BrandVivo },
+  { name: "Motorola", Component: BrandMotorola },
+];
 
 
 // Vantagens práticas para técnicos
@@ -208,23 +240,16 @@ const InfiniteBrandCarousel = () => {
         <div className="flex w-max animate-infinite-scroll [animation-duration:60s]">
           {[1, 2, 3, 4].map((copy) =>
           <div key={copy} className="flex items-center gap-8 lg:gap-16 px-4">
-              {BRANDS.map((brand, idx) =>
-            <div
-              key={`${brand.name}-${copy}-${idx}`}
-              className="flex items-center justify-center min-w-[60px] lg:min-w-[100px] h-8 lg:h-12">
-
-                  <img
-                src={brand.url}
-                alt={brand.name}
-                className="h-full w-auto object-contain max-h-5 lg:max-h-8 opacity-60"
-                loading="lazy"
-                decoding="async"
-                width="35"
-                height="35"
-                />
-
-                </div>
-            )}
+              {BRANDS.map((brand, idx) => {
+                const BrandIcon = brand.Component;
+                return (
+                  <div
+                    key={`${brand.name}-${copy}-${idx}`}
+                    className="flex items-center justify-center min-w-[60px] lg:min-w-[100px] h-8 lg:h-12 text-foreground">
+                    <BrandIcon />
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
