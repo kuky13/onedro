@@ -122,14 +122,19 @@ export default function DeviceTestPage() {
         viewport: `${window.innerWidth}x${window.innerHeight}`,
       };
 
-      await supabase
+      const { error: updateError } = await supabase
         .from("device_test_sessions")
         .update({
           status: "in_progress",
           started_at: new Date().toISOString(),
           device_info: JSON.parse(JSON.stringify(deviceInfo)),
         })
-        .eq("id", session.id);
+        .eq("share_token", session.share_token);
+
+      if (updateError) {
+        console.error("Error updating status to in_progress:", updateError);
+        return;
+      }
 
       setSession({ ...session, status: "in_progress", device_info: deviceInfo });
     } catch (err) {
@@ -159,7 +164,7 @@ export default function DeviceTestPage() {
           test_results: JSON.parse(JSON.stringify(testResults)),
           overall_score: overallScore,
         })
-        .eq("id", session.id)
+        .eq("share_token", session.share_token)
         .select("*")
         .single();
 
@@ -196,7 +201,7 @@ export default function DeviceTestPage() {
       const { error } = await supabase
         .from("device_test_sessions")
         .update({ test_results: JSON.parse(JSON.stringify(updatedResults)) })
-        .eq("id", session.id);
+        .eq("share_token", session.share_token);
 
       if (error) {
         console.error("Error syncing to cloud:", error);
