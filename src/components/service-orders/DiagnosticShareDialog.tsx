@@ -336,23 +336,12 @@ export function DiagnosticShareDialog({
     setDiagnosticUrl("");
     setQrDataUrl(null);
     setShowQR(false);
+    if (wasShowingQR) {
+      setPendingQRRegeneration(true);
+    }
     await createNewSession(userId);
     setIsLoading(false);
-
-    // Regenerar QR automaticamente se estava visível
-    if (wasShowingQR) {
-      // Aguarda o diagnosticUrl ser atualizado via createNewSession
-      setTimeout(async () => {
-        const urlEl = document.querySelector("[data-diagnostic-url]");
-        const currentUrl = urlEl?.getAttribute("data-diagnostic-url") || `${window.location.origin}/testar/${session?.share_token}`;
-        try {
-          const dataUrl = await QRCode.toDataURL(currentUrl, {
-            margin: 1,
-            width: 180,
-            color: { dark: "#000000", light: "#FFFFFF" },
-          });
-          setQrDataUrl(dataUrl);
-          setShowQR(true);
+  };
         } catch (err) {
           console.error("Erro ao regenerar QR:", err);
         }
