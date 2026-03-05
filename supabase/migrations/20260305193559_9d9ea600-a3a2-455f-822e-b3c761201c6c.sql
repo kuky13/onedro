@@ -1,0 +1,1 @@
+ALTER TABLE public.warranties ADD COLUMN IF NOT EXISTS device_checklist jsonb DEFAULT NULL;
