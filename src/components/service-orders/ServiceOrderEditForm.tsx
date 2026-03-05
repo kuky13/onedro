@@ -500,7 +500,7 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
             value={formData.deviceChecklist}
             onChange={(data) => updateFormData('deviceChecklist', data)}
             disabled={isSubmitting}
-            serviceOrderId={formData.id}
+            {...(formData.id ? { serviceOrderId: formData.id } : {})}
           />
 
 
