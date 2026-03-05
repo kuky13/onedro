@@ -168,7 +168,7 @@ export const WormBudgetCard = ({
             <div className="flex items-center gap-3 min-w-0">
               <div className="min-w-0">
                 <h4 className="font-semibold text-base leading-tight">
-                  OR: {budget.sequential_number ? budget.sequential_number.toString().padStart(4, '0') : budget.id.slice(-8)}
+                  {budget.part_quality || budget.issue || 'Orçamento'}
                 </h4>
               </div>
               {getWorkflowBadge()}

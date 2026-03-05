@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Plus, RefreshCw, Smartphone, FileText, MessageCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { isIOS } from '@/utils/whatsappUtils';
 import { useSupabaseRealtime } from '@/hooks/useSupabaseRealtime';
 import { useQueryClient } from '@tanstack/react-query';
@@ -275,6 +276,9 @@ export const WormBudgetList = ({
                 <h3 className="font-semibold text-lg leading-tight truncate">
                   {group.device_model}
                 </h3>
+                <Badge variant="outline" className="shrink-0 font-mono text-xs">
+                  OR: {(group.budgets[0]?.sequential_number || 0).toString().padStart(4, '0')}
+                </Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-0.5">
                 {group.device_type} • {group.totalCount} orçamento(s)
