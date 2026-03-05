@@ -22,27 +22,24 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          if (id.includes("node_modules")) {
-            if (id.includes("jspdf") || id.includes("html2canvas") || id.includes("pdf-lib") || id.includes("xlsx")) {
-              return "vendor-pdf-excel";
-            }
-            if (id.includes("recharts")) {
-              return "vendor-charts";
-            }
-            if (id.includes("@supabase")) {
-              return "vendor-supabase";
-            }
-            if (id.includes("@radix-ui") || id.includes("cmdk") || id.includes("sonner") || id.includes("vaul") || id.includes("class-variance-authority") || id.includes("tailwind-merge") || id.includes("clsx")) {
-              return "vendor-ui";
-            }
-            if (id.includes("framer-motion")) {
-              return "vendor-motion";
-            }
-            if (id.includes("react-dom") || id.includes("react-router") || id.includes("/react/")) {
-              return "vendor-react";
-            }
-            return "vendor";
+          if (!id.includes("node_modules")) return;
+
+          // Chunks dedicados apenas para libs realmente pesadas/isoladas
+          if (id.includes("jspdf") || id.includes("html2canvas") || id.includes("pdf-lib") || id.includes("xlsx")) {
+            return "vendor-pdf-excel";
           }
+
+          if (id.includes("recharts")) {
+            return "vendor-charts";
+          }
+
+          if (id.includes("@supabase")) {
+            return "vendor-supabase";
+          }
+
+          // Para o restante, deixar o Rollup decidir automaticamente
+          // (evita ciclos entre chunks que podem causar TDZ em produção)
+          return;
         },
       },
     },
