@@ -21,7 +21,8 @@ export function useAdminLicenseList() {
       setError(null);
 
       const pSearch = (opts?.search ?? search).trim();
-      const pStatus = (opts?.status ?? statusFilter).trim() as LicenseStatusFilter;
+      const rawStatus = (opts?.status ?? statusFilter).trim();
+      const pStatus = (rawStatus === "all" ? "" : rawStatus) as LicenseStatusFilter;
 
       try {
         const params: { p_page: number; p_page_size: number; p_search?: string; p_status?: string } = {
