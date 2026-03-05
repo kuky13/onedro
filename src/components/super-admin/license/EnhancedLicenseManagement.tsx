@@ -364,7 +364,7 @@ export function EnhancedLicenseManagement() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="active">Ativa</SelectItem>
                 <SelectItem value="expired">Expirada</SelectItem>
                 <SelectItem value="inactive">Inativa</SelectItem>
