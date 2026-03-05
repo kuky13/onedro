@@ -118,7 +118,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
-    <link rel="preconnect" href="https://oghjlypdnmqecaavekyr.supabase.co" crossorigin />
+    <link rel="preconnect" href="https://oghjlypdnmqecaavekyr.supabase.co" />
 
     <!-- Enhanced Safe Area CSS Variables -->
     <style>
@@ -230,28 +230,26 @@
 </head>
 
   <body>
+    <div id="root"></div>
     <!-- Bot detection redirect para device test preview edge function -->
     <script>
       (function() {
-        const BOT_USER_AGENTS = [
+        var BOT_USER_AGENTS = [
           "facebookexternalhit", "whatsapp", "telegrambot", "slurp", "googlebot",
           "bingbot", "yandexbot", "duckduckbot", "baiduspider", "sogou", "exabot",
           "discordbot", "twitterbot", "linkedinbot", "skypeuripreview", "vkshare",
           "pinterest", "embedly", "quora", "rogerbot", "facebot", "oembed", "vimeo",
           "ico", "applebot", "metainspector"
         ];
-        
-        const isBot = BOT_USER_AGENTS.some(bot => navigator.userAgent.toLowerCase().includes(bot));
-        const isTestRoute = window.location.pathname.startsWith('/testar/');
-        
+        var ua = navigator.userAgent.toLowerCase();
+        var isBot = BOT_USER_AGENTS.some(function(bot) { return ua.indexOf(bot) !== -1; });
+        var isTestRoute = window.location.pathname.indexOf('/testar/') === 0;
         if (isBot && isTestRoute) {
-          const token = window.location.pathname.split('/testar/')[1];
-          // Redirecionar para edge function para gerar preview com og:tags
-          window.location.replace(`https://oghjlypdnmqecaavekyr.supabase.co/functions/v1/device-test-preview?token=${encodeURIComponent(token)}`);
+          var token = window.location.pathname.split('/testar/')[1];
+          window.location.replace('https://oghjlypdnmqecaavekyr.supabase.co/functions/v1/device-test-preview?token=' + encodeURIComponent(token));
         }
       })();
     </script>
-    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
 
     <script>

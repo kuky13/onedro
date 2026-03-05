@@ -1,67 +1,134 @@
 
 
-## Performance Improvement Plan (Mobile Score: 72 → ~85+)
+# Expansao da Documentacao do Projeto OneDrip
 
-### Current Metrics
-| Metric | Current | Target |
-|---|---|---|
-| FCP | 3.7s | < 2.5s |
-| LCP | 5.2s | < 3.0s |
-| Unused JS | 330 KiB | < 100 KiB |
-| Images | 705 KiB wasted | < 50 KiB |
+## Objetivo
+Criar documentacao tecnica completa e detalhada para que qualquer desenvolvedor que entre no projeto consiga entender rapidamente como tudo funciona. Vamos expandir os 5 arquivos existentes e criar 7 novos arquivos `.md`.
 
-### Root Causes Found
+---
 
-1. **`useCompanyDataLoader` on landing page** (Index.tsx) — triggers dynamic import of `pdfUtils.ts` → `jspdf` → pulls the 271KB `vendor-pdf-excel` chunk on the landing page where it's never needed. It also fires Supabase queries for company data that are useless for non-logged users.
+## Arquivos Existentes - Melhorias
 
-2. **Brand logos are massive PNGs** (Huawei 222KB, OPPO 168KB, LG 87KB, etc.) displayed at 35x35px. Total: ~705KB wasted.
+### `0-ai-project-context.md` - Atualizar
+- Adicionar secao sobre o sistema de Diagnostico de Dispositivos (`/testar/:token`)
+- Documentar o modulo de Peliculas (`/p`)
+- Mencionar o sistema de Gamificacao (HamsterPage/CookiePage)
+- Atualizar a lista de Guards com `MobileMenuProvider`
 
-3. **Supabase preconnect broken** — `crossorigin` attribute prevents it from being used for REST API calls (fetch without CORS credentials). PageSpeed flags it as "unused preconnect" and suggests 320ms LCP savings.
+### `1-visao-geral.md` - Expandir
+- Adicionar modulo de Garantias (`/garantia`)
+- Documentar Central de Ajuda (`/central-de-ajuda`)
+- Adicionar secao sobre Notificacoes Push e sistema de Updates
+- Mencionar Apps Page e Sistema (mini-OS no browser)
 
-4. **CSS render-blocking** — 28KB CSS blocks rendering for 560ms. Can be partially mitigated with critical inline CSS for the landing page skeleton.
+### `2-frontend-estrutura.md` - Detalhar
+- Documentar o sistema de `lazyWithRetry` com telemetria de chunks
+- Explicar `ChunkLoadRecoveryBanner` e `useChunkLoadTelemetry`
+- Detalhar o `SessionPersistence` e `secureStorage`
+- Documentar o `MobileMenuProvider` e navegacao mobile
 
-5. **Bot detection script in `<body>`** runs synchronously before React mounts.
+### `3-backend-supabase.md` - Expandir
+- Listar todas as 40+ Edge Functions com descricao curta
+- Documentar o fluxo de `rate-limiter` e `security-api`
+- Explicar o sistema de notificacoes push (`send-push-notification`)
 
-### Plan
+### `4-integracoes-externas.md` - Atualizar
+- Adicionar secao sobre Evolution API e multi-broker completo
+- Documentar o sistema de download de video via VPS proxy
 
-#### 1. Remove `useCompanyDataLoader` from `Index.tsx`
-This is the biggest win. The landing page only needs `useAuth` to check if user is logged in, then redirects. Remove the import and the `companyLoading` condition. This prevents the entire `pdfUtils → jspdf` chain from loading on landing.
+---
 
-#### 2. Optimize brand logos — replace with tiny WebP/SVG versions
-Create optimized versions of each logo at max 100x100px in WebP format (~2-5KB each instead of 30-222KB). Place in `public/logos/` as new files and update `Index.tsx` references. Estimated savings: **~700KB**.
+## Novos Arquivos
 
-Logos to optimize (current → target):
-- Huawei: 222KB → ~3KB
-- OPPO: 168KB → ~3KB
-- LG: 87KB → ~2KB
-- Motorola: 44KB → ~2KB
-- Apple: 40KB → ~2KB
-- Samsung: 37KB → ~2KB
-- Realme: 30KB → ~2KB
-- Vivo: 22KB → ~2KB
-- Xiaomi: 10KB → ~1KB
+### `5-typescript-tipos.md` - Tipos e Interfaces
+Documentar todas as interfaces criticas do sistema:
+- `ServiceOrderData` (OS com campos de senha, checklist, etc.)
+- `Budget` (tipo canonico via Supabase Tables)
+- `User`, `UserProfile`, `DebugInfo`
+- `CompanyInfo`, `CompanyData`, `CompanyFormData`
+- `TestSession`, `TestResult`, `TestDetails`, `TestConfig`
+- `DevicePasswordType` e seus valores
+- `CheckoutParams`, `PixPaymentData`
+- `BudgetData`, `BudgetPartData` (para PDFs)
+- `AuthContextType` e `UserRole`
+- Tabela visual com cada tipo e onde e usado
 
-Since I cannot create image files directly, I'll resize them via CSS and add `fetchpriority="low"` to deprioritize them. For real optimization, you'd need to upload smaller versions.
+### `6-hooks-referencia.md` - Guia de Hooks
+Catalogar os 60+ hooks com categorias:
+- **Autenticacao**: `useAuth`, `useTokenRotation`, `useSecurity`
+- **Licenciamento**: `useLicense`, `useLicenseVerification`, `useLicenseCache`, `useTrialLicense`
+- **Dispositivo**: `useDeviceDetection`, `useIOSDetection`, `useMobileDetection`, `useBatteryDetection`
+- **Ordens de Servico**: `useSecureServiceOrders`, `useServiceOrderEdit`, `useServiceOrderRealTime`, `useServiceOrderShare`
+- **Orcamentos (Worm)**: `useBudgetData`, `useBudgetDeletion`, `useBudgetServiceOrder`, `useCreateServiceOrderFromBudget`
+- **PWA/Offline**: `usePWA`, `useOfflineDetection`, `useSwipeGesture`
+- **UI/UX**: `useResponsive`, `useMobileMenu`, `usePopupState`, `useDebounce`
+- **Store**: `useShopProfile`, `useImportBudgetToStore`
+- **Config**: `useAppConfig`, `useCompanyBranding`, `useDrippySettings`, `useCookiePreferences`
+- Exemplos de uso para os mais importantes
 
-#### 3. Fix Supabase preconnect in `index.html`
-Remove `crossorigin` from the Supabase preconnect link. The REST API uses `apikey` header, not CORS credentials, so `crossorigin` causes a mismatch. Estimated LCP savings: **320ms**.
+### `7-rotas-e-guards.md` - Mapa de Rotas
+Tabela completa com todas as rotas do `App.tsx`:
+- Rota, Componente, Guard aplicado, Lazy/Estatico
+- Fluxo visual de redirecionamentos (auth -> licenca -> dashboard)
+- Explicacao de cada Guard: `UnifiedProtectionGuard`, `AdminGuard`, `MaintenanceGuard`
+- Como adicionar uma nova rota (passo a passo)
 
-#### 4. Add critical inline CSS in `index.html`
-Add minimal inline styles for the loading skeleton / initial paint so the page shows something before the 28KB CSS loads.
+### `8-edge-functions.md` - Backend Serverless
+Documentacao detalhada de cada Edge Function:
+- **Pagamentos**: `create-mercadopago-checkout`, `check-mercadopago-payment`, `mercadopago-webhook`, `cancel-mercadopago-payment`, `create-mercadopago-subscription`
+- **WhatsApp**: `whatsapp-proxy`, `whatsapp-webhook`, `whatsapp-qr-connect`, `whatsapp-ai-reply`, `whatsapp-instance-manage`, `waha-proxy`
+- **IA**: `chat-ai`, `triage-ai`, `analyze-budgets`
+- **Seguranca**: `security-api`, `rate-limiter`, `real-time-monitoring`, `audit-system`
+- **Usuarios**: `manage-user-profile`, `admin-reset-password`, `admin-update-user-email`, `validate-license`
+- **Comunicacao**: `send-license-email`, `send-payment-receipt-email`, `send-push-notification`, `notification-system`
+- Fluxo de request/response de cada grupo
 
-#### 5. Move bot detection script to `defer` or after `#root`
-The bot detection script currently runs before the `#root` div. Move it after or make it non-blocking.
+### `9-seguranca.md` - Arquitetura de Seguranca
+- Sistema `secureStorage` com criptografia AES-GCM e PBKDF2
+- `SecurityLogger` e auditoria de acessos
+- RLS (Row Level Security) - regras e padroes
+- `botDetection`, `secureCSP`, `secureNavigation`
+- Rate limiting nas Edge Functions
+- Token rotation (`useTokenRotation`)
+- Fluxo de validacao de licencas
 
-### Files Modified
+### `10-pdf-e-utils.md` - Utilitarios e Geracao de PDFs
+- Como funciona o `pdfUtils.ts` (jsPDF client-side)
+- `serviceOrderPdfUtils.ts` para recibos de OS
+- `currency.ts` - formatacao BRL
+- `whatsappUtils.ts` e `whatsappTemplateUtils.ts`
+- `authCleanup.ts` - limpeza de sessao
+- `pwaDetection.ts` e `pwaReset.ts`
+- `debugLogger.ts` e `asciiConsole.ts`
 
-| File | Change |
-|---|---|
-| `src/pages/Index.tsx` | Remove `useCompanyDataLoader` import and usage |
-| `index.html` | Fix preconnect, add critical CSS, defer bot script |
+### `11-guia-contribuicao.md` - Guia para Novos Devs
+- Como rodar o projeto localmente
+- Convencoes de codigo (React Query > useEffect, Zustand para global state)
+- Como criar uma nova pagina (registrar rota, escolher Guard, lazy vs estatico)
+- Como criar um novo hook
+- Como adicionar uma Edge Function
+- Checklist de PR/review
+- Erros comuns e como evitar (RLS, chunks, offline)
 
-### Expected Impact
-- **~700KB less images** loaded (with proper logo optimization)
-- **~270KB less JS** on landing (vendor-pdf-excel no longer pulled)
-- **~320ms faster LCP** from working preconnect
-- Mobile score: 72 → estimated ~85+
+---
+
+## Detalhes Tecnicos
+
+### Arquivos a criar:
+1. `.documentação/docs/5-typescript-tipos.md`
+2. `.documentação/docs/6-hooks-referencia.md`
+3. `.documentação/docs/7-rotas-e-guards.md`
+4. `.documentação/docs/8-edge-functions.md`
+5. `.documentação/docs/9-seguranca.md`
+6. `.documentação/docs/10-pdf-e-utils.md`
+7. `.documentação/docs/11-guia-contribuicao.md`
+
+### Arquivos a editar:
+1. `.documentação/docs/0-ai-project-context.md`
+2. `.documentação/docs/1-visao-geral.md`
+3. `.documentação/docs/2-frontend-estrutura.md`
+4. `.documentação/docs/3-backend-supabase.md`
+5. `.documentação/docs/4-integracoes-externas.md`
+
+Total: **12 arquivos** (7 novos + 5 atualizados)
 
