@@ -23,7 +23,7 @@ import {
 "lucide-react";
 import { DashboardSkeleton } from "@/components/ui/loading-states";
 import { useAppInfo } from "@/hooks/useAppConfig";
-import { useCompanyDataLoader } from "@/hooks/useCompanyDataLoader";
+
 import { PWATestAccessButton } from "@/components/pwa/PWATestAccessButton";
 
 // Logos das marcas para o carrossel
@@ -235,9 +235,8 @@ const InfiniteBrandCarousel = () => {
 const Index = () => {
   const { user, loading } = useAuth();
   const { name, logo } = useAppInfo();
-  const { isLoading: companyLoading } = useCompanyDataLoader();
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
-  if (loading || user && companyLoading) {
+  if (loading) {
     return <DashboardSkeleton />;
   }
   if (user) {
