@@ -168,7 +168,7 @@ const AppContent = () => {
   return <>
     <ChunkLoadRecoveryBanner />
     <ReloadMonitor />
-    <SessionPersistence />
+    <Suspense fallback={null}><SessionPersistence /></Suspense>
     <Sonner position="top-right" expand={false} richColors closeButton duration={4000} visibleToasts={1} toastOptions={{
       style: {
         background: 'hsl(var(--background))',
@@ -177,7 +177,7 @@ const AppContent = () => {
       }
     }} />
     <IOSRedirectHandler />
-    <ChatwootWidget />
+    <Suspense fallback={null}><ChatwootWidget /></Suspense>
 
     {/* Modal de aceite removido */}
 
