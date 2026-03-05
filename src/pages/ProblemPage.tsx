@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/useToast';
-import { AdminGuard } from '@/components/AdminGuard';
-import { 
-  Settings, 
-  AlertTriangle, 
-  CheckCircle, 
-  Save, 
-  Power, 
+import {
+  AlertTriangle,
+  CheckCircle,
+  Save,
+  Power,
   PowerOff,
   ArrowLeft,
   Shield,
   RefreshCw,
-  Activity
+  Activity,
+  Wrench,
+  Clock
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,19 +27,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 
 const ProblemPageContent: React.FC = () => {
+  const navigate = useNavigate();
   const { profile, loading: authLoading } = useAuth();
   const { systemStatus, loading: statusLoading, refetch } = useMaintenanceMode();
   const { showSuccess, showError } = useToast();
   
   const [isUpdating, setIsUpdating] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
-  const [formData, setFormData] = useState({
-    status: systemStatus?.status || 'maintenance',
+  const [formData, setFormData] = useState<{
+    status: 'maintenance' | 'error';
+    message: string;
+    estimated_resolution: string;
+  }>({
+    status: (systemStatus?.status as 'maintenance' | 'error') || 'maintenance',
     message: systemStatus?.message || '',
     estimated_resolution: systemStatus?.estimated_resolution || '',
   });
 
-  // Atualizar form quando systemStatus mudar
   React.useEffect(() => {
     if (systemStatus) {
       setFormData({
@@ -61,17 +66,24 @@ const ProblemPageContent: React.FC = () => {
         updated_by: profile?.id,
       };
 
-      // Só incluir estimated_resolution se não estiver vazio
       if (formData.estimated_resolution.trim()) {
         updateData.estimated_resolution = new Date(formData.estimated_resolution).toISOString();
       } else {
         updateData.estimated_resolution = null;
       }
 
+      if (!systemStatus?.id) {
+        showError({
+          title: 'Erro',
+          description: 'Status do sistema não encontrado.'
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('system_status')
         .update(updateData)
-        .eq('id', systemStatus?.id);
+        .eq('id', systemStatus.id);
 
       if (error) throw error;
 
@@ -79,7 +91,10 @@ const ProblemPageContent: React.FC = () => {
       refetch();
     } catch (error: any) {
       console.error('Erro ao atualizar status:', error);
-      showError('Erro ao atualizar status: ' + error.message);
+      showError({
+        title: 'Erro ao atualizar status',
+        description: String(error?.message || error)
+      });
     } finally {
       setIsUpdating(false);
     }
@@ -97,16 +112,17 @@ const ProblemPageContent: React.FC = () => {
       if (error) throw error;
       
       const newStatus = data as boolean;
-      showSuccess(
-        newStatus 
-          ? 'Modo de manutenção ativado!' 
-          : 'Modo de manutenção desativado!'
-      );
+      showSuccess({
+        title: newStatus ? 'Modo de manutenção ativado!' : 'Modo de manutenção desativado!'
+      });
       
       refetch();
     } catch (error: any) {
       console.error('Erro ao alternar modo de manutenção:', error);
-      showError('Erro ao alternar modo de manutenção: ' + error.message);
+      showError({
+        title: 'Erro ao alternar modo de manutenção',
+        description: String(error?.message || error)
+      });
     } finally {
       setIsToggling(false);
     }
@@ -115,8 +131,12 @@ const ProblemPageContent: React.FC = () => {
   const formatDateTime = (dateString: string | null) => {
     if (!dateString) return '';
     try {
+      // datetime-local espera horário LOCAL (sem timezone). 
+      // toISOString() converte para UTC e “desloca” o horário, então ajustamos pelo offset.
       const date = new Date(dateString);
-      return date.toISOString().slice(0, 16); // Format for datetime-local input
+      const tzOffsetMs = date.getTimezoneOffset() * 60_000;
+      const localIso = new Date(date.getTime() - tzOffsetMs).toISOString();
+      return localIso.slice(0, 16);
     } catch {
       return '';
     }
@@ -126,133 +146,148 @@ const ProblemPageContent: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="loading-spinner mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando painel administrativo...</p>
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground text-sm">Carregando...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="max-w-5xl mx-auto px-4 space-y-8 animate-fade-in-up">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex items-center space-x-4">
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
+        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => window.location.href = '/houston'}
-              className="flex items-center gap-2"
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate('/houston')}
+              className="rounded-full"
             >
-              <ArrowLeft className="h-4 w-4" />
-              Ver Status Público
+              <ArrowLeft className="h-5 w-5" />
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => window.location.reload()}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Atualizar
-            </Button>
-          </div>
-          
-          <div className="flex-1 lg:text-center">
-            <h1 className="text-3xl font-bold text-foreground flex items-center justify-center lg:justify-center gap-3">
-              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                <Shield className="h-6 w-6 text-primary" />
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Shield className="h-5 w-5 text-primary" />
               </div>
-              Painel Administrativo
-            </h1>
-            <p className="text-muted-foreground mt-2">Gerenciar status do sistema Houston</p>
+              <div>
+                <h1 className="text-lg font-bold text-foreground">Houston</h1>
+                <p className="text-xs text-muted-foreground">Painel Admin</p>
+              </div>
+            </div>
           </div>
           
-          <Badge variant="secondary" className="text-sm self-start lg:self-center">
-            <Activity className="h-3 w-3 mr-1" />
-            Admin: {profile?.name}
+          <Badge variant="secondary" className="gap-1">
+            <Activity className="h-3 w-3" />
+            {profile?.name}
           </Badge>
         </div>
+      </header>
 
-        {/* Status Atual */}
-        <Card className="card-premium">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Settings className="h-5 w-5 text-primary" />
-              </div>
-              Status Atual do Sistema
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="flex items-center space-x-4 p-4 bg-muted/30 rounded-xl">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{
-                  backgroundColor: systemStatus?.status === 'maintenance' ? 'hsl(var(--primary) / 0.1)' : 'hsl(var(--success) / 0.1)'
-                }}>
+      <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-2">
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={() => window.location.reload()}
+            className="rounded-full gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Atualizar
+          </Button>
+        </div>
+
+        {/* Status Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                  systemStatus?.status === 'maintenance' 
+                    ? 'bg-primary/10' 
+                    : 'bg-green-500/10'
+                }`}>
                   {systemStatus?.status === 'maintenance' ? (
                     <AlertTriangle className="h-6 w-6 text-primary" />
                   ) : (
-                    <CheckCircle className="h-6 w-6 text-success" />
+                    <CheckCircle className="h-6 w-6 text-green-500" />
                   )}
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium">Status</p>
-                  <p className="font-semibold text-foreground capitalize">
+                  <p className="text-xs text-muted-foreground">Status</p>
+                  <p className="font-semibold text-foreground">
                     {systemStatus?.status === 'maintenance' ? 'Manutenção' : 'Operacional'}
                   </p>
                 </div>
               </div>
-              
-              <div className="p-4 bg-muted/30 rounded-xl">
-                <p className="text-sm text-muted-foreground font-medium mb-2">Modo de Manutenção</p>
-                <Badge 
-                  variant={systemStatus?.maintenance_mode_active ? "destructive" : "secondary"}
-                  className="font-semibold"
-                >
-                  {systemStatus?.maintenance_mode_active ? 'Ativo' : 'Inativo'}
-                </Badge>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                  systemStatus?.maintenance_mode_active 
+                    ? 'bg-destructive/10' 
+                    : 'bg-green-500/10'
+                }`}>
+                  {systemStatus?.maintenance_mode_active ? (
+                    <PowerOff className="h-6 w-6 text-destructive" />
+                  ) : (
+                    <Power className="h-6 w-6 text-green-500" />
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Manutenção</p>
+                  <Badge variant={systemStatus?.maintenance_mode_active ? "destructive" : "secondary"}>
+                    {systemStatus?.maintenance_mode_active ? 'Ativo' : 'Inativo'}
+                  </Badge>
+                </div>
               </div>
-              
-              <div className="p-4 bg-muted/30 rounded-xl">
-                <p className="text-sm text-muted-foreground font-medium mb-2">Última Atualização</p>
-                <p className="text-sm font-medium text-foreground">
-                  {systemStatus?.updated_at 
-                    ? new Date(systemStatus.updated_at).toLocaleString('pt-BR')
-                    : 'Não informado'
-                  }
-                </p>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                  <Clock className="h-6 w-6 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Última Atualização</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {systemStatus?.updated_at 
+                      ? new Date(systemStatus.updated_at).toLocaleString('pt-BR')
+                      : '-'
+                    }
+                  </p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Controle de Modo de Manutenção */}
-        <Card className="card-premium">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                systemStatus?.maintenance_mode_active 
-                  ? 'bg-destructive/10' 
-                  : 'bg-success/10'
-              }`}>
-                {systemStatus?.maintenance_mode_active ? (
-                  <PowerOff className="h-5 w-5 text-destructive" />
-                ) : (
-                  <Power className="h-5 w-5 text-success" />
-                )}
-              </div>
-              Controle de Modo de Manutenção
+        {/* Maintenance Toggle */}
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              {systemStatus?.maintenance_mode_active ? (
+                <PowerOff className="h-5 w-5 text-destructive" />
+              ) : (
+                <Power className="h-5 w-5 text-green-500" />
+              )}
+              Controle de Manutenção
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-              <div className="space-y-2">
-                <p className="font-semibold text-lg text-foreground">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <p className="font-semibold text-foreground">
                   Modo de manutenção está {systemStatus?.maintenance_mode_active ? 'ATIVO' : 'INATIVO'}
                 </p>
-                <p className="text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   {systemStatus?.maintenance_mode_active 
                     ? 'Usuários serão redirecionados para a página de manutenção'
                     : 'Sistema funcionando normalmente para todos os usuários'
@@ -264,17 +299,16 @@ const ProblemPageContent: React.FC = () => {
                 onClick={handleToggleMaintenanceMode}
                 disabled={isToggling}
                 variant={systemStatus?.maintenance_mode_active ? "destructive" : "default"}
-                size="lg"
-                className="shrink-0 min-w-[200px]"
+                className="rounded-full gap-2 min-w-[180px]"
               >
                 {isToggling ? (
-                  <div className="loading-spinner mr-2"></div>
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                 ) : systemStatus?.maintenance_mode_active ? (
-                  <PowerOff className="h-4 w-4 mr-2" />
+                  <PowerOff className="h-4 w-4" />
                 ) : (
-                  <Power className="h-4 w-4 mr-2" />
+                  <Power className="h-4 w-4" />
                 )}
-                {systemStatus?.maintenance_mode_active ? 'Desativar' : 'Ativar'} Manutenção
+                {systemStatus?.maintenance_mode_active ? 'Desativar' : 'Ativar'}
               </Button>
             </div>
           </CardContent>
@@ -282,26 +316,24 @@ const ProblemPageContent: React.FC = () => {
 
         <Separator />
 
-        {/* Formulário de Edição */}
-        <Card className="card-premium">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
-                <Settings className="h-5 w-5 text-accent" />
-              </div>
-              Editar Informações de Status
+        {/* Edit Form */}
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Wrench className="h-5 w-5 text-primary" />
+              Editar Informações
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleUpdateStatus} className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <Label htmlFor="status" className="text-sm font-semibold">Tipo de Status</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="status" className="text-sm font-medium">Tipo de Status</Label>
                   <Select 
                     value={formData.status} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as 'maintenance' | 'error' }))}
                   >
-                    <SelectTrigger className="h-12">
+                    <SelectTrigger className="rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -311,8 +343,8 @@ const ProblemPageContent: React.FC = () => {
                   </Select>
                 </div>
                 
-                <div className="space-y-3">
-                  <Label htmlFor="estimated_resolution" className="text-sm font-semibold">Previsão de Resolução</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="estimated_resolution" className="text-sm font-medium">Previsão de Resolução</Label>
                   <Input
                     id="estimated_resolution"
                     type="datetime-local"
@@ -321,13 +353,13 @@ const ProblemPageContent: React.FC = () => {
                       ...prev, 
                       estimated_resolution: e.target.value 
                     }))}
-                    className="h-12"
+                    className="rounded-xl"
                   />
                 </div>
               </div>
               
-              <div className="space-y-3">
-                <Label htmlFor="message" className="text-sm font-semibold">Mensagem para os Usuários</Label>
+              <div className="space-y-2">
+                <Label htmlFor="message" className="text-sm font-medium">Mensagem para os Usuários</Label>
                 <Textarea
                   id="message"
                   placeholder="Digite a mensagem que será exibida aos usuários..."
@@ -335,18 +367,18 @@ const ProblemPageContent: React.FC = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
                   rows={4}
                   required
-                  className="resize-none"
+                  className="rounded-xl resize-none"
                 />
               </div>
               
-              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Button 
                   type="submit" 
                   disabled={isUpdating}
-                  className="flex items-center gap-2 px-6"
+                  className="rounded-full gap-2"
                 >
                   {isUpdating ? (
-                    <div className="loading-spinner"></div>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <Save className="h-4 w-4" />
                   )}
@@ -357,7 +389,7 @@ const ProblemPageContent: React.FC = () => {
                   type="button"
                   variant="outline" 
                   onClick={() => refetch()}
-                  className="flex items-center gap-2 px-6"
+                  className="rounded-full gap-2"
                 >
                   <RefreshCw className="h-4 w-4" />
                   Atualizar Dados
@@ -366,17 +398,13 @@ const ProblemPageContent: React.FC = () => {
             </form>
           </CardContent>
         </Card>
-      </div>
+      </main>
     </div>
   );
 };
 
 export const ProblemPage: React.FC = () => {
-  return (
-    <AdminGuard fallbackPath="/houston">
-      <ProblemPageContent />
-    </AdminGuard>
-  );
+  return <ProblemPageContent />;
 };
 
 export default ProblemPage;

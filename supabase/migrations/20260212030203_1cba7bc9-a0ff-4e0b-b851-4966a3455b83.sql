@@ -1,0 +1,1 @@
+ALTER TABLE public.whatsapp_conversations ADD COLUMN IF NOT EXISTS remote_jid_alt text;

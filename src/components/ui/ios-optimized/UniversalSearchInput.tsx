@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Search, X, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

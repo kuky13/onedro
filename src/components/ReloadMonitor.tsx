@@ -14,7 +14,7 @@ export const ReloadMonitor = () => {
   useEffect(() => {
     mountCountRef.current++;
     const now = Date.now();
-    const isDevelopment = process.env.NODE_ENV === 'development';
+    const isDevelopment = (import.meta as any).env?.DEV ?? false;
     
     // Configurações diferentes para desenvolvimento e produção
     const FREQUENT_RELOAD_THRESHOLD = isDevelopment ? 30000 : 10000; // 30s em dev, 10s em prod

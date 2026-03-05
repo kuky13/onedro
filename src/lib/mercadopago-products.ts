@@ -1,48 +1,59 @@
-export interface MercadoPagoPlan {
+export interface MercadoPagoPlanConfig {
   id: string;
   name: string;
   description: string;
-  price: number; // em centavos
+  price: number;
   currency: string;
   interval: "month" | "year";
   features: string[];
 }
 
-// Produtos configurados no Mercado Pago
-export const MERCADOPAGO_PRODUCTS = {
-  professional_monthly: {
-    id: "professional_monthly",
-    name: "Plano Profissional Mensal",
-    description: "Acesso completo ao sistema de gestão OneDrip",
-    price: 3585, // R$ 35,85 em centavos
-    currency: "BRL",
-    interval: "month" as const,
+export const MERCADOPAGO_PLANS: {
+  monthly: MercadoPagoPlanConfig;
+  yearly: MercadoPagoPlanConfig;
+} = {
+  monthly: {
+    id: 'professional_monthly',
+    name: 'Plano Mensal',
+    description: 'Acesso completo ao sistema OneDrip',
+    price: 10.0,
+    currency: 'BRL',
+    interval: 'month',
     features: [
-      "Ordens de serviço ilimitadas",
-      "Gestão completa de clientes",
-      "Orçamentos profissionais",
-      "Emissão de notas fiscais",
-      "Relatórios detalhados",
-      "Suporte prioritário",
+      'Sistema de orçamentos e ordens de serviço',
+      'Sistema de loja virtual',
+      'Sistema de garantias',
+      'Sistema de peliculas compatíveis',
+      'Suporte técnico incluso',
+      'Atualizações gratuitas',
+      'Backup automático',
     ],
   },
-  professional_yearly: {
-    id: "professional_yearly",
-    name: "Plano Profissional Anual",
-    description: "Acesso completo ao sistema de gestão OneDrip (12 meses)",
-    price: 31525, // R$ 315,25 em centavos (desconto aplicado)
-    currency: "BRL",
-    interval: "year" as const,
+  yearly: {
+    id: 'professional_yearly',
+    name: 'Plano Anual',
+    description: 'Acesso completo ao sistema OneDrip com economia anual',
+    price: 10.0,
+    currency: 'BRL',
+    interval: 'year',
     features: [
-      "Ordens de serviço ilimitadas",
-      "Gestão completa de clientes",
-      "Orçamentos profissionais",
-      "Emissão de notas fiscais",
-      "Relatórios detalhados",
-      "Suporte prioritário",
-      "Economia de 4 meses (≈30%)",
+      'Sistema de orçamentos e ordens de serviço',
+      'Sistema de loja virtual',
+      'Sistema de garantias',
+      'Sistema de peliculas compatíveis',
+      'Suporte técnico incluso',
+      'Atualizações gratuitas',
+      'Backup automático',
     ],
   },
-} as const;
+};
 
-export type PlanType = keyof typeof MERCADOPAGO_PRODUCTS;
+export function getMercadoPagoPlan(planType: 'monthly' | 'yearly'): MercadoPagoPlanConfig {
+  return MERCADOPAGO_PLANS[planType];
+}
+
+export function calculateAnnualSavings(): number {
+  const monthlyTotal = MERCADOPAGO_PLANS.monthly.price * 12;
+  const yearlyPrice = MERCADOPAGO_PLANS.yearly.price;
+  return monthlyTotal - yearlyPrice;
+}

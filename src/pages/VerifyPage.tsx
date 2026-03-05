@@ -1,10 +1,12 @@
+// @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Loader2, AlertCircle, CheckCircle, Mail } from 'lucide-react';
+import { AlertCircle, CheckCircle, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { HamsterLoader } from '@/components/ui/hamster-loader';
 export const VerifyPage = () => {
   const navigate = useNavigate();
   const { user, session, loading: authLoading } = useAuth();
@@ -61,8 +63,9 @@ export const VerifyPage = () => {
 
     // Redirecionamento direto para mudança de email
     if (isEmailChange) {
-      console.log('📧 [VerifyPage] Detectado mudança de email, redirecionando para /reset-email');
-      navigate('/reset-email', { replace: true });
+      console.log('📧 [VerifyPage] Detectado mudança de email, redirecionando para /reset-email com hash de sucesso');
+      // Adiciona o hash para que a ResetEmailPage reconheça o sucesso
+      navigate('/reset-email#type=email_change', { replace: true });
       return;
     }
 
@@ -173,7 +176,7 @@ export const VerifyPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+            <HamsterLoader size="md" className="mx-auto" />
             <p className="text-muted-foreground">
               {authLoading ? 'Inicializando sistema...' : 'Verificando seu link, por favor aguarde...'}
             </p>

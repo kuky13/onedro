@@ -278,7 +278,8 @@ async function sendEmailNotification(
       return { success: false, error: 'Email disabled or no recipients' }
     }
     
-    const templateConfig = NOTIFICATION_CONFIG.email.templates[template] || NOTIFICATION_CONFIG.email.templates.security_alert
+    type TemplateKey = keyof typeof NOTIFICATION_CONFIG.email.templates;
+    const templateConfig = NOTIFICATION_CONFIG.email.templates[template as TemplateKey] || NOTIFICATION_CONFIG.email.templates.security_alert
     
     const templateData = {
       ...alert,
@@ -303,7 +304,7 @@ async function sendEmailNotification(
     return { success: true }
     
   } catch (error) {
-    return { success: false, error: error.message }
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
   }
 }
 
@@ -403,7 +404,7 @@ async function sendWebhookNotification(
     return { success: true }
     
   } catch (error) {
-    return { success: false, error: error.message }
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
   }
 }
 
@@ -444,7 +445,7 @@ async function sendRealtimeNotification(
     return { success: true }
     
   } catch (error) {
-    return { success: false, error: error.message }
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
   }
 }
 
@@ -475,15 +476,17 @@ async function sendNotification(
     }
     
     // Determine notification rules based on severity
-    const severityRules = NOTIFICATION_CONFIG.rules.severityRouting[alert.severity] || NOTIFICATION_CONFIG.rules.severityRouting.medium
+    type SeverityKey = keyof typeof NOTIFICATION_CONFIG.rules.severityRouting;
+    const severityRules = NOTIFICATION_CONFIG.rules.severityRouting[alert.severity as SeverityKey] || NOTIFICATION_CONFIG.rules.severityRouting.medium
     
     const channels = request.channels || severityRules.channels
     const recipients = request.recipients || severityRules.recipients
     
     // Check if notification should be delayed
-    if (!request.immediate && !severityRules.immediate && severityRules.delay) {
+    const delayValue = 'delay' in severityRules ? (severityRules as { delay: number }).delay : undefined
+    if (!request.immediate && !severityRules.immediate && delayValue) {
       // Schedule notification for later (in a real implementation)
-      console.log(`Notification scheduled for ${severityRules.delay}ms delay`)
+      console.log(`Notification scheduled for ${delayValue}ms delay`)
     }
     
     // Send notifications through each channel
@@ -493,8 +496,9 @@ async function sendNotification(
         
         switch (channel) {
           case 'email':
-            const emailRecipients = recipients.flatMap(role => 
-              NOTIFICATION_CONFIG.email.recipients[role] || []
+            type RecipientKey = keyof typeof NOTIFICATION_CONFIG.email.recipients;
+            const emailRecipients = recipients.flatMap((role: string) => 
+              NOTIFICATION_CONFIG.email.recipients[role as RecipientKey] || []
             )
             channelResult = await sendEmailNotification(alert, emailRecipients, request.type)
             break
@@ -543,7 +547,7 @@ async function sendNotification(
         
       } catch (error) {
         result.channels_failed.push(channel)
-        result.errors[channel] = error.message
+        result.errors[channel] = error instanceof Error ? error.message : 'Unknown error'
       }
     }
     
@@ -580,7 +584,7 @@ async function sendNotification(
     return result
     
   } catch (error) {
-    result.errors.general = error.message
+    result.errors.general = error instanceof Error ? error.message : 'Unknown error'
     return result
   }
 }
@@ -627,7 +631,7 @@ async function performHealthCheck(supabase: any): Promise<any> {
         .filter(([, config]) => config.enabled && config.url)
         .map(async ([name, config]) => {
           try {
-            const response = await fetch(config.url, {
+            const response = await fetch(config.url!, {
               method: 'HEAD',
               signal: AbortSignal.timeout(5000)
             })
@@ -850,7 +854,7 @@ serve(async (req) => {
         
       } catch (error) {
         return new Response(
-          JSON.stringify({ success: false, error: error.message }),
+          JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }),
           {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 500
@@ -916,7 +920,7 @@ serve(async (req) => {
       JSON.stringify({
         success: false,
         error: 'Internal server error',
-        message: error.message
+        message: error instanceof Error ? error.message : 'Unknown error'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

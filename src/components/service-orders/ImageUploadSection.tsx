@@ -1,9 +1,11 @@
-import React, { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { AlertCircle, CheckCircle, Upload, Trash2 } from 'lucide-react';
 import { useImageUpload } from '../../hooks/useImageUpload';
 import { ImageDropZone } from './ImageDropZone';
 import { ImagePreview } from './ImagePreview';
 import { ImageUploadSectionProps, IMAGE_UPLOAD_CONFIG } from '../../types/imageUpload';
+import heic2any from 'heic2any';
+
 export function ImageUploadSection({
   serviceOrderId,
   onImagesChange,
@@ -104,7 +106,7 @@ export function ImageUploadSection({
             Imagens Selecionadas ({state.files.length})
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {state.files.map((file, index) => <ImagePreview key={`${file.name}-${index}`} file={file} preview={state.previews[index]} index={index} onRemove={removeFile} uploading={state.uploading} />)}
+            {state.files.map((file, index) => <ImagePreview key={`${file.name}-${index}`} file={file} preview={state.previews[index] || ''} index={index} onRemove={removeFile} uploading={state.uploading} />)}
           </div>
           
 
@@ -121,11 +123,40 @@ export function ImageUploadSection({
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {state.uploadedImages.map(image => <div key={image.id} className="relative group">
                 <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 border-2 border-green-200">
-                  <img src={image.uploadthing_url || image.storage_path} alt={image.file_name} className="w-full h-full object-cover" loading="lazy" onError={e => {
-              console.error('Erro ao carregar imagem:', image.uploadthing_url || image.storage_path);
-              // Substituir por um SVG placeholder quando há erro
-              const target = e.target as HTMLImageElement;
-              const svgPlaceholder = `data:image/svg+xml;base64,${btoa(`
+                  <img
+                    src={image.uploadthing_url || image.storage_path || ''}
+                    alt={image.file_name || 'Imagem da ordem de serviço'}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    onError={async e => {
+                      const imageUrl = image.uploadthing_url || image.storage_path || '';
+                      console.error('Erro ao carregar imagem:', imageUrl);
+                      
+                      const target = e.target as HTMLImageElement;
+
+                      // Tentar converter HEIC se a URL terminar com .heic
+                      if (imageUrl.toLowerCase().endsWith('.heic') || imageUrl.toLowerCase().endsWith('.heif')) {
+                        try {
+                          console.log('🔄 Tentando converter HEIC para exibição:', imageUrl);
+                          const response = await fetch(imageUrl);
+                          const blob = await response.blob();
+                          const convertedBlob = await heic2any({
+                            blob,
+                            toType: 'image/jpeg',
+                            quality: 0.7
+                          });
+                          const displayBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+                          if (!displayBlob) throw new Error('Falha na conversão do HEIC');
+                          const objectUrl = URL.createObjectURL(displayBlob);
+                          target.src = objectUrl;
+                          return; // Sucesso na conversão
+                        } catch (convError) {
+                          console.error('❌ Falha na conversão on-the-fly do HEIC:', convError);
+                        }
+                      }
+
+                      // Substituir por um SVG placeholder quando há erro
+                      const svgPlaceholder = `data:image/svg+xml;base64,${btoa(`
                         <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
                           <rect width="200" height="200" fill="#f3f4f6"/>
                           <rect x="50" y="50" width="100" height="100" fill="#d1d5db" rx="8"/>
@@ -135,9 +166,10 @@ export function ImageUploadSection({
                           <text x="100" y="145" text-anchor="middle" fill="#6b7280" font-family="Arial" font-size="12">não encontrada</text>
                         </svg>
                       `)}`;
-              target.src = svgPlaceholder;
-            }} />
-                  
+                      target.src = svgPlaceholder;
+                    }}
+                  />
+
                   {/* Botão de remover */}
                   <button onClick={() => handleDeleteUploadedImage(image.id)} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600 flex items-center justify-center" title="Remover imagem">
                     <Trash2 className="h-4 w-4" />

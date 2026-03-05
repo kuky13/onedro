@@ -8,7 +8,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useServiceOrderValidation } from '@/hooks/useFormValidation';
-import { useFormAutoSave } from '@/hooks/useAutoSave';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/useToast';
 import { parseToReais, formatCurrencyFromReais } from '@/utils/currency';
@@ -20,7 +19,7 @@ type ServiceOrderStatus = Enums<'service_order_status'>;
 type ServiceOrderPriority = Enums<'service_order_priority'>;
 
 // Tipos para senha do dispositivo
-export type DevicePasswordType = 'pin' | 'abc' | 'pattern' | null;
+export type DevicePasswordType = 'pin' | 'abc' | 'pattern' | 'biometric' | null;
 
 export interface DevicePasswordData {
   type: DevicePasswordType;
@@ -31,10 +30,12 @@ export interface DevicePasswordData {
   };
 }
 
-interface FormData {
+interface ServiceOrderFormData {
   id?: string;
-  formatted_id?: string;
+  formatted_id: string;
+  // Client
   clientId: string;
+  // Device
   deviceType: string;
   deviceModel: string;
   imeiSerial: string;
@@ -52,6 +53,9 @@ interface FormData {
   laborCost: string;
   partsCost: string;
   isPaid: boolean;
+  paymentDate?: string;
+  installments?: number | null;
+  installmentValue?: string;
   // Senha do dispositivo
   devicePassword: DevicePasswordData;
   // Checklist de funcionamento do aparelho
@@ -82,7 +86,8 @@ interface NewClientData {
   address: string;
 }
 
-const initialFormData: FormData = {
+const initialFormData: ServiceOrderFormData = {
+  formatted_id: '',
   clientId: '',
   deviceType: '',
   deviceModel: '',
@@ -101,6 +106,9 @@ const initialFormData: FormData = {
   laborCost: '',
   partsCost: '',
   isPaid: false,
+  paymentDate: '',
+  installments: 1,
+  installmentValue: '',
   // Senha do dispositivo
   devicePassword: {
     type: null,
@@ -126,7 +134,7 @@ export const useServiceOrderEdit = (serviceOrderId?: string) => {
   const isEditMode = !!serviceOrderId;
 
   // Estados principais
-  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [formData, setFormData] = useState<ServiceOrderFormData>(initialFormData);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -143,20 +151,10 @@ export const useServiceOrderEdit = (serviceOrderId?: string) => {
   const [newClientData, setNewClientData] = useState<NewClientData>(initialNewClientData);
 
   // Hook de validação
-  const validation = useServiceOrderValidation(formData);
-
-  // Hook de auto-save (apenas para modo de criação)
-  const autoSave = useFormAutoSave(
-    formData,
-    `service-order-${serviceOrderId || 'new'}`,
-    {
-      enabled: !isEditMode, // Apenas para novas ordens
-      interval: 30000 // 30 segundos
-    }
-  );
+  const validation = useServiceOrderValidation(formData as any);
 
   // Função para atualizar dados do formulário
-  const updateFormData = useCallback((field: keyof FormData, value: any) => {
+  const updateFormData = useCallback((field: keyof ServiceOrderFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   }, []);
 
@@ -218,47 +216,72 @@ export const useServiceOrderEdit = (serviceOrderId?: string) => {
             console.error('Erro ao carregar clientes:', clientsResult.error);
             showError({ title: 'Erro ao carregar clientes' });
           } else {
-            const clientsData = clientsResult.data || [];
+            const clientsData: Client[] = (clientsResult.data || []).map((c: any) => ({
+              id: c.id,
+              name: c.name,
+              phone: c.phone,
+              ...(c.email ? { email: c.email } : {}),
+              ...(c.address ? { address: c.address } : {})
+            }));
             setClients(clientsData);
             setFilteredClients(clientsData);
           }
           
           if (serviceOrder) {
+            const so: any = serviceOrder;
+            const seq = typeof so.sequential_number === 'number' ? so.sequential_number : null;
+            const formattedId: string | undefined =
+              typeof so.formatted_id === 'string' && so.formatted_id.trim()
+                ? so.formatted_id
+                : seq != null
+                  ? `OS: ${String(seq).padStart(4, '0')}`
+                  : undefined;
+
+            const rawMeta = so.device_password_metadata;
+            const passwordMetadata = rawMeta && typeof rawMeta === 'object' && !Array.isArray(rawMeta)
+              ? (rawMeta as any)
+              : undefined;
+
+            const rawChecklist = so.device_checklist;
+            const deviceChecklist = rawChecklist && typeof rawChecklist === 'object' && !Array.isArray(rawChecklist)
+              ? (rawChecklist as any)
+              : null;
+
             setFormData({
-              id: serviceOrder.id,
-              formatted_id: serviceOrder.formatted_id,
-              clientId: serviceOrder.client_id,
-              deviceType: serviceOrder.device_type || '',
-              deviceModel: serviceOrder.device_model || '',
-              imeiSerial: serviceOrder.imei_serial || '',
-              reportedIssue: serviceOrder.reported_issue || '',
-              priority: serviceOrder.priority,
-              status: serviceOrder.status,
+              id: so.id,
+              formatted_id: formattedId ?? '',
+              clientId: so.client_id ?? '',
+              deviceType: so.device_type ?? '',
+              deviceModel: so.device_model ?? '',
+              imeiSerial: so.imei_serial ?? '',
+              reportedIssue: so.reported_issue ?? '',
+              priority: (so.priority ?? 'medium') as ServiceOrderPriority,
+              status: (so.status ?? 'opened') as ServiceOrderStatus,
               // Garantia
-              warrantyMonths: serviceOrder.warranty_months?.toString() || '12',
+              warrantyMonths: so.warranty_months != null ? String(so.warranty_months) : '12',
               // Datas
-              entryDate: serviceOrder.entry_date ? new Date(serviceOrder.entry_date).toISOString().slice(0, 16) : '',
-              exitDate: serviceOrder.exit_date ? new Date(serviceOrder.exit_date).toISOString().slice(0, 16) : '',
-              deliveryDate: serviceOrder.delivery_date ? new Date(serviceOrder.delivery_date).toISOString().slice(0, 10) : '',
+              entryDate: so.entry_date ? new Date(so.entry_date).toISOString().slice(0, 16) : '',
+              exitDate: so.exit_date ? new Date(so.exit_date).toISOString().slice(0, 16) : '',
+              deliveryDate: so.delivery_date ? new Date(so.delivery_date).toISOString().slice(0, 10) : '',
               // Payment and Progress Information
-              totalPrice: serviceOrder.total_price ? formatCurrencyFromReais(serviceOrder.total_price, { showSymbol: false }) : '',
-              laborCost: serviceOrder.labor_cost ? formatCurrencyFromReais(serviceOrder.labor_cost, { showSymbol: false }) : '',
-              partsCost: serviceOrder.parts_cost ? formatCurrencyFromReais(serviceOrder.parts_cost, { showSymbol: false }) : '',
-              isPaid: serviceOrder.is_paid || false,
+              totalPrice: so.total_price ? formatCurrencyFromReais(so.total_price, { showSymbol: false }) : '',
+              laborCost: so.labor_cost ? formatCurrencyFromReais(so.labor_cost, { showSymbol: false }) : '',
+              partsCost: so.parts_cost ? formatCurrencyFromReais(so.parts_cost, { showSymbol: false }) : '',
+              isPaid: !!so.is_paid,
               // Senha do dispositivo
               devicePassword: {
-                type: serviceOrder.device_password_type as DevicePasswordType,
-                value: serviceOrder.device_password_value || '',
-                metadata: serviceOrder.device_password_metadata || undefined
+                type: (so.device_password_type as DevicePasswordType) ?? null,
+                value: so.device_password_value ?? '',
+                metadata: passwordMetadata,
               },
               // Checklist de funcionamento do aparelho
-              deviceChecklist: serviceOrder.device_checklist || null,
+              deviceChecklist,
               // Observações
-              notes: serviceOrder.notes || '',
-              created_at: serviceOrder.created_at,
-              updated_at: serviceOrder.updated_at
+              notes: so.notes ?? '',
+              created_at: so.created_at ?? undefined,
+              updated_at: so.updated_at ?? undefined,
             });
-            setSelectedClientId(serviceOrder.client_id);
+            setSelectedClientId(so.client_id ?? '');
           }
         } else {
           // Para criação, carregar apenas tipos de dispositivo e clientes
@@ -287,7 +310,13 @@ export const useServiceOrderEdit = (serviceOrderId?: string) => {
             console.error('Erro ao carregar clientes:', clientsResult.error);
             showError({ title: 'Erro ao carregar clientes' });
           } else {
-            const clientsData = clientsResult.data || [];
+            const clientsData: Client[] = (clientsResult.data || []).map((c: any) => ({
+              id: c.id,
+              name: c.name,
+              phone: c.phone,
+              ...(c.email ? { email: c.email } : {}),
+              ...(c.address ? { address: c.address } : {})
+            }));
             setClients(clientsData);
             setFilteredClients(clientsData);
           }
@@ -372,16 +401,23 @@ export const useServiceOrderEdit = (serviceOrderId?: string) => {
         .single();
 
       if (error) {
-        console.error('Erro ao criar cliente:', error);
-        showError({ title: 'Erro ao criar cliente' });
-        return;
+        throw error;
+      }
+      if (!data) {
+        throw new Error('Falha ao criar cliente');
       }
 
-      // Atualizar lista de clientes
-      const newClient = data;
+      const newClient: Client = {
+        id: data.id,
+        name: data.name,
+        phone: data.phone,
+        ...(data.email ? { email: data.email } : {}),
+        ...(data.address ? { address: data.address } : {}),
+      };
+
       setClients(prev => [...prev, newClient]);
       setFilteredClients(prev => [...prev, newClient]);
-      
+
       // Selecionar o novo cliente
       setSelectedClientId(newClient.id);
       updateFormData('clientId', newClient.id);
@@ -424,7 +460,7 @@ export const useServiceOrderEdit = (serviceOrderId?: string) => {
     try {
       setIsSubmitting(true);
       
-      const submitData = {
+      const submitData: any = {
         owner_id: user.id,
         client_id: formData.clientId,
         device_type: formData.deviceType,
@@ -444,9 +480,9 @@ export const useServiceOrderEdit = (serviceOrderId?: string) => {
         // Campos de senha do dispositivo
         device_password_type: formData.devicePassword.type,
         device_password_value: formData.devicePassword.value || null,
-        device_password_metadata: formData.devicePassword.metadata || null,
+        device_password_metadata: (formData.devicePassword.metadata as any) || null,
         // Checklist de funcionamento do aparelho
-        device_checklist: formData.deviceChecklist,
+        device_checklist: (formData.deviceChecklist as any) || null,
         notes: formData.notes.trim() || null
       };
 
@@ -512,10 +548,7 @@ export const useServiceOrderEdit = (serviceOrderId?: string) => {
     
     // Validação
     validation,
-    
-    // Auto-save
-    autoSave,
-    
+
     // Funções
     updateFormData,
     handleSelectClient,

@@ -1,0 +1,2 @@
+UPDATE ia_configs SET personality = 'formal' WHERE personality = 'friendly' OR personality IS NULL;
+UPDATE ia_configs SET web_search_enabled = true WHERE web_search_enabled = false OR web_search_enabled IS NULL;

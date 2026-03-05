@@ -240,10 +240,8 @@ export const LicenseReportsPanel: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Relatórios de Licenças</h2>
-          <p className="text-muted-foreground">
-            Última atualização: {new Date(stats.timestamp).toLocaleString('pt-BR')}
-          </p>
+          <h2 className="text-2xl font-bold">Licenças</h2>
+          
         </div>
         <Button onClick={fetchLicenseStats} variant="outline">
           <RefreshCw className="mr-2 h-4 w-4" />
@@ -259,9 +257,7 @@ export const LicenseReportsPanel: React.FC = () => {
       {/* Custom License Creation */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Key className="h-5 w-5" />
-            Criar Licença Personalizada
+          <CardTitle className="flex items-center gap-2"><Key className="h-5 w-5" />Criar Licença Personalizada
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -274,7 +270,7 @@ export const LicenseReportsPanel: React.FC = () => {
                   <Shuffle className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">Qualquer combinação de caracteres ou use o botão para gerar</p>
+              <p className="text-xs text-muted-foreground">Lembre-se de colocar 13 digitos para a licença ser valida.</p>
             </div>
             
             <div className="space-y-2">

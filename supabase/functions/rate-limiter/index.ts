@@ -158,8 +158,8 @@ function generateKey(type: string, identifier: string, endpoint?: string): strin
   return endpoint ? `${type}:${identifier}:${endpoint}` : `${type}:${identifier}`
 }
 
-function isWhitelisted(ip: string, userRole?: string): boolean {
-  if (RATE_LIMIT_CONFIG.antiSpam.whitelist.ips.includes(ip)) {
+function isWhitelisted(ip: string | null | undefined, userRole?: string): boolean {
+  if (ip && RATE_LIMIT_CONFIG.antiSpam.whitelist.ips.includes(ip)) {
     return true
   }
   
@@ -400,7 +400,7 @@ async function enforceRateLimit(
   }
   
   // Check whitelist
-  if (isWhitelisted(ip, userRole)) {
+  if (isWhitelisted(ip, userRole || undefined)) {
     return {
       allowed: true,
       remaining: 999999,
@@ -488,7 +488,8 @@ async function enforceRateLimit(
   }
   
   // 4. Endpoint-specific rate limiting
-  const endpointConfig = strategies.endpoints[endpoint]
+  type EndpointKey = keyof typeof strategies.endpoints;
+  const endpointConfig = strategies.endpoints[endpoint as EndpointKey]
   if (endpointConfig) {
     const endpointKey = generateKey('endpoint', ip, endpoint)
     const endpointResult = checkRateLimit(endpointKey, endpointConfig)
@@ -656,7 +657,7 @@ serve(async (req) => {
     const body = req.method === 'POST' ? await req.text() : ''
     const result = await enforceRateLimit(req, body, supabase)
     
-    const responseHeaders = {
+    const responseHeaders: Record<string, string> = {
       ...corsHeaders,
       'Content-Type': 'application/json',
       'X-RateLimit-Remaining': result.remaining.toString(),
@@ -706,7 +707,7 @@ serve(async (req) => {
       JSON.stringify({
         success: false,
         error: 'Internal server error',
-        message: error.message
+        message: error instanceof Error ? error.message : 'Unknown error'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

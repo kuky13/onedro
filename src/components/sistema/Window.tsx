@@ -179,19 +179,22 @@ export function Window({
         <div className="window-controls flex gap-2">
           <button
             onClick={onMinimize}
-            className="hover:bg-white/20 p-1 rounded transition-colors"
+            className="hover:bg-primary-foreground/20 p-1 rounded transition-colors"
+            aria-label="Minimizar"
           >
             <Minus className="h-4 w-4" />
           </button>
           <button
             onClick={handleMaximize}
-            className="hover:bg-white/20 p-1 rounded transition-colors"
+            className="hover:bg-primary-foreground/20 p-1 rounded transition-colors"
+            aria-label={isMaximized ? "Restaurar" : "Maximizar"}
           >
             {isMaximized ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </button>
           <button
             onClick={onClose}
-            className="hover:bg-destructive p-1 rounded transition-colors"
+            className="hover:bg-destructive hover:text-destructive-foreground p-1 rounded transition-colors"
+            aria-label="Fechar"
           >
             <X className="h-4 w-4" />
           </button>

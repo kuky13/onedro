@@ -28,6 +28,31 @@ const buildWhatsAppUrl = (phone?: string, message?: string): string => {
   return `https://wa.me/${encodedText ? `?text=${encodedText}` : ''}`;
 };
 interface Budget {
+  shop_name?: string | null;
+  device_model?: string | null;
+  device_type?: string | null;
+  issue?: string | null;
+  part_quality?: string | null;
+  part_type?: string | null;
+  cash_price?: number | null;
+  installment_price?: number | null;
+  installments?: number | null;
+  installments_count?: number | null;
+  warranty_months?: number | null;
+  includes_delivery?: boolean | null;
+  includes_screen_protector?: boolean | null;
+  custom_services?: string | null;
+  notes?: string | null;
+  valid_until?: string | null;
+  parts?: Array<{
+    name?: string | null;
+    part_type?: string | null;
+    quantity?: number | null;
+    price?: number | null;
+    cash_price?: number | null;
+    installment_price?: number | null;
+    warranty_months?: number | null;
+  }>;
   title?: string;
   description?: string;
   total?: number;
@@ -93,10 +118,10 @@ export const generateServiceWhatsAppMessage = (
   if ((firstBudget as any)?.includes_screen_protector) additionalServices.push('Película 3D de brinde');
 
   if ((firstBudget as any)?.custom_services) {
-    const customText = String((firstBudget as any).custom_services).trim();
+    const customText = String((firstBudget as any).custom_services ?? '').trim();
     if (customText) {
-      const lines = customText.split('\n').filter(line => line.trim());
-      lines.forEach(line => {
+      const lines = customText.split('\n').filter((line: string) => line.trim());
+      lines.forEach((line: string) => {
         const cleanLine = line.replace(/^[•\-*]\s*/, '').trim();
         if (cleanLine) additionalServices.push(cleanLine);
       });
@@ -191,11 +216,11 @@ export const generateWhatsAppMessage = (budget: Budget, budgetWarningDays?: numb
   
   // Adicionar serviços personalizados
   if (budget.custom_services) {
-    const customServicesText = budget.custom_services.trim();
+    const customServicesText = String(budget.custom_services ?? '').trim();
     if (customServicesText) {
       // Se já tiver bullets ou quebras de linha, processar
-      const lines = customServicesText.split('\n').filter(line => line.trim());
-      lines.forEach(line => {
+      const lines = customServicesText.split('\n').filter((line: string) => line.trim());
+      lines.forEach((line: string) => {
         const cleanLine = line.replace(/^[•\-*]\s*/, '').trim();
         if (cleanLine) additionalServices.push(cleanLine);
       });
@@ -279,7 +304,9 @@ export const copyTextToClipboard = async (text: string): Promise<boolean> => {
       await navigator.clipboard.writeText(text);
       return true;
     }
-  } catch {}
+  } catch {
+    // Ignore clipboard errors
+  }
   try {
     const textarea = document.createElement('textarea');
     textarea.value = text;

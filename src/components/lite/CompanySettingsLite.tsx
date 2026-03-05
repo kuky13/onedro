@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,7 +41,10 @@ export const CompanySettingsLite = ({ userId, profile }: CompanySettingsLiteProp
         email: companyInfo.email || ''
       });
     }
-  }, [companyInfo]);
+    // Mantém userId/profile referenciados para futuras personalizações
+    void userId;
+    void profile;
+  }, [companyInfo, userId, profile]);
 
   const handleSave = async () => {
     try {
@@ -109,7 +112,7 @@ export const CompanySettingsLite = ({ userId, profile }: CompanySettingsLiteProp
         <div className="space-y-2">
           <Label>Logo da Empresa</Label>
           <LogoUploadZone
-            currentLogoUrl={companyInfo?.logo_url}
+            currentLogoUrl={companyInfo?.logo_url || ''}
             onUpload={handleLogoUpload}
             onRemove={() => updateCompanyInfo({ logo_url: '' })}
             isUploading={false}

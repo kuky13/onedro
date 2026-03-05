@@ -1,3 +1,112 @@
 project_id = "oghjlypdnmqecaavekyr"
-[db]
-major_version = 15
+
+[functions.admin-reset-password]
+verify_jwt = false
+
+[functions.admin-update-user-email]
+verify_jwt = false
+
+[functions.audit-system]
+verify_jwt = false
+
+[functions.cancel-mercadopago-payment]
+verify_jwt = false
+
+[functions.cancel-mercadopago-subscription]
+verify_jwt = false
+
+[functions.chat-ai]
+verify_jwt = false
+
+[functions.check-mercadopago-payment]
+verify_jwt = false
+
+[functions.cleanup-service-orders]
+verify_jwt = false
+
+[functions.create-mercadopago-checkout]
+verify_jwt = false
+
+[functions.create-mercadopago-subscription]
+verify_jwt = false
+
+[functions.evolution-list-groups]
+verify_jwt = false
+
+[functions.manage-user-profile]
+verify_jwt = false
+
+[functions.mercadopago-subscription-webhook]
+verify_jwt = false
+
+[functions.mercadopago-webhook]
+verify_jwt = false
+
+[functions.notification-system]
+verify_jwt = false
+
+[functions.rate-limiter]
+verify_jwt = false
+
+[functions.real-time-monitoring]
+verify_jwt = false
+
+[functions.security-api]
+verify_jwt = false
+
+[functions.send-license-email]
+verify_jwt = false
+
+[functions.send-payment-receipt-email]
+verify_jwt = false
+
+[functions.send-push-notification]
+verify_jwt = false
+
+[functions.triage-ai]
+verify_jwt = false
+
+[functions.validate-license]
+verify_jwt = false
+
+[functions.waha-list-groups]
+verify_jwt = false
+
+[functions.waha-proxy]
+verify_jwt = false
+
+[functions.whatsapp-admin-cleanup]
+verify_jwt = false
+
+[functions.whatsapp-ai-reply]
+verify_jwt = false
+
+[functions.whatsapp-context]
+verify_jwt = false
+
+[functions.whatsapp-instance-manage]
+verify_jwt = false
+
+[functions.whatsapp-proxy]
+verify_jwt = false
+
+[functions.whatsapp-qr-connect]
+verify_jwt = false
+
+[functions.whatsapp-webhook]
+verify_jwt = false
+
+[functions.whatsapp-zapi-orcamentos]
+verify_jwt = false
+
+[functions.zapi-list-groups]
+verify_jwt = false
+
+[functions.media-download-proxy]
+verify_jwt = false
+
+[functions.sync-budgets-to-store]
+verify_jwt = false
+
+[functions.analyze-budgets]
+verify_jwt = false

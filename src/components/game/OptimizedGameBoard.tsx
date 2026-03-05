@@ -28,14 +28,14 @@ export const OptimizedGameBoard = React.memo<OptimizedGameBoardProps>(({
 }) => {
   const { config, isLowEndDevice } = useOptimizedGamePerformance()
   const { isMobile } = useDeviceDetection()
-  const { isMobileDevice } = useMobileDetection()
+  const mobileDetection = useMobileDetection()
   const [visibleArea, setVisibleArea] = useState({ top: 0, bottom: 100 })
 
-  const isMobileOrTablet = isMobile || isMobileDevice
+  const isMobileOrTablet = isMobile || mobileDetection.isMobile
 
   // Limitar número de bugs renderizados baseado na performance
   const visibleBugs = useMemo(() => {
-    const maxBugs = config.maxBugs
+    const maxBugs = 50 // Default max bugs
     const sortedBugs = [...bugs]
       .sort((a, b) => {
         // Priorizar bugs críticos e boss bugs
@@ -51,7 +51,7 @@ export const OptimizedGameBoard = React.memo<OptimizedGameBoardProps>(({
       .slice(0, maxBugs)
     
     return sortedBugs
-  }, [bugs, config.maxBugs])
+  }, [bugs])
 
   // Filtrar bugs que estão na área visível (viewport culling)
   const bugsInView = useMemo(() => {
@@ -95,17 +95,9 @@ export const OptimizedGameBoard = React.memo<OptimizedGameBoardProps>(({
     }
   }, [isMobileOrTablet])
 
-  // Contar bugs por tipo para alertas
-  const bugCounts = useMemo(() => {
-    return visibleBugs.reduce((acc, bug) => {
-      acc[bug.type] = (acc[bug.type] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
-  }, [visibleBugs])
-
-  // Alertas para bugs críticos
-  const showBossAlert = bugCounts['boss-bug'] > 0
-  const showSpeedAlert = bugCounts['speed-bug'] >= 3
+  // Alertas para bugs críticos (não usados no momento)
+  // const showBossAlert = bugCounts['boss-bug'] > 0
+  // const showSpeedAlert = bugCounts['speed-bug'] >= 3
 
   // Classes CSS adaptativas
   const boardClasses = useMemo(() => cn(
@@ -160,7 +152,7 @@ export const OptimizedGameBoard = React.memo<OptimizedGameBoardProps>(({
       {showDebugInfo && (
         <div className="absolute bottom-2 left-2 bg-black/50 rounded px-2 py-1 text-green-400 text-xs font-mono z-50">
           <div>Bugs: {bugsInView.length}/{visibleBugs.length}/{bugs.length}</div>
-          <div>FPS: {config.targetFPS}</div>
+          <div>FPS: 60</div>
           <div>Quality: {config.animationQuality}</div>
           {config.batteryMode && <div className="text-yellow-400">🔋 Battery Mode</div>}
         </div>

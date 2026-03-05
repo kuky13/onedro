@@ -1,0 +1,1 @@
+UPDATE drippy_settings SET active_provider = 'lovable', active_model = 'google/gemini-3-flash-preview', updated_at = now() WHERE id = 'de201935-5621-404e-a6c4-529a6e0889b5';

@@ -1,19 +1,18 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 export interface GameSettings {
   id?: string;
   speed_bug_spawn_rate: number;
   speed_bug_speed_multiplier: number;
-  bug_spawn_percentage?: number;
-  bug_damage?: number;
-  hit_sound_enabled?: boolean;
-  hit_sound_volume?: number;
-  boss_bug_spawn_rate?: number;
-  boss_bug_points?: number;
-  boss_bug_timer?: number;
-  boss_bug_damage?: number;
+  bug_spawn_percentage?: number | null;
+  bug_damage?: number | null;
+  hit_sound_enabled?: boolean | null;
+  hit_sound_volume?: number | null;
+  boss_bug_spawn_rate?: number | null;
+  boss_bug_points?: number | null;
+  boss_bug_timer?: number | null;
+  boss_bug_damage?: number | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -26,11 +25,14 @@ export const useGameSettings = () => {
   const fetchSettings = async () => {
     try {
       setIsLoading(true);
-      let { data, error } = await supabase
+      const response = await supabase
         .from('game_settings')
         .select('*')
         .limit(1)
         .single();
+      
+      let data = response.data;
+      const error = response.error;
 
       if (error && error.code === 'PGRST116') { // No rows found
         // Insert default settings

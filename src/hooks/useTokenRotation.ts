@@ -47,9 +47,12 @@ export const useTokenRotation = (config: Partial<TokenRotationConfig> = {}) => {
         return false;
       }
 
-      // Decodificar o JWT para obter a data de expiração
-      const tokenPayload = JSON.parse(atob(session.access_token.split('.')[1]));
-      const expiryTime = tokenPayload.exp * 1000; // Converter para milliseconds
+      const tokenPart = session.access_token.split('.')[1];
+      if (!tokenPart) return false;
+      const tokenPayload = JSON.parse(atob(tokenPart));
+      const expiryTime = (Number(tokenPayload?.exp || 0) * 1000) || 0;
+      if (!expiryTime) return false;
+
       const currentTime = Date.now();
       const timeUntilExpiry = expiryTime - currentTime;
       const refreshThreshold = finalConfig.refreshBeforeExpiry * 60 * 1000; // Converter para milliseconds
@@ -67,7 +70,11 @@ export const useTokenRotation = (config: Partial<TokenRotationConfig> = {}) => {
       }
 
       return true;
-    } catch (error) {
+    } catch (error: any) {
+      // Ignorar erros de aborto silenciosamente
+      if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
+        return false;
+      }
       debugLogger.error('TokenRotation', 'Erro na verificação de token', { error });
       return false;
     }

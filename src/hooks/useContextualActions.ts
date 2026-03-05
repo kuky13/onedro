@@ -190,9 +190,11 @@ export function useContextualActions() {
         throw new Error('Ordem de serviço não encontrada');
       }
 
+      const currentStatus = currentOrder.status ?? 'opened';
+
       // Validar se a transição é permitida
-      if (!isValidTransition(currentOrder.status, action.nextStatus)) {
-        throw new Error(`Transição de status não permitida: ${getStatusText(currentOrder.status)} → ${action.nextStatus}`);
+      if (!isValidTransition(currentStatus, action.nextStatus)) {
+        throw new Error(`Transição de status não permitida: ${getStatusText(currentStatus)} → ${action.nextStatus}`);
       }
 
       // Usar diretamente o status da ação (já são status válidos do banco)

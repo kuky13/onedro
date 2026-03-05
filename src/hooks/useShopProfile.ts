@@ -1,5 +1,3 @@
-
-import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,8 +9,8 @@ export interface ShopProfile {
   shop_name: string;
   address: string;
   contact_phone: string;
-  cnpj?: string;
-  logo_url?: string;
+  cnpj?: string | null;
+  logo_url?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -64,7 +62,7 @@ export const useShopProfile = () => {
 
       if (shopProfile?.id) {
         // Update existing profile
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('shop_profiles')
           .update(payload)
           .eq('id', shopProfile.id)
@@ -73,17 +71,17 @@ export const useShopProfile = () => {
           .single();
 
         if (error) throw error;
-        return data;
+        return true;
       } else {
         // Create new profile
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('shop_profiles')
           .insert(payload)
           .select()
           .single();
 
         if (error) throw error;
-        return data;
+        return true;
       }
     },
     onSuccess: () => {
@@ -93,7 +91,7 @@ export const useShopProfile = () => {
         description: 'As informações da empresa foram atualizadas com sucesso.',
       });
     },
-    onError: (error) => {
+    onError: (_error) => {
       showError({
         title: 'Erro ao salvar',
         description: 'Ocorreu um erro ao salvar as informações da empresa.',
@@ -143,7 +141,7 @@ export const useShopProfile = () => {
       // Uploading file
 
       // Upload do arquivo
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('company-logos')
         .upload(fileName, file, {
           upsert: true,
@@ -179,7 +177,7 @@ export const useShopProfile = () => {
           title: 'Logo enviada com sucesso',
           description: 'A logo da empresa foi atualizada.',
         });
-      } catch (error) {
+      } catch (_error) {
         showError({
           title: 'Erro ao atualizar perfil',
           description: 'Logo enviada, mas houve erro ao atualizar o perfil.',
@@ -189,7 +187,7 @@ export const useShopProfile = () => {
     onError: (error) => {
       showError({
         title: 'Erro ao enviar logo',
-        description: error.message || 'Ocorreu um erro ao enviar a logo.',
+        description: (error as any)?.message || 'Ocorreu um erro ao enviar a logo.',
       });
     },
   });
@@ -221,8 +219,8 @@ export const useShopProfile = () => {
           ...shopProfile,
           logo_url: null 
         });
-      } catch (error) {
-        throw error;
+      } catch (_error) {
+        throw _error;
       }
     },
     onSuccess: () => {
@@ -231,7 +229,7 @@ export const useShopProfile = () => {
         description: 'A logo da empresa foi removida com sucesso.',
       });
     },
-    onError: (error) => {
+    onError: (_error) => {
       showError({
         title: 'Erro ao remover logo',
         description: 'Ocorreu um erro ao remover a logo.',

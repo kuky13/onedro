@@ -19,9 +19,6 @@ import {
   User as UserIcon,
   Crown,
   RefreshCw,
-  BarChart3,
-  Activity,
-  Cog,
   Copy,
   Eye,
   EyeOff
@@ -30,7 +27,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -41,9 +37,6 @@ import { useUserManagement } from '@/hooks/useUserManagement';
 import { UserEditModal } from '@/components/UserEditModal';
 import { UserDeletionDialog } from './UserDeletionDialog';
 import { UserRenewalDialog } from './UserRenewalDialog';
-import { UserAnalytics } from './UserAnalytics';
-import { UserActivityHistory } from './UserActivityHistory';
-import { UserSettings } from './UserSettings';
 
 type ViewMode = 'table' | 'cards';
 type FilterRole = 'all' | 'admin' | 'manager' | 'user';
@@ -82,7 +75,6 @@ export const EnhancedUserManagement = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [activeTab, setActiveTab] = useState('users');
   const [showLicenseCodes, setShowLicenseCodes] = useState(false);
   const [copiedLicense, setCopiedLicense] = useState<string | null>(null);
 
@@ -207,30 +199,19 @@ export const EnhancedUserManagement = () => {
     toast.success(`${selectedUserData.length} usuários exportados com sucesso!`);
   };
 
-  // Função para exportar todos os usuários
-  const exportAllUsers = () => {
-    const csvContent = generateCSV(filteredAndSortedUsers);
-    downloadCSV(csvContent, 'todos_usuarios.csv');
-    toast.success(`${filteredAndSortedUsers.length} usuários exportados com sucesso!`);
-  };
-
-  // Função para importar usuários
+  // Funções não utilizadas atualmente - comentadas para evitar erros
+  /*
   const importUsers = () => {
     // Implementar lógica de importação
     toast.success('Funcionalidade de importação será implementada em breve');
   };
 
-  // Função para backup de dados
   const backupData = () => {
     // Implementar lógica de backup
     toast.success('Backup iniciado com sucesso');
   };
+  */
 
-  // Função para limpeza de usuários inativos
-  const cleanupInactiveUsers = () => {
-    // Implementar lógica de limpeza
-    toast.success('Limpeza de usuários inativos iniciada');
-  };
 
   const exportUsers = () => {
     const usersToExport = selectedUsers.length > 0 
@@ -307,9 +288,11 @@ export const EnhancedUserManagement = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={exportAllUsers}>
-            <Download className="h-4 w-4 mr-2" />
-            Exportar Todos
+          <Button
+            variant="outline"
+            onClick={() => window.open('/supadmin/users', '_blank')}
+          >
+            Ir para painel avançado (SQL)
           </Button>
           {selectedUsers.length > 0 && (
             <Button variant="outline" onClick={exportSelectedUsers}>
@@ -320,29 +303,8 @@ export const EnhancedUserManagement = () => {
         </div>
       </div>
 
-      {/* Sistema de abas */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="users" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Usuários
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Análises
-          </TabsTrigger>
-          <TabsTrigger value="activity" className="flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            Atividades
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Cog className="h-4 w-4" />
-            Configurações
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Aba de Usuários */}
-        <TabsContent value="users" className="space-y-6">
+      {/* Conteúdo de Usuários */}
+      <div className="space-y-6">
           {/* Estatísticas */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             <Card>
@@ -577,28 +539,7 @@ export const EnhancedUserManagement = () => {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-
-        {/* Aba de Análises */}
-        <TabsContent value="analytics">
-          <UserAnalytics users={filteredAndSortedUsers} />
-        </TabsContent>
-
-        {/* Aba de Atividades */}
-        <TabsContent value="activity">
-          <UserActivityHistory />
-        </TabsContent>
-
-        {/* Aba de Configurações */}
-        <TabsContent value="settings">
-          <UserSettings 
-            onExportUsers={exportAllUsers}
-            onImportUsers={importUsers}
-            onBackupData={backupData}
-            onCleanupInactiveUsers={cleanupInactiveUsers}
-          />
-        </TabsContent>
-      </Tabs>
+      </div>
 
       {/* Modais */}
       <UserEditModal

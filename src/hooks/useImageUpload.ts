@@ -3,7 +3,6 @@ import {
   ImageUploadState,
   ImageUploadHookReturn,
   ImageUploadResult,
-  ServiceOrderImage,
   IMAGE_UPLOAD_CONFIG,
 } from '../types/imageUpload';
 import { RadicalImageProcessingService } from '../services/radicalImageProcessingService';
@@ -33,7 +32,7 @@ export function useImageUpload(serviceOrderId?: string): ImageUploadHookReturn {
     console.log('🔍 useImageUpload - useEffect executado com serviceOrderId:', serviceOrderId);
     if (serviceOrderId) {
       console.log('🔍 useImageUpload - Chamando loadExistingImages para:', serviceOrderId);
-      loadExistingImages(serviceOrderId);
+      loadExistingImages();
     }
   }, [serviceOrderId]);
 
@@ -77,7 +76,8 @@ export function useImageUpload(serviceOrderId?: string): ImageUploadHookReturn {
     }
   }, [serviceOrderId]);
 
-  const addFiles = useCallback((newFiles: File[]) => {
+  const addFiles = useCallback(async (files: File[] | FileList): Promise<void> => {
+    const newFiles: File[] = Array.isArray(files) ? files : Array.from(files);
     console.log('📁 UPLOAD: Iniciando addFiles com', newFiles.length, 'arquivos');
 
     // 🔥 INTERCEPTADOR DEFINITIVO - FORÇA MIME TYPE CORRETO IMEDIATAMENTE
@@ -222,7 +222,7 @@ export function useImageUpload(serviceOrderId?: string): ImageUploadHookReturn {
     // 🛡️ VALIDAÇÃO TRIPLA - PONTO 2 (ANTES DO UPLOAD)
     console.log('🛡️ VALIDAÇÃO TRIPLA PONTO 2: Verificando arquivos antes do upload...');
     for (let i = 0; i < state.files.length; i++) {
-      const file = state.files[i];
+      const file = state.files[i]!;
       console.log(`🛡️ VALIDAÇÃO TRIPLA PONTO 2 - Arquivo ${i + 1}:`, {
         name: file.name,
         type: file.type,
@@ -258,21 +258,22 @@ export function useImageUpload(serviceOrderId?: string): ImageUploadHookReturn {
 
     try {
       const results: ImageUploadResult[] = [];
-      
+
       // Calcular ordem de upload baseada nas imagens já existentes
       const startOrder = state.uploadedImages.length + 1;
 
       for (let i = 0; i < state.files.length; i++) {
         try {
+          const file = state.files[i]!;
           console.log(`🔍 useImageUpload.uploadImages - Enviando arquivo ${i + 1}/${state.files.length}:`, {
-            name: state.files[i].name,
-            type: state.files[i].type,
-            size: state.files[i].size,
+            name: file.name,
+            type: file.type,
+            size: file.size,
             order: startOrder + i
           });
 
           const image = await SupabaseStorageService.uploadImage({
-            file: state.files[i],
+            file,
             serviceOrderId: orderId,
             uploadOrder: startOrder + i,
             userId: user?.id || '',
@@ -292,7 +293,7 @@ export function useImageUpload(serviceOrderId?: string): ImageUploadHookReturn {
           }));
         } catch (error) {
           console.error(`🔍 useImageUpload.uploadImages - Erro no upload ${i + 1}:`, error);
-          
+
           results.push({
             success: false,
             error: error instanceof Error ? error.message : 'Erro desconhecido',
@@ -331,7 +332,7 @@ export function useImageUpload(serviceOrderId?: string): ImageUploadHookReturn {
       }));
       throw error;
     }
-  }, [state.files, state.uploadedImages.length, state.previews]);
+  }, [state.files, state.uploadedImages.length, state.previews, user?.id]);
 
   const deleteImage = useCallback(async (imageId: string): Promise<boolean> => {
     try {

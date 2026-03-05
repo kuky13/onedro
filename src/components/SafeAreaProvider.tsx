@@ -33,7 +33,6 @@ export const SafeAreaProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     const detectDevice = () => {
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       const isIPhone = /iPhone/.test(navigator.userAgent);
       
       if (!isIPhone) {

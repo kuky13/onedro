@@ -1,7 +1,4 @@
-
-import React from 'react';
 import { cn } from '@/lib/utils';
-
 // Skeleton components for different content types
 export const TextSkeleton = ({ className, lines = 3 }: { className?: string; lines?: number }) => (
   <div className={cn("space-y-2", className)}>

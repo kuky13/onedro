@@ -55,7 +55,7 @@ export const APP_CONFIG = {
   // Marketing copy
   marketing: {
     heroTitle: 'Transforme sua Assistência Técnica',
-    heroSubtitle: 'Junte-se a centenas de profissionais que já utilizam o OneDrip para gerenciar seus negócios de forma mais eficiente.',
+    heroSubtitle: 'Venha usar a OneDrip para gerenciar seus negócios de forma mais eficiente.',
     benefitsTitle: 'Vantagens do OneDrip',
     benefitsSubtitle: 'Descubra os benefícios de usar nosso sistema',
     testimonialsTitle: 'O que nossos clientes dizem',

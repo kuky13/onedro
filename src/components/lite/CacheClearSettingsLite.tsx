@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -33,27 +33,27 @@ export const CacheClearSettingsLite = () => {
           if (databases && databases.length > 0) {
             await Promise.all(
               databases.map(db => {
-                if (db.name) {
-                  return new Promise<void>((resolve, reject) => {
-                    const deleteReq = indexedDB.deleteDatabase(db.name!);
-                    deleteReq.onsuccess = () => {
-                      console.log(`IndexedDB removido: ${db.name}`);
-                      resolve();
-                    };
-                    deleteReq.onerror = () => {
-                      console.error(`Erro ao remover IndexedDB: ${db.name}`, deleteReq.error);
-                      resolve(); // Continue mesmo com erro
-                    };
-                    deleteReq.onblocked = () => {
-                      console.warn(`Bloqueado ao remover IndexedDB: ${db.name}`);
-                      resolve(); // Continue anyway
-                    };
-                    // Timeout para evitar travamento
-                    setTimeout(() => resolve(), 5000);
-                  });
-                }
-                return Promise.resolve();
-              })
+                 if (db.name) {
+                   return new Promise<void>((resolve) => {
+                     const deleteReq = indexedDB.deleteDatabase(db.name!);
+                     deleteReq.onsuccess = () => {
+                       console.log(`IndexedDB removido: ${db.name}`);
+                       resolve();
+                     };
+                     deleteReq.onerror = () => {
+                       console.error(`Erro ao remover IndexedDB: ${db.name}`, deleteReq.error);
+                       resolve(); // Continue mesmo com erro
+                     };
+                     deleteReq.onblocked = () => {
+                       console.warn(`Bloqueado ao remover IndexedDB: ${db.name}`);
+                       resolve(); // Continue anyway
+                     };
+                     // Timeout para evitar travamento
+                     setTimeout(() => resolve(), 5000);
+                   });
+                 }
+                 return Promise.resolve();
+               })
             );
           }
         } catch (error) {

@@ -90,7 +90,7 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
           .from('service_orders')
           .select(`
             id,
-            formatted_id,
+            sequential_number,
             device_type,
             device_model,
             reported_issue,
@@ -109,7 +109,11 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
           .single();
 
         if (error) throw error;
-        return data;
+
+        const seq = (data as any)?.sequential_number as number | null | undefined;
+        const formatted_id = seq != null ? `OS: ${String(seq).padStart(4, '0')}` : data.id.slice(-8);
+
+        return { ...(data as any), formatted_id } as ServiceOrderRealTimeData;
       }
       return null;
     },
@@ -134,7 +138,15 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
         .limit(50);
 
       if (error) throw error;
-      return data || [];
+
+      return (data || []).map((e: any) => ({
+        id: e.id,
+        event_type: e.event_type,
+        customer_message: e.customer_message ?? null,
+        customer_visible: !!e.customer_visible,
+        created_at: e.created_at ?? new Date().toISOString(),
+        payload: e.payload,
+      }));
     },
     enabled: !!serviceOrderQuery.data?.id,
     staleTime: 1000 * 60 * 2, // 2 minutes
@@ -145,7 +157,7 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
     if (eventsQuery.data) {
       setEvents(eventsQuery.data);
       if (eventsQuery.data.length > 0) {
-        setLastEventId(eventsQuery.data[0].id);
+        setLastEventId(eventsQuery.data[0]!.id);
       }
     }
   }, [eventsQuery.data]);
@@ -235,8 +247,16 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
           },
           (payload) => {
             console.log('New event:', payload);
-            const newEvent = payload.new as ServiceOrderEvent;
-            
+            const raw = (payload as any).new as any;
+            const newEvent: ServiceOrderEvent = {
+              id: raw.id,
+              event_type: raw.event_type,
+              customer_message: raw.customer_message ?? null,
+              customer_visible: !!raw.customer_visible,
+              created_at: raw.created_at ?? new Date().toISOString(),
+              payload: raw.payload,
+            };
+
             // Only handle customer-visible events
             if (newEvent.customer_visible) {
               handleNewEvent(newEvent);
@@ -294,14 +314,28 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
             .select('id, event_type, customer_message, customer_visible, created_at, payload')
             .eq('service_order_id', serviceOrderQuery.data.id)
             .eq('customer_visible', true)
-            .gt('created_at', lastEventId ? 
-              events.find(e => e.id === lastEventId)?.created_at || new Date().toISOString() : 
-              new Date(Date.now() - pollingInterval).toISOString()
+            .gt(
+              'created_at',
+              lastEventId
+                ? events.find(e => e.id === lastEventId)?.created_at || new Date().toISOString()
+                : new Date(Date.now() - pollingInterval).toISOString()
             )
             .order('created_at', { ascending: false });
 
           if (newEvents && newEvents.length > 0) {
-            newEvents.reverse().forEach(handleNewEvent);
+            newEvents
+              .slice()
+              .reverse()
+              .forEach((e: any) =>
+                handleNewEvent({
+                  id: e.id,
+                  event_type: e.event_type,
+                  customer_message: e.customer_message ?? null,
+                  customer_visible: !!e.customer_visible,
+                  created_at: e.created_at ?? new Date().toISOString(),
+                  payload: e.payload,
+                })
+              );
           }
         }
 
@@ -380,14 +414,16 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
   // Log customer view
   useEffect(() => {
     if (serviceOrderQuery.data?.id && shareToken) {
+      const soId = serviceOrderQuery.data.id;
+
       // Log that customer viewed the service order
       const logCustomerView = async () => {
         try {
           const { error } = await supabase.rpc('log_customer_view', {
-            p_service_order_id: serviceOrderQuery.data.id,
+            p_service_order_id: soId,
             p_share_token: shareToken
           });
-          
+
           if (error) {
             console.error('Error logging customer view:', error);
           }
@@ -395,7 +431,7 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
           console.error('Failed to log customer view:', err);
         }
       };
-      
+
       logCustomerView();
     }
   }, [serviceOrderQuery.data?.id, shareToken]);

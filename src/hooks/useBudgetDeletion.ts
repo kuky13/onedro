@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,33 +43,25 @@ export const useBudgetDeletion = () => {
     });
   }, [queryClient]);
 
-  // Restaurar item no cache se exclusão falhar
-  const restoreOptimisticUpdate = useCallback((budgetId: string, budgetData: any) => {
-    console.log('Restoring optimistic update for budget:', budgetId);
-    queryClient.setQueryData(['budgets'], (oldData: any) => {
-      if (!oldData) return [budgetData];
-      return [...oldData, budgetData];
-    });
-  }, [queryClient]);
 
   // Single budget soft deletion
   const deleteSingleBudget = useMutation({
     mutationFn: async ({ budgetId, deletionReason }: { budgetId: string; deletionReason?: string }) => {
       console.log('Iniciando soft delete do orçamento:', budgetId);
-      
+
       // Verificar se o usuário está autenticado
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error('Usuário não autenticado. Faça login novamente.');
       }
-      
+
       console.log('Usuário autenticado:', user.id);
-      
-      const { data, error } = await supabase.rpc('soft_delete_budget_with_audit', {
-        p_budget_id: budgetId,
-        p_deletion_reason: deletionReason
-      });
-      
+
+      const rpcArgs: any = { p_budget_id: budgetId };
+      if (deletionReason) rpcArgs.p_deletion_reason = deletionReason;
+
+      const { data, error } = await supabase.rpc('soft_delete_budget_with_audit', rpcArgs);
+
       if (error) {
         console.error('Erro no soft delete:', error);
         throw new Error(error.message || 'Erro ao excluir orçamento');
@@ -80,7 +71,7 @@ export const useBudgetDeletion = () => {
       if (!response?.success) {
         throw new Error(response?.error || 'Falha na exclusão do orçamento');
       }
-      
+
       return response;
     },
     onMutate: async ({ budgetId }) => {
@@ -97,7 +88,7 @@ export const useBudgetDeletion = () => {
         description: "O orçamento foi excluído e está disponível na lixeira por 90 dias. Acesse a lixeira no menu lateral para restaurá-lo se necessário.",
       });
     },
-    onError: (error: Error, variables, context) => {
+    onError: (error: Error, _variables, context) => {
       console.error('Erro na exclusão:', error);
       // Restaurar dados se falhar
       if (context?.previousData) {
@@ -145,7 +136,7 @@ export const useBudgetDeletion = () => {
         description: `${data.deleted_count} orçamento(s) foram movidos para a lixeira.`,
       });
     },
-    onError: (error: Error, variables, context) => {
+    onError: (error: Error, _variables, context) => {
       console.error('Erro na exclusão em massa:', error);
       // Restaurar dados se falhar
       if (context?.previousData) {
@@ -226,7 +217,7 @@ export const useBudgetDeletion = () => {
         });
       }
     },
-    onError: (error: Error, variables, context) => {
+    onError: (error: Error, _variables, context) => {
       console.error('Erro na exclusão em lote:', error);
       // Restaurar dados se falhar
       if (context?.previousData) {
@@ -290,10 +281,9 @@ export const useBudgetDeletion = () => {
     setIsDeleting(true);
     try {
       console.log('Starting single deletion for budget:', options.budgetId);
-      await deleteSingleBudget.mutateAsync({
-        budgetId: options.budgetId,
-        deletionReason: options.deletionReason
-      });
+      const payload: any = { budgetId: options.budgetId };
+      if (options.deletionReason) payload.deletionReason = options.deletionReason;
+      await deleteSingleBudget.mutateAsync(payload);
       console.log('Single deletion completed successfully');
     } finally {
       setIsDeleting(false);
@@ -304,9 +294,9 @@ export const useBudgetDeletion = () => {
     setIsDeleting(true);
     try {
       console.log('Starting mass deletion');
-      await deleteAllBudgets.mutateAsync({
-        deletionReason: options.deletionReason
-      });
+      const payload: any = {};
+      if (options.deletionReason) payload.deletionReason = options.deletionReason;
+      await deleteAllBudgets.mutateAsync(payload);
       console.log('Mass deletion completed successfully');
     } finally {
       setIsDeleting(false);
@@ -325,10 +315,9 @@ export const useBudgetDeletion = () => {
     setIsDeleting(true);
     try {
       console.log('Starting batch deletion for budgets:', options.budgetIds);
-      await deleteSelectedBudgets.mutateAsync({
-        budgetIds: options.budgetIds,
-        deletionReason: options.deletionReason
-      });
+      const payload: any = { budgetIds: options.budgetIds };
+      if (options.deletionReason) payload.deletionReason = options.deletionReason;
+      await deleteSelectedBudgets.mutateAsync(payload);
       console.log('Batch deletion completed successfully');
     } finally {
       setIsDeleting(false);

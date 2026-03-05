@@ -60,15 +60,19 @@ export const useCompanyDataLoader = () => {
   // Combinar dados de ambos os hooks
   const combinedData = useMemo((): CombinedCompanyData => {
     const isLoading = shopLoading || brandingLoading;
-    const hasData = !!(shopProfile || companyInfo);
-    
+    const safeShopProfile = shopProfile ?? null;
+    const safeCompanyInfo = companyInfo ?? null;
+    const safeShareSettings = shareSettings ?? null;
+
+    const hasData = !!(safeShopProfile || safeCompanyInfo);
+
     return {
-      shopProfile,
-      companyInfo,
-      shareSettings,
+      shopProfile: safeShopProfile,
+      companyInfo: safeCompanyInfo,
+      shareSettings: safeShareSettings,
       isLoading,
       hasData,
-      error
+      error,
     };
   }, [shopProfile, companyInfo, shareSettings, shopLoading, brandingLoading, error]);
 

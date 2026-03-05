@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, User, Building2, Shield, Settings, Save, Star, FileText, Cookie, Home } from 'lucide-react';
+import { ArrowLeft, User, Shield, Settings, FileText, Cookie, Home } from 'lucide-react';
 import { useIOSDetection } from '@/hooks/useIOSDetection';
 import { ProfileSettingsLite } from '@/components/lite/ProfileSettingsLite';
 import { SecuritySettingsLite } from '@/components/lite/SecuritySettingsLite';
@@ -22,7 +22,7 @@ export const SettingsLite = ({
   onBack
 }: SettingsLiteProps) => {
   const [activeSection, setActiveSection] = useState<string>('account');
-  const { isIOS } = useIOSDetection();
+  useIOSDetection();
   
   const sections = [{
     id: 'account',

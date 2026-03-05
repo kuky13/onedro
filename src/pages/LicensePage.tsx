@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,13 +25,9 @@ export const LicensePage = () => {
   } = useToast();
   const navigate = useNavigate();
   const { 
-    licenseStatus, 
-    isLoading: licenseLoading, 
-    refreshLicense, 
-    hasValidLicense, 
-    isExpired, 
-    needsActivation,
-    daysUntilExpiry 
+    licenseStatus,
+    refreshLicense,
+    isExpired
   } = useLicense();
   
   // Custom revalidation function for license activation
@@ -67,7 +63,9 @@ export const LicensePage = () => {
     }
 
     // Validar formato do código (13 caracteres alfanuméricos)
-    if (licenseCode.length !== 13 || !/^[A-Z0-9]{13}$/.test(licenseCode)) {
+    // Usamos uma validação simples para não bloquear códigos válidos gerados pelo novo sistema
+    const cleanCode = licenseCode.trim().toUpperCase();
+    if (cleanCode.length !== 13 || !/^[A-Z0-9]{13}$/.test(cleanCode)) {
       showError({
         title: 'Formato Inválido',
         description: 'O código deve ter exatamente 13 caracteres (letras e números).'
@@ -79,8 +77,8 @@ export const LicensePage = () => {
       const {
         data,
         error
-      } = await supabase.rpc('activate_license_enhanced', {
-        license_code: licenseCode.trim(),
+      } = await supabase.rpc('activate_license_fixed', { // Usando activate_license_fixed para compatibilidade total
+        p_license_code: cleanCode,
         p_user_id: user.id
       });
       if (error) {

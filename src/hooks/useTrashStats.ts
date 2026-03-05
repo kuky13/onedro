@@ -19,11 +19,6 @@ interface DeletedServiceOrder {
   total_price: number;
 }
 
-interface CleanupLog {
-  cleanup_date: string;
-  deleted_count: number;
-}
-
 export const useTrashStats = () => {
   return useQuery({
     queryKey: ['trashStats'],

@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useWhatsAppTemplates, useDeleteTemplate, useUpdateTemplate, useEnsureDefaultTemplate, useResetDefaultTemplate } from '@/hooks/worm/useWhatsAppMessageTemplates';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Plus, Loader2, Star, Edit, Copy, Trash2, RotateCcw } from 'lucide-react';
+import { MessageSquare, Plus, Star, Edit, Trash2, RotateCcw } from 'lucide-react';
+import { HamsterLoader } from '@/components/ui/hamster-loader';
 import { WhatsAppTemplateEditor } from './WhatsAppTemplateEditor';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { toast } from 'sonner';
 export const WormWhatsAppConfig = () => {
   const {
     user
@@ -24,8 +24,7 @@ export const WormWhatsAppConfig = () => {
   const ensureDefault = useEnsureDefaultTemplate(user?.id);
   const resetDefault = useResetDefaultTemplate();
 
-  // Criar template padrão ao montar se não existir
-  React.useEffect(() => {
+  useEffect(() => {
     if (user?.id && templates.length === 0 && !isLoading) {
       ensureDefault.mutate();
     }
@@ -36,14 +35,6 @@ export const WormWhatsAppConfig = () => {
   };
   const handleEditTemplate = (template: any) => {
     setEditingTemplate(template);
-    setIsEditorOpen(true);
-  };
-  const handleDuplicateTemplate = async (template: any) => {
-    setEditingTemplate({
-      template_name: `${template.template_name} (Cópia)`,
-      message_template: template.message_template,
-      is_default: false
-    });
     setIsEditorOpen(true);
   };
   const handleSetDefault = async (templateId: string) => {
@@ -66,7 +57,7 @@ export const WormWhatsAppConfig = () => {
   };
   if (isLoading || ensureDefault.isPending) {
     return <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <HamsterLoader size="md" className="mx-auto" />
       </div>;
   }
   return <>
@@ -80,7 +71,7 @@ export const WormWhatsAppConfig = () => {
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => user?.id && resetDefault.mutate(user.id)} disabled={resetDefault.isPending}>
-              {resetDefault.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RotateCcw className="h-4 w-4 mr-2" />}
+              {resetDefault.isPending ? <HamsterLoader size="sm" className="mr-2" /> : <RotateCcw className="h-4 w-4 mr-2" />}
               Reset
             </Button>
             

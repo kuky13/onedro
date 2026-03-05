@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Loader2, Eye, EyeOff, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppInfo } from '@/hooks/useAppConfig';
@@ -39,7 +39,7 @@ export const ResetPasswordPage = () => {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [user]);
-  const handleRequestReset = async (e: React.FormEvent) => {
+  const handleRequestReset = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
@@ -47,7 +47,7 @@ export const ResetPasswordPage = () => {
     setLoading(false);
     // User feedback is handled by the toast in useAuth
   };
-  const handleUpdatePassword = async (e: React.FormEvent) => {
+  const handleUpdatePassword = async (e: FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       setMessage({
@@ -101,11 +101,6 @@ export const ResetPasswordPage = () => {
     }
     return 'Redefinir Senha';
   };
-  const backLink = user ? <Link to="/dashboard/settings" className="underline text-muted-foreground hover:text-primary">
-      Voltar para Configurações
-    </Link> : <Link to="/auth" className="underline text-muted-foreground hover:text-primary">
-      Voltar para o Login
-    </Link>;
   return <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
         <div className="w-full max-w-md relative z-10">
             <div className="text-center mb-8">

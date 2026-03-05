@@ -4,35 +4,47 @@ import { toast } from 'sonner';
 
 export interface CompanyInfo {
   id: string;
+  owner_id: string;
   name: string;
-  logo_url?: string;
-  address?: string;
-  whatsapp_phone?: string;
-  email?: string;
-  business_hours?: string;
-  description?: string;
-  additional_images?: string[];
-  cnpj?: string;
-  warranty_cancellation_terms?: string;
-  warranty_legal_reminders?: string;
-  created_at: string;
-  updated_at: string;
+  logo_url: string | null;
+  address: string | null;
+  whatsapp_phone: string | null;
+  email: string | null;
+  phone: string | null;
+  business_hours: string | null;
+  description: string | null;
+  website: string | null;
+  additional_images: string[] | null;
+  cnpj: string | null;
+  warranty_cancellation_terms: string | null;
+  warranty_legal_reminders: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface CompanyShareSettings {
   id: string;
-  welcome_message?: string;
-  special_instructions?: string;
-  warranty_info?: string;
-  show_contact_info?: boolean;
-  show_company_description?: boolean;
-  show_logo?: boolean;
-  show_company_name?: boolean;
-  show_whatsapp_button?: boolean;
-  custom_message?: string;
-  theme_color?: string;
-  created_at: string;
-  updated_at: string;
+  owner_id: string;
+  custom_message: string | null;
+  theme_color: string | null;
+  welcome_message: string | null;
+  special_instructions: string | null;
+  warranty_info: string | null;
+
+  show_address: boolean | null;
+  show_business_hours: boolean | null;
+  show_company_name: boolean | null;
+  show_description: boolean | null;
+  show_email: boolean | null;
+  show_logo: boolean | null;
+  show_phone: boolean | null;
+  show_special_instructions: boolean | null;
+  show_warranty_info: boolean | null;
+  show_welcome_message: boolean | null;
+  show_whatsapp_button: boolean | null;
+
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export function useCompanyBranding() {

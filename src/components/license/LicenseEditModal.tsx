@@ -83,7 +83,12 @@ export const LicenseEditModal = ({ isOpen, onClose, license, onSuccess }: Licens
     try {
       const { data, error } = await supabase.rpc('admin_get_all_users');
       if (error) throw error;
-      setAvailableUsers(data || []);
+      const users = (data || []).map((user: any) => ({
+        id: user.id,
+        name: user.email || user.id,
+        email: user.email
+      }));
+      setAvailableUsers(users);
     } catch (error) {
       console.error('Error loading users:', error);
       setAvailableUsers([]);
@@ -114,7 +119,7 @@ export const LicenseEditModal = ({ isOpen, onClose, license, onSuccess }: Licens
             p_license_code: formData.license_code,
             p_expires_at: formData.expires_at.toISOString(),
             p_is_active: formData.is_active,
-            p_notes: formData.notes || null
+            p_notes: formData.notes || ''
           });
           break;
           
@@ -139,8 +144,8 @@ export const LicenseEditModal = ({ isOpen, onClose, license, onSuccess }: Licens
           });
           
           // Verificar se a função retornou um erro no JSON
-          if (result?.data && !result.data.success) {
-            throw new Error(result.data.error || 'Erro ao transferir licença');
+          if (result?.data && typeof result.data === 'object' && 'success' in result.data && !(result.data as any).success) {
+            throw new Error((result.data as any).error || 'Erro ao transferir licença');
           }
           break;
       }
@@ -307,12 +312,12 @@ export const LicenseEditModal = ({ isOpen, onClose, license, onSuccess }: Licens
                           ? format(formData.expires_at, "HH:mm")
                           : "23:59"
                         }
-                        onChange={(e) => {
-                          const [hours, minutes] = e.target.value.split(':');
-                          const newDate = new Date(formData.expires_at);
-                          newDate.setHours(parseInt(hours), parseInt(minutes));
-                          setFormData(prev => ({ ...prev, expires_at: newDate }));
-                        }}
+        onChange={(e) => {
+          const [hours, minutes] = e.target.value.split(':');
+          const newDate = new Date(formData.expires_at);
+          newDate.setHours(parseInt(hours || '0', 10), parseInt(minutes || '0', 10));
+          setFormData(prev => ({ ...prev, expires_at: newDate }));
+        }}
                       />
                     </div>
                   </div>
@@ -365,9 +370,9 @@ export const LicenseEditModal = ({ isOpen, onClose, license, onSuccess }: Licens
                 </SelectTrigger>
                 <SelectContent>
                   {availableUsers.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.name} ({user.email})
-                    </SelectItem>
+                      <SelectItem key={user.id} value={user.id || ''}>
+                        {user.name} ({user.email})
+                      </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

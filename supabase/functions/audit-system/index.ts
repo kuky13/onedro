@@ -260,7 +260,7 @@ async function queryAuditLogs(
 // Get audit statistics
 async function getAuditStatistics(supabase: any, timeframe: string = '24h') {
   try {
-    const timeframes = {
+    const timeframes: Record<string, number> = {
       '1h': 1,
       '24h': 24,
       '7d': 24 * 7,
@@ -313,26 +313,26 @@ async function getAuditStatistics(supabase: any, timeframe: string = '24h') {
     }
     
     // Process statistics
-    const eventStats = eventCounts.reduce((acc, log) => {
+    const eventStats = eventCounts.reduce((acc: Record<string, number>, log: { event_type: string }) => {
       acc[log.event_type] = (acc[log.event_type] || 0) + 1;
       return acc;
-    }, {});
+    }, {} as Record<string, number>);
     
-    const severityStats = severityCounts.reduce((acc, log) => {
+    const severityStats = severityCounts.reduce((acc: Record<string, number>, log: { severity: string }) => {
       acc[log.severity] = (acc[log.severity] || 0) + 1;
       return acc;
-    }, {});
+    }, {} as Record<string, number>);
     
-    const successStats = successCounts.reduce((acc, log) => {
+    const successStats = successCounts.reduce((acc: { success: number; failure: number }, log: { success: boolean }) => {
       const key = log.success ? 'success' : 'failure';
       acc[key] = (acc[key] || 0) + 1;
       return acc;
     }, { success: 0, failure: 0 });
     
-    const ipStats = ipCounts.reduce((acc, log) => {
+    const ipStats = ipCounts.reduce((acc: Record<string, number>, log: { ip_address: string }) => {
       acc[log.ip_address] = (acc[log.ip_address] || 0) + 1;
       return acc;
-    }, {});
+    }, {} as Record<string, number>);
     
     return {
       success: true,
@@ -348,7 +348,7 @@ async function getAuditStatistics(supabase: any, timeframe: string = '24h') {
             : 0
         },
         top_ip_addresses: Object.entries(ipStats)
-          .sort(([,a], [,b]) => b - a)
+          .sort(([,a], [,b]) => (b as number) - (a as number))
           .slice(0, 10)
           .map(([ip, count]) => ({ ip, count }))
       }

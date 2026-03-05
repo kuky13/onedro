@@ -3,77 +3,29 @@
  * Sistema OneDrip - Mobile First Design
  */
 
-import React, { useState, useEffect } from 'react';
+import { type FormEvent } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { ValidatedInput, ValidatedTextarea, PhoneInput, IMEIInput, CurrencyInput } from '@/components/ui/validated-input';
+import { ValidatedInput, ValidatedTextarea, IMEIInput, CurrencyInput } from '@/components/ui/validated-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { AutoSaveIndicatorCompact } from '@/components/ui/auto-save-indicator';
 import { DevicePasswordSection } from '@/components/service-orders/DevicePasswordSection';
-import { DeviceChecklist } from '@/components/service-orders/DeviceChecklist';
-import { ImageUploadSection } from '@/components/service-orders/ImageUploadSection';
+import { DeviceTestIntegration } from '@/components/service-orders/DeviceTestIntegration';
+import { UnifiedSpinner } from '@/components/ui/UnifiedSpinner';
 
-import {
-  ArrowLeft,
-  Save,
-  Wrench,
-  User,
-  Smartphone,
-  AlertCircle,
-  Phone,
-  Calendar,
-  FileText,
-  Search,
-  X,
-  Plus,
-  DollarSign,
-  CheckCircle,
-  Clock
-} from 'lucide-react';
+import { ArrowLeft, Save, Wrench, User, Smartphone, Calendar, Search, X, DollarSign, CheckCircle, Clock } from 'lucide-react';
 import { useServiceOrderEdit } from '@/hooks/useServiceOrderEdit';
-import { toast } from 'sonner';
 import type { Enums } from '@/integrations/supabase/types';
 
-type ServiceOrderStatus = Enums<'service_order_status'>;
 type ServiceOrderPriority = Enums<'service_order_priority'>;
 
-interface FormData {
-  // Client Information (will be stored in clients table)
-  clientId: string;
-  
-  // Device Information
-  deviceType: string;
-  deviceModel: string;
-  imeiSerial: string;
-  
-  // Service Information
-  reportedIssue: string;
-  priority: ServiceOrderPriority;
-  warrantyMonths: string;
-  
-  // Date Information
-  entryDate: string;
-  exitDate: string;
-  deliveryDate: string;
-  
-  // Payment and Progress Information
-  paymentStatus: string;
-  estimatedCompletion: string;
-  actualCompletion: string;
-  
-  // Notes
-  customerNotes: string;
-  technicianNotes: string;
-}
-
 export const ServiceOrderFormPage = () => {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditMode = !!id;
@@ -84,25 +36,22 @@ export const ServiceOrderFormPage = () => {
     formData,
     isLoading,
     isSubmitting,
-    
+
     // Auxiliary data
     deviceTypes,
     clients,
     filteredClients,
-    
+
     // UI state
     clientSearchTerm,
     selectedClientId,
     showNewClientForm,
     isCreatingClient,
     newClientData,
-    
+
     // Validation
     validation,
-    
-    // Auto-save
-    autoSave,
-    
+
     // Functions
     updateFormData,
     handleClientSearch,
@@ -110,8 +59,16 @@ export const ServiceOrderFormPage = () => {
     handleNewClientDataChange,
     handleCreateNewClient,
     handleCancelNewClient,
-    handleSubmit
+    handleSubmit,
   } = useServiceOrderEdit(id);
+
+  const autoSave = {
+    isSaving: false,
+    lastSaved: null as Date | null,
+    hasUnsavedChanges: false,
+    error: null as Error | null,
+    clearSavedData: () => {},
+  };
 
   // All data loading and state management is now handled by useServiceOrderEdit hook
 
@@ -131,14 +88,9 @@ export const ServiceOrderFormPage = () => {
       </div>
     );
   }
-
-
-
   if (isEditMode && isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
+      <UnifiedSpinner fullScreen size="md" message="Carregando ordem de serviço..." />
     );
   }
 
@@ -184,12 +136,12 @@ export const ServiceOrderFormPage = () => {
               </p>
             </div>
             {!isEditMode && (
-              <AutoSaveIndicatorCompact
-                isSaving={autoSave.isSaving}
-                lastSaved={autoSave.lastSaved}
-                hasUnsavedChanges={autoSave.hasUnsavedChanges}
-                error={autoSave.error}
-              />
+                <AutoSaveIndicatorCompact
+                  isSaving={autoSave.isSaving}
+                  lastSaved={autoSave.lastSaved}
+                  hasUnsavedChanges={autoSave.hasUnsavedChanges}
+                  error={autoSave.error}
+                />
             )}
           </div>
         </div>
@@ -197,7 +149,7 @@ export const ServiceOrderFormPage = () => {
 
       {/* Form Content */}
       <div className="p-4 pb-24">
-        <form onSubmit={async (e) => {
+        <form onSubmit={async (e: FormEvent) => {
           e.preventDefault();
           const orderId = await handleSubmit(e);
           if (orderId && !isEditMode) {
@@ -493,12 +445,13 @@ export const ServiceOrderFormPage = () => {
             </CardContent>
           </Card>
 
-          {/* Device Checklist */}
-          <DeviceChecklist
-            value={formData.deviceChecklist}
-            onChange={(data) => updateFormData('deviceChecklist', data)}
-            disabled={isSubmitting}
-          />
+          {/* Device Test Integration - Sistema Interativo */}
+          {formData.id && (
+            <DeviceTestIntegration
+              serviceOrderId={formData.id}
+              disabled={isSubmitting}
+            />
+          )}
 
           {/* Status de Pagamento */}
           <Card className="border-border/50">

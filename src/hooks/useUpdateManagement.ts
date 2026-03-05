@@ -24,6 +24,15 @@ export const useUpdateManagement = (): UseUpdateManagementReturn => {
   const [stats, setStats] = useState<UpdateStats | null>(null);
   const { showSuccess, showError } = useToast();
   const { hasRole } = useAuth();
+
+  const sanitizeUpdate = useCallback((row: any): Update => {
+    return {
+      ...row,
+      link_text: row?.link_text ?? '',
+      link_url: row?.link_url ?? '',
+      is_active: Boolean(row?.is_active),
+    } as Update;
+  }, []);
   
   // Refs para controlar requisições simultâneas
   const loadingUpdatesRef = useRef(false);
@@ -47,7 +56,7 @@ export const useUpdateManagement = (): UseUpdateManagementReturn => {
         throw new Error(supabaseError.message);
       }
 
-      setUpdates(data || []);
+      setUpdates((data || []).map(sanitizeUpdate));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar atualizações';
       setError(errorMessage);
@@ -71,7 +80,16 @@ export const useUpdateManagement = (): UseUpdateManagementReturn => {
         .select('id, is_active, created_at');
 
       if (updatesError) {
-        throw new Error(updatesError.message);
+        // Se a tabela updates não existir ou der erro de rede, apenas logar e continuar
+        // Não lançar erro para não quebrar a UI
+        console.warn('Tabela updates inacessível ou erro de rede:', updatesError.message);
+        setStats({
+          total_views: 0,
+          total_dismissals: 0,
+          active_updates: 0,
+          last_update: null
+        });
+        return;
       }
 
       let dismissalsCount = 0;
@@ -84,22 +102,25 @@ export const useUpdateManagement = (): UseUpdateManagementReturn => {
             .rpc('get_dismissals_count');
 
           if (dismissalsError) {
-            console.warn('Erro ao carregar estatísticas de dismissals:', dismissalsError.message);
-            // Se a RPC não existir, tentar consulta direta com tratamento de erro
-            const { count, error: countError } = await supabase
-              .from('user_update_preferences')
-              .select('*', { count: 'exact', head: true })
-              .eq('dismissed', true);
-            
-            if (!countError) {
-              dismissalsCount = count || 0;
+            // Silenciosamente falhar se a RPC não existir ou der erro de permissão
+            // Tentar consulta direta com tratamento de erro
+            try {
+              const { count, error: countError } = await supabase
+                .from('user_update_preferences')
+                .select('*', { count: 'exact', head: true })
+                .eq('dismissed', true);
+              
+              if (!countError) {
+                dismissalsCount = count || 0;
+              }
+            } catch (innerErr) {
+               // Ignorar erros de rede na consulta secundária
             }
           } else {
             dismissalsCount = dismissalsData || 0;
           }
         } catch (err) {
-          console.warn('Erro ao carregar estatísticas de dismissals para admin:', err);
-          // Continuar sem as estatísticas de dismissals se houver erro
+          // Ignorar erros globais de admin stats
         }
       }
 
@@ -113,9 +134,8 @@ export const useUpdateManagement = (): UseUpdateManagementReturn => {
         last_update: lastUpdate
       });
     } catch (err) {
-      console.error('Erro ao carregar estatísticas:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar estatísticas';
-      setError(errorMessage);
+      console.warn('Erro silencioso ao carregar estatísticas:', err);
+      // Não setar erro visível para o usuário em falhas de background stats
     } finally {
       loadingStatsRef.current = false;
     }
@@ -145,7 +165,8 @@ export const useUpdateManagement = (): UseUpdateManagementReturn => {
         throw new Error(supabaseError.message);
       }
 
-      setUpdates(prev => [newUpdate, ...prev]);
+      const safeNewUpdate = sanitizeUpdate(newUpdate);
+      setUpdates(prev => [safeNewUpdate, ...prev]);
       showSuccess({ title: 'Atualização criada com sucesso!' });
       // Recarregar stats sem usar await para evitar loops
       loadStats();
@@ -167,15 +188,16 @@ export const useUpdateManagement = (): UseUpdateManagementReturn => {
     setError(null);
 
     try {
+      const updatePayload: Record<string, any> = {};
+      if (data.title !== undefined) updatePayload.title = data.title;
+      if (data.content !== undefined) updatePayload.content = data.content;
+      if (data.link_text !== undefined) updatePayload.link_text = data.link_text ?? null;
+      if (data.link_url !== undefined) updatePayload.link_url = data.link_url ?? null;
+      if (data.is_active !== undefined) updatePayload.is_active = data.is_active;
+
       const { data: updatedUpdate, error: supabaseError } = await supabase
         .from('updates')
-        .update({
-          title: data.title,
-          content: data.content,
-          link_text: data.link_text,
-          link_url: data.link_url,
-          is_active: data.is_active
-        })
+        .update(updatePayload)
         .eq('id', data.id)
         .select()
         .single();
@@ -184,8 +206,9 @@ export const useUpdateManagement = (): UseUpdateManagementReturn => {
         throw new Error(supabaseError.message);
       }
 
-      setUpdates(prev => prev.map(u => u.id === data.id ? updatedUpdate : u));
-      setCurrentUpdate(updatedUpdate);
+      const safeUpdatedUpdate = sanitizeUpdate(updatedUpdate);
+      setUpdates(prev => prev.map(u => u.id === data.id ? safeUpdatedUpdate : u));
+      setCurrentUpdate(safeUpdatedUpdate);
       showSuccess({ title: 'Atualização salva com sucesso!' });
       // Recarregar stats sem usar await para evitar loops
       loadStats();
@@ -257,12 +280,13 @@ export const useUpdateManagement = (): UseUpdateManagementReturn => {
         throw new Error(supabaseError.message);
       }
 
-      setUpdates(prev => prev.map(u => u.id === id ? updatedUpdate : u));
+      const safeUpdatedUpdate = sanitizeUpdate(updatedUpdate);
+      setUpdates(prev => prev.map(u => u.id === id ? safeUpdatedUpdate : u));
       if (currentUpdate?.id === id) {
-        setCurrentUpdate(updatedUpdate);
+        setCurrentUpdate(safeUpdatedUpdate);
       }
       
-      const statusText = updatedUpdate.is_active ? 'ativada' : 'desativada';
+      const statusText = safeUpdatedUpdate.is_active ? 'ativada' : 'desativada';
       showSuccess({ title: `Atualização ${statusText} com sucesso!` });
       // Recarregar stats sem usar await para evitar loops
       loadStats();
@@ -292,7 +316,7 @@ export const useUpdateManagement = (): UseUpdateManagementReturn => {
         throw new Error(supabaseError.message);
       }
 
-      setCurrentUpdate(data);
+      setCurrentUpdate(sanitizeUpdate(data));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar atualização';
       setError(errorMessage);

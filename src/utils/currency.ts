@@ -142,12 +142,12 @@ export const hasExcessiveZeros = (value: string): boolean => {
  * @param fieldContext - Contexto do campo (labor, parts, total)
  * @returns Objeto com informações sobre como formatar
  */
-export const detectCurrencyContext = (value: string, fieldContext?: 'labor' | 'parts' | 'total') => {
+export const detectCurrencyContext = (value: string, _fieldContext?: 'labor' | 'parts' | 'total') => {
   const digits = value.replace(/\D/g, '');
   const numericValue = parseInt(digits, 10);
   
   if (isNaN(numericValue) || digits === '') {
-    return { shouldFormat: false, formatType: 'none', confidence: 0 };
+    return { shouldFormat: false, formatType: 'none', confidence: 0, numericValue: 0, reason: 'empty' as const };
   }
   
   // Casos específicos baseados no contexto e valor - LÓGICA MAIS CONSERVADORA
@@ -233,7 +233,7 @@ export const smartFormatCurrency = (value: string, fieldContext?: 'labor' | 'par
   }
   
   if (context.formatType === 'divide-by-100') {
-    const number = context.numericValue / 100;
+    const number = (context.numericValue ?? 0) / 100;
     const formatted = new Intl.NumberFormat('pt-BR', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
@@ -250,7 +250,7 @@ export const smartFormatCurrency = (value: string, fieldContext?: 'labor' | 'par
   }
   
   // Fallback para formatação normal
-  const number = context.numericValue / 100;
+  const number = (context.numericValue ?? 0) / 100;
   const formatted = new Intl.NumberFormat('pt-BR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
@@ -309,7 +309,7 @@ export const parseCurrencyInput = (formattedValue: string): number => {
   // Se só tem ponto, pode ser decimal em inglês ou separador de milhares
   if (cleaned.includes('.')) {
     const parts = cleaned.split('.');
-    if (parts.length === 2 && parts[1].length <= 2) {
+    if (parts.length === 2 && parts[1] && parts[1].length <= 2) {
       // Provavelmente decimal (ex: 123.45)
       const parsed = parseFloat(cleaned);
       return isNaN(parsed) ? 0 : parsed;

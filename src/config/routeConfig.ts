@@ -37,7 +37,9 @@ export const ROUTE_CONFIG = {
     '/cookie',
     '/unauthorized',
     '/share/service-order/*', // rotas de compartilhamento
-    '/central-de-ajuda'
+    '/central-de-ajuda',
+    '/downloads', // Download de vídeos (yt-dlp)
+    '/k/*' // Rotas públicas das lojas
   ],
 
   // Rotas que requerem apenas autenticação
@@ -47,8 +49,14 @@ export const ROUTE_CONFIG = {
     '/reset-email',
     '/service-orders',
     '/service-orders/*',
+    '/reparos',
+    '/reparos/*',
     '/msg',
-    '/sistema'
+    '/sistema',
+    '/store',
+    '/store/*',
+    '/whatsapp',
+    '/whats'
   ],
 
   // Rotas que requerem licença válida
@@ -57,9 +65,15 @@ export const ROUTE_CONFIG = {
     '/painel',
     '/service-orders',
     '/service-orders/*',
+    '/reparos',
+    '/reparos/*',
     '/settings',
     '/msg',
-    '/sistema'
+    '/sistema',
+    '/store',
+    '/store/*',
+    '/whatsapp',
+    '/whats'
   ],
 
   // Rotas que requerem email confirmado
@@ -68,7 +82,11 @@ export const ROUTE_CONFIG = {
     '/painel',
     '/service-orders',
     '/service-orders/*',
-    '/msg'
+    '/reparos',
+    '/reparos/*',
+    '/msg',
+    '/store',
+    '/store/*'
   ],
 
   // Redirecionamentos padrão

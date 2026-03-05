@@ -14,13 +14,22 @@ export const DevicePasswordDisplay: React.FC<DevicePasswordDisplayProps> = ({
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
-  // Se não há senha, não renderiza nada
-  if (!value?.type || !value?.value) {
+  // Determinar o tipo efetivo ou fallback para 'abc' se houver valor
+  const effectiveType = value?.type || (value?.value ? 'abc' : null);
+
+  // Se não há tipo nem valor, não renderiza nada
+  if (!effectiveType) {
+    return null;
+  }
+
+  // Se o tipo não for pattern e não tiver valor, não renderiza
+  // (Exceto se for abc/pin e quisermos mostrar vazio, mas geralmente não queremos)
+  if (effectiveType !== 'pattern' && !value?.value) {
     return null;
   }
 
   const getPasswordTypeIcon = () => {
-    switch (value.type) {
+    switch (effectiveType) {
       case 'pin':
         return <Hash className="w-4 h-4" />;
       case 'abc':
@@ -28,12 +37,12 @@ export const DevicePasswordDisplay: React.FC<DevicePasswordDisplayProps> = ({
       case 'pattern':
         return <Grid3X3 className="w-4 h-4" />;
       default:
-        return null;
+        return <Type className="w-4 h-4" />; // Fallback icon
     }
   };
 
   const getPasswordTypeLabel = () => {
-    switch (value.type) {
+    switch (effectiveType) {
       case 'pin':
         return 'PIN';
       case 'abc':
@@ -46,19 +55,35 @@ export const DevicePasswordDisplay: React.FC<DevicePasswordDisplayProps> = ({
   };
 
   const renderPasswordValue = () => {
-    if (value.type === 'pattern') {
-      // Para padrões, mostrar a visualização do padrão
-      return (
-        <div className="space-y-2">
-          <PatternPasswordViewer 
-            pattern={value.value} 
-            size={180}
-          />
-          <div className="text-center">
-            <span className="text-sm text-muted-foreground">
-              Padrão de desbloqueio
-            </span>
+    if (effectiveType === 'pattern') {
+      // Para padrões, tentar desenhar o traçado se tivermos o valor
+      if (value.value) {
+        return (
+          <div className="space-y-2">
+            <PatternPasswordViewer 
+              pattern={value.value} 
+              size={180}
+            />
+            <div className="text-center">
+              <span className="text-sm text-muted-foreground">
+                Padrão de desbloqueio
+              </span>
+            </div>
           </div>
+        );
+      }
+
+      // Fallback para padrões antigos sem valor salvo
+      return (
+        <div className="space-y-1">
+          <div className="text-sm text-muted-foreground">
+            Padrão de desbloqueio cadastrado, mas não foi possível desenhar o traçado.
+          </div>
+          {(value.metadata as any)?.dotCount && (
+            <div className="text-xs text-muted-foreground">
+              Padrão com {(value.metadata as any).dotCount} pontos.
+            </div>
+          )}
         </div>
       );
     }

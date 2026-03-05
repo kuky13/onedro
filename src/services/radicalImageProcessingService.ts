@@ -5,8 +5,42 @@
  * NUNCA falha e SEMPRE retorna um arquivo image/jpeg REAL
  */
 
+import heic2any from 'heic2any';
+
 export class RadicalImageProcessingService {
-  private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+  /**
+   * 🔥 CONVERSÃO DE HEIC PARA JPEG
+   */
+  private static async convertHeicToJpeg(file: File): Promise<File> {
+    const isHeic = file.name.toLowerCase().endsWith('.heic') || 
+                   file.name.toLowerCase().endsWith('.heif') ||
+                   file.type === 'image/heic' || 
+                   file.type === 'image/heif';
+
+    if (!isHeic) return file;
+
+    console.log('🍏 HEIC detectado, convertendo para JPEG...', file.name);
+    try {
+      const convertedBlob = await heic2any({
+        blob: file,
+        toType: 'image/jpeg',
+        quality: 0.8
+      });
+
+      const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+      if (!blob) return file;
+      const newFileName = file.name.replace(/\.(heic|heif)$/i, '.jpg');
+      
+      return new File([blob], newFileName, {
+        type: 'image/jpeg',
+        lastModified: Date.now()
+      });
+    } catch (error) {
+      console.error('❌ Erro ao converter HEIC:', error);
+      return file; // Retorna o original se falhar
+    }
+  }
 
   /**
    * 🔥 CRIAÇÃO ABSOLUTA DE JPEG REAL
@@ -157,14 +191,14 @@ export class RadicalImageProcessingService {
       size: file.size
     });
 
-    if (file.type !== 'image/jpeg') {
-      console.error('🚨 ABSOLUTO: FALHA FINAL - não é image/jpeg!', file.type);
-      throw new Error(`VALIDAÇÃO FINAL FALHOU: Esperado image/jpeg, recebido ${file.type}`);
-    }
-
     if (file.type === 'application/json') {
       console.error('🚨 ABSOLUTO: IMPOSSÍVEL - ainda é application/json!');
       throw new Error('VALIDAÇÃO FINAL FALHOU: Arquivo ainda é application/json');
+    }
+
+    if (file.type !== 'image/jpeg') {
+      console.error('🚨 ABSOLUTO: FALHA FINAL - não é image/jpeg!', file.type);
+      throw new Error(`VALIDAÇÃO FINAL FALHOU: Esperado image/jpeg, recebido ${file.type}`);
     }
 
     if (file.size === 0) {
@@ -188,9 +222,12 @@ export class RadicalImageProcessingService {
     });
 
     try {
+      // 🔥 ETAPA 0: CONVERTE HEIC SE NECESSÁRIO
+      const readyFile = await this.convertHeicToJpeg(file);
+
       // 🔥 ETAPA 1: CRIA JPEG REAL USANDO CANVAS
       console.log('🔥 ABSOLUTO: Criando JPEG REAL usando Canvas...');
-      const realJpegFile = await this.createRealJpegFile(file);
+      const realJpegFile = await this.createRealJpegFile(readyFile);
 
       // 🛡️ ETAPA 2: Validação final absoluta
       console.log('🛡️ ABSOLUTO: Aplicando validação final absoluta...');
@@ -272,16 +309,17 @@ export class RadicalImageProcessingService {
     const processedFiles: File[] = [];
     
     for (let i = 0; i < files.length; i++) {
+      const file = files[i];
       try {
         console.log(`🔄 ABSOLUTO FINAL: Processando arquivo ${i + 1}/${files.length}`);
-        const processed = await this.processImage(files[i]);
+        const processed = await this.processImage(file!);
         processedFiles.push(processed);
         console.log(`✅ ABSOLUTO FINAL: Arquivo ${i + 1}/${files.length} processado com sucesso`);
       } catch (error) {
         console.error(`❌ ABSOLUTO FINAL: Erro no arquivo ${i + 1}:`, error);
         
         // Mesmo com erro, força um JPEG mínimo
-        const emergencyFile = this.createMinimalJpeg(files[i].name || `emergency_${i}.jpg`);
+        const emergencyFile = this.createMinimalJpeg(file?.name || `emergency_${i}.jpg`);
         processedFiles.push(emergencyFile);
         console.log(`🔥 ABSOLUTO FINAL: Arquivo ${i + 1} forçado como JPEG mínimo`);
       }

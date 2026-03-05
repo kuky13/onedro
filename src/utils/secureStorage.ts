@@ -1,10 +1,10 @@
 /**
  * Sistema de Armazenamento Seguro com Criptografia
- * Sistema OneDrip Blueberry - Segurança 2025
+ * Sistema OneDrip Blueberry - Segurança 2026
  */
 
 // Chave base para criptografia (em produção, deve vir de variável de ambiente)
-const ENCRYPTION_KEY = import.meta.env.VITE_ENCRYPTION_KEY || 'onedrip-blueberry-2025-secure-key';
+const ENCRYPTION_KEY = import.meta.env.VITE_ENCRYPTION_KEY || 'onedrip-blueberry-2026-secure-key';
 
 /**
  * Gera uma chave de criptografia baseada na chave base e um salt

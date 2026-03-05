@@ -1,70 +1,56 @@
-import React, { useState } from 'react';
-import { MessageSquare } from 'lucide-react';
+import { ArrowLeft, Settings, Menu, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
-import { isIOS } from '@/utils/whatsappUtils';
-import { WormWhatsAppConfig } from './WormWhatsAppConfig';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
 export const WormHeader = () => {
   const navigate = useNavigate();
-  const [isConfigOpen, setIsConfigOpen] = useState(false);
-  const handleBack = () => {
-    navigate('/dashboard');
-  };
-  const handleWhatsAppConfig = () => {
-    setIsConfigOpen(true);
-  };
-  return <header className="relative bg-card border-b border-border/40 backdrop-blur-sm">
-      {/* Background decoration removida para tirar o degradê */}
-      
-      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        {/* Header actions */}
-        <div className="mb-4 p-2 bg-background/30 backdrop-blur-sm rounded-xl border border-border/20">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBack}
-              className="flex items-center gap-3 px-4 py-2.5 border border-primary/20 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300 ease-in-out text-foreground hover:text-primary rounded-lg font-medium"
-            >
-              Voltar
-            </Button>
 
-            <Button variant="default" size="sm" onClick={handleWhatsAppConfig} className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300 ease-in-out text-foreground hover:text-primary hover:bg-gradient-to-r hover:from-primary/15 hover:to-primary/8 rounded-lg font-medium text-black">
-              <MessageSquare className="h-4 w-4" />
-              WhatsApp
-            </Button>
-          </div>
+  return (
+    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border/50">
+      <div className="flex items-center justify-between py-3 lg:py-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/dashboard')}
+          className="gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Voltar
+        </Button>
+
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="rounded-xl">
+                <Menu className="h-4 w-4 mr-2" />
+                Menu
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem
+                onClick={() => navigate('/worm/config')}
+                className="cursor-pointer"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Configurações
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => navigate('/worm/lixeira')}
+                className="cursor-pointer"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Lixeira
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-
-        {/* Config Sheet */}
-        <Sheet open={isConfigOpen} onOpenChange={setIsConfigOpen}>
-          <SheetContent
-            side="right"
-            className="w-full sm:max-w-3xl overflow-y-auto"
-            style={{
-              paddingTop: 'max(env(safe-area-inset-top, 0px), 16px)',
-              paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)'
-            }}
-          >
-            <SheetTitle className="sr-only">Templates WhatsApp</SheetTitle>
-            {isIOS() && (
-              <div className="sticky top-0 z-10 flex justify-end pb-2 bg-background/80 backdrop-blur-sm">
-                <Button variant="outline" size="sm" onClick={() => setIsConfigOpen(false)}>
-                  Fechar
-                </Button>
-              </div>
-            )}
-            <WormWhatsAppConfig />
-            {isIOS() && (
-              <div className="mt-4">
-                <Button variant="outline" className="w-full" onClick={() => setIsConfigOpen(false)}>
-                  Fechar
-                </Button>
-              </div>
-            )}
-          </SheetContent>
-        </Sheet>
       </div>
-    </header>;
+    </header>
+  );
 };

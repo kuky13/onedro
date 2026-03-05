@@ -18,9 +18,7 @@ export interface AvailableLicense {
   is_active: boolean;
 }
 
-export interface UserManagementPanelProps {
-  // Props do componente principal
-}
+export type UserManagementPanelProps = Record<string, never>;
 
 export interface UserAssignLicenseModalProps {
   user: UserWithLicense;

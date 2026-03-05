@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCreateTemplate, useUpdateTemplate } from '@/hooks/worm/useWhatsAppMessageTemplates';
 import { Button } from '@/components/ui/button';
@@ -68,7 +68,7 @@ export const WhatsAppTemplateEditor = ({ template, onSuccess, onCancel }: WhatsA
     const text = messageTemplate;
     const before = text.substring(0, start);
     const after = text.substring(end);
-    
+
     const newText = before + placeholder + after;
     setMessageTemplate(newText);
 
@@ -125,13 +125,13 @@ export const WhatsAppTemplateEditor = ({ template, onSuccess, onCancel }: WhatsA
 
   const generatePreview = () => {
     let preview = messageTemplate;
-    
+
     // Processar blocos de qualidades primeiro
     if (preview.includes('{qualidades_inicio}') && preview.includes('{qualidades_fim}')) {
       const before = preview.split('{qualidades_inicio}')[0];
       const middle = preview.split('{qualidades_inicio}')[1].split('{qualidades_fim}')[0];
       const after = preview.split('{qualidades_fim}')[1] || '';
-      
+
       // Gerar 2 peças de exemplo
       const exampleParts = [
         {
@@ -151,19 +151,21 @@ export const WhatsAppTemplateEditor = ({ template, onSuccess, onCancel }: WhatsA
           peca_garantia_meses: '3',
         }
       ];
-      
+
+      const replaceAllSafe = (str: string, find: string, repl: string) => str.split(find).join(repl);
+
       let processedParts = '';
       exampleParts.forEach(part => {
         let partText = middle;
         Object.entries(part).forEach(([key, value]) => {
-          partText = partText.replaceAll(`{${key}}`, value);
+          partText = replaceAllSafe(partText, `{${key}}`, value);
         });
         processedParts += partText;
       });
-      
+
       preview = `${before}${processedParts}${after}`;
     }
-    
+
     // Substituir placeholders globais por dados de exemplo
     const replacements: Record<string, string> = {
       '{nome_empresa}': 'TechCell Assistência',
@@ -182,12 +184,13 @@ export const WhatsAppTemplateEditor = ({ template, onSuccess, onCancel }: WhatsA
       '{forma_pagamento}': 'Cartão de Crédito',
       '{servicos_inclusos}': 'Buscamos e entregamos o seu aparelho\nPelícula 3D de brinde',
       '{observacoes}': 'Peça 100% original com garantia Apple',
-      '{data_validade}': '31/12/2025',
+      '{data_validade}': '31/12/2026',
     };
 
-    // Aplicar substituições
+    const replaceAllSafe = (str: string, find: string, repl: string) => str.split(find).join(repl);
+
     Object.entries(replacements).forEach(([key, value]) => {
-      preview = preview.replaceAll(key, value);
+      preview = replaceAllSafe(preview, key, value);
     });
 
     return preview;

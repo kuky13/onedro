@@ -3,16 +3,14 @@
  * Mostra atalhos para visualização e edição quando ordem já existe
  */
 
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  ExternalLink, 
-  Edit, 
+import {
+  ExternalLink,
+  Edit,
   Share,
   CheckCircle,
-  Clock
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useServiceOrderShare } from '@/hooks/useServiceOrderShare';
@@ -20,15 +18,13 @@ import { useServiceOrderShare } from '@/hooks/useServiceOrderShare';
 interface ServiceOrderActionsProps {
   createdOrderId: string;
   formattedId?: string | null;
-  onCreateNew?: () => void;
   compact?: boolean;
 }
 
-export const ServiceOrderActions = ({ 
-  createdOrderId, 
+export const ServiceOrderActions = ({
+  createdOrderId,
   formattedId,
-  onCreateNew,
-  compact = false 
+  compact = false
 }: ServiceOrderActionsProps) => {
   const navigate = useNavigate();
   const { generateShareToken, isGenerating } = useServiceOrderShare();

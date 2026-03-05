@@ -20,10 +20,12 @@ export const useAdminImages = () => {
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
 
+  const sb = supabase as any;
+
   const { data: images, isLoading } = useQuery({
     queryKey: ['admin-images'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from('admin_images')
         .select('*')
         .order('category', { ascending: true })
@@ -53,19 +55,21 @@ export const useAdminImages = () => {
       const filePath = `${category}/${fileName}`;
 
       // Upload file to storage
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await sb.storage
         .from('admin-assets')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
+      const { data: publicData } = sb.storage
         .from('admin-assets')
         .getPublicUrl(filePath);
 
+      const publicUrl = publicData?.publicUrl as string;
+
       // Save to database
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from('admin_images')
         .insert({
           name,
@@ -73,7 +77,7 @@ export const useAdminImages = () => {
           file_name: fileName,
           file_url: publicUrl,
           description,
-          uploaded_by: (await supabase.auth.getUser()).data.user?.id
+          uploaded_by: (await sb.auth.getUser()).data.user?.id,
         })
         .select()
         .single();
@@ -103,7 +107,7 @@ export const useAdminImages = () => {
   const deleteImageMutation = useMutation({
     mutationFn: async (imageId: string) => {
       // Get image data first
-      const { data: image, error: fetchError } = await supabase
+      const { data: image, error: fetchError } = await sb
         .from('admin_images')
         .select('*')
         .eq('id', imageId)
@@ -113,14 +117,14 @@ export const useAdminImages = () => {
 
       // Delete from storage
       const filePath = `${image.category}/${image.file_name}`;
-      const { error: storageError } = await supabase.storage
+      const { error: storageError } = await sb.storage
         .from('admin-assets')
         .remove([filePath]);
 
       if (storageError) throw storageError;
 
       // Delete from database
-      const { error: dbError } = await supabase
+      const { error: dbError } = await sb
         .from('admin_images')
         .delete()
         .eq('id', imageId);

@@ -35,6 +35,23 @@ export const cleanupAuthState = (): void => {
         }
       });
     }
+
+    // Best effort to clear cookies
+    try {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i];
+        if (!cookie) continue;
+        const eqPos = cookie.indexOf("=");
+        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+        // Also try with common domains
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + window.location.hostname;
+      }
+      console.log('🗑️ Cookies limpos (best effort)');
+    } catch (e) {
+      console.warn('⚠️ Erro ao limpar cookies:', e);
+    }
     
     console.log('✅ Estado de autenticação limpo');
   } catch (error) {

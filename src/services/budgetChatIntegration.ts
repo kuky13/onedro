@@ -1,8 +1,6 @@
 import { supabase } from '@/integrations/supabase/client'
 import { generateWhatsAppMessage, openWhatsApp } from '@/utils/whatsappUtils'
 import { generateWhatsAppMessageFromTemplate } from '@/utils/whatsappTemplateUtils'
-import { useWhatsAppMessageTemplates } from '@/hooks/worm/useWhatsAppMessageTemplates'
-
 /**
  * Generate semantic search terms for better matching
  */
@@ -77,14 +75,16 @@ function generateSemanticSearchTerms(searchTerm: string): string[] {
   // Check for device model synonyms
   Object.keys(deviceSynonyms).forEach(key => {
     if (searchTerm.includes(key)) {
-      terms.push(...deviceSynonyms[key])
+      const synonyms = deviceSynonyms[key] ?? []
+      terms.push(...synonyms)
     }
   })
-  
+
   // Check for service synonyms
   Object.keys(serviceSynonyms).forEach(key => {
     if (searchTerm.includes(key)) {
-      terms.push(...serviceSynonyms[key])
+      const synonyms = serviceSynonyms[key] ?? []
+      terms.push(...synonyms)
     }
   })
   
@@ -99,6 +99,8 @@ export interface BudgetData {
   device_type: string
   device_model: string
   issue: string
+  part_quality?: string
+  total_price?: number
   cash_price: number
   installment_price: number
   warranty_months: number
@@ -137,7 +139,7 @@ export async function getUserBudgets(userId: string, limit = 10) {
         *,
         budget_parts(*)
       `)
-      .eq('user_id', userId)
+      .eq('owner_id', userId)
       .order('created_at', { ascending: false })
       .limit(limit)
 
@@ -190,7 +192,7 @@ export async function searchBudgets(userId: string, searchTerm: string, limit = 
         *,
         budget_parts(*)
       `)
-      .eq('user_id', userId)
+      .eq('owner_id', userId)
       .or(orConditions)
       .neq('workflow_status', 'template')
       .neq('client_name', 'TEMPLATE')
@@ -255,7 +257,7 @@ export async function getBudgetById(budgetId: string, userId: string) {
         budget_parts(*)
       `)
       .eq('id', budgetId)
-      .eq('user_id', userId)
+      .eq('owner_id', userId)
       .single()
 
     if (error) {
@@ -273,16 +275,20 @@ export async function getBudgetById(budgetId: string, userId: string) {
 /**
  * Generate WhatsApp message for a budget
  */
-export async function generateBudgetWhatsAppMessage(budget: BudgetData, shopName: string, shopPhone: string, template?: WhatsAppTemplate) {
+export async function generateBudgetWhatsAppMessage(
+  budget: BudgetData,
+  shopName: string,
+  _shopPhone: string,
+  template?: WhatsAppTemplate
+) {
   try {
-    // If template is provided, use template generation
     if (template) {
       const message = generateWhatsAppMessageFromTemplate(template.message_template, budget, shopName)
       return { message, error: null }
     }
 
-    // Otherwise use default generation
-    const message = generateWhatsAppMessage(budget, shopName, shopPhone)
+    // generateWhatsAppMessage já usa shop_name dentro do próprio orçamento
+    const message = generateWhatsAppMessage(budget as any)
     return { message, error: null }
   } catch (error) {
     console.error('Exception generating WhatsApp message:', error)
@@ -322,13 +328,15 @@ export async function createBudgetFromChat(userId: string, budgetData: Partial<B
     const { data, error } = await supabase
       .from('budgets')
       .insert({
-        user_id: userId,
+        owner_id: userId,
         client_name: budgetData.client_name || 'Cliente',
         client_phone: budgetData.client_phone || '',
         device_type: budgetData.device_type || 'Celular',
         device_model: budgetData.device_model || '',
         issue: budgetData.issue || '',
+        part_quality: budgetData.part_quality || budgetData.issue || '',
         cash_price: budgetData.cash_price || 0,
+        total_price: budgetData.total_price || budgetData.cash_price || 0,
         installment_price: budgetData.installment_price || 0,
         warranty_months: budgetData.warranty_months || 3,
         includes_delivery: budgetData.includes_delivery || false,
@@ -681,7 +689,7 @@ export function parseBudgetCommand(text: string) {
   
   // Extract more specific information with better patterns
   const clientNameMatch = lowerText.match(/(?:cliente|para|para o|para a|nome\s*é|nome\s*e)\s+([a-zA-ZçÇãÃõÕáÁéÉíÍóÓúÚâÂêÊîÎôÔûÛ\s]+?)(?:com|de|para|com\s*o|com\s*a|$)/i)
-  const clientName = clientNameMatch ? clientNameMatch[1].trim() : null
+  const clientName = clientNameMatch?.[1]?.trim() ?? null
   
   // Extract additional details
   const additionalDetails = {
@@ -696,16 +704,16 @@ export function parseBudgetCommand(text: string) {
             intents.searchBudget ? 'search' :
             intents.createBudget ? 'create' : 
             intents.sendWhatsApp ? 'send_whatsapp' : 'unknown',
-    budgetNumber: intents.budgetNumber ? parseInt(intents.budgetNumber[1]) : null,
-    clientPhone: intents.clientPhone ? intents.clientPhone[1] : null,
+    budgetNumber: intents.budgetNumber?.[1] ? parseInt(intents.budgetNumber[1], 10) : null,
+    clientPhone: intents.clientPhone?.[1] ?? null,
     clientName: clientName,
     deviceModel: deviceModel,
     deviceBrand: deviceBrand,
     serviceType: serviceType,
     servicePriority: servicePriority,
-    price: intents.priceInfo ? parseFloat(intents.priceInfo[1].replace(',', '.')) : null,
+    price: intents.priceInfo?.[1] ? parseFloat(intents.priceInfo[1].replace(',', '.')) : null,
     urgent: intents.urgent,
-    specificDate: intents.specificDate ? intents.specificDate[1] : null,
+    specificDate: intents.specificDate?.[1] ?? null,
     additionalDetails: additionalDetails,
     originalText: text,
     isNumericSearch: /^\d+$/.test(lowerText) // Indicates if user typed just a number (like Worm search)

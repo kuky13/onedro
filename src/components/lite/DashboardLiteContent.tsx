@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ExternalLink } from 'lucide-react';
 import { DataManagementLite } from './DataManagementLite';
@@ -7,6 +6,7 @@ import { AdminLiteEnhanced } from './AdminLiteEnhanced';
 import { ClientsLite } from './ClientsLite';
 import { ServiceOrdersLite } from './ServiceOrdersLite';
 import { ServiceOrderTrash } from '@/components/ServiceOrderTrash';
+import { WhatsAppCrmLite } from '@/components/whatsapp-crm/WhatsAppCrmLite';
 
 interface DashboardLiteContentProps {
   budgets: any[];
@@ -24,20 +24,12 @@ interface DashboardLiteContentProps {
 }
 
 export const DashboardLiteContent = ({ 
-  budgets, 
-  loading, 
-  error, 
-  onRefresh,
   profile,
   activeView = 'list',
-  selectedBudgetId,
   userId,
   hasPermission,
   onNavigateBack,
-  onNavigateTo,
-  isiOSDevice = false
 }: DashboardLiteContentProps) => {
-  
   const handleWormRedirect = () => {
     window.location.href = '/worm';
   };
@@ -69,7 +61,7 @@ export const DashboardLiteContent = ({
           onBack={onNavigateBack || (() => {})}
         />
       );
-      
+
     case 'service-orders':
       return (
         <ServiceOrdersLite
@@ -77,14 +69,14 @@ export const DashboardLiteContent = ({
           onBack={onNavigateBack || (() => {})}
         />
       );
-      
+
     case 'service-orders-trash':
       return (
         <div className="p-4">
           <ServiceOrderTrash />
         </div>
       );
-      
+
     case 'data-management':
       return (
         <DataManagementLite
@@ -92,7 +84,7 @@ export const DashboardLiteContent = ({
           onBack={onNavigateBack || (() => {})}
         />
       );
-      
+
     case 'settings':
       return (
         <SettingsLite
@@ -101,7 +93,10 @@ export const DashboardLiteContent = ({
           onBack={onNavigateBack || (() => {})}
         />
       );
-      
+
+    case 'whatsapp-crm':
+      return <WhatsAppCrmLite />;
+
     case 'admin':
       if (!hasPermission?.('manage_users')) return null;
       return (
@@ -110,7 +105,7 @@ export const DashboardLiteContent = ({
           onBack={onNavigateBack || (() => {})}
         />
       );
-      
+
     default:
       return (
         <div className="text-center py-8">

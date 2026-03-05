@@ -27,6 +27,7 @@ export const UpdatePopup: React.FC<UpdatePopupProps> = ({ className = '' }) => {
       return () => clearTimeout(timer);
     } else {
       setIsVisible(false);
+      return undefined;
     }
   }, [popupState.isVisible, popupState.currentUpdate]);
 
@@ -56,12 +57,6 @@ export const UpdatePopup: React.FC<UpdatePopupProps> = ({ className = '' }) => {
     }, 200);
   };
 
-  const handleLinkClick = () => {
-    if (currentUpdate.link_url) {
-      window.open(currentUpdate.link_url, '_blank', 'noopener,noreferrer');
-    }
-  };
-
   const handleClearError = () => {
     clearError();
   };
@@ -75,28 +70,23 @@ export const UpdatePopup: React.FC<UpdatePopupProps> = ({ className = '' }) => {
 
   return (
     <>
-      {/* Backdrop para mobile */}
-      <div 
-        className={`fixed inset-0 bg-black/20 backdrop-blur-sm z-[9998] transition-opacity duration-300 sm:hidden ${
-          isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={handleTemporaryClose}
-        aria-hidden="true"
-      />
-      
       {/* Container do popup */}
       <div 
         className={`
           fixed z-[9999] transition-all duration-300 ease-out
-          ${isVisible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-2'}
           
-          /* Mobile: centralizado na tela */
-          top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-2rem)] max-w-sm
+          /* Animação base (Opacity/Scale) */
+          ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
           
-          /* Tablet: posição superior direita com mais espaço */
-          sm:top-4 sm:right-4 sm:left-auto sm:translate-x-0 sm:translate-y-0 sm:w-auto sm:max-w-md
+          /* Mobile: Topo da tela */
+          top-4 left-4 right-4 w-auto max-w-sm mx-auto
           
-          /* Desktop: posição original */
+          /* Tablet/Desktop: Animação de entrada vindo de cima + Posicionamento canto superior */
+          sm:top-4 sm:right-4 sm:left-auto sm:translate-x-0 
+          sm:${isVisible ? 'translate-y-0' : '-translate-y-2'}
+          sm:w-auto sm:max-w-md
+          
+          /* Desktop: tamanho maior */
           lg:max-w-lg
           
           ${className}
@@ -156,7 +146,7 @@ export const UpdatePopup: React.FC<UpdatePopupProps> = ({ className = '' }) => {
               id="popup-content"
               className="text-muted-foreground mb-4 sm:mb-6 leading-relaxed text-sm sm:text-base"
             >
-              {currentUpdate.content.split('\n').map((line, index) => (
+              {currentUpdate.content.split('\n').map((line: string, index: number) => (
                 <span key={index} className={index > 0 ? 'block mt-2' : 'block'}>
                   {line}
                 </span>

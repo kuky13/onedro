@@ -64,11 +64,13 @@ export enum SecurityEventType {
 class SecurityAuditLogger {
   private static instance: SecurityAuditLogger;
   private sessionId: string;
-  private userId?: string;
-  private ipAddress?: string;
-  private userAgent?: string;
+  private userId: string | undefined;
+  private ipAddress: string | undefined;
+  private userAgent: string | undefined;
   private eventQueue: SecurityEvent[] = [];
   private flushInterval: NodeJS.Timeout | null = null;
+  private consecutiveFailures: number = 0;
+  private isCircuitOpen: boolean = false;
 
   private constructor() {
     this.sessionId = this.generateSessionId();
@@ -77,7 +79,7 @@ class SecurityAuditLogger {
     
     // Listener para mudanças de autenticação
     supabase.auth.onAuthStateChange((event, session) => {
-      this.userId = session?.user?.id;
+      this.userId = session?.user?.id ?? undefined;
       
       if (event === 'SIGNED_IN') {
         this.logSecurityEvent({
@@ -117,15 +119,31 @@ class SecurityAuditLogger {
       this.userAgent = navigator.userAgent;
       
       // Tentar obter IP (em produção, isso viria do backend)
+      // Usar um timeout curto para não travar a inicialização se o serviço estiver fora ou bloqueado
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
       try {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        this.ipAddress = data.ip;
-      } catch {
+        const response = await fetch('https://api.ipify.org?format=json', { 
+          signal: controller.signal,
+          mode: 'cors',
+          cache: 'no-cache'
+        });
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          const data = await response.json();
+          this.ipAddress = data.ip;
+        } else {
+          this.ipAddress = 'unknown';
+        }
+      } catch (err) {
+        clearTimeout(timeoutId);
         this.ipAddress = 'unknown';
+        // Não logar erro de socket/aborto para evitar poluição no console
       }
     } catch (error) {
-      console.warn('Erro ao inicializar informações do cliente:', error);
+      this.ipAddress = 'unknown';
     }
   }
 
@@ -135,16 +153,16 @@ class SecurityAuditLogger {
   public async logSecurityEvent(event: Omit<SecurityEvent, 'id' | 'timestamp' | 'session_id' | 'user_id' | 'ip_address' | 'user_agent'>): Promise<void> {
     const fullEvent: SecurityEvent = {
       ...event,
-      user_id: this.userId,
+      ...(this.userId ? { user_id: this.userId } : {}),
       session_id: this.sessionId,
-      ip_address: this.ipAddress,
-      user_agent: this.userAgent,
+      ...(this.ipAddress ? { ip_address: this.ipAddress } : {}),
+      ...(this.userAgent ? { user_agent: this.userAgent } : {}),
       timestamp: new Date().toISOString(),
       metadata: {
         client_timestamp: Date.now(),
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         screen_resolution: `${screen.width}x${screen.height}`,
-        ...event.metadata
+        ...(event.metadata ?? {})
       }
     };
 
@@ -157,7 +175,7 @@ class SecurityAuditLogger {
     }
 
     // Log local para desenvolvimento
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.log('🔒 Security Event:', fullEvent);
     }
   }
@@ -167,24 +185,87 @@ class SecurityAuditLogger {
    */
   private async flushEvents(): Promise<void> {
     if (this.eventQueue.length === 0) return;
+    
+    // Circuit breaker: se falhou muitas vezes (ex: tabela inexistente), para de tentar
+    if (this.isCircuitOpen) {
+      if (this.eventQueue.length > 100) {
+        // Limpar fila se ficar muito grande enquanto circuito está aberto
+        this.eventQueue = []; 
+      }
+      return;
+    }
 
     const eventsToSend = [...this.eventQueue];
     this.eventQueue = [];
 
     try {
-      const { error } = await supabase
-        .from('security_audit_log')
-        .insert(eventsToSend);
+      // Preferir token do usuário (RLS) quando disponível.
+      // Se não houver sessão, cai para o anon key (pode ser bloqueado por RLS, mas evita crash).
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
 
-      if (error) {
-        console.error('Erro ao enviar logs de auditoria:', error);
-        // Recolocar eventos na fila em caso de erro
+      // Usar a URL diretamente com fetch para evitar qualquer interferência do SDK do Supabase
+      // e usar um nome de parâmetro que não seja 'columns' se possível.
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || (supabase as any).supabaseUrl;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || (supabase as any).supabaseKey;
+
+      if (!supabaseUrl || !supabaseAnonKey) {
+        if (import.meta.env.DEV) console.warn('SecurityLogger: Supabase URL or Key missing');
+        return;
+      }
+
+      const response = await fetch(`${supabaseUrl}/rest/v1/site_events`, {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${accessToken || supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(eventsToSend),
+        keepalive: true // Garantir que a requisição continue mesmo se a página for fechada/navegada
+      });
+
+      if (!response.ok) {
+        // 400/401/403/404 normalmente indica schema/perm/endpoint incorreto.
+        // Abrir circuito para não ficar spammando requests e console.
+        if ([400, 401, 403, 404].includes(response.status)) {
+          this.isCircuitOpen = true;
+          this.eventQueue = []; // descartar fila para não crescer indefinidamente
+          
+          if (import.meta.env.DEV) {
+            console.warn(`SecurityLogger: Circuit breaker opened due to HTTP ${response.status}. Logging disabled.`);
+          }
+        }
+        return; // Sair silenciosamente para evitar ERR_ABORTED visível no console
+      }
+
+      this.consecutiveFailures = 0;
+    } catch (error: any) {
+      // Ignorar erros de aborto/cancelamento silenciosamente
+      if (error?.name === 'AbortError' || error?.message?.includes('aborted') || error?.message?.includes('canceled')) {
+        // Devolver eventos para a fila se não foi um erro fatal do circuito
+        if (!this.isCircuitOpen) {
+          this.eventQueue.unshift(...eventsToSend);
+        }
+        return;
+      }
+
+      this.consecutiveFailures++;
+      if (this.consecutiveFailures >= 3) {
+        this.isCircuitOpen = true;
+        if (import.meta.env.DEV) {
+          console.warn('SecurityLogger: Circuit breaker opened due to consecutive failures. Logging disabled temporarily.');
+        }
+      }
+
+      if (import.meta.env.DEV) {
+        console.warn('Falha ao enviar logs de auditoria:', error);
+      }
+      // Se o circuito abriu, não re-enfileirar (evita loop + fila infinita)
+      if (!this.isCircuitOpen) {
         this.eventQueue.unshift(...eventsToSend);
       }
-    } catch (error) {
-      console.error('Erro ao enviar logs de auditoria:', error);
-      // Recolocar eventos na fila em caso de erro
-      this.eventQueue.unshift(...eventsToSend);
     }
   }
 
@@ -412,6 +493,12 @@ if (typeof window !== 'undefined') {
 
 // Detectar atividades suspeitas automaticamente
 if (typeof window !== 'undefined') {
+  // Em produção isso pode gerar muitos eventos e, se o endpoint falhar, vira ruído.
+  // Mantemos o detector apenas em DEV (ou quando explicitamente habilitado).
+  const enabled = !import.meta.env.DEV; // Desabilitado em DEV para evitar ruído
+  if (!enabled) {
+    // noop
+  } else {
   // Detectar tentativas de abertura de DevTools
   const devtools = { open: false, orientation: null };
   const threshold = 160;
@@ -458,4 +545,5 @@ if (typeof window !== 'undefined') {
     });
     return originalEval.call(this, code);
   };
+  }
 }

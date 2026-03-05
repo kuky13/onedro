@@ -106,7 +106,7 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({
   const filteredUsers = useMemo(() => {
     if (!users) return [];
 
-    let filtered = users.filter(user => {
+    const filtered = users.filter(user => {
       // Filtro de busca
       const searchLower = filters.search.toLowerCase();
       const matchesSearch = !filters.search || 

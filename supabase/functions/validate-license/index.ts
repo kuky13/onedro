@@ -201,7 +201,7 @@ Deno.serve(async (req) => {
       request_data: { ...body, request_id: requestId },
       response_data: { ...result, processing_time_ms: processingTime },
       success: result.success,
-      error_message: result.success ? null : result.error
+      error_message: result.success ? undefined : result.error
     });
     
     // Create response with rate limit headers
@@ -217,7 +217,7 @@ Deno.serve(async (req) => {
     
     const response = result.success 
       ? createSuccessResponse(responseData)
-      : createErrorResponse(result.error, result.status || HTTP_STATUS.BAD_REQUEST, responseData);
+      : createErrorResponse(result.error || 'Unknown error', result.status || HTTP_STATUS.BAD_REQUEST, responseData);
     
     // Add rate limit headers
     response.headers.set('X-RateLimit-Remaining', Math.min(specificRateLimit.remaining, globalRateLimit.remaining).toString());
@@ -242,7 +242,7 @@ Deno.serve(async (req) => {
         user_agent: req.headers.get('user-agent') || 'unknown',
         request_data: { request_id: requestId },
         success: false,
-        error_message: `Critical error: ${error.message}`
+        error_message: `Critical error: ${error instanceof Error ? error.message : String(error)}`
       });
     } catch (logError) {
       console.error('Failed to log critical error:', logError);
@@ -302,7 +302,7 @@ async function validateLicense(supabase: any, licenseKey: string, userId?: strin
     const now = new Date();
     const expirationDate = new Date(license.expiration_date);
     const isExpired = now > expirationDate;
-    const isInGracePeriod = isExpired && isWithinGracePeriod(expirationDate, VALIDATION_CONFIG.GRACE_PERIOD_DAYS);
+    const isInGracePeriod = isExpired && isWithinGracePeriod(expirationDate.toISOString(), VALIDATION_CONFIG.gracePeriodDays);
     
     if (isExpired && !isInGracePeriod) {
       return { 
@@ -375,6 +375,14 @@ async function activateLicense(supabase: any, licenseKey: string, userId: string
     }
     
     const license = validation.license;
+    
+    if (!license) {
+      return {
+        success: false,
+        error: 'License data not found',
+        status: HTTP_STATUS.NOT_FOUND
+      };
+    }
     
     // Check if license is in grace period (allow activation but warn)
     if (license.is_in_grace_period) {
@@ -547,7 +555,8 @@ async function deactivateLicense(supabase: any, licenseKey: string, userId: stri
     
     if (deviceFingerprint) {
       // Deactivate specific device
-      const targetDevice = activeDevices.find(d => d.device_fingerprint === deviceFingerprint);
+      interface DeviceRecord { device_fingerprint: string; device_name: string; activated_at: string; }
+      const targetDevice = activeDevices.find((d: DeviceRecord) => d.device_fingerprint === deviceFingerprint);
       
       if (!targetDevice) {
         return {
@@ -596,7 +605,8 @@ async function deactivateLicense(supabase: any, licenseKey: string, userId: stri
       }
       
       deactivatedDevices = activeDevices.length;
-      deactivatedDevicesList = activeDevices.map(device => ({
+      interface DeviceRecord { device_fingerprint: string; device_name: string; activated_at: string; }
+      deactivatedDevicesList = activeDevices.map((device: DeviceRecord) => ({
         fingerprint: device.device_fingerprint,
         name: device.device_name,
         activated_at: device.activated_at

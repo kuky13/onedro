@@ -1,0 +1,73 @@
+﻿MEGA BASE DE DADOS: ASSISTÊNCIA TÉCNICA DE CELULARES E DISPOSITIVOS MÓVEIS
+Objetivo: Treinar IA com conhecimento técnico, prático, dicas de bancada e gestão de assistência técnica (focado em Android e iOS).
+1. MENTALIDADE DO TÉCNICO E GESTÃO DA ASSISTÊNCIA (BUSINESS)
+* A Regra do Orçamento: O preço cobrado não é apenas o valor da peça + mão de obra. Deve incluir o risco do reparo. Se o reparo de uma placa pode "matar" o celular de R$ 5.000 do cliente, o valor cobrado deve cobrir esse risco.
+* Garantias são inevitáveis: Todo técnico terá prejuízos e retornos em garantia (telas com toque fantasma, baterias que incham). A solução é comprar peças de "Qualidade Original" (Original China, Incell Premium) ou "Nacional" e embutir o risco no preço final. O barato sai caro e gera retrabalho.
+* O Cliente Mente (ou omite): Nunca confie 100% no relato do cliente. Ele pode dizer "parou do nada", mas o celular caiu na água ou sofreu queda. O diagnóstico visual e na fonte de bancada é quem diz a verdade.
+* Teste tudo ANTES de colar: Telas devem ser testadas exaustivamente (brilho máximo, touch em todas as extremidades) antes de tirar os selos e colar. Fornecedor não troca tela colada ou sem selo.
+* Ordem de Serviço (O.S.): É obrigatório ter O.S. com CPF, IMEI do aparelho, relato do cliente e assinatura. Protege o técnico contra aparelhos roubados e clientes de má-fé.
+* Ferramentas vs. Conhecimento: Não compre todas as ferramentas de uma vez. Compre o básico (chaves, espátulas, multímetro, fonte) e invista em conhecimento (cursos, leitura de esquemas). Ferramentas avançadas (câmera térmica, osciloscópio) devem ser compradas com o lucro dos reparos que as exigem.
+2. FERRAMENTAS E INSUMOS ESSENCIAIS
+* Básicas: Kit de chaves, espátulas de plástico e metal, pinças de precisão, álcool isopropílico, escova antiestática.
+* Fonte de Bancada (Assimétrica): Essencial para diagnóstico. Uma fonte de 4 dígitos (ex: 30V 5A ou 10A) é ideal. Ela revela se o aparelho tem curto primário, fuga de corrente, ou se tem pulso de boot normal.
+* USB Charger (Dock Test / Smart Charger): Ferramenta crucial. Conectando o celular via USB, ele mostra a corrente (Amperes). Se der 0.0A, não há comunicação. Se der 0.1A a 0.2A cravado, falha na placa ou bateria morta. Se subir para 1.0A a 2.0A, o protocolo de carga rápida está ativo.
+* Multímetro: Usado principalmente na Escala de Diodo (Condução Reversa) para testar comunicação das trilhas (valores entre 300 e 700 mV geralmente indicam trilhas OK; "OL" indica trilha rompida/aberta; "0.00" indica curto total).
+* Microscópio: Trinocular (ex: 70x50) com lente objetiva (ex: 0.5x ou 0.7x para aumentar a distância de trabalho) é indispensável para microssoldagem e reparo de placas.
+* Estação de Retrabalho (Ar Quente): Para remover C.I.s e conectores. Modelos de entrada (Yaxun) servem para o básico. Para reparo avançado de CPU/Placa, exige-se ferramentas como Quick 861DW ou Sugon.
+* Insumos de Qualidade: * Fluxo de Solda: Amtech, Mechanic (evite fluxos xing-ling que fervem e sujam a placa).
+   * Solda em Pasta: 138°C (baixa fusão, para interposer e reballing em locais sensíveis) e 183°C (fusão média, padrão para a maioria dos C.I.s).
+   * Breu (Rosin): Método barato e infalível para achar curtos. A fumaça cria uma camada branca; ao injetar tensão, o componente em curto aquece e derrete a camada instantaneamente.
+* Programadoras de iPhone (JC V1SE, V1S Pro): Necessárias para copiar dados de telas (True Tone), baterias (saúde 100%) e reparar Face ID (Dot Projector).
+3. DIAGNÓSTICO: O PASSO A PASSO (PROTOCOLOS)
+A. Celular não liga:
+1. Testar bateria (multímetro em 20V contínuo, deve ter mais de 3.7V).
+2. Conectar no USB Charger e ver o consumo.
+3. Ligar na Fonte de Bancada (injetar 4.2V na linha V-BAT):
+   * Consumo antes de apertar Power: Curto na malha primária (V-BAT ou VPH_PWR / VDD_MAIN).
+   * Consumo ao apertar Power e trava (ex: 80mA, 150mA): Falha de software, solda fria na CPU, memória RAM ou PMIC.
+   * Consumo ao apertar Power e zera ao soltar: Falha no PMIC (Gerenciador de Energia), oscilador de cristal, ou curto em malha secundária bloqueando o boot.
+B. Celular não carrega (ou Carga Falsa):
+1. Análise visual do conector. Teste com Dock Test em condução reversa (Malhas VBUS, DM, DP, CC1, CC2 e GND).
+2. Trocar subplaca (preferir originais retiradas ou linha "Turbo").
+3. Verificar o Flex de ligação (famoso defeito da linha Samsung A - A30, A50, A71).
+4. Medir se chegam 5V no OVP (Proteção contra sobretensão).
+5. Medir se a tensão entra e sai do IFPMIC (C.I. de Carga). Se entra 5V e não sai tensão para a bateria, trocar o IFPMIC.
+C. Problemas de Imagem / Backlight (Luz):
+* Ligar o celular e iluminar a tela com uma lanterna. Se ver os ícones no fundo escuro, o defeito é o Backlight (iluminação), não a imagem (LCD).
+* Defeito de Backlight geralmente ocorre na malha do ânodo (LED+), bobinas indutoras desgastadas, diodos de comutação ou CI de luz.
+* Se a malha estiver "OL" (Open Line), o filtro EMI perto do conector FPC pode estar queimado. Faça um jumper para teste.
+D. Sem Rede / Sinal / Wi-Fi:
+* Verificar se o IMEI está nulo/zerado (*#06#). Se estiver, problema na Baseband.
+* Conferir contato das antenas coaxiais e conectores na carcaça.
+* Testar WTR / Transceiver (CI de radiofrequência).
+4. MICROSSOLDAGEM E REPARO AVANÇADO
+* Troca de Conector FPC (Plásticos): Calor excessivo derrete o FPC e pode matar a CPU/Memória que fica do outro lado da placa. Técnica: Usar calor por baixo da placa (se não houver componentes críticos), proteger ao redor com fita kapton/alumínio, usar fluxo, ou remover o antigo cortando com bisturi e soldando o novo apenas com ferro de solda estanhando pino a pino.
+* Remoção de Blindagens: Nunca puxe blindagens soldadas à força com calor, isso empena a placa e arranca pads (trilhas). Use uma micro retífica para cortar a quina da blindagem.
+* Recuperação de Trilhas (Jumper): Fios de cobre esmaltados (fios de fone de ouvido ou fios específicos de 0.01mm a 0.09mm). Raspar a trilha na placa, soldar a ponta do fio e curar com Máscara UV (Luz Ultravioleta) para fixar.
+* Reballing (CPU e C.I.s): Limpar a resina ao redor com temperatura baixa (200°C-250°C), levantar o C.I. com espátula cega (aprox. 380°C). Limpar placa e C.I. com malha dessoldadora. Usar Stencil de boa qualidade, secar um pouco a solda em pasta no papel toalha antes de aplicar, e aquecer para formar as esferas.
+* Software de Esquemas Elétricos (Borneo, DZKJ, Estech): Essenciais. Fornecem o "Bitmap" (você clica num ponto da placa e ele mostra para onde a trilha vai) e os valores de Condução Reversa ideais para comparação.
+5. SOFTWARE E DESBLOQUEIOS (FRP, iCloud, Mi Account)
+Regra Geral Atualizada: O mercado de desbloqueio mudou. Os métodos antigos de "Talkback", "Youtube" e "Aplicativos" funcionam em aparelhos antigos (Android 10, 11). Aparelhos recentes (Android 13, 14, 15, 16) exigem Ferramentas (Boxes/Dongles) ou acesso via Servidor pago.
+* Samsung FRP (Conta Google):
+   * Antigos: Método #0# para ativar ADB. Usa-se ferramentas grátis como SamFw Tool.
+   * Novos: Via servidor (envia-se o SN/IMEI) ou via ferramentas pagas como UnlockTool, Phoenix Service Tool, TSM Tool em Modo Test Point (abrindo o aparelho e fechando curto em dois pontos específicos).
+* Motorola FRP: * Antigos: Truque de forçar o uso de bateria para o Google Play Services aparecer e ser desativado.
+   * Novos: Uso da UnlockTool com arquivos Custom Preloader (Flash Mode / EDL) ligando o aparelho segurando volume+ e volume-.
+* Xiaomi (Conta Mi e FRP): * O grande problema é a Conta Mi. Pode ser feita "Semi-definitiva" (desbloqueia, mas se formatar ou atualizar o MIUI/HyperOS, bloqueia de novo). Feito via UnlockTool em Modo EDL (Test Point na placa) ou Modo Fastboot.
+   * Definitivo: Apenas via Servidor autorizado Xiaomi.
+   * Erro "DM-Verity Corruption": Celular corrompido. Resolve-se passando firmware (ROM) via Fastboot ou ferramentas ADB.
+* Apple (iCloud Bypass): * O bloqueio de ativação pode ser burlado de forma "Semi-definitiva" (não pode resetar pelo PC, às vezes nem atualizar).
+   * Ferramentas: iRemoval Pro, iKey Prime, FRPFile, LPro.
+   * Muitos métodos exigem "Jailbreak" (usando um pendrive bootável em PCs Windows ou via Mac).
+   * Modos essenciais de iPhone: Modo Recovery (Cabo USB na tela) para passar software via iTunes/3uTools. Modo DFU (Tela preta) para reparos profundos.
+6. SÍNTESE DE PROBLEMAS CRÔNICOS (O QUE MAIS CHEGA EM 2024/2025)
+* Poco X3 / X3 Pro: Morte súbita. O aparelho apaga, reinicia sozinho, perde câmeras ou não dá touch. Solução: Reballing obrigatório na CPU e Memória RAM.
+* Linha Samsung A (A50, A51, A71): Aparelho não carrega, apaga tela, falha microfone. Defeito comum no FPC da placa-mãe ou no cabo flex de interligação.
+* iPhone (Pós-troca de tela/bateria): Mensagem de "Peça Desconhecida". Precisa transplantar o C.I. (EEPROM) da tela velha para a nova ou o Flex BMS da bateria velha para a célula nova (ou usar baterias coreless/novas programáveis da W09/JC).
+* LG K41s/K51s/K52/K61: Bloqueio de FRP chato. Muitas vezes precisa fazer Downgrade do Android via software LG UP para conseguir passar pelas brechas do sistema antigo.
+DIRETRIZES DE COMPORTAMENTO PARA A IA RESPONDER USUÁRIOS
+Ao atuar como especialista, a IA deve:
+1. Priorizar o básico antes do avançado: Se o usuário disser "Meu celular não liga", a IA deve recomendar testar a tensão da bateria e a subplaca de carga antes de mandar fazer reballing em CPU.
+2. Alertar sobre riscos: Ao sugerir remover blindagens ou trocar conectores FPC, alertar sobre o risco de matar a CPU por excesso de calor. Sugerir o uso de micro retífica ou solda a ferro.
+3. Linguagem Técnica Apropriada: Utilizar termos corretos do setor no Brasil (ex: Condução Reversa, Malha Primária, IFPMIC, Reballing, Máscara UV, Malha Dessoldadora, Dock Test).
+4. Ética em Software: Ao falar de IMEI e FRP, lembrar que o foco é auxiliar técnicos no reparo de aparelhos lícitos, enfatizando a importância da Ordem de Serviço com dados do cliente.

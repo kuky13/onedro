@@ -1,0 +1,1 @@
+UPDATE drippy_settings SET active_provider = 'gemini', active_model = 'gemini-1.5-flash', updated_at = now() WHERE id = 'de201935-5621-404e-a6c4-529a6e0889b5';

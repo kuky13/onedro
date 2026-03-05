@@ -65,14 +65,15 @@ export function useSecurity() {
   /**
    * Check rate limiting status
    */
-  const checkRateLimit = useCallback(async (endpoint: string) => {
-    try {
-      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/rate-limiter?action=check`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-        },
+   const checkRateLimit = useCallback(async (endpoint: string) => {
+     try {
+       const supabaseUrl = (supabase as any).supabaseUrl as string;
+       const response = await fetch(`${supabaseUrl}/functions/v1/rate-limiter?action=check`, {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+           'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+         },
         body: JSON.stringify({
           endpoint,
           user_id: (await supabase.auth.getUser()).data.user?.id
@@ -103,13 +104,15 @@ export function useSecurity() {
   /**
    * Log audit event
    */
-  const logAuditEvent = useCallback(async (
-    eventType: AuditEventType,
-    details: Record<string, any>,
-    severity: SecurityLevel = 'info'
-  ) => {
-    try {
-      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/audit-system`, {
+   const logAuditEvent = useCallback(async (
+     eventType: AuditEventType,
+     details: Record<string, any>,
+     severity: SecurityLevel = 'low'
+   ) => {
+     try {
+        const supabaseUrl = (supabase as any).supabaseUrl as string;
+        // A edge function roteia por path (/create), não por querystring.
+        const response = await fetch(`${supabaseUrl}/functions/v1/audit-system/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -149,11 +152,11 @@ export function useSecurity() {
     try {
       // Client-side validation first
       if (!SecurityValidator.validateLicenseKey(licenseKey)) {
-        await logAuditEvent('license_invalid', { 
-          reason: 'invalid_format',
-          license_key: licenseKey.substring(0, 8) + '...' 
-        }, 'medium')
-        throw new Error('Invalid license key format')
+         await logAuditEvent('license_invalid', { 
+           reason: 'invalid_format',
+           license_key: licenseKey.substring(0, 8) + '...' 
+         }, 'medium')
+         throw new Error('Invalid license key format')
       }
       
       if (!SecurityValidator.validateDeviceId(deviceId)) {
@@ -171,7 +174,8 @@ export function useSecurity() {
       }
       
       // Call Edge Function for server-side validation
-      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/validate-license`, {
+       const supabaseUrl = (supabase as any).supabaseUrl as string;
+       const response = await fetch(`${supabaseUrl}/functions/v1/validate-license`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -193,10 +197,10 @@ export function useSecurity() {
           license_key: licenseKey.substring(0, 8) + '...',
           device_id: deviceId.substring(0, 8) + '...',
           result: data.success ? 'valid' : 'invalid',
-          reason: data.error || 'validation_completed'
-        },
-        data.success ? 'info' : 'medium'
-      )
+           reason: data.error || 'validation_completed'
+         },
+         data.success ? 'low' : 'medium'
+       )
       
       return data
     } catch (err) {
@@ -208,11 +212,12 @@ export function useSecurity() {
   /**
    * Get security metrics
    */
-  const getSecurityMetrics = useCallback(async () => {
-    try {
-      setLoading(true)
-      
-      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/real-time-monitoring?action=metrics`, {
+   const getSecurityMetrics = useCallback(async () => {
+     try {
+       setLoading(true)
+
+       const supabaseUrl = (supabase as any).supabaseUrl as string;
+       const response = await fetch(`${supabaseUrl}/functions/v1/real-time-monitoring?action=metrics`, {
         headers: {
           'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
         }
@@ -241,10 +246,11 @@ export function useSecurity() {
   /**
    * Get recent security alerts
    */
-  const getRecentAlerts = useCallback(async (limit: number = 10) => {
-    try {
-      const response = await fetch(
-        `${supabase.supabaseUrl}/functions/v1/real-time-monitoring?action=alerts&limit=${limit}`,
+   const getRecentAlerts = useCallback(async (limit: number = 10) => {
+     try {
+       const supabaseUrl = (supabase as any).supabaseUrl as string;
+       const response = await fetch(
+         `${supabaseUrl}/functions/v1/real-time-monitoring?action=alerts&limit=${limit}`,
         {
           headers: {
             'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
@@ -281,8 +287,10 @@ export function useSecurity() {
       if (filters?.limit) params.append('limit', filters.limit.toString())
       if (filters?.offset) params.append('offset', filters.offset.toString())
       
-      const response = await fetch(
-        `${supabase.supabaseUrl}/functions/v1/audit-system?action=query&${params.toString()}`,
+       const supabaseUrl = (supabase as any).supabaseUrl as string
+       // A edge function roteia por path (/query), não por querystring.
+       const response = await fetch(
+         `${supabaseUrl}/functions/v1/audit-system/query?${params.toString()}`,
         {
           headers: {
             'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
@@ -307,8 +315,9 @@ export function useSecurity() {
    * Test notification system
    */
   const testNotifications = useCallback(async () => {
-    try {
-      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/notification-system?action=test`, {
+     try {
+       const supabaseUrl = (supabase as any).supabaseUrl as string;
+       const response = await fetch(`${supabaseUrl}/functions/v1/notification-system?action=test`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`

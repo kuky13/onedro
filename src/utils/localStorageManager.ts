@@ -4,51 +4,59 @@
  */
 
 export interface UserStorageData {
-  user?: {
-    id: string;
-    email: string;
-    name?: string;
-    role?: string;
-    avatar_url?: string;
-  };
+  user?:
+    | {
+        id: string;
+        email: string;
+        name?: string;
+        role?: string;
+        avatar_url?: string;
+      }
+    | undefined;
   settings: {
-    theme?: string;
+    theme?: string | undefined;
     notifications?: boolean;
     budgetWarning?: boolean;
     budgetWarningDays?: number;
-    painelEnabled?: boolean;
+    painelEnabled?: boolean | undefined;
     forceNormalDashboard?: boolean;
     socialQrEnabled?: boolean;
   };
   cache: {
-    lastSync?: number;
+    lastSync?: number | undefined;
     profileData?: Record<string, unknown>;
     licenseInfo?: Record<string, unknown>;
     expiry?: number; // TTL para cache
   };
-  licenseCache?: {
-    hasValidLicense?: boolean;
-    licenseStatus?: string;
-    lastVerified?: number;
-    expiresAt?: string;
-    cacheExpiry?: number;
-    isExpired?: boolean;
-    needsActivation?: boolean;
-  };
-  sessionBackup?: {
-    hasValidSession?: boolean;
-    lastLogin?: number;
-    deviceInfo?: string;
-  };
-  navigationState?: {
-    activeTab?: string;
-    lastActiveTab?: string;
-    editingItemId?: string;
-    editingItemType?: 'budget' | 'service_order' | 'client';
-    lastActiveTimestamp?: number;
-    shouldRestore?: boolean;
-    navigationHistory?: string[];
-  };
+  licenseCache?:
+    | {
+        hasValidLicense?: boolean;
+        licenseStatus?: string;
+        lastVerified?: number;
+        expiresAt?: string;
+        cacheExpiry?: number;
+        isExpired?: boolean;
+        needsActivation?: boolean;
+      }
+    | undefined;
+  sessionBackup?:
+    | {
+        hasValidSession?: boolean;
+        lastLogin?: number;
+        deviceInfo?: string;
+      }
+    | undefined;
+  navigationState?:
+    | {
+        activeTab?: string | undefined;
+        lastActiveTab?: string | undefined;
+        editingItemId?: string | undefined;
+        editingItemType?: 'budget' | 'service_order' | 'client' | undefined;
+        lastActiveTimestamp?: number;
+        shouldRestore?: boolean;
+        navigationHistory?: string[];
+      }
+    | undefined;
 }
 
 class LocalStorageManager {
@@ -172,9 +180,9 @@ class LocalStorageManager {
    * Limpar cache de licença
    */
   clearLicenseCache(): void {
-    this.setData({
-      licenseCache: undefined
-    });
+    this.setData({ licenseCache: {} });
+    // remove efetivamente do storage
+    this.setData({ licenseCache: undefined }, true);
   }
 
   /**
@@ -223,7 +231,7 @@ class LocalStorageManager {
     this.setNavigationState({
       editingItemId: itemId,
       editingItemType: itemType,
-      activeTab: activeTab,
+      ...(activeTab ? { activeTab } : {}),
       shouldRestore: true
     });
   }
@@ -234,15 +242,15 @@ class LocalStorageManager {
   clearEditingState(): void {
     const currentData = this.getData();
     const navState = currentData.navigationState || {};
-    
-    this.setData({
-      navigationState: {
-        ...navState,
-        editingItemId: undefined,
-        editingItemType: undefined,
-        shouldRestore: false
-      }
-    });
+
+    const nextNavState: UserStorageData['navigationState'] = {
+      ...navState,
+      shouldRestore: false
+    };
+    delete (nextNavState as any).editingItemId;
+    delete (nextNavState as any).editingItemType;
+
+    this.setData({ navigationState: nextNavState });
   }
 
   /**
@@ -258,9 +266,9 @@ class LocalStorageManager {
    */
   clearNavigationState(): void {
     const currentData = this.getData();
-    this.setData({
-      navigationState: undefined
-    });
+    const next: UserStorageData = { ...currentData };
+    delete (next as any).navigationState;
+    localStorage.setItem(this.APP_KEY, JSON.stringify(next));
   }
 
   /**
@@ -292,12 +300,12 @@ class LocalStorageManager {
   hasValidBackup(): boolean {
     const data = this.getData();
     const backup = data.sessionBackup;
-    
+
     if (!backup?.hasValidSession) return false;
-    
+
     // Backup válido por 7 dias
     const maxAge = 7 * 24 * 60 * 60 * 1000;
-    return backup.lastLogin && (Date.now() - backup.lastLogin) < maxAge;
+    return !!backup.lastLogin && (Date.now() - backup.lastLogin) < maxAge;
   }
 
   /**
@@ -305,9 +313,9 @@ class LocalStorageManager {
    */
   smartClear(): void {
     const currentData = this.getData();
-    const preservedSettings = {
-      theme: currentData.settings.theme,
-      painelEnabled: currentData.settings.painelEnabled
+    const preservedSettings: UserStorageData['settings'] = {
+      ...(currentData.settings.theme ? { theme: currentData.settings.theme } : {}),
+      ...(currentData.settings.painelEnabled !== undefined ? { painelEnabled: currentData.settings.painelEnabled } : {})
     };
 
     // Manter apenas configurações essenciais
@@ -421,7 +429,7 @@ class LocalStorageManager {
     return {
       size,
       keys: Object.keys(localStorage).length,
-      lastSync: data.cache.lastSync
+      ...(data.cache.lastSync !== undefined ? { lastSync: data.cache.lastSync } : {})
     };
   }
 }

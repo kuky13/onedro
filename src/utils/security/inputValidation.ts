@@ -1,6 +1,6 @@
 /**
  * Utilitários de Validação e Segurança para Entradas do Usuário
- * Sistema OneDrip Blueberry - Auditoria de Segurança 2025
+ * Sistema OneDrip Blueberry - Auditoria de Segurança 2026
  */
 
 // Padrões perigosos para detecção de SQL Injection
@@ -177,12 +177,10 @@ export const clientRateLimit = new ClientRateLimit();
 export const logSecurityEvent = (
   eventType: string, 
   details: Record<string, any> = {},
-  severity: 'low' | 'medium' | 'high' = 'medium'
+  _severity: 'low' | 'medium' | 'high' = 'medium'
 ) => {
   // Em produção, isso enviaria para o backend
   if (import.meta.env.DEV) {
     console.warn(`[SECURITY] ${eventType}:`, details);
   }
-  
-
 };

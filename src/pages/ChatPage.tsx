@@ -1,77 +1,29 @@
 import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent } from '@/components/ui/card'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
-import { Send, Link as LinkIcon, Bot, MessageSquare, Share2, Plus, Copy, Phone, Settings, Trash2, RefreshCw, X } from 'lucide-react'
-import { deepseekChat, deepseekStream } from '@/services/deepseekService'
+import { Send, Link as LinkIcon, Settings, Trash2, RefreshCw, X, Sparkles } from 'lucide-react'
+import { supabase } from '@/integrations/supabase/client'
 import { useToast } from '@/hooks/useToast'
-import { loadMessages, saveMessage, clearMessages } from '@/services/chatMemoryService'
-import { 
-  getUserBudgets, 
-  searchBudgets,
-  getBudgetById, 
-  sendBudgetViaWhatsApp, 
+import { loadMessages, saveMessage, clearMessages, resetMood } from '@/services/chatMemoryService'
+import drippyAvatar from '@/assets/drippy-avatar.png'
+import { Progress } from '@/components/ui/progress'
+import {
+  getUserBudgets,
+  sendBudgetViaWhatsApp,
   parseBudgetCommand,
-  createBudgetFromChat,
   getUserDefaultTemplate,
-  BudgetData
+  BudgetData,
 } from '@/services/budgetChatIntegration'
-import { useWormBudgets } from '@/hooks/worm/useWormBudgets'
-import { 
-  searchWormBudgets, 
-  formatBudgetResultsForAI, 
-  formatBudgetDetailsForAI 
-} from '@/services/wormChatIntegration'
+import { searchWormBudgets, formatBudgetResultsForAI } from '@/services/wormChatIntegration'
 import { useShopProfile } from '@/hooks/useShopProfile'
-
-function MarkdownLite({ text }: { text: string }) {
-  const formatInline = (s: string) => {
-    const parts = s.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g)
-    return parts.map((part, i) => {
-      if (part.startsWith('**') && part.endsWith('**')) return <strong key={i}>{part.slice(2, -2)}</strong>
-      if (part.startsWith('*') && part.endsWith('*')) return <em key={i}>{part.slice(1, -1)}</em>
-      return <span key={i}>{part}</span>
-    })
-  }
-  const lines = text.split('\n')
-  const elements: React.ReactNode[] = []
-  let i = 0
-  while (i < lines.length) {
-    const line = lines[i]
-    if (line.trim() === '---') {
-      elements.push(<hr key={`hr-${i}`} className="my-2 border-border/50" />)
-      i++
-      continue
-    }
-    if (line.startsWith('- ')) {
-      const items: string[] = []
-      while (i < lines.length && lines[i].startsWith('- ')) {
-        items.push(lines[i].slice(2))
-        i++
-      }
-      elements.push(
-        <ul key={`ul-${i}`} className="list-disc pl-5 space-y-1">
-          {items.map((it, idx) => (
-            <li key={idx} className="text-sm">{formatInline(it)}</li>
-          ))}
-        </ul>
-      )
-      continue
-    }
-    if (line.trim().length === 0) {
-      elements.push(<div key={`sp-${i}`} className="h-2" />)
-      i++
-      continue
-    }
-    elements.push(
-      <p key={`p-${i}`} className="text-sm whitespace-pre-wrap">{formatInline(line)}</p>
-    )
-    i++
-  }
-  return <div className="space-y-1">{elements}</div>
-}
+import { MarkdownRenderer } from '@/components/chat/MarkdownRenderer'
+import { MobileHamburgerButton } from '@/components/mobile/MobileHamburgerButton'
+import { MobileHamburgerMenu } from '@/components/mobile/MobileHamburgerMenu'
+import { useMobileMenuContext } from '@/components/mobile/MobileMenuProvider'
+import { searchHelpArticles, formatHelpSuggestions, isHelpRelatedQuery } from '@/services/helpCenterIntegration'
+import { motion, AnimatePresence } from 'framer-motion'
 
 type Role = 'user' | 'assistant'
 
@@ -83,52 +35,9 @@ interface ChatMessage {
 }
 
 const initialAssistantMessage = (name?: string) =>
-  `Oi${name ? `, ${name}` : ''}! Eu sou a Drippy ✨ sua assistente da OneDrip.
-Posso te ajudar com planos, licença, dashboard, orçamentos, suporte e muito mais.
+  `Oi${name ? `, ${name}` : ''}! Eu sou a Drippy ✨ sua assistente inteligente da OneDrip.
 
-💡 **PESQUISA PERFEITA DE ORÇAMENTOS** Agora com inteligência avançada!
-
-🔍 **Busca Ultra-Precisa - Exemplos que funcionam perfeitamente:**
-• "iPhone 13 Pro Max 128GB troca de tela" - Busca completa com modelo e serviço
-• "Galaxy A12 bateria fraca" - Encontra por modelo e problema específico
-• "Orçamento 45 do João Silva" - Busca por número e cliente
-• "A52 5G câmera traseira quebrada" - Modelo 5G com serviço detalhado
-• "Redmi Note 11 carregador não funciona" - Xiaomi com problema específico
-
-⚡ **Novos recursos de busca inteligente:**
-• **Por Modelo Completo:** "iPhone 14 Pro Max", "Galaxy S23 Ultra 5G"
-• **Por Problema Específico:** "tela com linhas", "bateria inchada", "câmera desfocada"
-• **Por Faixa de Preço:** "orçamentos até R$ 500", "mais barato que R$ 300"
-• **Por Data:** "orçamentos de hoje", "da semana passada", "do mês"
-• **Por Status:** "orçamentos pendentes", "aprovados", "expirados"
-
-🎯 **Busca por número é instantânea:**
-• Digite apenas "38" ou "123" - Encontro imediatamente
-• "Orçamento #45" - Formato tradicional também funciona
-
-📱 **Modelos que eu reconheço perfeitamente:**
-• iPhone: 11, 12, 13, 14, 15, SE, Pro, Pro Max, Mini
-• Samsung: Galaxy A12, A22, A32, A52, A72, S20, S21, S22, S23, Note
-• Xiaomi: Redmi Note 9, 10, 11, 12, Mi 11, 12, 13, Poco X3, X4
-• Motorola: Moto G8, G9, G10, Edge 20, 30, One
-
-🔧 **Serviços com precisão cirúrgica:**
-• "troca de tela", "display LCD", "touch digitalizador"
-• "bateria fraca", "autonomia baixa", "bateria viciada"
-• "câmera traseira", "câmera frontal", "lente quebrada"
-• "carregador lento", "porta de carga", "conector USB"
-• "sistema lento", "formatação", "atualização Android"
-
-💬 **Ações que posso fazer:**
-• "Me fale o orçamento do [modelo]" - Mostro com template WhatsApp
-• "Mostrar meus orçamentos recentes" - Últimos 5 orçamentos
-• "Enviar orçamento #123 via WhatsApp" - Compartilho com template personalizado
-• "Criar orçamento para iPhone 13" - Crio novo orçamento via chat
-
-✨ **Template WhatsApp personalizado:**
-Cada orçamento vem com mensagem pronta para WhatsApp usando seu template configurado!
-
-O que você procura agora? Digite o modelo, serviço ou número do orçamento!`
+Como posso te ajudar hoje? 💖`
 
 const badWords = ['palavrão', 'ofensa']
 
@@ -147,95 +56,121 @@ const buildActions = (text: string, isAdmin: boolean) => {
   if (/(orçamento|orcamento|worm)/.test(t)) actions.push({ label: 'Abrir Orçamentos', path: '/worm' })
   if (/(sistema)/.test(t)) actions.push({ label: 'Abrir Sistema', path: '/sistema' })
   if (/(notifica|mensagem|msg)/.test(t)) actions.push({ label: 'Abrir Mensagens', path: '/msg' })
+  if (/(loja|store)/.test(t)) actions.push({ label: 'Abrir Minha Loja', path: '/store' })
   if (isAdmin && /(admin|super)/.test(t)) actions.push({ label: 'Abrir Super Admin', path: '/supadmin' })
   return actions
 }
 
+// Quick suggestion chips
+const QUICK_SUGGESTIONS = [
+  { label: '📋 Meus orçamentos', text: 'mostre meus orçamentos' },
+  { label: '🔧 Minhas OS', text: 'mostre minhas ordens de serviço' },
+  { label: '👥 Meus clientes', text: 'mostre meus clientes' },
+  { label: '📊 Estatísticas', text: 'mostre minhas estatísticas de orçamentos' },
+]
+
 export default function ChatPage() {
   const { profile } = useAuth()
   const { shopProfile } = useShopProfile()
+  const { isOpen, toggleMenu, closeMenu, menuData, handleLogout } = useMobileMenuContext()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [userBudgets, setUserBudgets] = useState<BudgetData[]>([])
-  const [searchResults, setSearchResults] = useState<BudgetData[]>([])
   const [showSettings, setShowSettings] = useState(false)
   const [isClearing, setIsClearing] = useState(false)
+  const [moodLevel, setMoodLevel] = useState(100)
   const navigate = useNavigate()
   const listRef = useRef<HTMLDivElement>(null)
+  const endRef = useRef<HTMLDivElement>(null)
   const { showError, showSuccess } = useToast()
   const conversationId = 'drippy'
 
-  // Handle WhatsApp sharing for budget
-  const handleBudgetWhatsAppShare = async (budget: BudgetData) => {
-    if (!shopProfile) return
-    
-    try {
-      const { template } = await getUserDefaultTemplate(profile.id)
-      const { success, error } = await sendBudgetViaWhatsApp(budget, shopProfile.name, shopProfile.contact_phone, template || undefined)
-      
-      if (success) {
-        showSuccess({ title: 'Sucesso', description: `Orçamento #${budget.sequential_number} compartilhado via WhatsApp!` })
-      } else {
-        showError({ title: 'Erro ao compartilhar', description: error })
+  const scrollToBottom = (behavior: ScrollBehavior = 'auto') => {
+    endRef.current?.scrollIntoView({ behavior, block: 'end' })
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior })
+  }
+
+  // Load mood level
+  const loadMoodLevel = async () => {
+    if (profile?.id) {
+      const { data } = await supabase
+        .from('chat_mood')
+        .select('mood_level')
+        .eq('user_id', profile.id)
+        .eq('conversation_id', conversationId)
+        .maybeSingle()
+
+      if (data) {
+        setMoodLevel(data.mood_level)
       }
-    } catch (error) {
-      showError({ title: 'Erro', description: 'Erro ao compartilhar orçamento' })
     }
   }
 
-  // Handle copying budget content
-  const handleBudgetCopy = async (budget: BudgetData) => {
-    try {
-      const { template } = await getUserDefaultTemplate(profile.id)
-      const { message } = await generateBudgetWhatsAppMessage(budget, shopProfile.name, shopProfile.contact_phone, template || undefined)
-      
-      // Create comprehensive copy content
-      const remainingDays = Math.max(0, 30 - Math.floor((Date.now() - new Date(budget.created_at).getTime()) / (1000 * 60 * 60 * 24)))
-      const createdDate = new Date(budget.created_at).toLocaleDateString('pt-BR')
-      
-      const copyContent = `[🔍 Orçamento OR: ${budget.sequential_number.toString().padStart(4, '0')}]
-📅 Data de criação: ${createdDate}
-⏳ Restam ${remainingDays} dias
-
-📱 **Template WhatsApp:**
-${message}`
-      
-      await navigator.clipboard.writeText(copyContent)
-      showSuccess({ title: 'Copiado!', description: 'Conteúdo do orçamento copiado para área de transferência' })
-    } catch (error) {
-      showError({ title: 'Erro ao copiar', description: 'Não foi possível copiar o conteúdo' })
-    }
+  const getMoodEmoji = (level: number) => {
+    if (level >= 80) return '😊'
+    if (level >= 60) return '😐'
+    if (level >= 40) return '😕'
+    if (level >= 20) return '😠'
+    return '😡'
   }
 
-  // Load user budgets
+  const getMoodText = (level: number) => {
+    if (level >= 80) return 'Amigável'
+    if (level >= 60) return 'Normal'
+    if (level >= 40) return 'Chateada'
+    if (level >= 20) return 'Irritada'
+    return 'Muito Irritada'
+  }
+
+  const toChatBudget = (b: any): BudgetData => ({
+    id: b.id,
+    client_name: b.client_name ?? 'Cliente',
+    client_phone: b.client_phone ?? '',
+    device_type: b.device_type ?? '',
+    device_model: b.device_model ?? '',
+    issue: b.issue ?? '',
+    cash_price: b.cash_price ?? 0,
+    installment_price: b.installment_price ?? 0,
+    warranty_months: b.warranty_months ?? 0,
+    includes_delivery: b.includes_delivery ?? false,
+    includes_screen_protector: b.includes_screen_protector ?? false,
+    custom_services: b.custom_services ?? '',
+    notes: b.notes ?? '',
+    sequential_number: b.sequential_number ?? 0,
+    created_at: b.created_at ?? new Date().toISOString(),
+    budget_parts: b.budget_parts ?? b.budget_parts ?? [],
+  })
+
   const loadUserBudgets = async () => {
     if (profile?.id) {
       const { budgets, error } = await getUserBudgets(profile.id, 5)
       if (error) {
         console.error('Error loading budgets:', error)
       } else {
-        setUserBudgets(budgets)
+        setUserBudgets((budgets as any[]).map(toChatBudget))
       }
     }
   }
 
-  // Clear chat history
   const handleClearHistory = async () => {
     if (!profile?.id) return
-    
+
     setIsClearing(true)
     try {
       const { error } = await clearMessages(profile.id, conversationId)
       if (error) {
         showError({ title: 'Erro', description: 'Não foi possível limpar o histórico' })
-      } else {
-        showSuccess({ title: 'Sucesso', description: 'Histórico de conversas limpo com sucesso!' })
-        // Reset messages to just the initial message
-        const name = profile?.name
-        const first: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: initialAssistantMessage(name) }
-        setMessages([first])
+        return
       }
+
+      await resetMood(profile.id, conversationId)
+      showSuccess({ title: 'Sucesso', description: 'Histórico e humor resetados! ✨' })
+      setMoodLevel(100)
+
+      const name = profile?.name
+      const first: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: initialAssistantMessage(name) }
+      setMessages([first])
     } catch (error) {
       showError({ title: 'Erro', description: 'Erro ao limpar histórico' })
     } finally {
@@ -244,31 +179,30 @@ ${message}`
     }
   }
 
-  // Reset chat completely
   const handleResetChat = () => {
     const name = profile?.name
     const first: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: initialAssistantMessage(name) }
     setMessages([first])
     setShowSettings(false)
-    showSuccess({ title: 'Chat Resetado', description: 'Conversa reiniciada com sucesso!' })
+    showSuccess({ title: 'Chat Resetado', description: 'Conversa reiniciada!' })
   }
 
   useEffect(() => {
     const name = profile?.name
     const init = async () => {
       if (profile?.id) {
-        // Load chat history
         const { messages: stored, error } = await loadMessages(profile.id, conversationId, 100)
         if (error) {
           console.error('Failed to load chat history:', error)
         } else if (stored.length > 0) {
           const restored: ChatMessage[] = stored.map(m => ({ id: crypto.randomUUID(), role: m.role, content: m.content }))
           setMessages(restored)
+          await loadMoodLevel()
           return
         }
-        
-        // Load user budgets
+
         await loadUserBudgets()
+        await loadMoodLevel()
       }
       const first: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: initialAssistantMessage(name) }
       setMessages([first])
@@ -277,157 +211,121 @@ ${message}`
   }, [profile?.id, profile?.name])
 
   useEffect(() => {
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' })
-  }, [messages])
+    if (messages.length > 0 && profile?.id) {
+      loadMoodLevel()
+    }
+  }, [messages.length])
+
+  useEffect(() => {
+    requestAnimationFrame(() => scrollToBottom('auto'))
+    const t1 = setTimeout(() => scrollToBottom('smooth'), 200)
+    const t2 = setTimeout(() => scrollToBottom('auto'), 700)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [messages, sending])
 
   const handleBudgetActions = async (command: string, parsedCommand: any) => {
     if (!profile?.id || !shopProfile) return
 
-    console.log('🔧 handleBudgetActions called with:', parsedCommand.intent, parsedCommand)
-
     switch (parsedCommand.intent) {
-      case 'list':
+      case 'list': {
         if (userBudgets.length === 0) {
-          return 'Você não tem orçamentos recentes. Que tal criar um novo orçamento?'
+          return 'Você não tem orçamentos recentes.'
         }
-        
+
         let budgetList = '📋 **Seus Orçamentos Recentes:**\n\n'
         for (const budget of userBudgets) {
-          // Get template for each budget if user wants detailed info
-          if (budget.id && profile?.id) {
-            try {
-              const detailedFormat = await formatSingleBudgetBeautiful(budget, profile.id, shopProfile?.name)
-              budgetList += detailedFormat + '\n\n---\n\n'
-            } catch (error) {
-              // Fallback to simple format if template processing fails
-              budgetList += `**Orçamento #${budget.sequential_number}**\n`
-              budgetList += `👤 ${budget.client_name}\n`
-              budgetList += `📱 ${budget.device_type} ${budget.device_model}\n`
-              budgetList += `🔧 ${budget.issue || 'Sem descrição'}\n`
-              budgetList += `💰 À vista: R$ ${budget.cash_price.toFixed(2)}\n`
-              budgetList += `📅 ${new Date(budget.created_at).toLocaleDateString()}\n\n`
-            }
-          } else {
-            // Simple format without template
-            budgetList += `**Orçamento #${budget.sequential_number}**\n`
-            budgetList += `👤 ${budget.client_name}\n`
-            budgetList += `📱 ${budget.device_type} ${budget.device_model}\n`
-            budgetList += `🔧 ${budget.issue || 'Sem descrição'}\n`
-            budgetList += `💰 À vista: R$ ${budget.cash_price.toFixed(2)}\n`
-            budgetList += `📅 ${new Date(budget.created_at).toLocaleDateString()}\n\n`
-          }
+          budgetList += `**Orçamento #${budget.sequential_number}**\n`
+          budgetList += `👤 ${budget.client_name}\n`
+          budgetList += `📱 ${budget.device_type} ${budget.device_model}\n`
+          budgetList += `💰 R$ ${budget.cash_price.toFixed(2)}\n\n`
         }
-        budgetList += '💡 **Dica:** Para enviar por WhatsApp, digite: "Enviar orçamento #NÚMERO"'
         return budgetList
+      }
 
-      case 'search':
-        console.log('🔍 SEARCH case triggered with:', parsedCommand)
-        if (parsedCommand.deviceModel || parsedCommand.serviceType || parsedCommand.budgetNumber) {
-          const searchTerm = parsedCommand.deviceModel || parsedCommand.serviceType || parsedCommand.budgetNumber?.toString() || command
-          console.log('🔍 Searching for term:', searchTerm)
-          
-          // Enhanced search with additional filters based on parsed command
-          const searchFilters = {
-            clientName: parsedCommand.clientName,
-            minPrice: parsedCommand.price ? parsedCommand.price * 0.8 : undefined, // 20% range around mentioned price
-            maxPrice: parsedCommand.price ? parsedCommand.price * 1.2 : undefined,
-            urgent: parsedCommand.urgent,
-            status: parsedCommand.servicePriority === 'urgent' ? 'pending' : undefined
+      case 'search': {
+        if (parsedCommand.deviceModel || parsedCommand.budgetNumber) {
+          const searchTerm = parsedCommand.deviceModel || parsedCommand.budgetNumber?.toString() || command
+
+          const searchFilters: any = {
+            search: searchTerm,
+            limit: 10
           }
-          
-          // Use enhanced search functionality for real-time results
-          const { budgets: searchResults, error } = await searchBudgets(profile.id, searchTerm, 10, searchFilters)
-          
-          console.log('🔍 Enhanced search results:', searchResults?.length, 'results, error:', error)
-          
+
+          const { budgets: searchResults, error } = await searchWormBudgets(profile.id, searchFilters)
+
           if (error || !searchResults || searchResults.length === 0) {
-            return `🔍 **Nenhum orçamento encontrado para "${searchTerm}"**\n\n` +
-                   `Que tal criar um novo orçamento ou tentar uma busca diferente?\n\n` +
-                   `💡 **Exemplos de busca inteligente:**\n` +
-                   `• "A12 128GB" - busca por modelo com armazenamento\n` +
-                   `• "iPhone 13 Pro Max troca de tela" - busca completa\n` +
-                   `• "João Silva" - busca por cliente\n` +
-                   `• "orçamento 45" - busca por número\n` +
-                   `• "orçamentos de hoje" - busca por data\n` +
-                   `• "orçamentos pendentes" - busca por status`
+            return `🔍 Nenhum orçamento encontrado para "${searchTerm}"`
           }
-          
-          // Store search results for potential actions
-          setSearchResults(searchResults)
-          
-          // Format results using enhanced template integration
-          const formattedResults = await formatBudgetResultsForAI(searchResults, searchTerm, profile.id, shopProfile?.name)
-          console.log('🔍 Enhanced formatted results length:', formattedResults.length)
+
+          const normalized = (searchResults as any[]).map(toChatBudget)
+
+          const formattedResults = await formatBudgetResultsForAI(
+            normalized,
+            searchTerm,
+            profile.id,
+            shopProfile?.shop_name
+          )
+
           return formattedResults
         }
-        console.log('🔍 No search criteria found - returning null')
         return null
+      }
 
-      case 'send_whatsapp':
+      case 'send_whatsapp': {
         if (!parsedCommand.budgetNumber) {
-          return 'Por favor, especifique o número do orçamento. Exemplo: "Enviar orçamento #123"'
+          return 'Especifique o número do orçamento.'
         }
-        
-        // Use Worm search to find the specific budget by number
-        const { budgets: searchResults, error } = await searchWormBudgets(profile.id, { 
-          search: parsedCommand.budgetNumber.toString(), 
-          limit: 1 
+
+        const { budgets: results, error } = await searchWormBudgets(profile.id, {
+          search: parsedCommand.budgetNumber.toString(),
+          limit: 1,
         })
-        
-        if (error || !searchResults || searchResults.length === 0) {
-          return `Orçamento #${parsedCommand.budgetNumber} não encontrado. Verifique os orçamentos disponíveis acima.`
+
+        if (error || !results || results.length === 0) {
+          return `Orçamento #${parsedCommand.budgetNumber} não encontrado.`
         }
-        
-        const budget = searchResults[0]
+
+        const budget = toChatBudget((results as any[])[0])
 
         try {
           const { template } = await getUserDefaultTemplate(profile.id)
-          const { success, error } = await sendBudgetViaWhatsApp(budget, shopProfile.name, shopProfile.contact_phone, template || undefined)
-          
+          const templateForSend = template
+            ? ({
+              ...template,
+              name: (template as any).name ?? (template as any).template_name ?? 'Template',
+            } as any)
+            : undefined
+
+          const { success, error } = await sendBudgetViaWhatsApp(
+            budget,
+            shopProfile.shop_name,
+            shopProfile.contact_phone,
+            templateForSend
+          )
+
           if (success) {
-            return `✅ Orçamento #${budget.sequential_number} enviado para ${budget.client_name} via WhatsApp!`
+            return `✅ Orçamento #${budget.sequential_number} enviado!`
           } else {
-            return `❌ Erro ao enviar: ${error}`
+            return `❌ Erro: ${error}`
           }
-        } catch (error) {
-          return `❌ Erro ao processar envio: ${error}`
+        } catch {
+          return `❌ Erro ao processar envio`
         }
+      }
 
       case 'create':
-        const budgetData: Partial<BudgetData> = {
-          client_name: parsedCommand.clientName || (parsedCommand.clientPhone ? `Cliente ${parsedCommand.clientPhone}` : 'Cliente'),
-          client_phone: parsedCommand.clientPhone || '',
-          device_type: parsedCommand.deviceBrand || 'Celular',
-          device_model: parsedCommand.deviceModel || '',
-          issue: parsedCommand.serviceType || command,
-          cash_price: parsedCommand.price || 0,
-          notes: 'Criado via chat com Drippy'
-        }
-
-        const { budget: newBudget, error: createError } = await createBudgetFromChat(profile.id, budgetData)
-        if (createError) {
-          return `❌ Erro ao criar orçamento: ${createError}`
-        }
-        
-        // Reload budgets
-        await loadUserBudgets()
-        
-        return `✅ Orçamento #${newBudget.sequential_number} criado com sucesso!\n\n` +
-               `📱 ${newBudget.device_type} ${newBudget.device_model}\n` +
-               `🔧 ${newBudget.issue || 'Sem descrição'}\n` +
-               `💰 R$ ${newBudget.cash_price.toFixed(2)}\n\n` +
-               `Para enviar por WhatsApp, digite: "Enviar orçamento #${newBudget.sequential_number}"`
+        return null;
 
       default:
         return null
     }
   }
 
-  const handleSend = async () => {
-    const text = input.trim()
+  const handleSend = async (overrideText?: string) => {
+    const text = (overrideText || input).trim()
     if (!text) return
     setSending(true)
-    setInput('')
+    if (!overrideText) setInput('')
 
     const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', content: text }
     setMessages(prev => [...prev, userMsg])
@@ -442,243 +340,362 @@ ${message}`
       const warn: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: 'Vamos manter a conversa respeitosa. Em que mais posso ajudar?'
+        content: 'Vamos manter a conversa respeitosa.'
       }
       setMessages(prev => [...prev, warn])
       setSending(false)
       return
     }
 
-    // Parse budget commands
     const parsedCommand = parseBudgetCommand(text)
     let budgetResponse = null
 
     if (parsedCommand.intent !== 'unknown') {
-      console.log('🎯 Budget command detected:', parsedCommand.intent, parsedCommand)
       budgetResponse = await handleBudgetActions(text, parsedCommand)
-      console.log('📊 Budget response:', budgetResponse)
-    }
-
-    // CRITICAL: If we have ANY budget-related response (search/list/send/create), 
-    // show it EXACTLY without passing through AI to prevent hallucinations
-    if (budgetResponse && (parsedCommand.intent === 'search' || parsedCommand.intent === 'list' || parsedCommand.intent === 'send' || parsedCommand.intent === 'create')) {
-      const msgId = crypto.randomUUID()
-      setMessages(prev => [...prev, { id: msgId, role: 'assistant', content: budgetResponse }])
-      if (profile?.id) {
-        await saveMessage({ user_id: profile.id, conversation_id: conversationId, role: 'assistant', content: budgetResponse })
-      }
-      setSending(false)
-      return
-    }
-
-    // Fallback: tentar busca Worm mesmo quando a intenção é desconhecida
-    if (parsedCommand.intent === 'unknown' && profile?.id) {
-      const { budgets: fallbackBudgets } = await searchWormBudgets(profile.id, { search: text, limit: 5 })
-      if (fallbackBudgets && fallbackBudgets.length > 0) {
-        const formatted = await formatBudgetResultsForAI(fallbackBudgets, text, profile.id, shopProfile?.name)
-        const msgId = crypto.randomUUID()
-        setMessages(prev => [...prev, { id: msgId, role: 'assistant', content: formatted }])
-        await saveMessage({ user_id: profile.id, conversation_id: conversationId, role: 'assistant', content: formatted })
-        setSending(false)
-        return
-      }
     }
 
     try {
-      const name = profile?.name
-      let system = `Você é a Drippy, assistente da OneDrip. Responda de forma objetiva, profissional e doce, em PT-BR. Foque em ajudar o usuário nas áreas do sistema: planos, licença, dashboard, orçamentos (Worm), suporte, sistema e mensagens. Se o usuário pedir ações, sugira botões e caminhos do site. Nome do usuário: ${name || 'Usuário'}. 
+      const isAdmin = profile?.role === 'admin'
+      const actions = buildActions(text, isAdmin)
 
-REGRAS CRÍTICAS:
-1. NUNCA invente dados de orçamentos, preços, clientes ou números
-2. Se não souber algo, diga claramente "Não tenho essa informação"
-3. Para buscar orçamentos reais, peça ao usuário para usar comandos específicos
-4. NUNCA crie exemplos fictícios de orçamentos`
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (!session) {
+        throw new Error('Você precisa estar autenticado')
+      }
+
+      const messageHistory = messages.map(m => ({
+        role: m.role,
+        content: m.content
+      }))
+      messageHistory.push({
+        role: 'user',
+        content: text
+      })
+
+      const { data, error: invokeError } = await supabase.functions.invoke('chat-ai', {
+        body: {
+          message: text,
+          conversationId,
+          messageHistory: messageHistory.slice(-11)
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      })
+
+      if (invokeError) {
+        throw new Error(invokeError.message)
+      }
+
+      let aiResponse = data?.reply || 'Desculpe, não consegui processar isso.'
+
+      if (isHelpRelatedQuery(text) && !budgetResponse) {
+        const helpSuggestions = searchHelpArticles(text, 3)
+        if (helpSuggestions.length > 0) {
+          const suggestionsText = formatHelpSuggestions(helpSuggestions)
+          aiResponse += '\n\n' + suggestionsText
+        }
+      }
 
       const assistantId = crypto.randomUUID()
-      setMessages(prev => [...prev, { id: assistantId, role: 'assistant', content: '' }])
-      let final = ''
-      
-      const history = [
-        { role: 'system', content: system },
-        ...messages.map(m => ({ role: m.role, content: m.content })),
-        { role: 'user', content: text }
-      ]
-      
-      try {
-        await deepseekStream(history as any, 0.7, (chunk) => {
-          final += chunk
-          setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: m.content + chunk } : m))
-        })
-      } catch (error: any) {
-        console.error('DeepSeek API error:', error)
-        const errorMessage = error.message || 'Erro ao conectar com a IA'
-        setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: `❌ ${errorMessage}` } : m))
-        setSending(false)
-        return
+      const resp: ChatMessage = {
+        id: assistantId,
+        role: 'assistant',
+        content: aiResponse,
+        ...(actions.length > 0 ? { actions } : {})
       }
-      
-      // Add budget-specific actions if applicable
-      let actions = buildActions(text, false)
-      
-      // Add budget-specific quick actions (without budget action buttons)
-      if (parsedCommand.intent === 'list' && userBudgets.length > 0) {
-        actions.push({ 
-          label: 'Ver Todos Orçamentos', 
-          path: '/worm',
-          onClick: () => navigate('/worm')
-        })
-      } else if (parsedCommand.intent === 'create') {
-        actions.push({ 
-          label: 'Criar Orçamento', 
-          path: '/worm',
-          onClick: () => navigate('/worm')
-        })
-      }
-      
-      setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, actions } : m))
-      
+      setMessages(prev => [...prev, resp])
+
       if (profile?.id) {
-        const { error } = await saveMessage({ user_id: profile.id, conversation_id: conversationId, role: 'assistant', content: final })
+        const { error } = await saveMessage({ user_id: profile.id, conversation_id: conversationId, role: 'assistant', content: aiResponse })
         if (error) {
           console.error('Failed to save assistant message:', error)
         }
       }
     } catch (e: any) {
-      showError({ title: 'Falha ao responder', description: e?.message || 'Erro desconhecido' })
+      showError({ title: 'Falha', description: e?.message || 'Erro desconhecido' })
     } finally {
       setSending(false)
     }
   }
 
-  const handleAction = (path: string, onClick?: () => void) => {
-    if (onClick) {
-      onClick()
-    } else {
-      navigate(path)
-    }
-  }
+  const showSuggestions = messages.length <= 1
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/40">
-      <div className="max-w-3xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg border flex items-center justify-center bg-primary/10 backdrop-blur-sm">
-              <Bot className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <div className="font-semibold text-lg">Drippy</div>
-              <div className="text-sm text-muted-foreground">Assistente virtual OneDrip</div>
-            </div>
-          </div>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={() => setShowSettings(!showSettings)}
-            className="backdrop-blur-sm"
-          >
-            <Settings className="w-4 h-4 mr-2" />
-            Configurações
-          </Button>
-        </div>
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
+      <div className="sticky top-0 z-10 px-4 pt-3">
+        <div className="container mx-auto max-w-3xl">
+          <div className="flex items-center justify-between">
+            <MobileHamburgerButton
+              isOpen={isOpen}
+              onClick={toggleMenu}
+            />
 
-        {/* Settings Panel */}
-        {showSettings && (
-          <Card className="mb-4 bg-card/50 backdrop-blur-sm border-border/50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-sm flex items-center gap-2">
-                  <Settings className="w-4 h-4" />
-                  Configurações da IA
-                </h3>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={() => setShowSettings(false)}
-                  className="h-6 w-6 p-0"
-                >
-                  <X className="w-3 h-3" />
-                </Button>
-              </div>
-              <div className="space-y-2">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={handleClearHistory}
-                  disabled={isClearing || messages.length <= 1}
-                  className="w-full justify-start"
-                >
-                  <Trash2 className="w-3 h-3 mr-2" />
-                  {isClearing ? 'Limpando...' : 'Apagar Histórico'}
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={handleResetChat}
-                  className="w-full justify-start"
-                >
-                  <RefreshCw className="w-3 h-3 mr-2" />
-                  Resetar Chat
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-3">
-                💡 Apagar histórico remove todas as mensagens do banco de dados. Resetar chat apenas reinicia a conversa atual.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        <div ref={listRef} className="space-y-3 h-[60vh] overflow-y-auto">
-          {messages.map(m => (
-            <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <Card className={`max-w-[80%] transition-all duration-300 ${m.role === 'user' 
-                ? 'bg-primary text-primary-foreground border-primary/20 shadow-lg' 
-                : 'bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg hover:-translate-y-0.5'
-              }`}>
-                <CardContent className="p-4">
-                  <div className={`text-sm leading-relaxed ${m.role === 'user' ? 'text-primary-foreground' : 'text-foreground'}`}>
-                    {m.role === 'assistant' ? <MarkdownLite text={m.content} /> : m.content}
+            <div className="flex-1 flex items-center justify-center">
+              <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-background/40 backdrop-blur-xl border border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.3)]">
+                <div className="relative">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 p-[2px]">
+                    <img
+                      src={drippyAvatar}
+                      alt="Drippy"
+                      className="w-full h-full rounded-full object-cover"
+                    />
                   </div>
-                  {/* Budget actions removed - messages now show beautiful formatting without buttons */}
-                  {m.actions && m.actions.length > 0 && (
-                    <div className={`mt-3 flex flex-wrap gap-2 ${m.role === 'user' ? 'opacity-90' : ''}`}>
-                      {m.actions.map(a => (
-                        <Button key={a.path} size="sm" variant={m.role === 'user' ? 'secondary' : 'outline'} onClick={() => handleAction(a.path, a.onClick)}>
-                          <LinkIcon className="w-3 h-3 mr-1" />
-                          {a.label}
+                  <span className="absolute -bottom-0.5 -right-0.5 text-xs">
+                    {getMoodEmoji(moodLevel)}
+                  </span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h1 className="text-sm font-semibold text-foreground">Drippy</h1>
+                    <Sparkles className="h-3 w-3 text-primary" />
+                  </div>
+                  <p className="text-[10px] text-primary/70 font-medium">Online • IA Assistente</p>
+                </div>
+              </div>
+            </div>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowSettings(!showSettings)}
+              className="h-9 w-9 rounded-full hover:bg-primary/10"
+            >
+              <Settings className="h-4 w-4 text-muted-foreground" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Settings Panel */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden sticky top-[61px] z-10 px-4"
+          >
+            <div className="container mx-auto max-w-3xl py-3">
+              <div className="rounded-2xl bg-background/40 backdrop-blur-xl border border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.3)] px-4 py-4 space-y-3">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">Humor da Drippy</span>
+                  <span className="text-xs text-foreground flex items-center gap-1.5 bg-muted/50 px-2 py-0.5 rounded-full">
+                    {getMoodEmoji(moodLevel)} {getMoodText(moodLevel)}
+                  </span>
+                </div>
+                <Progress
+                  value={moodLevel}
+                  className="h-1.5"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetChat}
+                  className="h-8 text-xs rounded-xl"
+                >
+                  <RefreshCw className="h-3 w-3 mr-1.5" />
+                  Reiniciar
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleClearHistory}
+                  disabled={isClearing}
+                  className="h-8 text-xs rounded-xl"
+                >
+                  <Trash2 className="h-3 w-3 mr-1.5" />
+                  {isClearing ? 'Limpando...' : 'Limpar Tudo'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowSettings(false)}
+                  className="h-8 w-8 p-0 ml-auto rounded-xl"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Messages */}
+      <div
+        ref={listRef}
+        className="flex-1 overflow-y-auto px-4 py-6 space-y-5 container mx-auto max-w-3xl"
+      >
+        {messages.map((m) => {
+          const isUser = m.role === 'user';
+          return (
+            <motion.div
+              key={m.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+              className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'}`}
+            >
+              <div className={`flex items-end gap-2 max-w-[88%] md:max-w-[75%]`}>
+
+                {/* Assistant Avatar */}
+                {!isUser && (
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 p-[1.5px] flex-shrink-0 mb-0.5">
+                    <img
+                      src={drippyAvatar}
+                      alt="Drippy"
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  </div>
+                )}
+
+                <div className={`flex flex-col gap-1.5 ${isUser ? 'items-end' : 'items-start'}`}>
+                  {/* Bubble */}
+                  <div
+                    className={`
+                      relative px-4 py-2.5 text-[14px] leading-relaxed
+                      ${isUser
+                        ? 'bg-primary text-primary-foreground rounded-2xl rounded-br-md shadow-md shadow-primary/10'
+                        : 'bg-card/80 backdrop-blur-sm border border-border/20 text-foreground rounded-2xl rounded-bl-md'}
+                    `}
+                  >
+                    <div className="prose prose-sm dark:prose-invert max-w-none break-words [&>p]:m-0">
+                      {isUser ? (
+                        <p className="whitespace-pre-wrap m-0">{m.content}</p>
+                      ) : (
+                        <MarkdownRenderer text={m.content} />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Action Cards */}
+                  {!isUser && m.actions && m.actions.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-0.5 ml-0.5">
+                      {m.actions.map((action, actionIdx) => (
+                        <Button
+                          key={actionIdx}
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => navigate(action.path)}
+                          className="h-7 rounded-full px-3 text-[11px] font-medium bg-primary/10 hover:bg-primary/20 border-0 shadow-none transition-all text-foreground/80 hover:text-foreground hover:scale-105"
+                        >
+                          <LinkIcon className="h-3 w-3 mr-1 opacity-60" />
+                          {action.label}
                         </Button>
                       ))}
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            </div>
-          ))}
-        </div>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
 
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-          <CardContent className="p-4">
-            <div className="flex gap-3">
+        {/* Quick Suggestions (shown only at start) */}
+        {showSuggestions && !sending && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.3 }}
+            className="flex flex-wrap gap-2 justify-center pt-2"
+          >
+            {QUICK_SUGGESTIONS.map((s, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  setInput('')
+                  handleSend(s.text)
+                }}
+                className="text-xs px-3.5 py-2 rounded-full border border-border/30 bg-card/60 hover:bg-primary/10 hover:border-primary/30 text-foreground/70 hover:text-foreground transition-all duration-200"
+              >
+                {s.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+
+        {/* Typing Indicator */}
+        {sending && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-start w-full"
+          >
+            <div className="flex items-end gap-2 max-w-[88%]">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 p-[1.5px] flex-shrink-0 mb-0.5">
+                <img
+                  src={drippyAvatar}
+                  alt="Drippy"
+                  className="w-full h-full rounded-full object-cover"
+                />
+              </div>
+              <div className="bg-card/80 backdrop-blur-sm border border-border/20 rounded-2xl rounded-bl-md px-4 py-3">
+                <div className="flex gap-1.5 items-center h-4">
+                  <div className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0ms', animationDuration: '1s' }}></div>
+                  <div className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '150ms', animationDuration: '1s' }}></div>
+                  <div className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '300ms', animationDuration: '1s' }}></div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+        <div ref={endRef} />
+      </div>
+
+      {/* Input Area */}
+      <div className="sticky bottom-0 mobile-safe pb-4 pt-3 px-4">
+        <div className="container mx-auto max-w-3xl">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleSend()
+            }}
+            className="relative"
+          >
+            <div className="relative flex items-center rounded-2xl bg-background/40 backdrop-blur-xl border border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.3)] px-4 py-1.5">
               <Input
                 value={input}
-                onChange={e => setInput(e.target.value)}
-                placeholder='Pergunte sobre orçamentos, planos, dashboard... (ex: "Me fale o orçamento do A12", "Mostrar meus orçamentos", "Enviar orçamento #123")'
-                onKeyDown={e => {
-                  if (e.key === 'Enter') handleSend()
-                }}
-                className="bg-background/50"
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Pergunte algo para a Drippy..."
+                disabled={sending}
+                className="min-h-[40px] border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:border-0 pr-10 text-[14px] placeholder:text-muted-foreground/50"
               />
-              <Button onClick={handleSend} disabled={sending} size="default">
-                <Send className="w-4 h-4 mr-2" />
-                {sending ? 'Enviando...' : 'Enviar'}
+              <Button
+                type="submit"
+                disabled={!input.trim() || sending}
+                size="icon"
+                className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-xl shadow-md transition-all hover:scale-105 active:scale-95 disabled:hover:scale-100"
+              >
+                {sending ? (
+                  <div className="loading-spinner w-4 h-4" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
               </Button>
             </div>
-            <div className="mt-3 text-xs text-muted-foreground text-center">
-              💡 Dica: Tente "iPhone 13 Pro Max troca de tela", "Galaxy A12 bateria fraca", "Orçamento 45", ou "Criar orçamento iPhone 14"
-            </div>
-          </CardContent>
-        </Card>
+          </form>
+        </div>
       </div>
+
+      {/* Mobile Menu */}
+      <MobileHamburgerMenu
+        isOpen={isOpen}
+        onClose={closeMenu}
+        onTabChange={(tab) => {
+          if (tab === 'dashboard') navigate('/dashboard');
+          closeMenu();
+        }}
+        menuData={menuData}
+        onLogout={handleLogout}
+      />
     </div>
   )
 }

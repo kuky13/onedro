@@ -29,21 +29,23 @@ export const useToast = () => {
     } else {
       // If it's an object, handle it properly
       const opts = messageOrOptions as ToastOptions | EnhancedToastOptions;
-      
-      if (opts.variant === 'destructive') {
+
+      const isDestructive = 'variant' in opts && opts.variant === 'destructive';
+
+      if (isDestructive) {
         return toast.error(opts.title, {
-          description: opts.description,
-          duration: (opts as EnhancedToastOptions).duration || 4000,
-          className: (opts as any).className,
-        });
-      } else {
-        // Default to info toast for non-destructive variants
-        return toast(opts.title, {
-          description: opts.description,
+          ...(opts.description ? { description: opts.description } : {}),
           duration: (opts as EnhancedToastOptions).duration || 4000,
           className: (opts as any).className,
         });
       }
+
+      // Default
+      return toast(opts.title, {
+        ...(opts.description ? { description: opts.description } : {}),
+        duration: (opts as EnhancedToastOptions).duration || 4000,
+        className: (opts as any).className,
+      });
     }
   };
 
@@ -59,16 +61,22 @@ export const useToast = () => {
     
     if (typeof options === 'object' && ('duration' in options || 'action' in options)) {
       const enhancedOptions = options as EnhancedToastOptions;
-      toast.success(enhancedOptions.title, {
-        description: enhancedOptions.description,
+      const toastOpts: any = {
+        ...(enhancedOptions.description ? { description: enhancedOptions.description } : {}),
         duration: enhancedOptions.duration || 4000,
-        action: enhancedOptions.action ? {
-          label: enhancedOptions.action.label,
-          onClick: enhancedOptions.action.onClick,
-        } : undefined,
-        onDismiss: enhancedOptions.onDismiss,
-        style: enhancedOptions.style,
-      });
+        ...(enhancedOptions.action
+          ? {
+              action: {
+                label: enhancedOptions.action.label,
+                onClick: enhancedOptions.action.onClick,
+              },
+            }
+          : {}),
+        ...(enhancedOptions.onDismiss ? { onDismiss: enhancedOptions.onDismiss as any } : {}),
+        ...(enhancedOptions.style ? { style: enhancedOptions.style } : {}),
+      };
+
+      toast.success(enhancedOptions.title, toastOpts);
     } else {
       const simpleOptions = options as Omit<ToastOptions, 'variant'>;
       toast.success(simpleOptions.title, {
@@ -89,17 +97,22 @@ export const useToast = () => {
     
     if (typeof options === 'object' && ('duration' in options || 'action' in options)) {
       const enhancedOptions = options as EnhancedToastOptions;
-      // Toast error logged
-      toast.error(enhancedOptions.title, {
-        description: enhancedOptions.description,
+      const toastOpts: any = {
+        ...(enhancedOptions.description ? { description: enhancedOptions.description } : {}),
         duration: enhancedOptions.duration || 6000,
-        action: enhancedOptions.action ? {
-          label: enhancedOptions.action.label,
-          onClick: enhancedOptions.action.onClick,
-        } : undefined,
-        onDismiss: enhancedOptions.onDismiss,
-        style: enhancedOptions.style,
-      });
+        ...(enhancedOptions.action
+          ? {
+              action: {
+                label: enhancedOptions.action.label,
+                onClick: enhancedOptions.action.onClick,
+              },
+            }
+          : {}),
+        ...(enhancedOptions.onDismiss ? { onDismiss: enhancedOptions.onDismiss as any } : {}),
+        ...(enhancedOptions.style ? { style: enhancedOptions.style } : {}),
+      };
+
+      toast.error(enhancedOptions.title, toastOpts);
     } else {
       const simpleOptions = options as Omit<ToastOptions, 'variant'>;
       toast.error(simpleOptions.title, {
@@ -120,16 +133,22 @@ export const useToast = () => {
     
     if (typeof options === 'object' && ('duration' in options || 'action' in options)) {
       const enhancedOptions = options as EnhancedToastOptions;
-      toast.info(enhancedOptions.title, {
-        description: enhancedOptions.description,
+      const toastOpts: any = {
+        ...(enhancedOptions.description ? { description: enhancedOptions.description } : {}),
         duration: enhancedOptions.duration || 4000,
-        action: enhancedOptions.action ? {
-          label: enhancedOptions.action.label,
-          onClick: enhancedOptions.action.onClick,
-        } : undefined,
-        onDismiss: enhancedOptions.onDismiss,
-        style: enhancedOptions.style,
-      });
+        ...(enhancedOptions.action
+          ? {
+              action: {
+                label: enhancedOptions.action.label,
+                onClick: enhancedOptions.action.onClick,
+              },
+            }
+          : {}),
+        ...(enhancedOptions.onDismiss ? { onDismiss: enhancedOptions.onDismiss as any } : {}),
+        ...(enhancedOptions.style ? { style: enhancedOptions.style } : {}),
+      };
+
+      toast.info(enhancedOptions.title, toastOpts);
     } else {
       const simpleOptions = options as Omit<ToastOptions, 'variant'>;
       toast.info(simpleOptions.title, {
@@ -150,16 +169,22 @@ export const useToast = () => {
     
     if (typeof options === 'object' && ('duration' in options || 'action' in options)) {
       const enhancedOptions = options as EnhancedToastOptions;
-      toast.warning(enhancedOptions.title, {
-        description: enhancedOptions.description,
+      const toastOpts: any = {
+        ...(enhancedOptions.description ? { description: enhancedOptions.description } : {}),
         duration: enhancedOptions.duration || 5000,
-        action: enhancedOptions.action ? {
-          label: enhancedOptions.action.label,
-          onClick: enhancedOptions.action.onClick,
-        } : undefined,
-        onDismiss: enhancedOptions.onDismiss,
-        style: enhancedOptions.style,
-      });
+        ...(enhancedOptions.action
+          ? {
+              action: {
+                label: enhancedOptions.action.label,
+                onClick: enhancedOptions.action.onClick,
+              },
+            }
+          : {}),
+        ...(enhancedOptions.onDismiss ? { onDismiss: enhancedOptions.onDismiss as any } : {}),
+        ...(enhancedOptions.style ? { style: enhancedOptions.style } : {}),
+      };
+
+      toast.warning(enhancedOptions.title, toastOpts);
     } else {
       const simpleOptions = options as Omit<ToastOptions, 'variant'>;
       toast.warning(simpleOptions.title, {
@@ -180,16 +205,22 @@ export const useToast = () => {
     
     if (typeof options === 'object' && ('duration' in options || 'action' in options)) {
       const enhancedOptions = options as EnhancedToastOptions;
-      return toast.loading(enhancedOptions.title, {
-        description: enhancedOptions.description,
+      const toastOpts: any = {
+        ...(enhancedOptions.description ? { description: enhancedOptions.description } : {}),
         duration: enhancedOptions.duration || Infinity,
-        action: enhancedOptions.action ? {
-          label: enhancedOptions.action.label,
-          onClick: enhancedOptions.action.onClick,
-        } : undefined,
-        onDismiss: enhancedOptions.onDismiss,
-        style: enhancedOptions.style,
-      });
+        ...(enhancedOptions.action
+          ? {
+              action: {
+                label: enhancedOptions.action.label,
+                onClick: enhancedOptions.action.onClick,
+              },
+            }
+          : {}),
+        ...(enhancedOptions.onDismiss ? { onDismiss: enhancedOptions.onDismiss as any } : {}),
+        ...(enhancedOptions.style ? { style: enhancedOptions.style } : {}),
+      };
+
+      return toast.loading(enhancedOptions.title, toastOpts);
     } else {
       const simpleOptions = options as Omit<ToastOptions, 'variant'>;
       return toast.loading(simpleOptions.title, {

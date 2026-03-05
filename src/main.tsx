@@ -1,25 +1,36 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
-import TestApp from './TestApp.tsx';
 import './index.css';
 
-// Inicializar interceptador de console ASCII
+// Console/Debug: manter silencioso por padrão.
+// Para habilitar o console ASCII no preview, use ?debugConsole=1
 import { asciiConsole } from './utils/asciiConsole';
-asciiConsole().initialize();
 
-// Debug: Adicionar logs para identificar problemas
-// Starting React application
+if (import.meta.env.DEV) {
+  const qs = new URLSearchParams(window.location.search);
+  if (qs.get('debugConsole') === '1') {
+    asciiConsole.initialize();
+  }
 
-// Capturar erros não tratados
-window.addEventListener('error', (event) => {
-  console.error('❌ Erro não tratado:', event.error);
-  console.error('Stack trace:', event.error?.stack);
-});
+  // Capturar erros não tratados apenas em DEV (evita ruído em produção)
+  window.addEventListener('error', (event) => {
+    // Ignorar AbortError silenciosamente
+    if (event.error?.name === 'AbortError' || event.error?.message?.includes('aborted')) {
+      return;
+    }
+    console.error('❌ Erro não tratado:', event.error);
+    console.error('Stack trace:', event.error?.stack);
+  });
 
-window.addEventListener('unhandledrejection', (event) => {
-  console.error('❌ Promise rejeitada:', event.reason);
-});
+  window.addEventListener('unhandledrejection', (event) => {
+    // Ignorar AbortError silenciosamente
+    if (event.reason?.name === 'AbortError' || event.reason?.message?.includes('aborted')) {
+      return;
+    }
+    console.error('❌ Promise rejeitada:', event.reason);
+  });
+}
 
 try {
   const rootElement = document.getElementById('root');
@@ -41,8 +52,9 @@ try {
   
   // Application rendered successfully
 } catch (error) {
-  console.error('❌ Erro ao inicializar aplicação:', error);
-  
+  const err = error instanceof Error ? error : new Error(String(error));
+  console.error('❌ Erro ao inicializar aplicação:', err);
+
   // Mostrar erro na tela
   const rootElement = document.getElementById('root');
   if (rootElement) {
@@ -68,7 +80,7 @@ try {
           max-width: 80%;
           overflow: auto;
           white-space: pre-wrap;
-        ">${error.message}\n\n${error.stack || ''}</pre>
+        ">${err.message}\n\n${err.stack || ''}</pre>
         <button onclick="window.location.reload()" style="
           margin-top: 20px;
           padding: 10px 20px;

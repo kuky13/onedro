@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Image, Upload, X, Check, AlertCircle } from 'lucide-react';
+import { Upload, X, Check, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 interface LogoUploadZoneProps {
   currentLogoUrl?: string;

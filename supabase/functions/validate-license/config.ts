@@ -38,7 +38,7 @@ export const SECURITY_CONFIG = {
   suspiciousPatterns: {
     // SQL injection patterns
     sqlInjection: [
-      /('|(\-\-)|(;)|(\||\|)|(\*|\*))/i,
+      /('|(--)|(;)|(\||\|)|(\*|\*))/i,
       /(union|select|insert|delete|update|drop|create|alter|exec|execute)/i,
     ],
     // XSS patterns
@@ -84,13 +84,15 @@ export const VALIDATION_CONFIG = {
   
   // Grace period for expired licenses (in days)
   gracePeriodDays: 7,
+  GRACE_PERIOD_DAYS: 7,
   
   // Minimum time between activations (in minutes)
   minActivationInterval: 5,
+  MIN_ACTIVATION_INTERVAL_MS: 5 * 60 * 1000, // 5 minutes in ms
   
   // Maximum concurrent validations per user
   maxConcurrentValidations: 5,
-} as const;
+};
 
 // Error messages
 export const ERROR_MESSAGES = {
@@ -105,14 +107,22 @@ export const ERROR_MESSAGES = {
   INTERNAL_ERROR: 'Internal server error.',
   INVALID_USER_AGENT: 'Invalid or suspicious user agent.',
   SUSPICIOUS_ACTIVITY: 'Suspicious activity detected.',
-} as const;
+  VALIDATION_FAILED: 'License validation failed.',
+  ACTIVATION_FAILED: 'License activation failed.',
+  DEACTIVATION_FAILED: 'License deactivation failed.',
+};
 
 // Success messages
 export const SUCCESS_MESSAGES = {
   LICENSE_VALID: 'License is valid and active.',
   LICENSE_ACTIVATED: 'License activated successfully.',
   LICENSE_DEACTIVATED: 'License deactivated successfully.',
-} as const;
+  VALIDATION_SUCCESS: 'License validation successful.',
+  ACTIVATION_SUCCESS: 'License activation successful.',
+  DEVICE_ALREADY_ACTIVATED: 'Device is already activated.',
+  DEVICE_DEACTIVATION_SUCCESS: 'Device deactivated successfully.',
+  LICENSE_DEACTIVATION_SUCCESS: 'License deactivated successfully.',
+};
 
 // HTTP status codes
 export const HTTP_STATUS = {
@@ -133,7 +143,7 @@ export const CORS_CONFIG = {
     'http://localhost:8080',
     'http://localhost:8081',
     // Add production domains here
-  ],
+  ] as string[],
   allowedMethods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: [
     'Content-Type',
@@ -143,4 +153,4 @@ export const CORS_CONFIG = {
     'User-Agent',
   ],
   maxAge: 86400, // 24 hours
-} as const;
+};

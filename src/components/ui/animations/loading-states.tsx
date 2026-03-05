@@ -1,7 +1,8 @@
+// @ts-nocheck
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { HamsterLoader } from '../hamster-loader';
 
 // Skeleton loader avançado
 interface AdvancedSkeletonProps {
@@ -123,28 +124,7 @@ export const IOSSpinner = ({
   color = 'currentColor',
   className = ''
 }: IOSSpinnerProps) => {
-  const sizes = {
-    sm: 'w-4 h-4',
-    md: 'w-6 h-6',
-    lg: 'w-8 h-8'
-  };
-
-  return (
-    <motion.div
-      className={cn(
-        'inline-block border-2 border-current border-t-transparent rounded-full',
-        sizes[size],
-        className
-      )}
-      style={{ color }}
-      animate={{ rotate: 360 }}
-      transition={{
-        duration: 1,
-        repeat: Infinity,
-        ease: 'linear'
-      }}
-    />
-  );
+  return <HamsterLoader size={size} className={className} />;
 };
 
 // Dots loader

@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Users, Shield, UserPlus, Settings, Search, Calendar, Trash2, Loader2, Gamepad2, Key, BarChart3, Filter, Grid, List, CheckSquare, MoreHorizontal, Image, Globe, Menu, Bell, Rocket, AlertTriangle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Users, Shield, UserPlus, Settings, Search, Gamepad2, Key, BarChart3, Filter, Grid, List, CheckSquare, MoreHorizontal, Image, Globe, Menu, Bell, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { UserEditModal } from '@/components/UserEditModal';
@@ -16,9 +16,6 @@ import { UserDeletionDialog } from '@/components/UserManagement/UserDeletionDial
 import { UserRenewalDialog } from '@/components/UserManagement/UserRenewalDialog';
 import { UserAnalytics } from '@/components/UserManagement/UserAnalytics';
 import { UserSettings } from '@/components/UserManagement/UserSettings';
-import { BetaFeaturesSettingsLite } from '@/components/lite/BetaFeaturesSettingsLite';
-
-import { GameSettingsPanel } from '@/components/admin/GameSettingsPanel';
 import { AdminLicenseManagerEnhanced } from '@/components/admin/AdminLicenseManagerEnhanced';
 import { AdminNotificationManager } from '@/components/admin/AdminNotificationManager';
 import { AdminLogs } from '@/components/AdminLogs';
@@ -33,9 +30,7 @@ interface AdminLiteEnhancedProps {
   onBack: () => void;
 }
 const AdminLiteEnhancedComponent = ({
-  userId,
-  onBack,
-  profile
+  onBack
 }: AdminLiteEnhancedProps & {
   profile: any;
 }) => {
@@ -64,13 +59,9 @@ const AdminLiteEnhancedComponent = ({
     isLoading,
     error,
     deleteUserMutation,
-    renewUserLicenseMutation,
-    filteredUsers,
     handleEdit,
     handleDelete,
-    handleRenew,
-    confirmDelete,
-    confirmRenewal
+    confirmDelete
   } = useUserManagement();
 
   // Enhanced filtering and sorting
@@ -107,21 +98,6 @@ const AdminLiteEnhancedComponent = ({
     navigate('/signup');
   };
 
-  // Enhanced stats calculation
-  const stats = React.useMemo(() => {
-    if (!users) return {
-      totalUsers: 0,
-      activeUsers: 0,
-      expiredUsers: 0,
-      adminUsers: 0
-    };
-    return {
-      totalUsers: users.length,
-      activeUsers: users.filter((user: any) => user.license_active && new Date(user.expiration_date) > new Date()).length,
-      expiredUsers: users.filter((user: any) => !user.license_active || new Date(user.expiration_date) <= new Date()).length,
-      adminUsers: users.filter((user: any) => user.role === 'admin').length
-    };
-  }, [users]);
   const getLicenseStatus = (user: any) => {
     if (!user.expiration_date) return 'Sem licença';
     const now = new Date();
@@ -142,13 +118,6 @@ const AdminLiteEnhancedComponent = ({
     } else {
       return 'bg-red-500/20 text-red-900 dark:text-red-200';
     }
-  };
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
   };
 
   // Bulk actions
@@ -384,8 +353,8 @@ const AdminLiteEnhancedComponent = ({
                       <label className="text-sm font-medium mb-2 block">Ordenar por</label>
                       <Select value={`${sortBy}-${sortOrder}`} onValueChange={value => {
                     const [field, order] = value.split('-');
-                    setSortBy(field);
-                    setSortOrder(order as 'asc' | 'desc');
+                    setSortBy(field || 'name');
+                    setSortOrder((order as 'asc' | 'desc') || 'asc');
                   }}>
                         <SelectTrigger>
                           <SelectValue />

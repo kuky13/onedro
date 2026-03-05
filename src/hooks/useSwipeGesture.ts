@@ -31,7 +31,9 @@ export const useSwipeGesture = (options: SwipeGestureOptions = {}) => {
   const isSwipingRef = useRef(false);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    const touch = e.touches[0];
+    const touch = e.touches.item(0);
+    if (!touch) return;
+
     touchStartRef.current = {
       x: touch.clientX,
       y: touch.clientY
@@ -43,14 +45,16 @@ export const useSwipeGesture = (options: SwipeGestureOptions = {}) => {
   const handleTouchMove = useCallback((e: TouchEvent) => {
     if (!touchStartRef.current) return;
 
-    const touch = e.touches[0];
+    const touch = e.touches.item(0);
+    if (!touch) return;
+
     const deltaX = Math.abs(touch.clientX - touchStartRef.current.x);
     const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
 
     // Determine if this is a swipe gesture
     if (deltaX > threshold || deltaY > threshold) {
       isSwipingRef.current = true;
-      
+
       if (preventScrollOnSwipe && deltaX > deltaY) {
         e.preventDefault();
       }
@@ -105,14 +109,14 @@ export const useSwipeGesture = (options: SwipeGestureOptions = {}) => {
     // Add passive: false to allow preventDefault
     const touchMoveOptions = { passive: !preventScrollOnSwipe };
     
-    targetElement.addEventListener('touchstart', handleTouchStart, { passive: true });
-    targetElement.addEventListener('touchmove', handleTouchMove, touchMoveOptions);
-    targetElement.addEventListener('touchend', handleTouchEnd, { passive: true });
+    targetElement.addEventListener('touchstart', handleTouchStart as unknown as EventListener, { passive: true });
+    targetElement.addEventListener('touchmove', handleTouchMove as unknown as EventListener, touchMoveOptions);
+    targetElement.addEventListener('touchend', handleTouchEnd as unknown as EventListener, { passive: true });
 
     return () => {
-      targetElement.removeEventListener('touchstart', handleTouchStart);
-      targetElement.removeEventListener('touchmove', handleTouchMove);
-      targetElement.removeEventListener('touchend', handleTouchEnd);
+      targetElement.removeEventListener('touchstart', handleTouchStart as unknown as EventListener);
+      targetElement.removeEventListener('touchmove', handleTouchMove as unknown as EventListener);
+      targetElement.removeEventListener('touchend', handleTouchEnd as unknown as EventListener);
     };
   }, [element, handleTouchStart, handleTouchMove, handleTouchEnd, preventScrollOnSwipe]);
 

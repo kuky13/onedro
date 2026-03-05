@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Shield, Lock, Eye, Database, UserCheck, FileText, Mail, Phone } from 'lucide-react';
@@ -22,12 +21,12 @@ export const PrivacyPage = () => {
       <div className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleGoBack}
-            className="flex items-center gap-2"
-          >
+            className="flex items-center gap-2">
+
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </Button>
@@ -45,7 +44,7 @@ export const PrivacyPage = () => {
               Política de Privacidade
             </CardTitle>
             <p className="text-muted-foreground mt-2">
-              OneDrip - Última atualização: Janeiro de 2025
+              OneDrip - Última atualização: Janeiro de 2026
             </p>
           </CardHeader>
 
@@ -210,7 +209,7 @@ export const PrivacyPage = () => {
 
             {/* Contato */}
             <section className="bg-muted/50 p-6 rounded-lg">
-              <h2 className="text-xl font-semibold mb-4">11. Contato - Encarregado de Dados</h2>
+              <h2 className="text-xl font-semibold mb-4">Encarregado de Dados</h2>
               <div className="space-y-2">
                 <p className="text-muted-foreground">
                   <strong>Encarregado de Proteção de Dados:</strong> André Ribeiro Lima
@@ -233,12 +232,12 @@ export const PrivacyPage = () => {
             {/* Footer */}
             <div className="text-center pt-8 border-t">
               <p className="text-sm text-muted-foreground">
-                © 2025 OneDrip - KukySolutions™ | Todos os direitos reservados
+                © 2026 OneDrip - KukySolutions™ | Todos os direitos reservados
               </p>
             </div>
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>);
+
 };

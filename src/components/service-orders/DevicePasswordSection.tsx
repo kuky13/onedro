@@ -22,29 +22,30 @@ export const DevicePasswordSection: React.FC<DevicePasswordSectionProps> = ({
   error
 }) => {
   // Garantir que value sempre tenha uma estrutura válida
-  const safeValue = value || { type: '', value: '', metadata: undefined };
+  const safeValue: DevicePasswordData = value || { type: null, value: '' };
+
   const handleTypeChange = (type: DevicePasswordType | 'none') => {
     if (type === 'none') {
       onChange({
-        type: '',
-        value: '',
-        metadata: undefined
+        type: null,
+        value: ''
       });
     } else {
       onChange({
         type,
-        value: '',
-        metadata: undefined
+        value: ''
       });
     }
   };
 
   const handleValueChange = (newValue: string, metadata?: any) => {
-    onChange({
+    const next: DevicePasswordData = {
       ...safeValue,
       value: newValue,
-      metadata
-    });
+      ...(metadata !== undefined ? { metadata } : {})
+    };
+
+    onChange(next);
   };
 
   const renderPasswordInput = () => {
@@ -82,13 +83,13 @@ export const DevicePasswordSection: React.FC<DevicePasswordSectionProps> = ({
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold text-white">
+        <CardTitle className="text-lg font-semibold">
           Senha do Dispositivo
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="password-type" className="text-sm font-medium text-white">
+          <Label htmlFor="password-type" className="text-sm font-medium">
             Tipo de Senha
           </Label>
           <Select

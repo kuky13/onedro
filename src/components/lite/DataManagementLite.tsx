@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -95,10 +95,10 @@ export const DataManagementLite = ({ userId, onBack }: DataManagementLiteProps) 
 
   const handleRestore = async (budget: any) => {
     try {
-      const { data, error } = await supabase.rpc('restore_deleted_budget', {
+      const { error } = await supabase.rpc('restore_deleted_budget', {
         p_budget_id: budget.id
       });
-        
+      
       if (error) throw error;
       
       setDeletedBudgets(prev => prev.filter(b => b.id !== budget.id));

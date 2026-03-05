@@ -3,7 +3,7 @@
  * Com preview dos dados e opções de customização básicas
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,

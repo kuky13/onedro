@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Upload, Image, AlertCircle, Camera } from 'lucide-react';
 import { ImageDropZoneProps, IMAGE_UPLOAD_CONFIG } from '../../types/imageUpload';
 import { useIsMobile } from '../../hooks/use-mobile';
@@ -10,14 +10,12 @@ export function ImageDropZone({
   className = ''
 }: ImageDropZoneProps) {
   const [isDragOver, setIsDragOver] = useState(false);
-  const [dragCounter, setDragCounter] = useState(0);
   const isMobile = useIsMobile();
   const remainingSlots = maxFiles - currentFileCount;
   const canAddFiles = remainingSlots > 0 && !disabled;
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragCounter(prev => prev + 1);
     if (canAddFiles) {
       setIsDragOver(true);
     }
@@ -25,13 +23,7 @@ export function ImageDropZone({
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragCounter(prev => {
-      const newCounter = prev - 1;
-      if (newCounter === 0) {
-        setIsDragOver(false);
-      }
-      return newCounter;
-    });
+    setIsDragOver(false);
   }, []);
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -41,7 +33,6 @@ export function ImageDropZone({
     e.preventDefault();
     e.stopPropagation();
     setIsDragOver(false);
-    setDragCounter(0);
     if (!canAddFiles) return;
     const files = Array.from(e.dataTransfer.files);
     const imageFiles = files.filter(file => IMAGE_UPLOAD_CONFIG.ACCEPTED_TYPES.includes(file.type as any));

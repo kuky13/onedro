@@ -155,7 +155,7 @@ export const SECURITY_HEADERS = {
   'X-Frame-Options': 'DENY',
   'X-XSS-Protection': '1; mode=block',
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:;",
+  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https://*.supabase.co https://api.kuky.help;",
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'geolocation=(), microphone=(), camera=()'
 } as const
@@ -197,7 +197,7 @@ export class SecurityValidator {
   static validateDeviceId(deviceId: string): boolean {
     const rules = VALIDATION_RULES.DEVICE_ID
     
-    return deviceId && 
+    return !!deviceId && 
            deviceId.length >= rules.minLength && 
            deviceId.length <= rules.maxLength && 
            rules.pattern.test(deviceId)
@@ -270,14 +270,16 @@ export class SecurityValidator {
       return data
     }
     
-    const sanitized = { ...data }
+    const sanitized: Record<string, unknown> = { ...(data as Record<string, unknown>) }
     
-    Object.keys(sanitized).forEach(key => {
+    Object.keys(sanitized).forEach((key) => {
       const lowerKey = key.toLowerCase()
-      if (sensitiveFields.some(field => lowerKey.includes(field))) {
+      const value = sanitized[key]
+
+      if (sensitiveFields.some((field) => lowerKey.includes(field))) {
         sanitized[key] = '[REDACTED]'
-      } else if (typeof sanitized[key] === 'object') {
-        sanitized[key] = this.sanitizeForLogging(sanitized[key])
+      } else if (typeof value === 'object' && value !== null) {
+        sanitized[key] = this.sanitizeForLogging(value)
       }
     })
     
@@ -311,7 +313,7 @@ export const SECURITY_MIDDLEWARE = {
         styleSrc: ["'self'", "'unsafe-inline'"],
         scriptSrc: ["'self'"],
         imgSrc: ["'self'", 'data:', 'https:'],
-        connectSrc: ["'self'", 'https:'],
+        connectSrc: ["'self'", 'https://*.supabase.co', 'https://api.kuky.help'],
         fontSrc: ["'self'", 'https:'],
         objectSrc: ["'none'"],
         mediaSrc: ["'self'"],

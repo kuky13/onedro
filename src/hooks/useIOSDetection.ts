@@ -44,8 +44,9 @@ const detectIOSSafari = (): IOSInfo => {
   if (isIOS) {
     const versionMatch = userAgent.match(/OS (\d+)[._](\d+)?/) || 
       userAgent.match(/Version\/(\d+)\.(\d+)/);
-    if (versionMatch) {
-      version = parseInt(versionMatch[1], 10);
+    const major = versionMatch?.[1];
+    if (major) {
+      version = parseInt(major, 10);
     }
   }
 
@@ -53,11 +54,9 @@ const detectIOSSafari = (): IOSInfo => {
   
   // Detectar qualquer dispositivo móvel/tablet
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(userAgent) ||
-    (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
-  
-  // Usar dashboard iOS para TODOS os dispositivos móveis:
-  // 1. Qualquer dispositivo móvel (Android, iOS, tablets, etc.)
-  // 2. Incluindo iPads, tablets Android, phones, etc.
+    Boolean(navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
+
+  // Usar dashboard iOS para TODOS os dispositivos móveis
   const shouldUseLite = isMobile;
 
   return {

@@ -1,0 +1,1 @@
+UPDATE public.whatsapp_conversations SET remote_jid_alt = '556499486306@s.whatsapp.net' WHERE id = '1b6a50fc-e777-4a49-9a21-64d16af19d7f';

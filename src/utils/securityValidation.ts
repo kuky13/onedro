@@ -1,5 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 
 /**
  * Utilidades para validação de segurança
@@ -10,8 +10,10 @@ export class SecurityValidation {
    */
   static async isEmailConfirmed(): Promise<boolean> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      return !!(user?.email_confirmed_at);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      return !!user?.email_confirmed_at;
     } catch {
       return false;
     }
@@ -39,12 +41,19 @@ export class SecurityValidation {
     details?: Record<string, any>
   ): Promise<void> {
     try {
-      await supabase.rpc('log_admin_access', {
+      const payload: {
+        p_action: string;
+        p_resource_type?: string;
+        p_resource_id?: string;
+        p_details?: Json;
+      } = {
         p_action: action,
-        p_resource_type: resourceType,
-        p_resource_id: resourceId,
-        p_details: details
-      });
+        ...(resourceType != null ? { p_resource_type: resourceType } : {}),
+        ...(resourceId != null ? { p_resource_id: resourceId } : {}),
+        ...(details != null ? { p_details: details as unknown as Json } : {}),
+      };
+
+      await supabase.rpc('log_admin_access', payload);
     } catch (error) {
       console.warn('Falha ao registrar log de auditoria:', error);
     }
@@ -58,7 +67,9 @@ export class SecurityValidation {
     reason?: string;
   }> {
     // Verificar se usuário está logado
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return { isValid: false, reason: 'Usuário não autenticado' };
     }
@@ -69,7 +80,9 @@ export class SecurityValidation {
     }
 
     // Verificar se sessão está válida
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) {
       return { isValid: false, reason: 'Sessão inválida' };
     }

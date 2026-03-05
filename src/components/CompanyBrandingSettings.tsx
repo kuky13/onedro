@@ -6,68 +6,18 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { Building2, Upload, Save, Trash2, AlertCircle, Image as ImageIcon, ExternalLink, ArrowLeft, Phone, FileText, Download, RotateCcw, Eye, AlertTriangle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Building2, Upload, Save, Trash2, AlertCircle, Image as ImageIcon, FileText, Download, RotateCcw, Eye } from 'lucide-react';
 import { useCompanyBranding } from '@/hooks/useCompanyBranding';
-import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
-interface CompanyFormData {
-  name: string;
-  logo_url: string;
-  whatsapp_phone: string;
-  description: string;
-  cnpj: string;
-  warranty_cancellation_terms: string;
-  warranty_legal_reminders: string;
-}
-const initialCompanyData: CompanyFormData = {
-  name: '',
-  logo_url: '',
-  whatsapp_phone: '',
-  description: '',
-  cnpj: '',
-  warranty_cancellation_terms: '',
-  warranty_legal_reminders: ''
-};
+import { CompanyFormData } from '@/types/company';
 
 // Inline Budget Warning Settings (form-only, no outer Card)
 type ColorKey = 'amber' | 'red' | 'blue' | 'emerald';
 type NotifyType = 'banner' | 'badge' | 'card';
-const colorClasses: Record<ColorKey, {
-  bg: string;
-  text: string;
-  border: string;
-  accent: string;
-}> = {
-  amber: {
-    bg: 'bg-amber-50 dark:bg-amber-900/20',
-    text: 'text-amber-800 dark:text-amber-200',
-    border: 'border-amber-200 dark:border-amber-800',
-    accent: 'text-amber-600 dark:text-amber-300'
-  },
-  red: {
-    bg: 'bg-red-50 dark:bg-red-900/20',
-    text: 'text-red-800 dark:text-red-200',
-    border: 'border-red-200 dark:border-red-800',
-    accent: 'text-red-600 dark:text-red-300'
-  },
-  blue: {
-    bg: 'bg-blue-50 dark:bg-blue-900/20',
-    text: 'text-blue-800 dark:text-blue-200',
-    border: 'border-blue-200 dark:border-blue-800',
-    accent: 'text-blue-600 dark:text-blue-300'
-  },
-  emerald: {
-    bg: 'bg-emerald-50 dark:bg-emerald-900/20',
-    text: 'text-emerald-800 dark:text-emerald-200',
-    border: 'border-emerald-200 dark:border-emerald-800',
-    accent: 'text-emerald-600 dark:text-emerald-300'
-  }
-};
 function InlineBudgetWarningSettings() {
   const {
     user,
@@ -133,13 +83,7 @@ function InlineBudgetWarningSettings() {
       localStorage.setItem('budgetWarningType', notifyType);
     } catch {}
   };
-  const previewClasses = React.useMemo(() => {
-    const c = colorClasses[color];
-    const base = `rounded-lg ${c.bg} ${c.text} border ${c.border}`;
-    if (notifyType === 'banner') return `${base} p-3 flex items-center gap-2`;
-    if (notifyType === 'badge') return `${base} inline-flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium`;
-    return `${base} p-4 shadow-soft`;
-  }, [color, notifyType]);
+  
   return <>
       <div className="flex items-center justify-between">
         <Label htmlFor="warning-enabled" className="flex flex-col">
@@ -167,7 +111,6 @@ function InlineBudgetWarningSettings() {
     </>;
 }
 export function CompanyBrandingSettings() {
-  const navigate = useNavigate();
   const {
     companyInfo,
     loading,
@@ -176,12 +119,8 @@ export function CompanyBrandingSettings() {
     uploadLogo,
     removeLogo,
     formatPhoneNumber,
-    generateWhatsAppLink,
     refreshData,
-    getDefaultWarrantyCancellationTerms,
-    getDefaultWarrantyLegalReminders,
-    resetWarrantyTermsToDefault,
-    getFormattedWarrantyTerms
+    resetWarrantyTermsToDefault
   } = useCompanyBranding();
   const [companyData, setCompanyData] = useState<CompanyFormData>({
     name: '',
@@ -378,7 +317,7 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
       // Salvar imediatamente no banco de dados para garantir persistência
       if (companyInfo) {
         await updateCompanyInfo({
-          logo_url: null
+          logo_url: ''
         });
       }
       toast.success('Logo removido com sucesso!');
@@ -386,22 +325,12 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
       toast.error('Erro ao remover logo');
     }
   };
-  const openWhatsApp = () => {
-    if (companyData.whatsapp_phone) {
-      // @ts-ignore - Temporary fix for function signature mismatch
-      const link = generateWhatsAppLink(companyData.whatsapp_phone, 'Olá! Gostaria de mais informações.');
-      window.open(link, '_blank');
-    }
-  };
   const handleRestoreWarrantyTerms = async () => {
     try {
       await resetWarrantyTermsToDefault();
-      // Atualizar o estado local com os termos padrão
-      setCompanyData({
-        ...companyData,
-        warranty_cancellation_terms: getDefaultWarrantyCancellationTerms(),
-        warranty_legal_reminders: getDefaultWarrantyLegalReminders()
-      });
+      // Recarregar dados para obter termos padrão
+      await refreshData();
+      toast.success('Termos restaurados para o padrão');
     } catch (error) {
       toast.error('Erro ao restaurar termos padrão');
     }

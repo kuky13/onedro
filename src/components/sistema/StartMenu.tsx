@@ -1,20 +1,16 @@
 import { useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
   Users, 
   Settings, 
   FileText, 
-  BarChart3,
   MessageSquare,
-  Calendar,
-  Folder,
-  LogOut,
   Home,
-  Zap,
   Calculator,
-  Trash2
+  Trash2,
+  Shield,
+  Smartphone,
+  Bot
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
@@ -32,15 +28,13 @@ const menuApps = [
   { id: 'worm-trash', title: 'Lixeira OR', icon: Trash2 },
   { id: 'ordens-trash', title: 'Lixeira OS', icon: Trash2 },
   { id: 'mensagens', title: 'Mensagens', icon: MessageSquare },
+  { id: 'supadmin', title: 'Super Admin', icon: Shield, route: '/supadmin' },
+  { id: 'peliculas', title: 'Películas', icon: Smartphone, route: '/p' },
+  { id: 'chat', title: 'IA Chat', icon: Bot, route: '/chat' },
 ];
 
 export function StartMenu({ onClose, profile, onLaunchApp }: StartMenuProps) {
   const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/auth');
-  };
 
   const handleNavigate = (route?: string) => {
     if (route) {
@@ -50,11 +44,13 @@ export function StartMenu({ onClose, profile, onLaunchApp }: StartMenuProps) {
   };
 
   const handleLaunch = (id: string, route?: string) => {
-    if (onLaunchApp) {
+    if (route) {
+      // Se houver rota, navegue para ela primeiro
+      handleNavigate(route);
+    } else if (onLaunchApp) {
+      // Se não houver rota, use onLaunchApp
       onLaunchApp(id);
       onClose();
-    } else if (route) {
-      handleNavigate(route);
     }
   };
 

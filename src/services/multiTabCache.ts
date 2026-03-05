@@ -37,7 +37,8 @@ class MultiTabCache {
   }
 
   constructor() {
-    this.channel = new BroadcastChannel(this.config.channelName);
+    const channelName = (this.config as any).channelName ?? 'multitab-cache';
+    this.channel = new BroadcastChannel(channelName);
     this.setupChannelListener();
     this.startCleanupTimer();
     this.checkVersion();

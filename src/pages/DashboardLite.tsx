@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCompanyDataLoader } from '@/hooks/useCompanyDataLoader';
-import { supabase } from '@/integrations/supabase/client';
 import { AdaptiveLayout } from '@/components/adaptive/AdaptiveLayout';
 import { DashboardLiteContent } from '@/components/lite/DashboardLiteContent';
 import { DashboardLiteStatsEnhanced } from '@/components/lite/enhanced/DashboardLiteStatsEnhanced';
@@ -15,18 +14,16 @@ import { BudgetErrorBoundary, AuthErrorBoundary } from '@/components/ErrorBounda
 import { LayoutProvider } from '@/contexts/LayoutContext';
 import { useBudgetData } from '@/hooks/useBudgetData';
 import { PageTransition } from '@/components/ui/animations/page-transitions';
-import { IOSSpinner } from '@/components/ui/animations/loading-states';
 import { UpdatePopup } from '@/components/UpdatePopup';
+import { MiniChatDrippy } from '@/components/mini-chat/MiniChatDrippy';
+import { UnifiedSpinner } from '@/components/ui/UnifiedSpinner';
 
-declare global {
-  interface Window {
-    OneSignalDeferred?: any[];
-    __ONESIGNAL_INIT__?: boolean;
-  }
-}
+type DashboardLiteProps = {
+  initialTab?: string;
+};
 
-export const DashboardLite = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+export const DashboardLite = ({ initialTab }: DashboardLiteProps) => {
+  const [activeTab, setActiveTab] = useState(initialTab ?? 'dashboard');
   const [isRestoringState, setIsRestoringState] = useState(true);
   const { profile, user, hasPermission } = useAuth();
   const { isDesktop } = useResponsive();
@@ -35,22 +32,11 @@ export const DashboardLite = () => {
   const companyDataLoader = useCompanyDataLoader();
   
   // Hook para gerenciar dados dos orçamentos - sempre chamar
-  const { budgets, loading, error, refreshing, handleRefresh } = useBudgetData(user?.id || '');
+  const { budgets, loading, error, handleRefresh, invalidate: invalidateBudgets } = useBudgetData(user?.id || '');
   
   // Memoização da verificação de iOS para evitar recálculos
   const isiOSDevice = useMemo(() => {
     return /iPad|iPhone|iPod/.test(navigator.userAgent) || navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
-  }, []);
-
-  useEffect(() => {
-    const shouldInit = typeof Notification === 'undefined' || Notification.permission !== 'granted';
-    if (!shouldInit) return;
-    if (window.__ONESIGNAL_INIT__) return;
-    window.__ONESIGNAL_INIT__ = true;
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    window.OneSignalDeferred.push(async function(OneSignal: any) {
-      await OneSignal.init({ appId: '0dc51c5c-74a5-4076-9b12-331c65cae23b' });
-    });
   }, []);
 
   // Restaurar estado de navegação ao carregar
@@ -95,10 +81,10 @@ export const DashboardLite = () => {
   useEffect(() => {
     if (!user?.id || isRestoringState) return;
 
-    // Salvar estado atual
+    // Salvar estado atual (não salvar campos com undefined por causa de exactOptionalPropertyTypes)
     storageManager.setNavigationState({
       activeTab,
-      lastActiveTab: activeTab !== 'dashboard' ? activeTab : undefined
+      ...(activeTab !== 'dashboard' ? { lastActiveTab: activeTab } : {})
     });
   }, [activeTab, user?.id, isRestoringState]);
 
@@ -122,49 +108,7 @@ export const DashboardLite = () => {
     return basicReady && !isRestoringState;
   }, [user?.id, profile, companyDataLoader.error, isRestoringState]);
 
-  // Real-time subscription otimizada
-  useEffect(() => {
-    if (!isReady || !user?.id) return;
-
-    // Subscription para atualizações em tempo real
-    let subscription: any = null;
-    let debounceTimer: NodeJS.Timeout | null = null;
-    
-    const setupSubscription = () => {
-      subscription = supabase.channel('budget_changes_lite').on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'budgets',
-        filter: `owner_id=eq.${user.id}`
-      }, payload => {
-        console.log('Budget change detected:', payload);
-        
-        // Clear previous timer
-        if (debounceTimer) {
-          clearTimeout(debounceTimer);
-        }
-        
-        // Debounce para evitar múltiplas chamadas
-        debounceTimer = setTimeout(() => {
-          handleRefresh();
-          debounceTimer = null;
-        }, 500);
-      }).subscribe();
-    };
-    setupSubscription();
-    
-    return () => {
-      // Clear debounce timer
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
-      
-      // Remove subscription properly
-      if (subscription) {
-        supabase.removeChannel(subscription);
-      }
-    };
-  }, [isReady, user?.id, handleRefresh]);
+  // Real-time: já é tratado em useBudgetData via React Query invalidation.
 
   // Detectar quando o usuário retorna ao app (visibilitychange)
   useEffect(() => {
@@ -183,8 +127,8 @@ export const DashboardLite = () => {
           }
         }
         
-        // Atualizar dados
-        handleRefresh();
+         // Marcar budgets como desatualizados (evita refetch redundante)
+         invalidateBudgets();
       }
     };
 
@@ -193,26 +137,26 @@ export const DashboardLite = () => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [user?.id, handleRefresh]);
+  }, [user?.id, invalidateBudgets]);
 
   // Memoização do conteúdo principal para evitar re-renders desnecessários
   // IMPORTANTE: Este hook deve ser chamado ANTES de qualquer return condicional
   const dashboardContent = useMemo(() => (
     <PageTransition type="fadeScale">
-      <div className={`${isDesktop ? 'desktop-dashboard-layout' : 'p-4 space-y-6'}`}>
-        <div className={`${isDesktop ? 'desktop-dashboard-main' : ''}`}>
-          <DashboardLiteStatsEnhanced profile={profile} userId={user?.id} />
-          <DashboardLiteQuickAccessEnhanced onTabChange={setActiveTab} hasPermission={hasPermission} />
-        </div>
-        {isDesktop && (
-          <div className="desktop-dashboard-sidebar">
-            <DashboardLiteLicenseStatus profile={profile} />
-            <DashboardLiteHelpSupport />
+        <div className={`${isDesktop ? 'desktop-dashboard-layout' : 'p-4 space-y-6'}`}>
+          <div className={`${isDesktop ? 'desktop-dashboard-main' : ''}`}>
+            <DashboardLiteStatsEnhanced profile={profile} />
+            <DashboardLiteQuickAccessEnhanced onTabChange={setActiveTab} hasPermission={hasPermission} />
           </div>
-        )}
+          {isDesktop && (
+            <div className="desktop-dashboard-sidebar">
+              <DashboardLiteLicenseStatus />
+              <DashboardLiteHelpSupport />
+            </div>
+          )}
         {!isDesktop && (
           <>
-            <DashboardLiteLicenseStatus profile={profile} />
+            <DashboardLiteLicenseStatus />
             <DashboardLiteHelpSupport />
           </>
         )}
@@ -225,15 +169,15 @@ export const DashboardLite = () => {
     if (activeTab !== 'dashboard') {
       return (
         <PageTransition type="slideLeft" key={activeTab}>
-          <DashboardLiteContent 
-            budgets={budgets} 
-            loading={loading} 
-            error={error} 
-            onRefresh={handleRefresh} 
-            profile={profile} 
-            activeView={activeTab} 
-            userId={user.id} 
-            hasPermission={hasPermission} 
+            <DashboardLiteContent 
+              budgets={budgets} 
+              loading={loading} 
+              error={error} 
+              onRefresh={handleRefresh} 
+              profile={profile} 
+              activeView={activeTab} 
+              userId={user?.id ?? ''} 
+              hasPermission={hasPermission}
             onNavigateBack={() => {
               setActiveTab('dashboard');
               storageManager.clearEditingState(); // Limpar estado ao voltar
@@ -245,27 +189,29 @@ export const DashboardLite = () => {
       );
     }
     return dashboardContent;
-  }, [activeTab, budgets, loading, error, handleRefresh, profile, user.id, hasPermission, isiOSDevice, dashboardContent, handleNavigateToEdit]);
+  }, [activeTab, budgets, loading, error, handleRefresh, profile, user?.id, hasPermission, isiOSDevice, dashboardContent, handleNavigateToEdit]);
 
   // Otimização para iOS: não renderizar nada até dados estarem prontos
   // IMPORTANTE: Este return condicional deve vir APÓS todos os hooks
   if (!isReady) {
+    const loadingMessage = isRestoringState
+      ? 'Comendo cookies...'
+      : companyDataLoader.isLoading
+      ? 'Carregando dados da empresa...'
+      : 'Carregando...';
+
     return (
-      <div 
-        className="h-[100dvh] bg-background flex items-center justify-center" 
+      <div
+        className="min-h-[100dvh] bg-background flex items-center justify-center px-4"
         style={{
           WebkitOverflowScrolling: 'touch',
           overscrollBehavior: 'none'
         }}
       >
-        <div className="text-center space-y-4">
-          <IOSSpinner size="lg" />
-          <p className="text-sm text-muted-foreground font-medium">
-            {isRestoringState ? 'Comendo cookies...' : 
-             companyDataLoader.isLoading ? 'Carregando dados da empresa...' : 'Carregando...'}
-          </p>
+        <div className="flex flex-col items-center gap-2 w-full max-w-sm mx-auto">
+          <UnifiedSpinner message={loadingMessage} className="w-full" />
           {companyDataLoader.error && (
-            <p className="text-xs text-red-500 max-w-xs mx-auto">
+            <p className="text-xs text-destructive text-center">
               Aviso: {companyDataLoader.error}
             </p>
           )}
@@ -273,6 +219,8 @@ export const DashboardLite = () => {
       </div>
     );
   }
+
+  if (!user) return null;
 
   return (
     <AuthErrorBoundary>
@@ -284,6 +232,7 @@ export const DashboardLite = () => {
           >
             {renderContent()}
             <UpdatePopup />
+            <MiniChatDrippy />
           </AdaptiveLayout>
         </LayoutProvider>
       </BudgetErrorBoundary>

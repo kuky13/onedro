@@ -1,8 +1,9 @@
-import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, MessageCircle, Sparkles } from 'lucide-react';
+import { MessageCircle, Sparkles } from 'lucide-react';
 
 export const DrippyPage = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 p-6">
       <div className="max-w-4xl mx-auto">
@@ -78,9 +79,9 @@ export const DrippyPage = () => {
           <Button 
             size="lg"
             className="px-8 py-3 text-lg"
-            onClick={() => window.open('https://onedrip.online', '_blank')}
+            onClick={() => navigate('/chat')}
           >
-            <ExternalLink className="w-5 h-5 mr-2" />
+            <MessageCircle className="w-5 h-5 mr-2" />
             Fale com a Drippy
           </Button>
         </div>

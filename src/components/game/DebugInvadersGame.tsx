@@ -7,7 +7,6 @@ import { GameConfigDisplay } from './GameConfigDisplay';
 import { ParticleEffect } from './ParticleEffect';
 
 import { useDebugInvadersGame } from '@/hooks/useDebugInvadersGame';
-import { useOptimizedGamePerformance } from '@/hooks/useOptimizedGamePerformance';
 import { useGameSounds } from '@/hooks/useGameSounds';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,13 +20,7 @@ export const DebugInvadersGame = () => {
   const {
     user
   } = useAuth();
-  const {
-    playBugClick,
-    playGameOver
-  } = useGameSounds();
-  
-  // Performance optimization hooks
-  const performanceConfig = useOptimizedGamePerformance();
+  const { playBugClick, playGameOver } = useGameSounds();
   const {
     score,
     level,
@@ -146,7 +139,7 @@ export const DebugInvadersGame = () => {
           <GameStats score={score} level={level} lives={lives} />
           
           <div className="relative">
-            <OptimizedGameBoard 
+            <OptimizedGameBoard
               bugs={bugs} 
               onBugClick={handleBugClick} 
               isPlaying={isPlaying}
@@ -154,7 +147,6 @@ export const DebugInvadersGame = () => {
                 width: isFullscreen ? window.innerWidth : 800, 
                 height: isFullscreen ? window.innerHeight - 120 : 400 
               }}
-              performanceConfig={performanceConfig}
             />
             
             {/* Particle Effects */}

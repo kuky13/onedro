@@ -38,7 +38,7 @@ serve(async (req) => {
     const action = url.searchParams.get('action');
 
     switch (method) {
-      case 'GET':
+      case 'GET': {
         // Get user profile with explicit field selection
         const { data: profile, error: profileError } = await supabaseClient
           .from('user_profiles')
@@ -69,8 +69,9 @@ serve(async (req) => {
           JSON.stringify(profile),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      }
 
-      case 'PUT':
+      case 'PUT': {
         if (action !== 'update-profile') {
           return new Response(
             JSON.stringify({ error: 'Invalid action' }),
@@ -125,6 +126,7 @@ serve(async (req) => {
           JSON.stringify(updatedProfile),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      }
 
       default:
         return new Response(

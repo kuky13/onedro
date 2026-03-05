@@ -1,8 +1,7 @@
-import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
@@ -21,8 +20,7 @@ import {
   AlertCircle, 
   CheckCheck,
   Trash2,
-  X,
-  Archive
+  X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -50,14 +48,19 @@ export const OptimizedNotificationPanel: React.FC<OptimizedNotificationPanelProp
     isMarkingAsRead,
     isMarkingAllAsRead,
     deleteNotification,
-    deleteAllNotifications,
-    isDeletingNotification,
-    isDeletingAllNotifications
+    isDeletingNotification
   } = useNotifications();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Ao abrir em tela cheia (rota /msg), marcar todas como lidas de forma silenciosa
+  useEffect(() => {
+    if (isFullPage && notifications.length > 0) {
+      markAllAsRead(true);
+    }
+  }, [isFullPage, notifications.length, markAllAsRead]);
 
   // Memoized filtered notifications for better performance
   const filteredNotifications = useMemo(() => {

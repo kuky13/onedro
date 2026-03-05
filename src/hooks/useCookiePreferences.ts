@@ -53,6 +53,22 @@ export const useCookiePreferences = () => {
         }
 
         if (data) {
+          const normalizeGranular = (input: unknown): Record<string, Record<string, boolean>> => {
+            if (!input || typeof input !== 'object' || Array.isArray(input)) return {};
+            const obj = input as Record<string, unknown>;
+            const result: Record<string, Record<string, boolean>> = {};
+
+            for (const [domain, domainValue] of Object.entries(obj)) {
+              if (!domainValue || typeof domainValue !== 'object' || Array.isArray(domainValue)) continue;
+              const categories = domainValue as Record<string, unknown>;
+              result[domain] = {};
+              for (const [category, allowed] of Object.entries(categories)) {
+                result[domain][category] = Boolean(allowed);
+              }
+            }
+            return result;
+          };
+
           const loadedPreferences: CookiePreferences = {
             essential: data.essential,
             functional: data.functional,
@@ -60,7 +76,7 @@ export const useCookiePreferences = () => {
             marketing: data.marketing,
             performance: data.performance,
             social: data.social,
-            granular: data.granular || {},
+            granular: normalizeGranular(data.granular),
             expirationDays: data.expiration_days,
             autoCleanup: data.auto_cleanup,
           };

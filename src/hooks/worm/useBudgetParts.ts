@@ -1,22 +1,36 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useRealtimeQueryInvalidation } from '@/hooks/useSupabaseRealtime';
+import { syncPartToStore, unlinkPart, type SyncableBudget } from '@/hooks/useServiceSync';
 
 export interface BudgetPart {
   id?: string;
   budget_id?: string;
   name: string;
-  part_type?: string;
-  brand_id?: string;
+  part_type?: string | null;
+  brand_id?: string | null;
   quantity: number;
   price: number;
-  cash_price?: number;
-  installment_price?: number;
+  cash_price?: number | null;
+  installment_price?: number | null;
   installment_count?: number;
-  warranty_months?: number;
+  warranty_months?: number | null;
 }
 
 export const useBudgetParts = (budgetId: string | undefined) => {
+  // Realtime com debounce para evitar tempestade de refetch/invalidações
+  useRealtimeQueryInvalidation({
+    queryKey: ['budget-parts', budgetId],
+    channelName: `budget-parts-${budgetId}`,
+    table: 'budget_parts',
+    event: '*',
+    schema: 'public',
+    filter: budgetId ? `budget_id=eq.${budgetId}` : undefined,
+    enabled: !!budgetId,
+    debounceMs: 600,
+  });
+
   return useQuery({
     queryKey: ['budget-parts', budgetId],
     queryFn: async () => {
@@ -40,26 +54,36 @@ export const useAddBudgetPart = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (part: BudgetPart) => {
+    mutationFn: async (part: BudgetPart & { _syncMeta?: { storeId: string; userId: string; budget: SyncableBudget } }) => {
+      if (!part.budget_id) throw new Error('ID do orçamento é obrigatório');
+
       const { data, error } = await supabase
         .from('budget_parts')
-        .insert({
-          budget_id: part.budget_id,
-          name: part.name,
-          part_type: part.part_type,
-          brand_id: part.brand_id,
-          quantity: part.quantity,
-          price: Math.round(part.price * 100),
-          cash_price: part.cash_price ? Math.round(part.cash_price * 100) : null,
-          installment_price: part.installment_price ? Math.round(part.installment_price * 100) : null,
-          // ensure integer NOT NULL column gets a value
-          installment_count: part.installment_count ?? 0,
-          warranty_months: part.warranty_months || 3,
-        })
+        .insert([
+          {
+            budget_id: part.budget_id,
+            name: part.name,
+            part_type: part.part_type ?? null,
+            brand_id: part.brand_id ?? null,
+            quantity: part.quantity,
+            price: Math.round(part.price * 100),
+            cash_price: part.cash_price ? Math.round(part.cash_price * 100) : null,
+            installment_price: part.installment_price ? Math.round(part.installment_price * 100) : null,
+            installment_count: part.installment_count ?? 0,
+            warranty_months: part.warranty_months || 3,
+          },
+        ])
         .select()
         .single();
 
       if (error) throw error;
+
+      // Auto-sync to store if meta provided
+      if (part._syncMeta && data) {
+        const { storeId, userId, budget } = part._syncMeta;
+        syncPartToStore(storeId, userId, data, budget).catch(console.error);
+      }
+
       return data;
     },
     onSuccess: (_, variables) => {
@@ -78,20 +102,19 @@ export const useUpdateBudgetPart = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (part: BudgetPart) => {
+    mutationFn: async (part: BudgetPart & { _syncMeta?: { storeId: string; userId: string; budget: SyncableBudget } }) => {
       if (!part.id) throw new Error('ID da peça é obrigatório');
 
       const { data, error } = await supabase
         .from('budget_parts')
         .update({
           name: part.name,
-          part_type: part.part_type,
-          brand_id: part.brand_id,
+          part_type: part.part_type ?? null,
+          brand_id: part.brand_id ?? null,
           quantity: part.quantity,
           price: Math.round(part.price * 100),
           cash_price: part.cash_price ? Math.round(part.cash_price * 100) : null,
           installment_price: part.installment_price ? Math.round(part.installment_price * 100) : null,
-          // ensure integer NOT NULL column gets a value
           installment_count: part.installment_count ?? 0,
           warranty_months: part.warranty_months || 3,
         })
@@ -100,6 +123,13 @@ export const useUpdateBudgetPart = () => {
         .single();
 
       if (error) throw error;
+
+      // Auto-sync to store if meta provided
+      if (part._syncMeta && data) {
+        const { storeId, userId, budget } = part._syncMeta;
+        syncPartToStore(storeId, userId, data, budget).catch(console.error);
+      }
+
       return data;
     },
     onSuccess: (_, variables) => {
@@ -118,7 +148,12 @@ export const useDeleteBudgetPart = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, budgetId }: { id: string; budgetId: string }) => {
+    mutationFn: async (variables: { id: string; budgetId: string }) => {
+      const { id } = variables;
+
+      // Remove sync link first (cascade will also handle this, but be explicit)
+      unlinkPart(id).catch(console.error);
+
       const { error } = await supabase
         .from('budget_parts')
         .delete()

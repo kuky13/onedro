@@ -99,19 +99,3 @@ export const SmartNavigation = ({ children }: SmartNavigationProps) => {
 };
 
 export default SmartNavigation;
-
-// Hook para usar navegação segura
-export const useSmartNavigation = () => {
-  const navigate = useNavigate();
-  
-  const safeNavigate = useCallback(async (to: string, options?: { replace?: boolean }) => {
-    if ((window as any).safeNavigate) {
-      return (window as any).safeNavigate(to, options);
-    }
-    
-    // Fallback para navegação normal
-    navigate(to, options);
-  }, [navigate]);
-  
-  return { safeNavigate };
-};

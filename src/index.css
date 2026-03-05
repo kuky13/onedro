@@ -569,3 +569,8 @@ div[style*="Edit with Lovable"],
     padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
   }
 }
+
+/* Pause animation on hover */
+.hover-paused:hover {
+  animation-play-state: paused;
+}

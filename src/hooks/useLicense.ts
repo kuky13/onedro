@@ -153,7 +153,7 @@ export function useLicense(): UseLicenseReturn {
           storageManager.setLicenseCache({
             hasValidLicense: true,
             licenseStatus: licenseData.license_code || '',
-            expiresAt: licenseStatus.expires_at,
+            ...(licenseStatus.expires_at ? { expiresAt: licenseStatus.expires_at } : {}),
             isExpired: licenseStatus.requires_renewal,
             needsActivation: licenseStatus.requires_activation
           });

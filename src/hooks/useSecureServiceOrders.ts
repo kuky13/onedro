@@ -123,7 +123,7 @@ export const useSecureServiceOrders = (userId: string | undefined, filters: Serv
         }
         
         if (filters.search) {
-          query = query.or(`device_type.ilike.%${filters.search}%,imei_serial.ilike.%${filters.search}%,reported_issue.ilike.%${filters.search}%,notes.ilike.%${filters.search}%`);
+          query = query.or(`device_type.ilike.%${filters.search}%,device_model.ilike.%${filters.search}%,reported_issue.ilike.%${filters.search}%`);
         }
         
         // Aplicar paginação
@@ -361,10 +361,10 @@ export const useSecureServiceOrders = (userId: string | undefined, filters: Serv
       }
 
       // Usar a função RPC soft_delete_service_order
-      const { data, error } = await supabase
-        .rpc('soft_delete_service_order', {
-          p_service_order_id: serviceOrderId
-        });
+       const { data, error } = await supabase
+         .rpc('soft_delete_service_order', {
+           p_id: serviceOrderId
+         });
 
       if (error) {
         logSecurityEvent('SERVICE_ORDER_DELETE_ERROR', { error: error.message, serviceOrderId });
@@ -404,10 +404,10 @@ export const useSecureServiceOrders = (userId: string | undefined, filters: Serv
       }
 
       // Usar a função RPC restore_service_order
-      const { data, error } = await supabase
-        .rpc('restore_service_order', {
-          p_service_order_id: serviceOrderId
-        });
+       const { data, error } = await supabase
+         .rpc('restore_service_order', {
+           p_id: serviceOrderId
+         });
 
       if (error) {
         logSecurityEvent('SERVICE_ORDER_RESTORE_ERROR', { error: error.message, serviceOrderId });

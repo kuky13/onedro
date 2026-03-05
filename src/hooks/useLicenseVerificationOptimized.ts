@@ -70,18 +70,20 @@ export const useLicenseVerificationOptimized = (
         throw rpcError;
       }
 
+      const status = (rpcData as any) || {};
+
       const licenseData: LicenseVerificationData = {
-        has_license: rpcData?.has_license || false,
-        is_valid: rpcData?.is_valid || false,
-        license_code: rpcData?.license_code || '',
-        expires_at: rpcData?.expires_at || null,
-        activated_at: rpcData?.activated_at || null,
-        days_remaining: rpcData?.days_remaining || null,
-        message: rpcData?.message || 'Status desconhecido',
-        requires_activation: rpcData?.requires_activation || false,
-        requires_renewal: rpcData?.requires_renewal || false,
-        expired_at: rpcData?.expired_at || null,
-        validation_timestamp: rpcData?.validation_timestamp || new Date().toISOString()
+        has_license: Boolean(status.has_license),
+        is_valid: Boolean(status.is_valid),
+        license_code: status.license_code || '',
+        expires_at: status.expires_at ?? undefined,
+        activated_at: status.activated_at ?? undefined,
+        days_remaining: status.days_remaining ?? undefined,
+        message: status.message || 'Status desconhecido',
+        requires_activation: Boolean(status.requires_activation),
+        requires_renewal: Boolean(status.requires_renewal),
+        expired_at: status.expired_at ?? undefined,
+        validation_timestamp: status.validation_timestamp || new Date().toISOString()
       };
 
       console.log('✅ [useLicenseVerificationOptimized] Dados processados:', licenseData);

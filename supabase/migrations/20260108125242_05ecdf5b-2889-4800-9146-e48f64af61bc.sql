@@ -1,0 +1,61 @@
+-- Ajustar função para usar JSON em vez de JSONB e garantir compatibilidade com payload da IA
+create or replace function public.insert_budget_parts_from_whatsapp(
+  owner_id uuid,
+  budget_id uuid,
+  parts json
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  budget_owner uuid;
+  part json;
+begin
+  -- Garantir que o orçamento existe
+  select b.owner_id into budget_owner
+  from public.budgets b
+  where b.id = budget_id;
+
+  if budget_owner is null then
+    raise exception 'Orçamento não encontrado' using errcode = 'P0001';
+  end if;
+
+  -- Importante: esta função é chamada apenas pela edge function com chave de service role,
+  -- então não faremos uma validação extra de owner aqui para não bloquear a IA.
+
+  -- Inserir cada peça recebida em JSON
+  for part in
+    select json_array_elements(parts)
+  loop
+    insert into public.budget_parts (
+      budget_id,
+      name,
+      part_type,
+      brand_id,
+      quantity,
+      price,
+      cash_price,
+      installment_price,
+      installment_count,
+      warranty_months
+    ) values (
+      budget_id,
+      coalesce(part->> 'name', part->> 'part_type', 'Opção'),
+      nullif(part->> 'part_type', ''),
+      nullif(part->> 'brand_id', '')::uuid,
+      coalesce( (part->> 'quantity')::int, 1 ),
+      coalesce( (part->> 'price')::numeric, 0 ),
+      nullif(part->> 'cash_price', '')::numeric,
+      nullif(part->> 'installment_price', '')::numeric,
+      coalesce( (part->> 'installment_count')::int, 0 ),
+      case
+        when part ? 'warranty_months' is false then null
+        when (part->> 'warranty_months')::int <= 1 then 3
+        else (part->> 'warranty_months')::int
+      end
+    );
+  end loop;
+end;
+$$;

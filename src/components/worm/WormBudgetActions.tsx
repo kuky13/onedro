@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import { FileText, Download, Share, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { Download, Share, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { generateBudgetPDF, saveBudgetPDF } from '@/utils/pdfUtils';
 import { useCompanyDataLoader } from '@/hooks/useCompanyDataLoader';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useDefaultPdfTemplate } from '@/hooks/worm/usePdfTemplates';
+import { useAuth } from '@/hooks/useAuth';
 
 interface WormBudgetActionsProps {
   budget: any;
@@ -15,18 +17,20 @@ interface WormBudgetActionsProps {
 export const WormBudgetActions = ({ budget, onClose }: WormBudgetActionsProps) => {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const { getCompanyDataForPDF, hasMinimalData, refreshData } = useCompanyDataLoader();
+  const { user } = useAuth();
+  const { data: defaultPdfTemplate } = useDefaultPdfTemplate(user?.id);
 
   const handleGeneratePDF = async () => {
     if (isGeneratingPDF) return;
-    
+
     setIsGeneratingPDF(true);
     try {
       console.log('[WORM PDF] Iniciando geração de PDF...');
-      
+
       if (!hasMinimalData()) {
         console.log('[WORM PDF] Dados insuficientes - tentando recarregar');
         await refreshData();
-        
+
         if (!hasMinimalData()) {
           toast.error('Dados da empresa não carregados. Verifique suas configurações ou sua conexão.');
           return;
@@ -88,12 +92,15 @@ export const WormBudgetActions = ({ budget, onClose }: WormBudgetActionsProps) =
         includes_screen_protector: fullBudget.includes_screen_protector === true,
         sequential_number: fullBudget.sequential_number,
         parts: mappedParts,
-      };
-      
+      } as any;
+
       const companyData = getCompanyDataForPDF();
       console.log('[WORM PDF] Gerando PDF com dados:', { pdfData, companyData });
-      
-      await saveBudgetPDF(pdfData, companyData);
+
+      console.log('[WORM PDF] Gerando PDF com dados:', { pdfData, companyData });
+
+      const serviceTemplate = defaultPdfTemplate?.service_section_template;
+      await saveBudgetPDF(pdfData, companyData, serviceTemplate);
       toast.success('PDF gerado com sucesso!');
       onClose();
     } catch (error) {
@@ -107,11 +114,11 @@ export const WormBudgetActions = ({ budget, onClose }: WormBudgetActionsProps) =
 
   const handleSharePDF = async () => {
     if (isGeneratingPDF) return;
-    
+
     setIsGeneratingPDF(true);
     try {
       console.log('[WORM PDF] Iniciando compartilhamento de PDF...');
-      
+
       if (!hasMinimalData()) {
         await refreshData();
         if (!hasMinimalData()) {
@@ -173,10 +180,12 @@ export const WormBudgetActions = ({ budget, onClose }: WormBudgetActionsProps) =
         includes_screen_protector: fullBudget.includes_screen_protector === true,
         sequential_number: fullBudget.sequential_number,
         parts: mappedParts,
-      };
-      
+      } as any;
+
+
       const companyData = getCompanyDataForPDF();
-      const pdfBlob = await generateBudgetPDF(pdfShareData, companyData);
+      const serviceTemplate = defaultPdfTemplate?.service_section_template;
+      const pdfBlob = await generateBudgetPDF(pdfShareData, companyData, serviceTemplate);
 
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([], 'test.pdf')] })) {
         const shopSlug = (companyData.shop_name || 'minha-loja').replace(/\s+/g, '-').toLowerCase();
@@ -211,7 +220,7 @@ export const WormBudgetActions = ({ budget, onClose }: WormBudgetActionsProps) =
         URL.revokeObjectURL(url);
         toast.success('PDF baixado com sucesso');
       }
-      
+
       onClose();
     } catch (error) {
       console.error('[WORM PDF] Erro ao compartilhar PDF:', error);
@@ -233,8 +242,8 @@ export const WormBudgetActions = ({ budget, onClose }: WormBudgetActionsProps) =
           <div className="flex items-center gap-2 mb-2">
             <h3 className="font-medium">Orçamento</h3>
             <span className="bg-primary/10 px-2 py-1 rounded-md text-sm font-mono font-medium text-primary">
-              {budget.sequential_number 
-                ? `OR: ${budget.sequential_number.toString().padStart(4, '0')}` 
+              {budget.sequential_number
+                ? `OR: ${budget.sequential_number.toString().padStart(4, '0')}`
                 : `OR-${budget.id?.slice(-8)}`
               }
             </span>
@@ -245,7 +254,7 @@ export const WormBudgetActions = ({ budget, onClose }: WormBudgetActionsProps) =
         </div>
 
         <div className="space-y-3">
-          <Button 
+          <Button
             onClick={handleGeneratePDF}
             disabled={isGeneratingPDF}
             className="w-full justify-start"
@@ -259,7 +268,7 @@ export const WormBudgetActions = ({ budget, onClose }: WormBudgetActionsProps) =
             Baixar PDF
           </Button>
 
-          <Button 
+          <Button
             onClick={handleSharePDF}
             disabled={isGeneratingPDF}
             className="w-full justify-start"

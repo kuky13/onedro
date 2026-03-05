@@ -1,13 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 export interface PatternPasswordViewerProps {
   pattern: string;
   size?: number;
-}
-
-interface Point {
-  x: number;
-  y: number;
 }
 
 interface GridDot {
@@ -85,14 +80,20 @@ export const PatternPasswordViewer: React.FC<PatternPasswordViewerProps> = ({
       // Ordenar os pontos ativos pela sequência do padrão
       const orderedDots = patternArray.map(id => 
         dots.find(dot => dot.id === id)
-      ).filter(Boolean) as GridDot[];
+      ).filter((dot): dot is GridDot => dot !== undefined);
 
       if (orderedDots.length > 0) {
-        ctx.moveTo(orderedDots[0].x, orderedDots[0].y);
-        for (let i = 1; i < orderedDots.length; i++) {
-          ctx.lineTo(orderedDots[i].x, orderedDots[i].y);
+        const firstPoint = orderedDots[0];
+        if (firstPoint && firstPoint.x !== undefined && firstPoint.y !== undefined) {
+          ctx.moveTo(firstPoint.x, firstPoint.y);
+          for (let i = 1; i < orderedDots.length; i++) {
+            const point = orderedDots[i];
+            if (point && point.x !== undefined && point.y !== undefined) {
+              ctx.lineTo(point.x, point.y);
+            }
+          }
+          ctx.stroke();
         }
-        ctx.stroke();
       }
     }
 

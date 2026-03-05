@@ -3,7 +3,7 @@
  * Sistema OneDrip - Melhorias UX
  */
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 
 export interface ValidationRule {
   required?: boolean;
@@ -102,7 +102,7 @@ const validators = {
     // Validação do algoritmo de Luhn para IMEI
     let sum = 0;
     for (let i = 0; i < 14; i++) {
-      let digit = parseInt(cleanImei[i]);
+      let digit = parseInt(cleanImei[i] ?? '0', 10);
       if (i % 2 === 1) {
         digit *= 2;
         if (digit > 9) {
@@ -111,9 +111,9 @@ const validators = {
       }
       sum += digit;
     }
-    
+
     const checkDigit = (10 - (sum % 10)) % 10;
-    if (checkDigit !== parseInt(cleanImei[14])) {
+    if (checkDigit !== parseInt(cleanImei[14] ?? '0', 10)) {
       return 'IMEI inválido';
     }
     
@@ -554,7 +554,7 @@ export const useServiceOrderValidation = (currentValues: Record<string, unknown>
             }
             break;
             
-          case 'pattern':
+          case 'pattern': {
             const patternArray = stringValue.split(',').map(Number).filter(n => !isNaN(n));
             if (patternArray.length < 4) {
               return 'Padrão deve conectar pelo menos 4 pontos';
@@ -571,6 +571,7 @@ export const useServiceOrderValidation = (currentValues: Record<string, unknown>
               return 'Pontos inválidos detectados';
             }
             break;
+          }
             
           default:
             return 'Tipo de senha não reconhecido';

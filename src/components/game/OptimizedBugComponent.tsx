@@ -23,10 +23,11 @@ export const OptimizedBugComponent = React.memo<OptimizedBugProps>(({
   animationQuality,
   enableHaptics = false 
 }) => {
-  const { isMobile, hasTouch } = useDeviceDetection()
-  const { isMobileDevice } = useMobileDetection()
+  const { isMobile } = useDeviceDetection()
+  const mobileDetection = useMobileDetection()
   
-  const isMobileOrTablet = isMobile || isMobileDevice
+  const isMobileOrTablet = isMobile || mobileDetection.isMobile
+  const hasTouch = mobileDetection.isMobile || window.matchMedia('(pointer: coarse)').matches
 
   // Calcular tamanho do hitbox baseado no dispositivo e tipo de bug
   const hitboxSize = useMemo(() => {
@@ -69,7 +70,7 @@ export const OptimizedBugComponent = React.memo<OptimizedBugProps>(({
         }
       case 'high':
       default:
-        const animations = {
+        const animations: Record<string, any> = {
           'boss-bug': { 
             scale: [1, 1.1, 1],
             rotate: [0, 2, -2, 0]
@@ -85,11 +86,12 @@ export const OptimizedBugComponent = React.memo<OptimizedBugProps>(({
           'memory-leak': {
             scale: [1, 0.95, 1],
             filter: ['hue-rotate(0deg)', 'hue-rotate(10deg)', 'hue-rotate(0deg)']
-          }
+          },
+          'bug': false
         }
         
         return {
-          animate: animations[bug.type] || false,
+          animate: animations[bug.type] ?? false,
           transition: { 
             duration: bug.type === 'boss-bug' ? 0.8 : 0.4,
             repeat: Infinity,
@@ -172,9 +174,10 @@ export const OptimizedBugComponent = React.memo<OptimizedBugProps>(({
       }}
       onClick={!hasTouch ? handleMouseClick : undefined}
       onTouchStart={hasTouch ? handleTouch : undefined}
-      {...animationProps}
-      whileHover={animationQuality !== 'low' ? { scale: 1.1 } : undefined}
-      whileTap={animationQuality !== 'low' ? { scale: 0.95 } : undefined}
+      animate={animationProps.animate || false}
+      transition={animationProps.transition as any}
+      whileHover={animationQuality !== 'low' ? { scale: 1.1 } : {}}
+      whileTap={animationQuality !== 'low' ? { scale: 0.95 } : {}}
     >
       {/* Emoji do bug */}
       <span 

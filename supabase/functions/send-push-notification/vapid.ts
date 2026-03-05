@@ -20,8 +20,8 @@ function base64urlToArrayBuffer(base64url: string): ArrayBuffer {
 }
 
 // Convert ArrayBuffer to base64url
-function arrayBufferToBase64url(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer)
+function arrayBufferToBase64url(buffer: ArrayBuffer | Uint8Array): string {
+  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer)
   let binary = ''
   for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCharCode(bytes[i])

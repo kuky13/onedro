@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowUp } from 'lucide-react';
 
 interface MiniToastWithArrowProps {
@@ -13,21 +13,27 @@ export const MiniToastWithArrow = ({
   message, 
   onClose, 
   duration = 3000 
-}: MiniToastWithArrowProps) => {
+}: MiniToastWithArrowProps): JSX.Element | null => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    let timer: number | undefined;
+
     if (show) {
       setIsVisible(true);
-      const timer = setTimeout(() => {
+      timer = window.setTimeout(() => {
         setIsVisible(false);
         setTimeout(onClose, 300); // Wait for animation to complete
       }, duration);
-
-      return () => clearTimeout(timer);
     } else {
       setIsVisible(false);
     }
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
   }, [show, duration, onClose]);
 
   if (!show && !isVisible) return null;

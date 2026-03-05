@@ -2,9 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    
+    <!-- Disable Google automatic translation popup -->
+    <meta name="google" content="notranslate" />
+
     <!-- Enhanced PWA Meta Tags -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no"
+    />
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
     <meta name="background-color" content="#ffffff" />
@@ -18,34 +23,65 @@
     <meta name="msapplication-tap-highlight" content="no" />
     <meta name="msapplication-navbutton-color" content="#000000" />
     <meta name="application-name" content="One Drip" />
-    
+
     <!-- Enhanced iOS Support -->
     <meta name="apple-mobile-web-app-orientation" content="portrait" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    
+
     <!-- Icons and Favicons -->
-    <link rel="icon" href="/icons/icon-48x48.png" type="image/png">
+    <link rel="icon" href="/icons/icon-48x48.png" type="image/png" />
     <link rel="apple-touch-icon" href="/icons/icon-180x180.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-48x48.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-48x48.png" />
     <link rel="mask-icon" href="/icons/icon-512x512.png" color="#000000" />
-    
+
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
-    
+
     <!-- Page Meta -->
-    <title>One Drip</title>
+    <title>One Drip | Orçamentos a partir de ROne Drip | Orçamentos a partir de R$25/mês5/mês</title>
     <meta name="author" content="kuky.png" />
-    <meta name="description" content="melhor sistema para sua assistência técnica">
+    <meta name="description" content="Sistema de orçamentos para assistências técnicas a partir de R$25 por mês.">
     <meta name="keywords" content="assistência técnica, orçamento, sistema, gestão, empresa, financeiro, administração">
+
+    <!-- Structured data for Google (monthly plan as primary offer) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": "One Drip - Sistema de orçamentos para assistências técnicas",
+        "description": "Sistema de orçamentos para assistências técnicas a partir de R$10 por mês.",
+        "brand": {
+          "@type": "Brand",
+          "name": "One Drip"
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "25.00",
+          "priceCurrency": "BRL",
+          "availability": "https://schema.org/InStock",
+          "url": "https://onedrip.lovable.app/",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "25.00",
+            "priceCurrency": "BRL",
+            "billingDuration": 1,
+            "billingIncrement": 1,
+            "unitCode": "MON"
+          }
+        }
+      }
+    </script>
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="/" />
-    
-    
-    <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/c1MYFcoH52gXlUJLHdUVkOoh2fE2/social-images/social-1761995877292-Drip.png">
+
+    <meta
+      property="og:image"
+      content="https://storage.googleapis.com/gpt-engineer-file-uploads/c1MYFcoH52gXlUJLHdUVkOoh2fE2/social-images/social-1761995877292-Drip.png"
+    />
     <meta property="og:image:width" content="512" />
     <meta property="og:image:height" content="512" />
     <meta property="og:site_name" content="One Drip" />
@@ -53,19 +89,37 @@
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="/" />
-    <meta property="twitter:title" content="One Drip" />
-    <meta property="twitter:description" content="melhor sistema para sua assistência técnica" />
+    <meta property="twitter:title" content="One Drip | Orçamentos a partir de R$25/mês" />
+    <meta
+      property="twitter:description"
+      content="Sistema de orçamentos para assistências técnicas a partir de R$25 por mês."
+    />
     <meta property="twitter:image" content="/icons/icon-512x512.png" />
 
     <!-- iOS Splash Screens -->
-    <link rel="apple-touch-startup-image" href="/icons/icon-512x512.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
-    <link rel="apple-touch-startup-image" href="/icons/icon-512x512.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" />
-    <link rel="apple-touch-startup-image" href="/icons/icon-512x512.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" />
-    
+    <link
+      rel="apple-touch-startup-image"
+      href="/icons/icon-512x512.png"
+      media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)"
+    />
+    <link
+      rel="apple-touch-startup-image"
+      href="/icons/icon-512x512.png"
+      media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)"
+    />
+    <link
+      rel="apple-touch-startup-image"
+      href="/icons/icon-512x512.png"
+      media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)"
+    />
+
     <!-- Performance Hints -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-    
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="dns-prefetch" href="https://oghjlypdnmqecaavekyr.supabase.co" />
+
     <!-- Enhanced Safe Area CSS Variables -->
     <style>
       :root {
@@ -73,14 +127,14 @@
         --safe-area-inset-right: env(safe-area-inset-right);
         --safe-area-inset-bottom: env(safe-area-inset-bottom);
         --safe-area-inset-left: env(safe-area-inset-left);
-        
+
         /* Enhanced safe area with fallbacks */
         --safe-top: max(env(safe-area-inset-top), 20px);
         --safe-bottom: max(env(safe-area-inset-bottom), 20px);
         --safe-left: env(safe-area-inset-left);
         --safe-right: env(safe-area-inset-right);
       }
-      
+
       /* Enhanced body styling for PWA */
       body {
         margin: 0;
@@ -90,7 +144,7 @@
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
       }
-      
+
       /* Root container with safe area support */
       #root {
         min-height: 100vh;
@@ -100,20 +154,20 @@
         padding-left: env(safe-area-inset-left);
         padding-right: env(safe-area-inset-right);
       }
-      
+
       /* Prevent zoom on iOS */
       input, select, textarea, button {
         font-size: 16px;
         -webkit-appearance: none;
         border-radius: 0;
       }
-      
+
       /* Enhanced touch handling */
       * {
         -webkit-tap-highlight-color: transparent;
         -webkit-touch-callout: none;
       }
-      
+
       /* PWA Display Mode Enhancements */
       @media (display-mode: standalone) {
         body {
@@ -121,28 +175,28 @@
           -webkit-user-select: none;
           overscroll-behavior: contain;
         }
-        
+
         /* Hide scrollbars in standalone mode */
         ::-webkit-scrollbar {
           display: none;
         }
-        
+
         html {
           scrollbar-width: none;
         }
       }
-      
+
       /* iOS specific enhancements */
       @supports (-webkit-touch-callout: none) {
         body {
           -webkit-overflow-scrolling: touch;
         }
-        
+
         #root {
           padding-top: max(env(safe-area-inset-top), 44px);
         }
       }
-      
+
       /* Dynamic Island support for iPhone 14 Pro+ */
       @media screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3),
              screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) {
@@ -150,7 +204,7 @@
           padding-top: max(env(safe-area-inset-top), 59px);
         }
       }
-      
+
       /* Landscape orientation adjustments */
       @media (orientation: landscape) and (max-height: 500px) {
         #root {
@@ -160,18 +214,46 @@
         }
       }
     </style>
-    <meta property="og:title" content="One Drip">
-  <meta name="twitter:title" content="One Drip">
-  <meta property="og:description" content="melhor sistema para sua assistência técnica">
-  <meta name="twitter:description" content="melhor sistema para sua assistência técnica">
-  <meta name="twitter:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/c1MYFcoH52gXlUJLHdUVkOoh2fE2/social-images/social-1761995877292-Drip.png">
-  <meta name="twitter:card" content="summary_large_image">
+    
+    
+    
+    
+    <meta
+      name="twitter:image"
+      content="https://storage.googleapis.com/gpt-engineer-file-uploads/c1MYFcoH52gXlUJLHdUVkOoh2fE2/social-images/social-1761995877292-Drip.png"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="og:title" content="One Drip | Orçamentos a partir de R$25/mês">
+  <meta name="twitter:title" content="One Drip | Orçamentos a partir de R$25/mês">
+  <meta property="og:description" content="Sistema de orçamentos para assistências técnicas a partir de R$25 por mês.">
+  <meta name="twitter:description" content="Sistema de orçamentos para assistências técnicas a partir de R$25 por mês.">
 </head>
 
   <body>
+    <!-- Bot detection redirect para device test preview edge function -->
+    <script>
+      (function() {
+        const BOT_USER_AGENTS = [
+          "facebookexternalhit", "whatsapp", "telegrambot", "slurp", "googlebot",
+          "bingbot", "yandexbot", "duckduckbot", "baiduspider", "sogou", "exabot",
+          "discordbot", "twitterbot", "linkedinbot", "skypeuripreview", "vkshare",
+          "pinterest", "embedly", "quora", "rogerbot", "facebot", "oembed", "vimeo",
+          "ico", "applebot", "metainspector"
+        ];
+        
+        const isBot = BOT_USER_AGENTS.some(bot => navigator.userAgent.toLowerCase().includes(bot));
+        const isTestRoute = window.location.pathname.startsWith('/testar/');
+        
+        if (isBot && isTestRoute) {
+          const token = window.location.pathname.split('/testar/')[1];
+          // Redirecionar para edge function para gerar preview com og:tags
+          window.location.replace(`https://oghjlypdnmqecaavekyr.supabase.co/functions/v1/device-test-preview?token=${encodeURIComponent(token)}`);
+        }
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+
     <script>
       (function(){
         const isInstalled = window.matchMedia('(display-mode: standalone)').matches || (('standalone' in window.navigator) && (window.navigator.standalone === true));
@@ -200,7 +282,7 @@
         }
       })();
     </script>
-    
+
     <!-- PWA Registration Script -->
     <script>
       // Service Worker Registration
@@ -209,7 +291,7 @@
           navigator.serviceWorker.register('/sw.js')
             .then(registration => {
               console.log('SW registrado com sucesso:', registration.scope);
-              
+
               // Check for updates (sem prompt repetitivo)
               registration.addEventListener('updatefound', () => {
                 const newWorker = registration.installing;
@@ -266,8 +348,6 @@
           }
         });
       }
-
-
     </script>
   </body>
 </html>

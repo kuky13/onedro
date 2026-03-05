@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { PlusCircle, List, Settings, Shield, Database, Users, Wrench, Download, Smartphone } from 'lucide-react';
+import { useState } from 'react';
+import { PlusCircle, List, Settings, Shield, Users, Wrench, MoreHorizontal, Hammer, Store } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { GlassCard, RippleButton } from '@/components/ui/animations/micro-interactions';
@@ -23,14 +23,6 @@ interface QuickAccessAction {
 }
 
 const quickAccessActions: QuickAccessAction[] = [{
-  id: 'new-budget',
-  label: 'Novo Orçamento',
-  icon: PlusCircle,
-  tab: 'new-budget',
-  permission: 'create_budgets',
-  gradient: 'from-green-500 to-emerald-500',
-  iconColor: 'text-green-600'
-}, {
   id: 'budgets',
   label: 'Ver Orçamentos',
   icon: List,
@@ -47,6 +39,14 @@ const quickAccessActions: QuickAccessAction[] = [{
   gradient: 'from-amber-500 to-yellow-500',
   iconColor: 'text-amber-600'
 }, {
+  id: 'warranties',
+  label: 'Garantias',
+  icon: Shield,
+  tab: 'warranties',
+  permission: null,
+  gradient: 'from-teal-500 to-cyan-500',
+  iconColor: 'text-teal-600'
+}, {
   id: 'clients',
   label: 'Clientes',
   icon: Users,
@@ -55,21 +55,21 @@ const quickAccessActions: QuickAccessAction[] = [{
   gradient: 'from-purple-500 to-indigo-500',
   iconColor: 'text-purple-600'
 }, {
-  id: 'download-app',
-  label: 'Baixar App',
-  icon: Download,
-  tab: 'download-app',
+  id: 'reparos',
+  label: 'Gestão de Reparos',
+  icon: Hammer,
+  tab: 'reparos',
   permission: null,
-  gradient: 'from-primary to-amber-500',
-  iconColor: 'text-primary'
+  gradient: 'from-orange-500 to-red-500',
+  iconColor: 'text-orange-600'
 }, {
-  id: 'peliculas',
-  label: 'Peliculas',
-  icon: Smartphone,
-  tab: 'peliculas',
+  id: 'store',
+  label: 'Minha Loja',
+  icon: Store,
+  tab: 'store',
   permission: null,
-  gradient: 'from-pink-500 to-fuchsia-500',
-  iconColor: 'text-pink-600'
+  gradient: 'from-violet-500 to-purple-500',
+  iconColor: 'text-violet-600'
 }, {
   id: 'settings',
   label: 'Configurações',
@@ -79,13 +79,13 @@ const quickAccessActions: QuickAccessAction[] = [{
   gradient: 'from-gray-500 to-slate-500',
   iconColor: 'text-gray-600'
 }, {
-  id: 'admin',
-  label: 'Painel Admin',
-  icon: Shield,
-  tab: 'admin',
-  permission: 'manage_users',
-  gradient: 'from-red-500 to-pink-500',
-  iconColor: 'text-red-600'
+  id: 'more',
+  label: 'Ver Mais',
+  icon: MoreHorizontal,
+  tab: 'more',
+  permission: null,
+  gradient: 'from-zinc-500 to-neutral-500',
+  iconColor: 'text-zinc-600'
 }];
 
 export const DashboardLiteQuickAccessEnhanced = ({
@@ -94,7 +94,7 @@ export const DashboardLiteQuickAccessEnhanced = ({
 }: DashboardLiteQuickAccessEnhancedProps) => {
   const navigate = useNavigate();
   const [showPWAModal, setShowPWAModal] = useState(false);
-  const { installApp, isInstalling, canInstall } = usePWASimple();
+  const { isInstalling } = usePWASimple();
   
   const handleActionClick = async (action: QuickAccessAction) => {
     // Handle PWA install modal
@@ -108,10 +108,18 @@ export const DashboardLiteQuickAccessEnhanced = ({
       navigate('/worm');
     } else if (action.id === 'service-orders') {
       navigate('/service-orders');
+    } else if (action.id === 'warranties') {
+      navigate('/garantia');
+    } else if (action.id === 'reparos') {
+      navigate('/reparos');
+    } else if (action.id === 'store') {
+      navigate('/store');
     } else if (action.id === 'peliculas') {
       navigate('/p');
     } else if (action.id === 'settings') {
       navigate('/settings');
+    } else if (action.id === 'more') {
+      navigate('/apps');
     } else {
       onTabChange(action.tab);
     }
@@ -136,7 +144,7 @@ export const DashboardLiteQuickAccessEnhanced = ({
           </div>
           
           <StaggerContainer className="grid grid-cols-2 gap-4">
-            {availableActions.map((action, index) => {
+            {availableActions.map((action) => {
               const Icon = action.icon;
               const isDownloadApp = action.id === 'download-app';
               const isLoadingDownload = isDownloadApp && isInstalling;

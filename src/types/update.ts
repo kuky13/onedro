@@ -19,9 +19,14 @@ export interface UserUpdatePreference {
   id: string;
   user_id: string;
   update_id: string;
-  dismissed: boolean;
+  dismissed: boolean | null;
   dismissed_at: string | null;
-  created_at: string;
+  created_at: string | null;
+  updates?: {
+    id: string;
+    title: string;
+    created_at: string | null;
+  };
 }
 
 export interface UpdateFormData {
@@ -124,24 +129,27 @@ export interface UseUpdateManagementReturn {
 }
 
 export interface UsePopupStateReturn {
-  isVisible: boolean;
-  currentUpdate: Update | null;
-  isLoading: boolean;
-  error: string | null;
-  showPopup: () => void;
+  popupState: PopupState;
+  dismissPopup: () => Promise<void>;
   hidePopup: () => void;
-  dismissUpdate: (updateId: string) => Promise<void>;
-  checkForActiveUpdate: () => Promise<void>;
+  showPopup: () => void;
   clearError: () => void;
+  refreshPopupState: () => void;
 }
 
 export interface UseUserPreferencesReturn {
   preferences: UserUpdatePreference[];
   isLoading: boolean;
   error: string | null;
+  hasUserDismissed: (updateId: string) => Promise<boolean>;
   dismissUpdate: (updateId: string) => Promise<void>;
-  restoreUpdate: (updateId: string) => Promise<void>;
-  checkDismissed: (updateId: string) => boolean;
-  loadPreferences: () => Promise<void>;
+  reactivateUpdate: (updateId: string) => Promise<void>;
+  getUserStats: () => Promise<{
+    total_dismissed: number;
+    total_updates: number;
+    dismissal_rate: number;
+  } | null>;
+  clearAllPreferences: () => Promise<void>;
   clearError: () => void;
+  refreshPreferences: () => Promise<void>;
 }

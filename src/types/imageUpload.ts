@@ -74,7 +74,7 @@ export interface ImagePreviewProps {
 }
 
 export interface ImageUploadSectionProps {
-  serviceOrderId?: string;
+  serviceOrderId?: string | undefined;
   onImagesChange?: (images: ServiceOrderImage[]) => void;
   onPendingFilesChange?: (hasPendingFiles: boolean) => void;
   disabled?: boolean;

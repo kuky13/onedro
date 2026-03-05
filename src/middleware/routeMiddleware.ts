@@ -50,6 +50,16 @@ class RouteMiddleware {
   private readonly CACHE_KEY = 'navigation-state';
   private lastStateCheck = 0;
   private pendingChecks = new Set<string>();
+  // Cache curto para evitar múltiplas chamadas RPC de licença em sequência
+  private readonly licenseCheckCache = new Map<
+    string,
+    {
+      checkedAt: number;
+      result: LicenseCheckResult;
+      pending?: Promise<LicenseCheckResult>;
+    }
+  >();
+  private readonly LICENSE_CACHE_TTL_MS = 60_000; // 60s: suficiente para navegação/guards sem perder reatividade
   // Configurações centralizadas
   private readonly config = ROUTE_CONFIG;
 
@@ -81,7 +91,8 @@ class RouteMiddleware {
       '/settings': { requiresAuth: true, requiresEmailVerification: true, requiresLicense: true },
       '/central-de-ajuda': { requiresAuth: true, requiresEmailVerification: true, requiresLicense: true },
       '/msg': { requiresAuth: true, requiresEmailVerification: true, requiresLicense: true },
-      
+      '/whatsapp': { requiresAuth: true, requiresEmailVerification: true, requiresLicense: true },
+      '/whats': { requiresAuth: true, requiresEmailVerification: true, requiresLicense: true },
       // Rotas administrativas
       '/admin': { 
         requiresAuth: true, 
@@ -184,9 +195,9 @@ class RouteMiddleware {
         userRole,
         lastCheck: now,
         licenseStatus,
-        licenseExpiresAt,
+        ...(licenseExpiresAt ? { licenseExpiresAt } : {}),
         isOffline,
-        isUsingCache
+        isUsingCache,
       };
 
       // Atualizar cache e estado local
@@ -194,8 +205,10 @@ class RouteMiddleware {
       multiTabCache.set(this.CACHE_KEY, newState, this.config.cache.defaultTTL);
 
       return newState;
-    } catch (error) {
-      console.error('❌ Erro ao obter estado de navegação:', error);
+    } catch (error: any) {
+      if (error?.name !== 'AbortError' && !error?.message?.includes('aborted')) {
+        console.error('❌ Erro ao obter estado de navegação:', error);
+      }
       return this.getDefaultState();
     } finally {
       this.pendingChecks.delete(checkId);
@@ -261,7 +274,12 @@ class RouteMiddleware {
     // Verificar licença (apenas para rotas que precisam)
     if (requiresLicense(path) && path !== '/licenca' && path !== '/verify-licenca') {
       if (state.user) {
-        const licenseCheck = await this.checkLicenseStatus(state.user.id);
+        // Evitar checar licença duas vezes (getNavigationState já checou)
+        const licenseStatus = state.licenseStatus;
+        const licenseCheck =
+          licenseStatus
+            ? ({ status: licenseStatus, lastCheck: state.lastCheck, ...(state.licenseExpiresAt ? { expiresAt: state.licenseExpiresAt } : {}) } as LicenseCheckResult)
+            : await this.checkLicenseStatus(state.user.id);
         
         if (licenseCheck.status === 'inactive') {
           // Log de tentativa de acesso não autorizado
@@ -359,16 +377,17 @@ class RouteMiddleware {
    * Normaliza o path da rota
    */
   private normalizePath(path: string): string {
-    // Remover query params e hash
-    const cleanPath = path.split('?')[0].split('#')[0];
-    
+    // Remover query params e hash (protegendo índices com noUncheckedIndexedAccess)
+    const base = path.split('?')[0] ?? path;
+    const cleanPath = (base.split('#')[0] ?? base) || path;
+
     // Verificar padrões dinâmicos
     for (const routePath of Object.keys(this.routeConfig)) {
       if (this.matchesPattern(cleanPath, routePath)) {
         return routePath;
       }
     }
-    
+
     return cleanPath;
   }
 
@@ -422,8 +441,40 @@ class RouteMiddleware {
    * com fallback e tratamento robusto de erros
    */
   private async checkLicenseStatus(userId: string): Promise<LicenseCheckResult> {
+    type LicenseStatusRpc = {
+      has_license: boolean;
+      is_valid: boolean;
+      requires_activation: boolean | null;
+      requires_renewal: boolean | null;
+      expired_at: string | null;
+      expires_at: string | null;
+      days_until_expiry: number | null;
+      days_remaining: number | null;
+    };
+
+    const isLicenseStatusRpc = (data: unknown): data is LicenseStatusRpc => {
+      return !!data && typeof data === 'object' && !Array.isArray(data) && 'has_license' in data;
+    };
+
     const isOffline = !navigator.onLine;
-    
+
+    // Online: usar cache curto para reduzir chamadas repetidas durante guards/navegação
+    if (!isOffline) {
+      const now = Date.now();
+      const cached = this.licenseCheckCache.get(userId);
+
+      if (cached?.pending) {
+        return cached.pending;
+      }
+
+      if (cached && now - cached.checkedAt < this.LICENSE_CACHE_TTL_MS) {
+        return {
+          ...cached.result,
+          isUsingCache: true,
+        };
+      }
+    }
+
     // Se estiver offline, tentar usar cache
     if (isOffline) {
       const cachedLicense = storageManager.getLicenseCache();
@@ -431,10 +482,10 @@ class RouteMiddleware {
         console.log('🔄 [RouteMiddleware] Usando cache de licença offline');
         return {
           status: 'active',
-          expiresAt: cachedLicense.expiresAt,
+          ...(cachedLicense.expiresAt ? { expiresAt: cachedLicense.expiresAt } : {}),
           lastCheck: Date.now(),
           isOffline: true,
-          isUsingCache: true
+          isUsingCache: true,
         };
       } else {
         console.warn('⚠️ [RouteMiddleware] Offline sem cache válido de licença');
@@ -442,16 +493,19 @@ class RouteMiddleware {
           status: 'not_found',
           lastCheck: Date.now(),
           isOffline: true,
-          isUsingCache: false
+          isUsingCache: false,
         };
       }
     }
 
     try {
+      const pendingPromise: Promise<LicenseCheckResult> = (async (): Promise<LicenseCheckResult> => {
       // Online - verificar normalmente
       // Primeira tentativa: usar a função RPC get_user_license_status
-      const { data: licenseData, error } = await supabase
-        .rpc('get_user_license_status', { p_user_id: userId });
+       const { data: licenseData, error } = await supabase
+         .rpc('get_user_license_status', { p_user_id: userId });
+
+       const rpcData = isLicenseStatusRpc(licenseData) ? licenseData : null;
       
       if (error) {
         console.error('❌ [RouteMiddleware] Erro na função RPC get_user_license_status:', error);
@@ -475,7 +529,7 @@ class RouteMiddleware {
           console.log('🔄 [RouteMiddleware] Usando cache como fallback após erro');
           return {
             status: 'active',
-            expiresAt: cachedLicense.expiresAt,
+            ...(cachedLicense.expiresAt ? { expiresAt: cachedLicense.expiresAt } : {}),
             lastCheck: Date.now(),
             isOffline: false,
             isUsingCache: true
@@ -491,11 +545,13 @@ class RouteMiddleware {
           console.warn('⚠️ [RouteMiddleware] Falha ao registrar erro de verificação de licença:', logError);
         }
         
+        // Atualizar cache para evitar tempestade de requests em caso de erro repetido
+        this.licenseCheckCache.set(userId, { checkedAt: Date.now(), result });
         return result;
       }
       
-      if (!licenseData) {
-        const result = { status: 'not_found' as const, lastCheck: Date.now() };
+       if (!rpcData) {
+         const result = { status: 'not_found' as const, lastCheck: Date.now() };
         
         // Log da verificação de licença
         console.log(`🔍 [RouteMiddleware] Nenhuma licença encontrada para usuário ${userId}`);
@@ -507,61 +563,54 @@ class RouteMiddleware {
           console.warn('⚠️ [RouteMiddleware] Falha ao registrar verificação de licença:', error);
         }
         
-        return result;
+         this.licenseCheckCache.set(userId, { checkedAt: Date.now(), result });
+         return result;
       }
       
       // Determinar status baseado nos dados da função RPC
       let status: 'active' | 'inactive' | 'expired' | 'not_found';
       
       // Lógica melhorada para determinar o status
-      if (!licenseData.has_license) {
-        status = 'not_found';
-      } else if (licenseData.requires_renewal || licenseData.expired_at) {
-        status = 'expired';
-      } else if (!licenseData.is_valid || licenseData.requires_activation) {
-        status = 'inactive';
-      } else if (licenseData.has_license && licenseData.is_valid) {
-        status = 'active';
-      } else {
-        // Caso edge - assumir inactive por segurança
-        status = 'inactive';
-      }
+       if (!rpcData.has_license) {
+         status = 'not_found';
+       } else if (rpcData.requires_renewal || rpcData.expired_at) {
+         status = 'expired';
+       } else if (!rpcData.is_valid || rpcData.requires_activation) {
+         status = 'inactive';
+       } else if (rpcData.has_license && rpcData.is_valid) {
+         status = 'active';
+       } else {
+         // Caso edge - assumir inactive por segurança
+         status = 'inactive';
+       }
       
-      const result = {
-        status,
-        expiresAt: licenseData.expires_at,
-        lastCheck: Date.now(),
-        isOffline: false,
-        isUsingCache: false
-      };
+       const result: LicenseCheckResult = {
+         status,
+         ...(rpcData.expires_at ? { expiresAt: rpcData.expires_at } : {}),
+         lastCheck: Date.now(),
+         isOffline: false,
+         isUsingCache: false,
+       };
       
       // Se a licença for válida, salvar no cache
       if (status === 'active') {
         storageManager.setLicenseCache({
           hasValidLicense: true,
-          licenseStatus: {
-            status: 'active',
-            isValid: true,
-            hasLicense: true,
-            expiresAt: licenseData.expires_at,
-            requiresActivation: false,
-            requiresRenewal: false,
-            daysUntilExpiry: licenseData.days_until_expiry || 0
-          },
-          expiresAt: licenseData.expires_at
+          licenseStatus: 'active',
+          ...(rpcData.expires_at ? { expiresAt: rpcData.expires_at } : {}),
         });
       }
       
       // Log detalhado da verificação de licença
       console.log(`🔍 [RouteMiddleware] Verificação de licença para usuário ${userId}:`, {
         status: result.status,
-        has_license: licenseData.has_license,
-        is_valid: licenseData.is_valid,
-        requires_activation: licenseData.requires_activation,
-        requires_renewal: licenseData.requires_renewal,
-        expired_at: licenseData.expired_at,
-        expires_at: licenseData.expires_at,
-        days_remaining: licenseData.days_remaining
+         has_license: rpcData.has_license,
+         is_valid: rpcData.is_valid,
+         requires_activation: rpcData.requires_activation,
+         requires_renewal: rpcData.requires_renewal,
+         expired_at: rpcData.expired_at,
+         expires_at: rpcData.expires_at,
+         days_remaining: rpcData.days_remaining
       });
       
       // Registrar a verificação de licença no SecurityLogger
@@ -571,7 +620,21 @@ class RouteMiddleware {
         console.warn('⚠️ [RouteMiddleware] Falha ao registrar verificação de licença:', error);
       }
       
-      return result;
+       this.licenseCheckCache.set(userId, { checkedAt: Date.now(), result });
+       return result;
+      })();
+
+      // Guardar promessa para deduplicar chamadas concorrentes
+      this.licenseCheckCache.set(userId, {
+        checkedAt: Date.now(),
+        result: { status: 'not_found' as const, lastCheck: Date.now() },
+        pending: pendingPromise,
+      });
+
+      const resolved = await pendingPromise;
+      // Após resolver, remover pending mantendo o resultado
+      this.licenseCheckCache.set(userId, { checkedAt: Date.now(), result: resolved });
+      return resolved;
     } catch (error) {
       console.error('❌ [RouteMiddleware] Erro crítico ao verificar status da licença:', error);
       const result = { status: 'not_found' as const, lastCheck: Date.now() };
@@ -583,6 +646,7 @@ class RouteMiddleware {
         console.warn('⚠️ [RouteMiddleware] Falha ao registrar erro de verificação de licença:', logError);
       }
       
+      this.licenseCheckCache.set(userId, { checkedAt: Date.now(), result });
       return result;
     }
   }
@@ -593,7 +657,7 @@ class RouteMiddleware {
   private processFallbackLicenseData(fallbackData: any, userId: string): LicenseCheckResult {
     try {
       let status: 'active' | 'inactive' | 'expired' | 'not_found' = 'not_found';
-      
+
       if (fallbackData && typeof fallbackData === 'object') {
         if (fallbackData.has_license === true && fallbackData.is_valid === true) {
           status = 'active';
@@ -601,21 +665,24 @@ class RouteMiddleware {
           status = 'inactive';
         }
       }
-      
+
       console.log(`🔄 [RouteMiddleware] Fallback processado para usuário ${userId}: ${status}`);
-      
-      return {
+
+      const result: LicenseCheckResult = {
         status,
-        expiresAt: fallbackData.expires_at || undefined,
+        ...(fallbackData.expires_at ? { expiresAt: fallbackData.expires_at } : {}),
         lastCheck: Date.now(),
         isOffline: false,
-        isUsingCache: false
+        isUsingCache: false,
       };
+
+      return result;
     } catch (error) {
       console.error('❌ [RouteMiddleware] Erro ao processar dados de fallback:', error);
       return { status: 'not_found', lastCheck: Date.now() };
     }
   }
+
 
   /**
    * Registra tentativas de acesso não autorizado

@@ -1,12 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Key, Info, Clock, Search, Gift, Loader2, Calendar, Shield } from 'lucide-react';
+import { Key, Info, Clock, Gift, Loader2, Calendar, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
-import { useNavigate } from 'react-router-dom';
+
 import { useLicenseActivation } from '@/hooks/useLicenseActivation';
 import { useTrialLicense } from '@/hooks/useTrialLicense';
 
@@ -15,14 +15,14 @@ interface LicenseActivationSectionProps {
   onLicenseActivated: () => void;
 }
 
-export const LicenseActivationSection = ({ user, onLicenseActivated }: LicenseActivationSectionProps) => {
+export const LicenseActivationSection = ({ onLicenseActivated }: LicenseActivationSectionProps) => {
   const [licenseCode, setLicenseCode] = useState('');
   const [previewDays, setPreviewDays] = useState<number | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   
   const { showSuccess, showError } = useToast();
-  const navigate = useNavigate();
+  
   
   const { 
     validateLicenseFormat, 
@@ -47,8 +47,8 @@ export const LicenseActivationSection = ({ user, onLicenseActivated }: LicenseAc
       if (validateLicenseFormat(value)) {
         setIsPreviewLoading(true);
         try {
-          const days = await previewLicense(value);
-          setPreviewDays(days);
+          const preview = await previewLicense(value);
+          setPreviewDays(preview?.days ?? null);
         } catch (error: any) {
           console.warn('Erro ao obter preview da licença:', error);
           setPreviewDays(null);
@@ -73,8 +73,8 @@ export const LicenseActivationSection = ({ user, onLicenseActivated }: LicenseAc
     }
 
     try {
-      const result = await activateLicense(licenseCode, user.id);
-      if (result.success) {
+      const result = await activateLicense(licenseCode);
+      if (result && result.success) {
         showSuccess({
           title: 'Licença Ativada!',
           description: result.message || 'Sua licença foi ativada com sucesso. Redirecionando...'
@@ -91,11 +91,12 @@ export const LicenseActivationSection = ({ user, onLicenseActivated }: LicenseAc
 
   const handleCreateTrialLicense = async () => {
     try {
-      const result = await createTrialLicense(user.id);
-      if (result.success) {
+      const result = await createTrialLicense();
+      if (result === true || (result && typeof result === 'object')) {
+        const licenseCode = (result && typeof result === 'object' && 'license_code' in result) ? (result as any).license_code : 'N/A';
         showSuccess({
           title: 'Licença de Teste Criada!',
-          description: `Você recebeu 7 dias de acesso gratuito. Código: ${result.license_code}`
+          description: `Você recebeu 7 dias de acesso gratuito. Código: ${licenseCode}`
         });
         setTimeout(() => {
           onLicenseActivated();
@@ -281,14 +282,6 @@ export const LicenseActivationSection = ({ user, onLicenseActivated }: LicenseAc
           </Button>
         )}
         
-        <Button 
-          onClick={() => navigate('/verify-licenca')}
-          variant="outline"
-          className="w-full border-amber-300 text-amber-700 hover:bg-amber-50"
-        >
-          <Search className="h-4 w-4 mr-2" />
-          Verificar Licença
-        </Button>
       </CardContent>
     </Card>
   );

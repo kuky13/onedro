@@ -46,18 +46,9 @@ export function useLicenseActivation(): UseLicenseActivationReturn {
     // Verificar se tem 13 caracteres
     if (cleanCode.length !== 13) return false;
     
-    // Verificar se é licença de teste (formato TRIALXXXXXXXX)
-    if (cleanCode.startsWith('TRIAL')) {
-      return /^TRIAL[A-Z0-9]{8}$/.test(cleanCode);
-    }
-    
-    // Verificar se é licença normal (formato DDDDDDXXXXXXX - 6 dígitos + 7 alfanuméricos)
-    if (/^[0-9]{6}[A-Z0-9]{7}$/.test(cleanCode)) {
-      const days = parseInt(cleanCode.substring(0, 6));
-      return days > 0 && days <= 999999; // Máximo ~2740 anos
-    }
-    
-    // Verificar se é licença legada (13 caracteres alfanuméricos)
+    // Aceitar qualquer string alfanumérica de 13 caracteres como válida
+    // A validação real de estrutura (6 dígitos + 7 chars) será feita no backend se necessário
+    // Isso evita falsos negativos no frontend
     return /^[A-Z0-9]{13}$/.test(cleanCode);
   }, []);
 
@@ -96,10 +87,11 @@ export function useLicenseActivation(): UseLicenseActivationReturn {
       }
 
       if (data && typeof data === 'object') {
+        const preview = data as any;
         return {
-          days: data.days || 0,
-          is_trial: data.is_trial || false,
-          is_legacy: data.is_legacy || false,
+          days: preview?.days || 0,
+          is_trial: preview?.is_trial || false,
+          is_legacy: preview?.is_legacy || false,
           valid_format: true
         };
       }
@@ -170,14 +162,20 @@ export function useLicenseActivation(): UseLicenseActivationReturn {
         return result;
       }
 
-      if (data && data.success) {
+      const isActivationPayload = (value: unknown): value is Record<string, any> => {
+        return !!value && typeof value === 'object' && ('success' in (value as any) || 'error' in (value as any));
+      };
+
+      const payload = isActivationPayload(data) ? (data as any) : null;
+
+      if (payload?.success === true) {
         const result: LicenseActivationResult = {
           success: true,
-          message: data.message || 'Licença ativada com sucesso',
-          license_code: data.license_code,
-          activated_at: data.activated_at,
-          expires_at: data.expires_at,
-          days_granted: data.days_granted
+          message: payload.message || 'Licença ativada com sucesso',
+          license_code: payload.license_code,
+          activated_at: payload.activated_at,
+          expires_at: payload.expires_at,
+          days_granted: payload.days_granted
         };
 
         showSuccess({
@@ -186,20 +184,20 @@ export function useLicenseActivation(): UseLicenseActivationReturn {
         });
 
         return result;
-      } else {
-        const result = {
-          success: false,
-          message: data?.error || 'Falha na ativação da licença',
-          error_code: data?.error_code || 'ACTIVATION_FAILED'
-        };
-
-        showError({
-          title: 'Falha na Ativação',
-          description: result.message
-        });
-        setError(result.message);
-        return result;
       }
+
+      const result = {
+        success: false,
+        message: payload?.error || 'Falha na ativação da licença',
+        error_code: payload?.error_code || 'ACTIVATION_FAILED'
+      };
+
+      showError({
+        title: 'Falha na Ativação',
+        description: result.message
+      });
+      setError(result.message);
+      return result;
     } catch (err) {
       console.error('Erro ao ativar licença:', err);
       const result = {

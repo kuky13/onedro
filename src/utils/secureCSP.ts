@@ -4,6 +4,7 @@
  * Sistema de nonces dinâmicos e hash de scripts
  */
 
+import React from 'react';
 import { securityLogger, SecurityEventType } from './securityAuditLogger';
 
 export interface CSPConfig {
@@ -40,10 +41,11 @@ class SecureCSPManager {
     this.config = {
       enableReporting: true,
       strictMode: true,
-      developmentMode: process.env.NODE_ENV === 'development',
+      developmentMode: import.meta.env.DEV,
       allowedDomains: [
         'https://api.supabase.co',
         'https://*.supabase.co',
+        'https://api.kuky.help',
         'https://api.ipify.org',
         'https://fonts.googleapis.com',
         'https://fonts.gstatic.com'
@@ -85,9 +87,9 @@ class SecureCSPManager {
    */
   private setupTrustedDomains(): void {
     const defaultDomains = [
-      'self',
       'https://api.supabase.co',
       'https://*.supabase.co',
+      'https://api.kuky.help',
       'https://fonts.googleapis.com',
       'https://fonts.gstatic.com',
       'https://api.ipify.org'
@@ -107,8 +109,6 @@ class SecureCSPManager {
     const encoder = new TextEncoder();
     const data = encoder.encode(script);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     const hashBase64 = btoa(String.fromCharCode(...new Uint8Array(hashBuffer)));
     
     this.allowedHashes.add(`'sha256-${hashBase64}'`);
@@ -132,23 +132,43 @@ class SecureCSPManager {
   private generateCSPPolicy(): string {
     const domains = Array.from(this.trustedDomains).join(' ');
     const hashes = Array.from(this.allowedHashes).join(' ');
+
+    // O preview da Lovable pode carregar o manifest via auth-bridge em lovable.dev.
+    // Sem `manifest-src`, o browser cai em `default-src 'self'` e bloqueia.
+    const isLovablePreviewHost = (() => {
+      try {
+        const h = window.location.hostname;
+        return h.endsWith('.lovable.app') || h.endsWith('.lovableproject.com') || h === 'lovable.app';
+      } catch {
+        return false;
+      }
+    })();
+
+     // No preview/dev, o ambiente pode injetar scripts (ex.: vercel.live feedback).
+     // Permitimos explicitamente para evitar spam de erros no console.
+     const devExtraScriptSrc = this.config.developmentMode
+       ? ' https://vercel.live'
+       : '';
     
-    const basePolicy = {
+    const basePolicy: Record<string, string> = {
       'default-src': "'self'",
       'script-src': this.config.strictMode 
-        ? `'self' 'nonce-${this.currentNonce}' ${hashes}`.trim()
-        : `'self' 'nonce-${this.currentNonce}' ${hashes} 'strict-dynamic'`.trim(),
+        ? (`'self' 'unsafe-eval' 'nonce-${this.currentNonce}' ${hashes}${devExtraScriptSrc}`).trim()
+        : (`'self' 'unsafe-eval' 'nonce-${this.currentNonce}' ${hashes} ${devExtraScriptSrc}`).trim(),
       'style-src': this.config.strictMode
-        ? `'self' 'nonce-${this.currentNonce}' https://fonts.googleapis.com`
+        ? `'self' 'unsafe-inline' https://fonts.googleapis.com` // unsafe-inline required for React styled-components/emotion
         : `'self' 'unsafe-inline' https://fonts.googleapis.com`,
       'img-src': `'self' data: blob: ${domains}`,
       'font-src': `'self' https://fonts.gstatic.com data:`,
       'connect-src': `'self' ${domains} wss://*.supabase.co`,
-      'media-src': `'self' blob: data:`,
+      'frame-src': `'self' ${domains}`,
+      // Necessário no preview da Lovable (auth-bridge do manifest)
+      'manifest-src': isLovablePreviewHost ? `'self' https://lovable.dev` : `'self'`,
+      'media-src': `'self' blob: data: ${domains}`,
       'object-src': "'none'",
       'base-uri': "'self'",
       'form-action': "'self'",
-      'frame-ancestors': "'none'",
+      // 'frame-ancestors': "'none'", // Ignored via meta tag, must be set via HTTP header
       'upgrade-insecure-requests': '',
       'block-all-mixed-content': ''
     };
@@ -290,25 +310,31 @@ class SecureCSPManager {
    * Avalia o nível de risco de uma violação
    */
   private assessViolationRisk(violation: CSPViolation): 'low' | 'medium' | 'high' | 'critical' {
+    const blockedURI = violation.blockedURI || '';
+
     // Violações críticas
-    if (violation.effectiveDirective === 'script-src' && 
-        (violation.blockedURI.includes('eval') || 
-         violation.blockedURI.includes('javascript:') ||
-         violation.blockedURI.includes('data:'))) {
+    if (
+      violation.effectiveDirective === 'script-src' &&
+      (blockedURI.includes('eval') || blockedURI.includes('javascript:') || blockedURI.includes('data:'))
+    ) {
       return 'critical';
     }
 
     // Violações de alto risco
-    if (violation.effectiveDirective === 'script-src' ||
-        violation.effectiveDirective === 'object-src' ||
-        violation.blockedURI.includes('unsafe-')) {
+    if (
+      violation.effectiveDirective === 'script-src' ||
+      violation.effectiveDirective === 'object-src' ||
+      blockedURI.includes('unsafe-')
+    ) {
       return 'high';
     }
 
     // Violações de médio risco
-    if (violation.effectiveDirective === 'style-src' ||
-        violation.effectiveDirective === 'img-src' ||
-        violation.effectiveDirective === 'connect-src') {
+    if (
+      violation.effectiveDirective === 'style-src' ||
+      violation.effectiveDirective === 'img-src' ||
+      violation.effectiveDirective === 'connect-src'
+    ) {
       return 'medium';
     }
 
@@ -319,8 +345,10 @@ class SecureCSPManager {
    * Manipula violações de alto risco
    */
   private handleHighRiskViolation(violation: CSPViolation): void {
-    // Log adicional para violações críticas
-    console.error('🚨 CSP High-Risk Violation:', violation);
+    // Log adicional para violações críticas apenas em DEV (evita ruído no console do usuário)
+    if (import.meta.env.DEV) {
+      console.error('🚨 CSP High-Risk Violation:', violation);
+    }
     
     // Notificar administradores (implementar conforme necessário)
     // this.notifyAdministrators(violation);
@@ -337,7 +365,9 @@ class SecureCSPManager {
   private blockSuspiciousResource(uri: string): void {
     // Adicionar à lista de recursos bloqueados
     // Implementar conforme necessário
-    console.warn(`🔒 Blocking suspicious resource: ${uri}`);
+    if (import.meta.env.DEV) {
+      console.warn(`🔒 Blocking suspicious resource: ${uri}`);
+    }
   }
 
   /**
@@ -444,7 +474,7 @@ class SecureCSPManager {
   public exportConfig(): {
     policy: string;
     config: CSPConfig;
-    stats: ReturnType<typeof this.getViolationStats>;
+    stats: ReturnType<SecureCSPManager['getViolationStats']>;
   } {
     return {
       policy: this.generateCSPPolicy(),
@@ -525,12 +555,4 @@ if (typeof window !== 'undefined') {
   } else {
     cspManager.enableDevelopmentMode();
   }
-}
-
-// Exportar React para uso nos componentes
-let React: any;
-try {
-  React = require('react');
-} catch {
-  // React não disponível
 }

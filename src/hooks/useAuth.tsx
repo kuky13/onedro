@@ -3,10 +3,16 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/useToast';
-import { useNavigate } from 'react-router-dom';
-import { getSecureItem } from '@/utils/secureStorage';
 import { cleanupAuthState, forceReload } from '@/utils/authCleanup';
 import { useTokenRotation } from '@/hooks/useTokenRotation';
+
+const devLog = (...args: any[]) => {
+  if (import.meta.env.DEV) console.log(...args);
+};
+
+const devWarn = (...args: any[]) => {
+  if (import.meta.env.DEV) console.warn(...args);
+};
 
 export type UserRole = 'admin' | 'manager' | 'user';
 
@@ -58,8 +64,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     refreshBeforeExpiry: 5, // Renovar 5 minutos antes de expirar
     checkInterval: 1,       // Verificar a cada minuto
     maxRetries: 3,
-    onTokenRefreshed: (newToken: string) => {
-      console.log('🔄 Token renovado automaticamente');
+    onTokenRefreshed: () => {
+      devLog('🔄 Token renovado automaticamente');
     },
     onRefreshFailed: (error: Error) => {
       console.error('❌ Falha na renovação automática do token:', error.message);
@@ -68,97 +74,84 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   });
 
   // Profile query using React Query
-  const { data: profile } = useQuery({
+  const { data: profileData } = useQuery({
     queryKey: ['user-profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
-      
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
 
-      if (error) {
-        console.error('❌ Erro ao buscar perfil:', error);
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          if (error.message && !error.message.includes('aborted')) {
+            console.warn('⚠️ Erro ao buscar perfil (possível falha de rede ou tabela ausente):', error.message);
+          }
+          return null;
+        }
+        return data as UserProfile;
+      } catch (err: any) {
+        if (err?.name !== 'AbortError' && !err?.message?.includes('aborted')) {
+          console.warn('⚠️ Erro silencioso no fetch de perfil:', err);
+        }
         return null;
       }
-      return data as UserProfile;
     },
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
+    retry: 1, // Reduzir retries para evitar spam de erros 404/net::ERR_ABORTED
   });
 
-  // Gerar fingerprint simples para dispositivo
-  const generateDeviceFingerprint = () => {
-    const data = {
-      screen: `${screen.width}x${screen.height}`,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      language: navigator.language,
-      platform: navigator.platform
-    };
-    return btoa(JSON.stringify(data)).slice(0, 32);
-  };
+  const profile: UserProfile | null = profileData ?? null;
 
-  // Integração com sistema de sessão persistente do Supabase
-  const manageSessionPersistence = async (session: Session) => {
-    try {
-      const deviceFingerprint = generateDeviceFingerprint();
-      const { data: sessionData, error } = await supabase.rpc('manage_persistent_session', {
-        p_device_fingerprint: deviceFingerprint,
-        p_device_name: navigator.platform || 'Unknown Device',
-        p_device_type: /Mobile|iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
-        p_user_agent: navigator.userAgent,
-        p_ip_address: null
-      });
-      
-      if (!error && (sessionData as any)?.success) {
-        console.log('✅ Sessão persistente configurada');
-        
-        // Marcar dispositivo como confiável após 3 logins
-        const { data: trustData } = await supabase.rpc('trust_device', {
-          p_device_fingerprint: deviceFingerprint
-        });
-        
-        if ((trustData as any)?.success) {
-          console.log('✅ Dispositivo marcado como confiável');
-        }
-      }
-    } catch (error) {
-      console.warn('⚠️ Erro ao configurar persistência:', error);
-    }
-  };
+  // ... keep existing code (device fingerprint / persistent session helpers removed - unused)
+
 
   // Inicialização simplificada e robusta do auth
   useEffect(() => {
-    console.log('🔐 Iniciando AuthProvider...');
+    // Flag para evitar múltiplas execuções se o componente desmontar
+    let mounted = true;
+
+    devLog('🔐 Iniciando AuthProvider...');
     
     const initializeAuth = async () => {
       try {
-        console.log('🔍 Verificando sessão existente...');
+        devLog('🔍 Verificando sessão existente...');
         
         // Tentar recuperar a sessão de forma simples
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getSession();
         
+        if (!mounted) return;
+
         if (error) {
-          console.error('❌ Erro ao obter sessão:', error);
-          // Em caso de erro, apenas limpar e continuar
+          // Em caso de erro de rede ou auth abortado, apenas tratar silenciosamente
+          // Isso evita o erro "net::ERR_ABORTED" visível se a requisição for cancelada
+          if (error.message && !error.message.includes('aborted')) {
+             devWarn('⚠️ Sessão não recuperada (provavelmente não logado ou rede):', error.message);
+          }
           setSession(null);
           setUser(null);
         } else {
-          console.log('📋 Sessão obtida:', !!session);
-          setSession(session);
-          setUser(session?.user ?? null);
+          devLog('📋 Sessão obtida:', !!data.session);
+          setSession(data.session);
+          setUser(data.session?.user ?? null);
         }
-      } catch (error) {
-        console.error('❌ Erro na inicialização:', error);
-        // Em caso de erro crítico, apenas definir como não autenticado
-        setSession(null);
-        setUser(null);
+      } catch (error: any) {
+        // Captura genérica de erros para não quebrar a aplicação
+        if (mounted) {
+          devWarn('⚠️ Erro não crítico na inicialização do auth:', error?.message || error);
+          setSession(null);
+          setUser(null);
+        }
       } finally {
-        setLoading(false);
-        setIsInitialized(true);
+        if (mounted) {
+          setLoading(false);
+          setIsInitialized(true);
+        }
       }
     };
 
@@ -168,7 +161,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Listener SYNCHRONOUS para mudanças de estado de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('🔄 Auth state change:', event, !!session);
+        if (!mounted) return;
+        
+        devLog('🔄 Auth state change:', event, !!session);
 
         // Atualizar estado SYNCHRONOUSLY - nunca async aqui!
         setSession(session);
@@ -176,19 +171,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         // Processar eventos de forma assíncrona usando setTimeout
         if (event === 'SIGNED_OUT') {
-          console.log('👋 Usuário deslogado');
+          devLog('👋 Usuário deslogado');
           // Limpar qualquer estado restante
           setTimeout(() => {
             cleanupAuthState();
           }, 0);
         } else if (event === 'SIGNED_IN' && session?.user) {
-          console.log('👋 Usuário logado');
+          devLog('👋 Usuário logado');
           
           // Usar setTimeout para evitar deadlocks
           setTimeout(() => {
             // Verificar se precisa ir para verificação
             if (!session.user.email_confirmed_at) {
-              console.log('📧 Email não confirmado, redirecionando para verificação');
+              devLog('📧 Email não confirmado, redirecionando para verificação');
               window.location.href = '/verify';
               return;
             }
@@ -205,7 +200,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                   return;
                 }
                 if (!existingProfile) {
-                  console.log('📝 Criando novo perfil...');
+                  devLog('📝 Criando novo perfil...');
                   supabase
                     .from('user_profiles')
                     .insert({
@@ -225,23 +220,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      mounted = false;
+    };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<{ error: Error | null }> => {
     try {
-      console.log('🔑 Fazendo login...');
-      
+      devLog('🔑 Fazendo login...');
+
       // Limpar estado anterior antes do login
       cleanupAuthState();
-      
+
       // Tentar deslogar globalmente primeiro (previne estados conflitantes)
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
         // Ignorar erros de signOut
       }
-      
+
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -249,10 +247,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (signInError) {
         console.error('❌ Erro no login:', signInError);
-        const errorMessage = signInError.message === 'Invalid login credentials' 
+        const errorMessage = signInError.message === 'Invalid login credentials'
           ? 'Email ou senha incorretos'
           : signInError.message;
-        
+
         // Use setTimeout to avoid setState during render
         setTimeout(() => {
           showError({
@@ -264,8 +262,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       if (signInData.user && signInData.session) {
-        console.log('✅ Login bem-sucedido');
-        
+        devLog('✅ Login bem-sucedido');
+
         // Verificar se perfil existe
         const { data: profileData, error: profileError } = await supabase
           .from('user_profiles')
@@ -274,16 +272,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           .maybeSingle();
 
         if (profileError || !profileData) {
-          console.error('❌ Perfil não encontrado');
-          await supabase.auth.signOut();
-          // Use setTimeout to avoid setState during render
-          setTimeout(() => {
-            showError({
-              title: 'Erro no login',
-              description: 'Perfil de usuário não encontrado. Contate o suporte.',
-            });
-          }, 0);
-          return { error: profileError || new Error('Profile not found') };
+          // Se for um erro de aborto, não deslogar nem tratar como erro de perfil ausente
+          if (profileError?.name === 'AbortError' || profileError?.message?.includes('aborted')) {
+            devLog('⏳ Busca de perfil abortada (provavelmente por reload), aguardando...');
+            return { error: null };
+          }
+
+          if (profileError) {
+            console.error('❌ Erro na busca de perfil:', profileError.message);
+          } else if (!profileData) {
+            console.error('❌ Perfil não encontrado para o usuário:', signInData.user.id);
+            
+            // Tentar criar o perfil automaticamente se estiver faltando
+            devLog('📝 Criando perfil ausente durante o login...');
+            const { error: insertError } = await supabase
+              .from('user_profiles')
+              .insert({
+                id: signInData.user.id,
+                name: signInData.user.user_metadata?.name || signInData.user.email || 'Usuário',
+                role: 'user'
+              });
+            
+            if (insertError) {
+              console.error('❌ Falha ao auto-criar perfil:', insertError.message);
+              await supabase.auth.signOut();
+              setTimeout(() => {
+                showError({
+                  title: 'Erro no login',
+                  description: 'Não foi possível criar seu perfil. Contate o suporte.',
+                });
+              }, 0);
+              return { error: insertError };
+            }
+            
+            devLog('✅ Perfil criado com sucesso durante o login');
+          }
         }
 
         // Use setTimeout to avoid setState during render
@@ -293,160 +316,174 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             description: 'Bem-vindo de volta!'
           });
         }, 0);
-        
+
         // Force page reload para garantir estado limpo
         forceReload(1000);
       }
-      
+
       return { error: null };
-    } catch (error) {
-      console.error('❌ Erro inesperado no login:', error);
-      // Use setTimeout to avoid setState during render
-      setTimeout(() => {
-        showError({
-          title: 'Erro inesperado',
-          description: 'Ocorreu um erro durante o login. Tente novamente.'
-        });
-      }, 0);
+    } catch (err: any) {
+      if (err?.name !== 'AbortError' && !err?.message?.includes('aborted')) {
+        console.error('❌ Erro inesperado no login:', err);
+        // Use setTimeout to avoid setState during render
+        setTimeout(() => {
+          showError({
+            title: 'Erro inesperado',
+            description: 'Ocorreu um erro durante o login. Tente novamente.'
+          });
+        }, 0);
+      }
+
+      const error = err instanceof Error ? err : new Error('Erro desconhecido');
       return { error };
     }
   };
 
-  const signUp = async (email: string, password: string, userData: { name: string; role?: string }) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    userData: { name: string; role?: string }
+  ): Promise<{ error: Error | null }> => {
     try {
       // Limpar estado anterior
       cleanupAuthState();
-      
+
       // Tentar deslogar globalmente primeiro
       try {
         await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
+      } catch {
         // Ignorar erros
       }
-      
+
       const redirectUrl = `${window.location.origin}/verify`;
-      
-      const { error } = await supabase.auth.signUp({
+
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: redirectUrl,
           data: {
             name: userData.name,
-            role: userData.role || 'user'
-          }
-        }
+            role: userData.role || 'user',
+          },
+        },
       });
-      
-      if (error) {
-        const errorMessage = error.message === 'User already registered'
-          ? 'Usuário já cadastrado'
-          : error.message;
-          
-        // Use setTimeout to avoid calling toast during render
+
+      if (signUpError) {
+        const errorMessage =
+          signUpError.message === 'User already registered'
+            ? 'Usuário já cadastrado'
+            : signUpError.message;
+
         setTimeout(() => {
           showError({
             title: 'Erro no cadastro',
             description: errorMessage,
           });
         }, 0);
-      } else {
-        // Use setTimeout to avoid calling toast during render
-        setTimeout(() => {
-          showSuccess({
-            title: 'Cadastro realizado!',
-            description: 'Verifique seu email para confirmar a conta.',
-            duration: 6000
-          });
-        }, 0);
+
+        return { error: signUpError };
       }
-      
-      return { error };
-    } catch (error) {
-      // Use setTimeout to avoid calling toast during render
+
+      setTimeout(() => {
+        showSuccess({
+          title: 'Cadastro realizado!',
+          description: 'Verifique seu email para confirmar a conta.',
+          duration: 6000,
+        });
+      }, 0);
+
+      return { error: null };
+    } catch (err) {
       setTimeout(() => {
         showError({
           title: 'Erro inesperado',
-          description: 'Ocorreu um erro durante o cadastro. Tente novamente.'
+          description: 'Ocorreu um erro durante o cadastro. Tente novamente.',
         });
       }, 0);
-      return { error };
+
+      const normalizedError = err instanceof Error ? err : new Error('Erro desconhecido');
+      return { error: normalizedError };
     }
   };
 
-  const requestPasswordReset = async (email: string) => {
+  const requestPasswordReset = async (email: string): Promise<{ error: Error | null }> => {
     try {
       const redirectUrl = `${window.location.origin}/verify`;
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,
       });
 
-      if (error) {
-        // Use setTimeout to avoid calling toast during render
+      if (resetError) {
         setTimeout(() => {
           showError({
             title: 'Erro ao solicitar',
             description: "Não foi possível enviar o link. Verifique o e-mail e tente novamente.",
           });
         }, 0);
-      } else {
-        // Use setTimeout to avoid calling toast during render
-        setTimeout(() => {
-          showSuccess({
-            title: 'Link enviado!',
-            description: 'Se o e-mail estiver cadastrado, um link de redefinição foi enviado. Se não encontrar o email na caixa de entrada, verifique também a pasta de spam/lixo eletrônico.',
-            duration: 8000,
-          });
-        }, 0);
+        return { error: resetError };
       }
-      return { error };
-    } catch (error) {
-      // Use setTimeout to avoid calling toast during render
+
+      setTimeout(() => {
+        showSuccess({
+          title: 'Link enviado!',
+          description:
+            'Se o e-mail estiver cadastrado, um link de redefinição foi enviado. Se não encontrar o email na caixa de entrada, verifique também a pasta de spam/lixo eletrônico.',
+          duration: 8000,
+        });
+      }, 0);
+
+      return { error: null };
+    } catch (err) {
       setTimeout(() => {
         showError({
           title: 'Erro inesperado',
           description: 'Ocorreu um erro ao solicitar a redefinição. Tente novamente.',
         });
       }, 0);
-      return { error };
+
+      const normalizedError = err instanceof Error ? err : new Error('Erro desconhecido');
+      return { error: normalizedError };
     }
   };
 
-  const updatePassword = async (password: string) => {
+  const updatePassword = async (password: string): Promise<{ error: Error | null }> => {
     try {
       const { error } = await supabase.auth.updateUser({ password });
 
       if (error) {
-        // Use setTimeout to avoid calling toast during render
         setTimeout(() => {
           showError({
             title: 'Erro ao atualizar senha',
             description: error.message,
           });
         }, 0);
-      } else {
-        // Use setTimeout to avoid calling toast during render
-        setTimeout(() => {
-          showSuccess({
-            title: 'Senha atualizada!',
-            description: 'Sua senha foi alterada com sucesso.',
-          });
-        }, 0);
+        return { error };
       }
-      return { error };
-    } catch (error) {
-      // Use setTimeout to avoid calling toast during render
+
+      setTimeout(() => {
+        showSuccess({
+          title: 'Senha atualizada!',
+          description: 'Sua senha foi alterada com sucesso.',
+        });
+      }, 0);
+
+      return { error: null };
+    } catch (err) {
+      const normalizedError = err instanceof Error ? err : new Error(String(err));
+
       setTimeout(() => {
         showError({
           title: 'Erro inesperado',
           description: 'Ocorreu um erro ao atualizar sua senha. Tente novamente.',
         });
       }, 0);
-      return { error };
+
+      return { error: normalizedError };
     }
   };
 
-  const updateEmail = async (email: string) => {
+  const updateEmail = async (email: string): Promise<{ error: Error | null }> => {
     try {
       const redirectUrl = `${window.location.origin}/verify`;
       const { error } = await supabase.auth.updateUser(
@@ -455,42 +492,48 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       );
 
       if (error) {
-        const errorMessage = error.message === 'New email address should be different from the current one.'
-          ? 'O novo email deve ser diferente do atual.'
-          : error.message;
-        // Use setTimeout to avoid calling toast during render
+        const errorMessage =
+          error.message === 'New email address should be different from the current one.'
+            ? 'O novo email deve ser diferente do atual.'
+            : error.message;
+
         setTimeout(() => {
           showError({
             title: 'Erro ao atualizar email',
             description: errorMessage,
           });
         }, 0);
-      } else {
-        // Use setTimeout to avoid calling toast during render
-        setTimeout(() => {
-          showSuccess({
-            title: 'Confirmação enviada!',
-            description: 'Verifique seu novo email para confirmar a alteração. Se não encontrar o email na caixa de entrada, verifique também a pasta de spam/lixo eletrônico.',
-            duration: 8000,
-          });
-        }, 0);
+
+        return { error };
       }
-      return { error };
-    } catch (error) {
-      // Use setTimeout to avoid calling toast during render
+
+      setTimeout(() => {
+        showSuccess({
+          title: 'Confirmação enviada!',
+          description:
+            'Enviamos links de confirmação. Por segurança, você pode precisar confirmar a alteração tanto no seu email atual quanto no novo. Verifique ambas as caixas de entrada (e pastas de spam).',
+          duration: 10000,
+        });
+      }, 0);
+
+      return { error: null };
+    } catch (err) {
+      const normalizedError = err instanceof Error ? err : new Error(String(err));
+
       setTimeout(() => {
         showError({
           title: 'Erro inesperado',
           description: 'Ocorreu um erro ao atualizar seu email. Tente novamente.',
         });
       }, 0);
-      return { error };
+
+      return { error: normalizedError };
     }
   };
 
   const signOut = async () => {
     try {
-      console.log('🚪 Fazendo logout...');
+      devLog('🚪 Fazendo logout...');
       
       // Limpar estado primeiro
       cleanupAuthState();

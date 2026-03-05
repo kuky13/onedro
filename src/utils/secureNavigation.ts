@@ -1,6 +1,6 @@
 /**
  * Utilitários de Navegação Segura
- * Sistema OneDrip Blueberry - Segurança 2025
+ * Sistema OneDrip Blueberry - Segurança 2026
  */
 
 // Lista de URLs permitidas para redirecionamento
@@ -36,7 +36,7 @@ export const isUrlSafe = (url: string): boolean => {
     // Verificar se é um caminho interno (relativo)
     if (url.startsWith('/')) {
       // Verificar se o caminho está na lista de permitidos
-      const basePath = url.split('?')[0].split('#')[0]; // Remove query params e hash
+      const basePath = ((url.split('?')[0] ?? '').split('#')[0] ?? ''); // Remove query params e hash
       return ALLOWED_INTERNAL_PATHS.includes(basePath) || 
              ALLOWED_INTERNAL_PATHS.some(path => basePath.startsWith(path + '/'));
     }
@@ -85,6 +85,7 @@ export const sanitizeUrl = (url: string): string => {
   }
 
   // Remove caracteres de controle e espaços
+  // eslint-disable-next-line no-control-regex
   const sanitized = url.replace(/[\x00-\x1F\x7F]/g, '').trim();
   
   // Remove javascript: e data: URLs

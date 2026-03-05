@@ -46,6 +46,13 @@ export const useMobileMenu = () => {
             description: 'Criar um novo orçamento'
           },
           {
+            id: 'drippy-ia',
+            label: 'Drippy IA',
+            icon: 'Brain',
+            href: '/chat',
+            description: 'Conversar com a assistente IA'
+          },
+          {
             id: 'settings',
             label: 'Configurações',
             icon: 'Settings',

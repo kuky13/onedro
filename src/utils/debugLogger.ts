@@ -13,22 +13,23 @@ class DebugLogger {
   log(category: string, message: string, data?: unknown) {
     if (this.isProduction) return;
 
+    // Marcar como usado (evita TS6133)
+    void category;
+    void message;
+    void data;
+
     const now = Date.now();
-    
+
     // Reset contador se passou o intervalo
     if (now - this.lastLogTime > this.LOG_RESET_INTERVAL) {
       this.logCount = 0;
       this.lastLogTime = now;
     }
-    
-    // Debug logs silenciados para evitar spam no console
-    // if (this.logCount < this.LOG_THROTTLE_LIMIT) {
-    //   console.log(`[${category}] ${message}`, data || '');
-    //   this.logCount++;
-    // } else if (this.logCount === this.LOG_THROTTLE_LIMIT) {
-    //   console.warn('⚠️ Logs throttled to prevent spam');
-    //   this.logCount++;
-    // }
+
+    // Conta chamadas (throttle) mesmo com logs silenciados
+    if (this.logCount < this.LOG_THROTTLE_LIMIT) {
+      this.logCount++;
+    }
   }
 
   error(category: string, message: string, error?: Error | unknown) {
@@ -37,8 +38,10 @@ class DebugLogger {
   }
 
   warn(category: string, message: string, data?: unknown) {
+    void category;
+    void message;
+    void data;
     // Silenciar warnings para reduzir spam no console
-    // console.warn(`[${category}] ${message}`, data || '');
   }
 }
 

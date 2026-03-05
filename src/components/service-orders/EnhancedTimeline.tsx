@@ -1,4 +1,3 @@
-import React from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
@@ -40,7 +39,6 @@ export interface ServiceOrderEvent {
 // Enhanced timeline props
 interface EnhancedTimelineProps {
   events: ServiceOrderEvent[];
-  currentStatus: string;
   showCustomerView?: boolean;
   className?: string;
   compact?: boolean;
@@ -256,7 +254,6 @@ const getRelativeTime = (dateString: string) => {
 
 export function EnhancedTimeline({
   events,
-  currentStatus,
   showCustomerView = false,
   className,
   compact = false,

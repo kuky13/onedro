@@ -2,7 +2,15 @@ import React, { useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { routeMiddleware } from '../middleware/routeMiddleware';
 import { supabase } from '../integrations/supabase/client';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+
+const devLog = (...args: any[]) => {
+  if (import.meta.env.DEV) console.log(...args);
+};
+
+const devWarn = (...args: any[]) => {
+  if (import.meta.env.DEV) console.warn(...args);
+};
 
 interface LicenseStatusMonitorProps {
   onLicenseStatusChange?: (status: 'active' | 'inactive') => void;
@@ -17,6 +25,7 @@ export const LicenseStatusMonitor: React.FC<LicenseStatusMonitorProps> = ({
 }) => {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const lastStatusRef = useRef<string | null>(null);
   const monitorIntervalRef = useRef<NodeJS.Timeout>();
   const subscriptionRef = useRef<any>(null);
@@ -35,7 +44,7 @@ export const LicenseStatusMonitor: React.FC<LicenseStatusMonitorProps> = ({
       return;
     }
 
-    console.log('🔍 Iniciando monitoramento de licença para usuário:', user.id);
+    devLog('🔍 Iniciando monitoramento de licença para usuário:', user.id);
 
     // Monitoramento em tempo real via Supabase Realtime
     const setupRealtimeMonitoring = () => {
@@ -50,7 +59,7 @@ export const LicenseStatusMonitor: React.FC<LicenseStatusMonitorProps> = ({
             filter: `user_id=eq.${user.id}`
           },
           (payload) => {
-            console.log('📡 Mudança detectada na licença:', payload);
+            devLog('📡 Mudança detectada na licença:', payload);
             
             const oldLicense = payload.old as any;
             const newLicense = payload.new as any;
@@ -60,7 +69,7 @@ export const LicenseStatusMonitor: React.FC<LicenseStatusMonitorProps> = ({
                 oldLicense.is_active === newLicense.is_active &&
                 oldLicense.expires_at === newLicense.expires_at &&
                 oldLicense.user_id === newLicense.user_id) {
-              console.log('🔍 Ignorando atualização de last_validation apenas');
+              devLog('🔍 Ignorando atualização de last_validation apenas');
               return;
             }
             
@@ -69,7 +78,7 @@ export const LicenseStatusMonitor: React.FC<LicenseStatusMonitorProps> = ({
             if (lastStatusRef.current !== currentStatus) {
               lastStatusRef.current = currentStatus;
               
-              console.log(`🔄 Status da licença alterado para: ${currentStatus}`);
+              devLog(`🔄 Status da licença alterado para: ${currentStatus}`);
               
               // Invalidar cache do middleware
               routeMiddleware.invalidateState();
@@ -77,13 +86,15 @@ export const LicenseStatusMonitor: React.FC<LicenseStatusMonitorProps> = ({
               // Notificar mudança via callback
               onLicenseStatusChange?.(currentStatus);
               
-              // Se licença foi desativada, forçar redirecionamento
+              // Se licença foi desativada, forçar redirecionamento suave
               if (currentStatus === 'inactive') {
-                console.warn('🚫 Licença desativada - redirecionando para verificação');
+                devWarn('🚫 Licença desativada - redirecionando para verificação');
                 
                 // Aguardar um pouco para garantir que o estado foi invalidado
                 setTimeout(() => {
-                  window.location.href = '/verify-licenca';
+                  if (location.pathname !== '/verify-licenca') {
+                    navigate('/verify-licenca');
+                  }
                 }, 100);
               }
             }
@@ -91,7 +102,7 @@ export const LicenseStatusMonitor: React.FC<LicenseStatusMonitorProps> = ({
         )
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
-            console.log('✅ Monitoramento em tempo real ativo');
+            devLog('✅ Monitoramento em tempo real ativo');
           } else if (status === 'CHANNEL_ERROR') {
             console.error('❌ Erro no canal de monitoramento');
             // Tentar reconectar após 5 segundos
@@ -107,20 +118,22 @@ export const LicenseStatusMonitor: React.FC<LicenseStatusMonitorProps> = ({
     const setupPeriodicCheck = () => {
       monitorIntervalRef.current = setInterval(async () => {
         try {
-          console.log('🔄 Verificação periódica de licença');
+          devLog('🔄 Verificação periódica de licença');
           
           const result = await routeMiddleware.canAccessRoute(location.pathname, true);
           
           if (!result.canAccess && result.licenseStatus === 'inactive') {
-            console.warn('🚫 Licença inativa detectada na verificação periódica');
+            devWarn('🚫 Licença inativa detectada na verificação periódica');
             
             // Invalidar estado e redirecionar
             routeMiddleware.invalidateState();
             
             onLicenseStatusChange?.('inactive');
             
-            // Redirecionar para verificação
-            window.location.href = '/verify-licenca';
+            // Redirecionar para verificação suavemente
+            if (location.pathname !== '/verify-licenca') {
+              navigate('/verify-licenca');
+            }
           }
         } catch (error) {
           console.error('❌ Erro na verificação periódica de licença:', error);
@@ -132,7 +145,8 @@ export const LicenseStatusMonitor: React.FC<LicenseStatusMonitorProps> = ({
 
     // Cleanup ao desmontar ou trocar usuário
     return () => {
-      console.log('🧹 Limpando monitoramento de licença');
+      // evitar ruído em produção
+      devLog('🧹 Limpando monitoramento de licença');
       
       if (subscriptionRef.current) {
         subscriptionRef.current.unsubscribe();
@@ -144,18 +158,24 @@ export const LicenseStatusMonitor: React.FC<LicenseStatusMonitorProps> = ({
         monitorIntervalRef.current = undefined;
       }
     };
-  }, [user, onLicenseStatusChange, location.pathname]);
+  }, [user, onLicenseStatusChange, location.pathname, navigate]);
 
-  // Verificação inicial do status da licença usando RPC
+  // Verificação inicial do status da licença usando RPC com AbortController
   useEffect(() => {
     if (!user) return;
 
+    const abortController = new AbortController();
+
     const checkInitialStatus = async () => {
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .rpc('get_user_license_status', {
             p_user_id: user.id
           });
+
+        if (abortController.signal.aborted) return;
+
+        if (error) throw error;
 
         if (data && typeof data === 'object') {
           const licenseData = data as { 
@@ -171,27 +191,23 @@ export const LicenseStatusMonitor: React.FC<LicenseStatusMonitorProps> = ({
           let redirectPath = '';
           
           if (!licenseData.has_license) {
-            // Caso 1: Nenhuma licença encontrada -> /licenca
             initialStatus = 'inactive';
             shouldRedirect = true;
             redirectPath = '/licenca';
-            console.log('📊 Nenhuma licença encontrada - redirecionando para ativação');
+            devLog('📊 Nenhuma licença encontrada - redirecionando para ativação');
           } else if (licenseData.requires_activation || licenseData.requires_renewal || !licenseData.is_valid) {
-            // Caso 2: Licença inativa/expirada -> /verify-licenca  
             initialStatus = 'inactive';
             shouldRedirect = true;
             redirectPath = '/verify-licenca';
-            console.log('📊 Licença inativa/expirada - redirecionando para verificação');
+            devLog('📊 Licença inativa/expirada - redirecionando para verificação');
           } else if (licenseData.has_license && licenseData.is_valid) {
-            // Caso 3: Licença válida -> acesso normal
             initialStatus = 'active';
-            console.log('📊 Licença válida - acesso permitido');
+            devLog('📊 Licença válida - acesso permitido');
           } else {
-            // Fallback para caso não esperado
             initialStatus = 'inactive';
             shouldRedirect = true;
             redirectPath = '/verify-licenca';
-            console.log('📊 Status desconhecido - redirecionando para verificação');
+            devLog('📊 Status desconhecido - redirecionando para verificação');
           }
           
           lastStatusRef.current = initialStatus;
@@ -201,23 +217,29 @@ export const LicenseStatusMonitor: React.FC<LicenseStatusMonitorProps> = ({
           
           // Redirecionar se necessário (apenas se não estivermos já na página correta)
           if (shouldRedirect && location.pathname !== redirectPath) {
-            console.log(`🔄 Redirecionamento automático: ${location.pathname} → ${redirectPath}`);
+            devLog(`🔄 Redirecionamento automático: ${location.pathname} → ${redirectPath}`);
             setTimeout(() => {
-              window.location.href = redirectPath;
+              if (location.pathname !== redirectPath) {
+                navigate(redirectPath);
+              }
             }, 100);
           }
         }
       } catch (error) {
-        console.warn('⚠️ Erro ao verificar status inicial da licença:', error);
-        // Em caso de erro, assumir que precisa de verificação
-        onLicenseStatusChange?.('inactive');
+        if (!abortController.signal.aborted) {
+          devWarn('⚠️ Erro ao verificar status inicial da licença:', error);
+          onLicenseStatusChange?.('inactive');
+        }
       }
     };
 
     checkInitialStatus();
-  }, [user, onLicenseStatusChange, location.pathname]);
 
-  // Componente invisível - não renderiza nada
+    return () => {
+      abortController.abort();
+    };
+  }, [user, onLicenseStatusChange, location.pathname, navigate]);
+
   return null;
 };
 

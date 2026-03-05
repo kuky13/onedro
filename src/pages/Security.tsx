@@ -3,7 +3,7 @@
  * Main security management interface combining dashboard and settings
  */
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
@@ -15,38 +15,19 @@ import {
   Activity, 
   AlertTriangle, 
   Eye, 
-  Lock,
   Server,
   Bell,
   BarChart3,
-  FileText
+  FileText,
 } from 'lucide-react'
 import SecurityDashboard from '../components/SecurityDashboard'
 import SecuritySettings from '../components/SecuritySettings'
 import { useSecurity } from '../hooks/useSecurity'
-import { useAuth } from '../hooks/useAuth'
+// Acesso admin é validado no nível de rota via AdminGuard.
 
 export function Security() {
   const [activeTab, setActiveTab] = useState('dashboard')
-  const { user } = useAuth()
-  const { securityState, loading, error } = useSecurity()
-  
-  // Check if user has admin privileges
-  const isAdmin = user?.user_metadata?.role === 'admin' || user?.app_metadata?.role === 'admin'
-  
-  if (!isAdmin) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Alert variant="destructive">
-          <Lock className="h-4 w-4" />
-          <AlertTitle>Access Denied</AlertTitle>
-          <AlertDescription>
-            You need administrator privileges to access the security management interface.
-          </AlertDescription>
-        </Alert>
-      </div>
-    )
-  }
+  const { securityState, error } = useSecurity()
   
   if (error) {
     return (

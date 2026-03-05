@@ -4,10 +4,8 @@ import { Badge } from './ui/badge';
 import { useTrashStats } from '@/hooks/useTrashStats';
 import { 
   Trash2, 
-  Calendar, 
   Clock, 
   AlertTriangle, 
-  TrendingUp,
   History
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';

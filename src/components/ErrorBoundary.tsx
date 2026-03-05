@@ -2,6 +2,7 @@ import { Component, ErrorInfo, ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { ResetAppButton } from '@/components/ResetAppButton';
 interface Props {
   children?: ReactNode;
   fallback?: ReactNode;
@@ -43,7 +44,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </CardHeader>
             <CardContent className="space-y-4 text-center">
               <p className="text-muted-foreground">
-                Ocorreu um erro inesperado. Tente recarregar a página ou entre em contato conosco se o problema persistir.
+                Ocorreu um erro inesperado. Tente recarregar a página ou entre em contato conosco se o problema persistir. ou coma cookies enquanto aguarda.
               </p>
               
               <div className="space-y-2">
@@ -56,13 +57,17 @@ export class ErrorBoundary extends Component<Props, State> {
                   Ir para Início
                 </Button>
                 
-                <Button 
+              <Button 
                   variant="ghost" 
                   onClick={() => window.location.href = '/auth'} 
                   className="w-full text-sm"
                 >
                   Voltar ao Login
                 </Button>
+
+                <div className="flex justify-center pt-2">
+                  <ResetAppButton />
+                </div>
               </div>
 
               {process.env.NODE_ENV === 'development' && this.state.error && <details className="mt-4 p-4 rounded-lg text-left bg-muted">

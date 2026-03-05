@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
+import { useRealtimeQueryInvalidation } from './useSupabaseRealtime';
 
 export interface NotificationData {
   id: string;
@@ -94,8 +95,19 @@ export const useNotifications = () => {
       return filteredData;
     },
     enabled: !authLoading && !!user?.id,
-    refetchInterval: 60000, // Atualizar a cada 60 segundos
-    staleTime: 30000 // Considerar dados obsoletos após 30 segundos
+    staleTime: 30000,
+  });
+
+  // Real-time: invalidar notificações quando houver mudanças para o usuário
+  useRealtimeQueryInvalidation({
+    queryKey: ['user-notifications', user?.id, filters],
+    channelName: user?.id ? `user-notifications-${user.id}` : 'user-notifications',
+    table: 'user_notifications',
+    event: '*',
+    schema: 'public',
+    filter: user?.id ? `user_id=eq.${user.id}` : '',
+    enabled: !authLoading && !!user?.id,
+    debounceMs: 500,
   });
 
   // Contar notificações não lidas
@@ -119,16 +131,14 @@ export const useNotifications = () => {
 
       return data;
     },
-    onSuccess: (data, notificationId) => {
-      // markAsRead success
-      // Invalidar cache para atualizar a lista
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-notifications'] });
       showSuccess({
         title: 'Sucesso',
         description: 'Notificação marcada como lida.'
       });
     },
-    onError: (error) => {
+    onError: () => {
       showError({
         title: 'Erro',
         description: 'Não foi possível marcar a notificação como lida.'
@@ -209,15 +219,14 @@ export const useNotifications = () => {
 
       return data;
     },
-    onSuccess: (data) => {
-      // Soft delete success
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-notifications'] });
       showSuccess({
         title: 'Sucesso',
         description: 'Mensagem movida para lixeira.'
       });
     },
-    onError: (error) => {
+    onError: () => {
       showError({
         title: 'Erro',
         description: 'Não foi possível mover a mensagem para lixeira.'
@@ -227,15 +236,11 @@ export const useNotifications = () => {
 
   // Restaurar notificação
   const restoreNotificationMutation = useMutation({
-    mutationFn: async (notificationId: string) => {
-      // Starting restore
-      
+    mutationFn: async (_notificationId: string) => {
       // Note: restore function would need to be implemented in database
       // For now, just refresh the data
       queryClient.invalidateQueries({ queryKey: ['user-notifications'] });
       return null;
-
-      // Restore executed
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-notifications'] });
@@ -244,7 +249,7 @@ export const useNotifications = () => {
         description: 'Mensagem restaurada com sucesso.'
       });
     },
-    onError: (error) => {
+    onError: () => {
       showError({
         title: 'Erro',
         description: 'Não foi possível restaurar a mensagem.'
@@ -284,7 +289,7 @@ export const useNotifications = () => {
         description: 'Todas as notificações foram excluídas.'
       });
     },
-    onError: (error) => {
+    onError: () => {
       showError({
         title: 'Erro',
         description: 'Não foi possível excluir todas as notificações.'
@@ -300,7 +305,7 @@ export const useNotifications = () => {
 
   // Função para marcar todas como lidas
   const markAllAsRead = useCallback((silent?: boolean) => {
-    markAllAsReadMutation.mutate({ silent });
+    markAllAsReadMutation.mutate(silent !== undefined ? { silent } : undefined);
   }, [markAllAsReadMutation]);
 
   // Função para soft delete de notificação

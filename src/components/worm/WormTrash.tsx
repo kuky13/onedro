@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,6 @@ import { RotateCcw, Trash2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useBudgetDeletion } from '@/hooks/useBudgetDeletion';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { formatCurrency } from '@/utils/currency';
 interface WormTrashProps {
   userId: string;
   onRestore?: () => void;
@@ -131,19 +130,17 @@ export const WormTrash = ({
       }
 
       // Marcar todos como não restauráveis em batch
-      const {
-        error,
-        count
-      } = await supabase.from('budget_deletion_audit').update({
-        can_restore: false
-      }).in('budget_id', budgetIds).eq('deleted_by', userId).select('*', {
-        count: 'exact'
-      });
+      const { error, data: updatedRows } = await supabase
+        .from('budget_deletion_audit')
+        .update({ can_restore: false })
+        .in('budget_id', budgetIds)
+        .eq('deleted_by', userId)
+        .select('budget_id');
       if (error) {
         console.error(`[WormTrash] Erro do Supabase ao esvaziar lixeira:`, error);
         throw new Error(`Falha ao esvaziar lixeira: ${error.message}`);
       }
-      const affectedRows = count || 0;
+      const affectedRows = updatedRows?.length || 0;
       console.log(`[WormTrash] Lixeira esvaziada: ${affectedRows}/${totalCount} orçamentos processados`);
       if (affectedRows === 0) {
         toast.warning('Nenhum orçamento foi processado. Verifique as permissões.');
@@ -230,7 +227,7 @@ export const WormTrash = ({
           </div>
           
           {deletedBudgets.map(record => {
-        const budget = record.budget_data;
+        const budget = (record.budget_data as any) || {};
         return <div key={record.budget_id} className="p-4 bg-muted rounded-lg">
                 <div className="flex items-start justify-between mb-3">
                   <div>
@@ -271,7 +268,11 @@ export const WormTrash = ({
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handlePermanentDelete(record.budget_id)} className="bg-destructive hover:bg-destructive/90" disabled={deletingId === record.budget_id}>
+                          <AlertDialogAction
+                            onClick={() => record.budget_id && handlePermanentDelete(record.budget_id)}
+                            className="bg-destructive hover:bg-destructive/90"
+                            disabled={deletingId === record.budget_id}
+                          >
                             {deletingId === record.budget_id ? 'Excluindo...' : 'Confirmar Exclusão'}
                           </AlertDialogAction>
                         </AlertDialogFooter>
@@ -284,7 +285,7 @@ export const WormTrash = ({
                   
                   <div>
                     <span>Excluído em: </span>
-                    {formatDate(record.created_at)}
+                    {formatDate(record.created_at || new Date().toISOString())}
                   </div>
                 </div>
               </div>;

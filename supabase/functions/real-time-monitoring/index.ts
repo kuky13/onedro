@@ -1,6 +1,10 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// Deno runtime doesn't provide Node's `process.uptime()`.
+// Track uptime since the module was loaded.
+const FUNCTION_START_MS = Date.now();
+
 // Configuration for real-time monitoring
 const MONITORING_CONFIG = {
   // Alert thresholds
@@ -222,7 +226,7 @@ async function detectSuspiciousPatterns(supabase: any): Promise<MonitoringAlert[
       severity: 'medium',
       title: 'Monitoring System Error',
       description: 'Error occurred while detecting suspicious patterns',
-      data: sanitizeData({ error: error.message }),
+      data: sanitizeData({ error: error instanceof Error ? error.message : String(error) }),
       timestamp: now,
       resolved: false
     })
@@ -232,7 +236,7 @@ async function detectSuspiciousPatterns(supabase: any): Promise<MonitoringAlert[
 }
 
 async function getSecurityMetrics(supabase: any, timeframe: string = '24h'): Promise<SecurityMetrics> {
-  const intervals = {
+  const intervals: Record<string, number> = {
     '1h': 1,
     '24h': 24,
     '7d': 24 * 7,
@@ -241,6 +245,14 @@ async function getSecurityMetrics(supabase: any, timeframe: string = '24h'): Pro
   
   const hours = intervals[timeframe] || 24
   const startTime = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString()
+  
+  interface AuditEvent {
+    success: boolean;
+    risk_score: number;
+    user_id: string;
+    ip_address: string;
+    event_type: string;
+  }
   
   try {
     // Get basic metrics
@@ -254,17 +266,17 @@ async function getSecurityMetrics(supabase: any, timeframe: string = '24h'): Pro
     }
     
     const totalEvents = events.length
-    const failedEvents = events.filter(e => !e.success).length
-    const highRiskEvents = events.filter(e => e.risk_score >= 70).length
-    const uniqueUsers = new Set(events.map(e => e.user_id).filter(Boolean)).size
-    const uniqueIps = new Set(events.map(e => e.ip_address).filter(Boolean)).size
-    const avgRiskScore = events.reduce((sum, e) => sum + (e.risk_score || 0), 0) / totalEvents || 0
+    const failedEvents = events.filter((e: AuditEvent) => !e.success).length
+    const highRiskEvents = events.filter((e: AuditEvent) => e.risk_score >= 70).length
+    const uniqueUsers = new Set(events.map((e: AuditEvent) => e.user_id).filter(Boolean)).size
+    const uniqueIps = new Set(events.map((e: AuditEvent) => e.ip_address).filter(Boolean)).size
+    const avgRiskScore = events.reduce((sum: number, e: AuditEvent) => sum + (e.risk_score || 0), 0) / totalEvents || 0
     
     // Get top event types
-    const eventTypeCounts = events.reduce((acc, event) => {
+    const eventTypeCounts = events.reduce((acc: Record<string, number>, event: AuditEvent) => {
       acc[event.event_type] = (acc[event.event_type] || 0) + 1
       return acc
-    }, {})
+    }, {} as Record<string, number>)
     
     const topEventTypes = Object.entries(eventTypeCounts)
       .map(([event_type, count]) => ({ event_type, count: count as number }))
@@ -272,7 +284,7 @@ async function getSecurityMetrics(supabase: any, timeframe: string = '24h'): Pro
       .slice(0, 10)
     
     // Get risk distribution
-    const riskDistribution = events.reduce((acc, event) => {
+    const riskDistribution = events.reduce((acc: Record<string, number>, event: AuditEvent) => {
       const level = getRiskLevel(event.risk_score || 0)
       acc[level] = (acc[level] || 0) + 1
       return acc
@@ -347,7 +359,7 @@ async function performHealthCheck(supabase: any): Promise<any> {
       recentActivity: false
     },
     metrics: {
-      uptime: process.uptime(),
+      uptime: (Date.now() - FUNCTION_START_MS) / 1000,
       memoryUsage: Deno.memoryUsage(),
       lastAlert: null
     }
@@ -524,7 +536,7 @@ serve(async (req) => {
       JSON.stringify({
         success: false,
         error: 'Internal server error',
-        message: error.message,
+        message: error instanceof Error ? error.message : String(error),
         timestamp: new Date().toISOString()
       }),
       {

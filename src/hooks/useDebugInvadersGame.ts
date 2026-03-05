@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { useAchievements } from '@/hooks/useAchievements';
 
@@ -23,7 +22,6 @@ export interface GameLog {
 export type GameState = 'idle' | 'playing' | 'paused' | 'gameOver';
 
 export const useDebugInvadersGame = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
   const { trackBugKill, trackGameEnd } = useAchievements();
   const [gameState, setGameState] = useState<GameState>('idle');
@@ -81,14 +79,14 @@ export const useDebugInvadersGame = () => {
     }
     
     const bugTypes: Bug['type'][] = ['bug', 'critical-bug', 'memory-leak'];
-    const type = bugTypes[Math.floor(Math.random() * bugTypes.length)];
-    
+    const type = bugTypes[Math.floor(Math.random() * bugTypes.length)] ?? 'bug';
+
     return {
       id: `bug-${Date.now()}-${Math.random()}`,
       x: Math.random() * 85 + 5, // Evitar bordas
       y: -5,
       speed: 0.2 + (level * 0.05) + Math.random() * 0.2, // Velocidade mais controlada
-      type
+      type,
     };
   }, [level, addLog, gameSettings]);
 
@@ -186,13 +184,15 @@ export const useDebugInvadersGame = () => {
           gameLoopRef.current = undefined;
         }
       };
-    } else {
-      // Limpar timer quando não está jogando
-      if (gameLoopRef.current) {
-        clearInterval(gameLoopRef.current);
-        gameLoopRef.current = undefined;
-      }
     }
+
+    // Limpar timer quando não está jogando
+    if (gameLoopRef.current) {
+      clearInterval(gameLoopRef.current);
+      gameLoopRef.current = undefined;
+    }
+
+    return undefined;
   }, [isPlaying, updateBugs, spawnBug]);
 
   // Level progression - progressão mais equilibrada

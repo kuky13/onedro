@@ -64,16 +64,17 @@ export function useTrialLicense(): UseTrialLicenseReturn {
       }
 
       if (data) {
+        const d: any = data as any;
         const status: TrialLicenseStatus = {
-          has_trial: data.has_trial || false,
-          is_active: data.is_active || false,
-          license_code: data.license_code || null,
-          created_at: data.created_at || null,
-          expires_at: data.expires_at || null,
-          days_remaining: data.days_remaining || null,
-          is_expired: data.is_expired || false,
-          can_create_trial: data.can_create_trial || false,
-          message: data.message || 'Status da licença de teste'
+          has_trial: d.has_trial || false,
+          is_active: d.is_active || false,
+          license_code: d.license_code || null,
+          created_at: d.created_at || null,
+          expires_at: d.expires_at || null,
+          days_remaining: d.days_remaining || null,
+          is_expired: d.is_expired || false,
+          can_create_trial: d.can_create_trial || false,
+          message: d.message || 'Status da licença de teste'
         };
 
         setTrialStatus(status);
@@ -91,9 +92,11 @@ export function useTrialLicense(): UseTrialLicenseReturn {
           message: 'Nenhuma licença de teste encontrada'
         });
       }
-    } catch (err) {
-      console.error('Erro ao buscar status da licença de teste:', err);
-      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+    } catch (err: any) {
+      if (err?.name !== 'AbortError' && !err?.message?.includes('aborted')) {
+        console.error('Erro ao buscar status da licença de teste:', err);
+        setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      }
       setTrialStatus(null);
     } finally {
       setIsLoading(false);
@@ -131,17 +134,18 @@ export function useTrialLicense(): UseTrialLicenseReturn {
         throw rpcError;
       }
 
-      if (data && data.success) {
+      const d: any = data as any;
+      if (d && d.success) {
         showSuccess({
           title: 'Licença de Teste Criada!',
-          description: `Sua licença de teste de 7 dias foi ativada. Código: ${data.license_code}`
+          description: `Sua licença de teste de 7 dias foi ativada. Código: ${d.license_code}`
         });
 
         // Atualizar status
         await fetchTrialStatus();
         return true;
       } else {
-        const errorMessage = data?.error || 'Falha ao criar licença de teste';
+        const errorMessage = d?.error || 'Falha ao criar licença de teste';
         showError({
           title: 'Erro na Criação',
           description: errorMessage
@@ -202,14 +206,15 @@ export function useTrialLicenseStatistics() {
       }
 
       if (data) {
+        const d: any = data as any;
         setStatistics({
-          total_trials: data.total_trials || 0,
-          active_trials: data.active_trials || 0,
-          expired_trials: data.expired_trials || 0,
-          trials_created_today: data.trials_created_today || 0,
-          trials_created_this_week: data.trials_created_this_week || 0,
-          trials_created_this_month: data.trials_created_this_month || 0,
-          conversion_rate: data.conversion_rate || 0
+          total_trials: d?.total_trials || 0,
+          active_trials: d?.active_trials || 0,
+          expired_trials: d?.expired_trials || 0,
+          trials_created_today: d?.trials_created_today || 0,
+          trials_created_this_week: d?.trials_created_this_week || 0,
+          trials_created_this_month: d?.trials_created_this_month || 0,
+          conversion_rate: d?.conversion_rate || 0
         });
       }
     } catch (err) {
@@ -248,14 +253,15 @@ export function useTrialLicenseCleanup() {
         throw rpcError;
       }
 
-      if (data && data.success) {
+      const d: any = data as any;
+      if (d && d.success) {
         showSuccess({
           title: 'Limpeza Concluída',
-          description: `${data.deactivated_count || 0} licenças desativadas, ${data.deleted_count || 0} licenças removidas`
+          description: `${d.deactivated_count || 0} licenças desativadas, ${d.deleted_count || 0} licenças removidas`
         });
         return true;
       } else {
-        throw new Error(data?.error || 'Falha na limpeza');
+        throw new Error(d?.error || 'Falha na limpeza');
       }
     } catch (err) {
       console.error('Erro na limpeza de licenças de teste:', err);

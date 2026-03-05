@@ -1,409 +1,450 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Shield, CreditCard, Clock, CheckCircle, MessageCircle, Phone, Award, Zap, TrendingUp, Gift } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { FadeInUp, ScaleOnHover } from '@/components/ui/animations';
-import { Heading, Text } from '@/components/ui/typography';
-import { PLANS_CONTENT } from '../data/content';
+// ============================================
+// CHECKOUT PAGE - MOBILE-FIRST CONVERSION OPTIMIZED
+// ============================================
+// Design focado em técnicos de celular
+// Redução de fricção, foco em valor real
 
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ArrowLeft, Shield, Check, Clock, Zap, MessageCircle, Loader2, User, Mail, Phone, AlertCircle, Atom } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { PLANS_CONTENT } from '../data/content';
+import { PixPaymentDisplay } from './PixPaymentDisplay';
+import { createPixPayment } from '@/lib/mercadopago-client';
+import { getMercadoPagoPlan } from '@/lib/mercadopago-products';
+import { toast } from 'sonner';
+import { usePlanPrice } from '@/hooks/usePlanPrice';
+import { useAuth } from '@/hooks/useAuth';
+import { useLicense } from '@/hooks/useLicense';
+import { CouponInput } from '@/components/checkout/CouponInput';
+interface AppliedCoupon {
+  id: string;
+  code: string;
+  discount_type: string;
+  discount_value: number;
+}
 interface CheckoutPageProps {
   planType?: 'monthly' | 'yearly';
 }
-
-export const CheckoutPage: React.FC<CheckoutPageProps> = ({ planType }) => {
-  const { type } = useParams<{ type: string }>();
+export const CheckoutPage: React.FC<CheckoutPageProps> = ({
+  planType
+}) => {
   const navigate = useNavigate();
-  // Removido requisito de aceite de termos
-  // Removed countdown timer state
-  
-  // Determina o tipo do plano baseado na URL ou prop
-  const currentPlanType = planType || (type === 'm' ? 'monthly' : type === 'a' ? 'yearly' : 'monthly');
+  const location = useLocation();
+  const {
+    user,
+    loading: authLoading
+  } = useAuth();
+  const {
+    licenseStatus,
+    isLoading: licenseLoading,
+    hasValidLicense,
+    isExpired,
+    isTrial,
+    daysUntilExpiry
+  } = useLicense();
+  const currentPlanType = planType || 'monthly';
   const isMonthly = currentPlanType === 'monthly';
-  
-  // Dados do plano selecionado
-  const planData = isMonthly ? PLANS_CONTENT.planos.mensal : PLANS_CONTENT.planos.anual;
-  
-  // URLs de pagamento
-  const paymentUrls = {
-    monthly: 'https://mpago.li/2ZqAPDs',
-    yearly: 'https://mpago.li/1c4LGhc'
+  const staticPlanData = isMonthly ? PLANS_CONTENT.planos.mensal : PLANS_CONTENT.planos.anual;
+  const {
+    price: dynamicPrice
+  } = usePlanPrice(currentPlanType, staticPlanData.preco);
+  const planData = {
+    ...staticPlanData,
+    preco: dynamicPrice
   };
-  
-  // Removed countdown timer effect
-  
-  const handlePayment = () => {
-    const paymentUrl = isMonthly ? paymentUrls.monthly : paymentUrls.yearly;
-    window.open(paymentUrl, '_blank');
+  const mercadoPagoPlan = getMercadoPagoPlan(currentPlanType);
+
+  // Auth redirect
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth', {
+        state: {
+          redirectTo: location.pathname
+        },
+        replace: true
+      });
+      toast.error('Login necessário', {
+        description: 'Você precisa estar logado para realizar uma compra.'
+      });
+    }
+  }, [user, authLoading, navigate, location.pathname]);
+
+  // Estados
+  const [step, setStep] = useState<'info' | 'payment' | 'pix'>('info');
+  const [purchaseMode, setPurchaseMode] = useState<'one_time' | 'subscription'>('one_time');
+  const [pixData, setPixData] = useState<{
+    qrCode: string;
+    qrCodeBase64?: string;
+    paymentId: string;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [contactData, setContactData] = useState({
+    name: '',
+    email: '',
+    phone: ''
+  });
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [finalPrice, setFinalPrice] = useState(dynamicPrice);
+  const [errors, setErrors] = useState({
+    name: '',
+    email: '',
+    phone: ''
+  });
+  const daysToAdd = currentPlanType === 'yearly' ? 365 : 30;
+
+  // Atualizar preço final quando o preço dinâmico mudar
+  useEffect(() => {
+    if (!appliedCoupon) {
+      setFinalPrice(dynamicPrice);
+    }
+  }, [dynamicPrice, appliedCoupon]);
+  const handleCouponApplied = (coupon: AppliedCoupon | null, newPrice: number) => {
+    setAppliedCoupon(coupon);
+    setFinalPrice(newPrice);
   };
-  
-  const handleDemo = () => {
-    // Redireciona para página da Drippy
-    navigate('/drippy');
+  const validateForm = (): boolean => {
+    const newErrors = {
+      name: '',
+      email: '',
+      phone: ''
+    };
+    let isValid = true;
+    if (!contactData.name.trim() || contactData.name.trim().length < 2) {
+      newErrors.name = 'Nome obrigatório (mínimo 2 caracteres)';
+      isValid = false;
+    }
+    if (!contactData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactData.email)) {
+      newErrors.email = 'Email inválido';
+      isValid = false;
+    }
+    const phoneDigits = contactData.phone.replace(/\D/g, '');
+    if (phoneDigits.length < 10 || phoneDigits.length > 11) {
+      newErrors.phone = 'Telefone inválido';
+      isValid = false;
+    }
+    setErrors(newErrors);
+    return isValid;
   };
-  
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      {/* Header */}
-      <header className="glass border-b shadow-soft sticky top-0 z-50 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate('/plans')}
-                className="flex items-center gap-2 interactive-scale"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Voltar
-              </Button>
-              <div className="flex items-center gap-3">
-                <img 
-                  src={PLANS_CONTENT.logo} 
-                  alt="OneDrip" 
-                  className="h-8 w-auto"
-                />
-                <Heading level="h1" size="xl" className="text-foreground">Finalizar Compra</Heading>
-              </div>
-            </div>
-            {!isMonthly && (
-              <Badge className="bg-gradient-to-r from-primary to-accent text-black font-bold px-3 py-1">
-                🔥 OFERTA LIMITADA
-              </Badge>
-            )}
-          </div>
+  const handlePhoneChange = (value: string) => {
+    let cleaned = value.replace(/\D/g, '');
+    if (cleaned.length <= 11) {
+      if (cleaned.length <= 10) {
+        cleaned = cleaned.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+      } else {
+        cleaned = cleaned.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
+      }
+      setContactData({
+        ...contactData,
+        phone: cleaned
+      });
+    }
+  };
+  const handleSubmitInfo = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validateForm()) {
+      setStep('payment');
+    } else {
+      toast.error('Preencha todos os campos corretamente');
+    }
+  };
+  const handlePixPayment = async () => {
+    setIsLoading(true);
+    try {
+      toast.info('Gerando QR Code PIX...');
+      const pixPayment = await createPixPayment({
+        planId: mercadoPagoPlan.id,
+        planType: currentPlanType,
+        paymentMethod: 'pix',
+        customerName: contactData.name,
+        customerEmail: contactData.email,
+        customerPhone: contactData.phone,
+        isAuthenticated: true
+      });
+      setPixData({
+        qrCode: pixPayment.qr_code,
+        qrCodeBase64: pixPayment.qr_code_base64,
+        paymentId: pixPayment.payment_id
+      });
+      setStep('pix');
+      toast.success('QR Code gerado!');
+    } catch (error) {
+      console.error('Erro ao gerar PIX:', error);
+      toast.error('Erro ao gerar PIX. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const handleSubscription = async () => {
+    setIsLoading(true);
+    try {
+      toast.info('Criando assinatura...');
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('create-mercadopago-subscription', {
+        body: {
+          planType: currentPlanType,
+          customerName: contactData.name,
+          customerEmail: contactData.email,
+          customerPhone: contactData.phone
+        }
+      });
+      if (error) throw error;
+      if (data?.redirect_url) {
+        toast.success('Redirecionando para autorização...');
+        window.location.href = data.redirect_url;
+      } else {
+        throw new Error('URL de redirecionamento não recebida');
+      }
+    } catch (error) {
+      console.error('Erro ao criar assinatura:', error);
+      toast.error('Erro ao criar assinatura. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const handleConfirmPayment = () => {
+    if (purchaseMode === 'one_time') {
+      return handlePixPayment();
+    }
+    return handleSubscription();
+  };
+  if (authLoading || !user) {
+    return <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>;
+  }
+  return <div className="min-h-screen bg-background">
+      {/* Header fixo */}
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
+        <div className="flex items-center justify-between px-4 py-3">
+          <Button variant="ghost" size="sm" onClick={() => step === 'info' ? navigate('/plans') : setStep('info')} className="text-muted-foreground hover:text-foreground -ml-2 p-2">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <span className="text-sm font-medium text-foreground">Finalizar Compra</span>
+          <div className="w-9" />
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero Section com Valor */}
-        <FadeInUp className="text-center mb-12">
-          <div className="max-w-4xl mx-auto">
-            <Heading level="h2" size="4xl" gradient className="mb-4">
-              Transforme Sua Assistência Técnica
-            </Heading>
-            <Text size="xl" color="secondary" className="mb-6">
-              Transforme sua gestão com o sistema mais completo do mercado
-            </Text>
-          </div>
-        </FadeInUp>
-        
-        {/* Seção de Benefícios Principais */}
-        <FadeInUp className="mb-16">
-          <div className="text-center mb-12">
-            <Heading level="h3" size="3xl" className="mb-4">
-              Por Que Escolher o OneDrip Agora?
-            </Heading>
-            <Text size="lg" color="secondary">
-              Descubra os benefícios exclusivos que fara sua empresa crescer
-            </Text>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
-            {[
-              {
-                icon: TrendingUp,
-                title: "Aumento de 40% na Produtividade",
-                description: "Automatize processos e reduza tempo gasto em tarefas manuais",
-                color: "text-green-500"
-              },
-              {
-                icon: Award,
-                title: "Suporte Premium Incluso",
-                description: "Atendimento com prioridade e completo",
-                color: "text-purple-500"
-              }
-            ].map((benefit, index) => {
-              const Icon = benefit.icon;
-              return (
-                <ScaleOnHover key={index}>
-                  <Card className="glass-card h-full border-0 bg-gradient-to-br from-card to-muted/20">
-                    <CardContent className="p-6 text-center">
-                      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 bg-gradient-to-br from-primary/10 to-primary/5 mx-auto">
-                        <Icon className={`h-8 w-8 ${benefit.color}`} />
-                      </div>
-                      <Heading level="h4" size="lg" className="mb-2">
-                        {benefit.title}
-                      </Heading>
-                      <Text color="secondary">
-                        {benefit.description}
-                      </Text>
-                    </CardContent>
-                  </Card>
-                </ScaleOnHover>
-              )
-            })}
-          </div>
-        </FadeInUp>
-        
-
-        
-        <div className="grid lg:grid-cols-2 gap-12">
-          {/* Coluna Esquerda - Resumo do Plano */}
-          <div className="space-y-8">
-            <FadeInUp>
-              <Card className="glass-card border-0 bg-gradient-to-br from-card to-muted/20">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-xl text-foreground">Resumo do Seu Plano</CardTitle>
-                    {planData.mostrar_badge && (
-                      <Badge className="bg-gradient-to-r from-primary to-accent text-black font-bold">
-                        {planData.badge_popular}
-                      </Badge>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div>
-                    <Heading level="h3" size="lg" className="text-foreground">{planData.nome}</Heading>
-                    <Text color="secondary">{planData.descricao}</Text>
-                  </div>
-                  
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                      {planData.moeda}{planData.preco.toFixed(2).replace('.', ',')}
-                    </span>
-                    <Text color="secondary">{planData.periodo}</Text>
-                    {planData.preco_original > planData.preco && (
-                      <span className="text-sm text-muted-foreground line-through ml-2">
-                        {planData.moeda}{planData.preco_original.toFixed(2).replace('.', ',')}
+      <main className="px-4 pb-8 pt-4 max-w-lg mx-auto">
+        {/* Resumo do Plano - Sempre Visível */}
+        <Card className="mb-6 bg-card border-border/50">
+          <CardContent className="p-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm text-muted-foreground">{planData.nome}</p>
+                <div className="flex items-baseline gap-2 mt-1">
+                  {appliedCoupon ? <>
+                      <span className="text-lg line-through text-muted-foreground">
+                        {planData.moeda}{planData.preco.toFixed(2).replace('.', ',')}
                       </span>
-                    )}
-                  </div>
-                  
-                  {planData.economia_texto && (
-                    <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-xl p-4">
-                      <div className="flex items-center gap-2">
-                        <Gift className="w-5 h-5 text-green-500" />
-                        <Text weight="bold" className="text-green-400">
-                          {planData.economia_texto}
-                        </Text>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="space-y-3">
-                    <Heading level="h4" size="md" className="text-foreground">Tudo Incluído:</Heading>
-                    <ul className="space-y-2">
-                      {planData.beneficios.map((beneficio, index) => (
-                        <li key={index} className="flex items-center gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                          <Text>{beneficio}</Text>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-            </FadeInUp>
+                      <span className="text-2xl font-bold text-green-500">
+                        {planData.moeda}{finalPrice.toFixed(2).replace('.', ',')}
+                      </span>
+                    </> : <span className="text-2xl font-bold text-foreground">
+                      {planData.moeda}{planData.preco.toFixed(2).replace('.', ',')}
+                    </span>}
+                  <span className="text-sm text-muted-foreground">{planData.periodo}</span>
+                </div>
+              </div>
+              {planData.economia_texto && <Badge className="bg-green-500/20 text-green-500 border-0">
+                  {planData.economia_texto}
+                </Badge>}
+            </div>
 
-            {/* Informações do Processo */}
-            <FadeInUp>
-              <Card className="glass-card border-0 bg-gradient-to-br from-card to-muted/20">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2 text-foreground">
-                    <Shield className="w-5 h-5 text-blue-500" />
-                    Processo 100% Seguro
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {[
-                    { icon: CheckCircle, text: "Pagamento criptografado SSL", color: "text-green-500" },
-                    { icon: Zap, text: "Ativação rapida", color: "text-blue-500" },
-                    { icon: MessageCircle, text: "Suporte técnico 24/7 incluso", color: "text-purple-500" },
-                    { icon: Award, text: "Garantia incondicional de 7 dias", color: "text-yellow-500" }
-                  ].map((item, index) => {
-                    const Icon = item.icon;
-                    return (
-                      <div key={index} className="flex items-center gap-3">
-                        <Icon className={`w-5 h-5 ${item.color}`} />
-                        <Text>{item.text}</Text>
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-            </FadeInUp>
-          </div>
-
-          {/* Coluna Direita - Garantias e Confiança */}
-          <div className="space-y-8">
-            {/* Garantia em Destaque */}
-            <FadeInUp>
-              <Card className="glass-card border-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 border-green-500/20">
-                <CardContent className="p-6 text-center">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center mx-auto mb-4">
-                    <Shield className="w-10 h-10 text-green-500" />
-                  </div>
-                  <Heading level="h3" size="xl" className="mb-2 text-green-400">
-                    Garantia de 7 Dias
-                  </Heading>
-                  <Text color="secondary" className="mb-4">
-                    Não ficou satisfeito? Devolvemos seu dinheiro, sem perguntas.
-                  </Text>
-                  <div className="bg-green-500/10 rounded-lg p-3">
-                    <Text size="sm" weight="bold" className="text-green-400">
-                      ✓ Risco Zero para Você
-                    </Text>
-                  </div>
-                </CardContent>
-              </Card>
-            </FadeInUp>
-
-
-          </div>
-        </div>
-
-        {/* Seção FAQ */}
-        <FadeInUp>
-          <div className="max-w-4xl mx-auto mt-16">
-            <div className="text-center mb-12">
-              <Heading level="h2" size="2xl" className="mb-4 text-foreground">
-                Perguntas Frequentes
-              </Heading>
-              <Text color="secondary" size="lg">
-                Tire suas dúvidas sobre o OneDrip
-              </Text>
+            {/* Cupom de desconto */}
+            <div className="mt-4 pt-4 border-t border-border/30">
+              <CouponInput planType={currentPlanType} originalPrice={dynamicPrice} onCouponApplied={handleCouponApplied} />
             </div>
             
-            <div className="grid md:grid-cols-2 gap-6">
-              {[
-                {
-                  question: "Como funciona a ativação?",
-                  answer: "Após o pagamento, você deverá mandar o comprovante para o nosso WhatsApp para receber a licença de acesso ao sistema."
-                },
-                {
-                  question: "Posso cancelar a qualquer momento?",
-                  answer: "Sim! Oferecemos garantia de 7 dias. Se não ficar satisfeito, devolvemos seu dinheiro."
-                },
-                {
-                  question: "O sistema funciona no meu celular?",
-                  answer: "Perfeitamente! O OneDrip é responsivo e funciona em qualquer dispositivo - celular, tablet ou computador."
-                }
-              ].map((faq, index) => (
-                <ScaleOnHover key={index}>
-                  <Card className="glass-card border-0 bg-gradient-to-br from-card to-muted/20 h-full">
-                    <CardContent className="p-6">
-                      <Heading level="h3" size="lg" className="mb-3 text-foreground">
-                        {faq.question}
-                      </Heading>
-                      <Text color="secondary">
-                        {faq.answer}
-                      </Text>
-                    </CardContent>
-                  </Card>
-                </ScaleOnHover>
-              ))}
-            </div>
-          </div>
-        </FadeInUp>
-
-        {/* Demonstração Redesenhada */}
-        <FadeInUp>
-          <div className="max-w-2xl mx-auto mt-16">
-            <Card className="glass-card border-0 bg-gradient-to-br from-purple-500/5 to-blue-500/5 border-purple-500/20">
-              <CardContent className="p-8 text-center">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mx-auto mb-6">
-                  <MessageCircle className="w-10 h-10 text-purple-500" />
+            {/* Status da licença */}
+            {!licenseLoading && licenseStatus && <div className={`mt-4 p-3 rounded-lg text-sm ${isTrial ? 'bg-blue-500/10 border border-blue-500/20' : hasValidLicense && !isExpired ? 'bg-green-500/10 border border-green-500/20' : isExpired ? 'bg-red-500/10 border border-red-500/20' : 'bg-yellow-500/10 border border-yellow-500/20'}`}>
+                <div className="flex items-start gap-2">
+                  {isTrial ? <Clock className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" /> : isExpired ? <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" /> : <Shield className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />}
+                  <div>
+                    <p className="font-medium text-foreground">
+                      {isTrial ? `Teste ativo (${daysUntilExpiry} dias restantes)` : hasValidLicense && !isExpired ? `Licença ativa (${daysUntilExpiry} dias)` : isExpired ? 'Licença expirada' : 'Sem licença'}
+                    </p>
+                    {purchaseMode === 'one_time' && <p className="text-xs text-muted-foreground mt-0.5">
+                      +{daysToAdd} dias serão adicionados
+                    </p>}
+                    {purchaseMode === 'subscription' && <p className="text-xs text-muted-foreground mt-0.5">
+                      Acesso contínuo enquanto a assinatura estiver ativa
+                    </p>}
+                  </div>
                 </div>
-                <Heading level="h3" size="xl" className="mb-4 text-foreground">
-                  Quer Ver o Sistema Funcionando?
-                </Heading>
-                <Text color="secondary" className="mb-6">
-                  Solicite uma demonstração com nossa assistente Drippy. 
-                  Ela fornecerá dados e instruções para você acessar o sistema manualmente.
-                </Text>
-                <Button 
-                  onClick={handleDemo}
-                  variant="outline" 
-                  className="w-full h-12 border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300"
-                >
-                  <Phone className="w-5 h-5 mr-2" />
-                Demonstração Gratuita
+              </div>}
+          </CardContent>
+        </Card>
+
+        {/* Step 1: Formulário de Contato */}
+        {step === 'info' && <Card className="bg-card border-border/50">
+            <CardContent className="p-4">
+              <h2 className="text-lg font-semibold text-foreground mb-4">
+                Seus dados
+              </h2>
+              
+              <form onSubmit={handleSubmitInfo} className="space-y-4">
+                <div>
+                  <Label htmlFor="name" className="text-sm text-foreground">Nome completo</Label>
+                  <div className="relative mt-1.5">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input id="name" type="text" placeholder="Seu nome" value={contactData.name} onChange={(e) => setContactData({
+                  ...contactData,
+                  name: e.target.value
+                })} className={`pl-10 ${errors.name ? 'border-red-500' : ''}`} />
+                  </div>
+                  {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+                </div>
+
+                <div>
+                  <Label htmlFor="email" className="text-sm text-foreground">Email</Label>
+                  <div className="relative mt-1.5">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input id="email" type="email" placeholder="seu@email.com" value={contactData.email} onChange={(e) => setContactData({
+                  ...contactData,
+                  email: e.target.value
+                })} className={`pl-10 ${errors.email ? 'border-red-500' : ''}`} />
+                  </div>
+                  {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+                </div>
+
+                <div>
+                  <Label htmlFor="phone" className="text-sm text-foreground">WhatsApp</Label>
+                  <div className="relative mt-1.5">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input id="phone" type="tel" placeholder="(11) 99999-9999" value={contactData.phone} onChange={(e) => handlePhoneChange(e.target.value)} className={`pl-10 ${errors.phone ? 'border-red-500' : ''}`} />
+                  </div>
+                  {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
+                </div>
+
+                <Button type="submit" className="w-full py-5 mt-4 bg-primary hover:bg-primary/90 text-primary-foreground">
+                  Continuar
+                </Button>
+              </form>
+            </CardContent>
+          </Card>}
+
+        {step === 'payment' && <div className="space-y-4">
+            <Card className="bg-card border-border/50">
+              <CardContent className="p-4">
+                <h2 className="text-lg font-semibold text-foreground mb-4">
+                  Escolha o tipo de plano
+                </h2>
+
+                {/* Modo de compra: Pagamento único ou Assinatura */}
+                <div className="space-y-3 mb-6">
+                  <button onClick={() => setPurchaseMode('one_time')} className={`w-full p-4 rounded-xl border-2 transition-all ${purchaseMode === 'one_time' ? 'bg-primary/10 border-primary shadow-sm' : 'bg-background border-border/30 hover:border-border'}`}>
+                    <div className="flex items-start gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${purchaseMode === 'one_time' ? 'border-primary' : 'border-muted-foreground'}`}>
+                        {purchaseMode === 'one_time' && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                      </div>
+                      <div className="text-left flex-1">
+                        <p className="font-semibold text-foreground">Pagamento único via PIX</p>
+                        <p className="text-sm text-muted-foreground mt-0.5">
+                          Adiciona +{daysToAdd} dias de acesso. Ideal para recarregar sua licença.
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                  {/* Opção de assinatura removida conforme solicitado */}
+                </div>
+
+                {/* Botão de confirmação */}
+                <Button onClick={handleConfirmPayment} disabled={isLoading} className="w-full py-5 bg-primary hover:bg-primary/90 text-primary-foreground">
+                  {isLoading ? <span className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {purchaseMode === 'one_time' ? 'Gerando QR Code...' : 'Criando assinatura...'}
+                    </span> : purchaseMode === 'one_time' ? 'Pagar com PIX' : 'Ativar assinatura'}
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Segurança */}
+            <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <Atom className="h-3.5 w-3.5 text-green-500" />
+                <span>Pagamento seguro</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Check className="h-3.5 w-3.5 text-green-500" />
+                <span>Garantia 7 dias</span>
+              </div>
+            </div>
+
+            <div className="text-center">
+              
+            </div>
+          </div>}
+
+        {/* Step 3: PIX Display */}
+        {step === 'pix' && pixData && <div className="space-y-4">
+            <PixPaymentDisplay qrCode={pixData.qrCode} {...pixData.qrCodeBase64 ? {
+          qrCodeBase64: pixData.qrCodeBase64
+        } : {}} paymentId={pixData.paymentId} amount={planData.preco} currency={planData.moeda} onPaymentApproved={() => {}} />
+            
+          </div>}
+
+        {/* Garantias */}
+        <div className="mt-8 space-y-3">
+          {[{
+          icon: Shield,
+          text: "Garantia incondicional de 7 dias"
+        }, {
+          icon: Zap,
+          text: "Ativação imediata após pagamento"
+        }, {
+          icon: MessageCircle,
+          text: "Suporte via WhatsApp incluído"
+        }].map((item, i) => <div key={i} className="flex items-center gap-3 text-sm text-muted-foreground">
+              <item.icon className="h-4 w-4 text-green-500 flex-shrink-0" />
+              <span>{item.text}</span>
+            </div>)}
+        </div>
+
+        {/* Contato */}
+        <div className="mt-8 text-center">
+          <p className="text-xs text-muted-foreground">Precisa de ajuda?</p>
+          <a href={`https://wa.me/55${PLANS_CONTENT.configuracoes.whatsapp_numero}`} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
+            Fale conosco no WhatsApp
+          </a>
+        </div>
+
+        {/* Links Legais */}
+        <div className="mt-8 pt-6 border-t border-border/50">
+          <p className="text-xs text-muted-foreground text-center mb-3">
+            Ao prosseguir com a compra, você concorda com nossos termos:
+          </p>
+          <div className="flex flex-wrap justify-center gap-3 text-xs text-muted-foreground">
+            <button onClick={() => navigate('/terms')} className="hover:text-primary transition-colors underline-offset-2 hover:underline">
+              Termos de Uso
+            </button>
+            <span className="text-border">•</span>
+            <button onClick={() => navigate('/terms#pagamentos')} className="hover:text-primary transition-colors underline-offset-2 hover:underline">
+              Pagamentos
+            </button>
+            <span className="text-border">•</span>
+            <button onClick={() => navigate('/terms#reembolso')} className="hover:text-primary transition-colors underline-offset-2 hover:underline">
+              Reembolso
+            </button>
           </div>
-        </FadeInUp>
-
-
-
-        {/* Call-to-Action Final */}
-        <FadeInUp>
-          <div className="max-w-4xl mx-auto mt-16" data-section="revolucionar">
-            <Card className="glass-card border-0 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
-              <CardContent className="p-8 text-center">
-
-                
-                <Heading level="h2" size="2xl" className="mb-4 text-foreground">
-                  Pronto para Revolucionar sua Assistência Técnica?
-                </Heading>
-                <Text color="secondary" size="lg" className="mb-8">
-                  Transforme seu negócio com a solução mais completa do mercado
-                </Text>
-                
-                {/* Botão de Compra Final */}
-                <div className="max-w-md mx-auto">
-                  {/* Removido bloco de aceite de termos para evitar bloqueio em dispositivos */}
-                  
-                  <Button 
-                    onClick={handlePayment}
-                    disabled={false}
-                    className="w-full h-16 text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
-                  >
-                    <CreditCard classNSame="w-6 h-6 mr-3" />
-                    Comprar - {planData.moeda}{planData.preco.toFixed(2).replace('.', ',')}
-                  </Button>
-                  
-                  <div className="flex items-center justify-center gap-3 mt-4">                   <img 
-                      src="https://kukusolutions.s-ul.eu/wF4rduaN" 
-                      alt="Mercado Pago" 
-                      className="h-6 w-auto"
-                    />
-                    <Text size="sm" color="secondary">
-                      Pagamento seguro via Mercado Pago
-                    </Text>
-                  </div>
-                  
-                  {/* Elementos de Confiança */}
-                  <div className="flex items-center justify-center gap-6 mt-6 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-green-500" />
-                      <span>SSL Seguro</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span>Garantia de 7 dias</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Award className="w-4 h-4 text-green-500" />
-                      <span>Suporte 24/7</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="flex flex-wrap justify-center gap-3 text-xs text-muted-foreground mt-2">
+            <button onClick={() => navigate('/privacy')} className="hover:text-primary transition-colors underline-offset-2 hover:underline">
+              Privacidade
+            </button>
+            <span className="text-border">•</span>
+            <button onClick={() => navigate('/cookies')} className="hover:text-primary transition-colors underline-offset-2 hover:underline">
+              Cookies
+            </button>
           </div>
-        </FadeInUp>
-
-        {/* Contato de Suporte Final */}
-        <FadeInUp>
-          <div className="max-w-2xl mx-auto mt-8">
-            <Card className="glass-card border-0 bg-gradient-to-br from-card to-muted/20">
-              <CardContent className="p-6 text-center">
-                <Text color="secondary" className="mb-2">Precisa de ajuda? Fale conosco!</Text>
-                <Text weight="bold" className="text-foreground">
-                  WhatsApp: ({PLANS_CONTENT.configuracoes.whatsapp_numero.slice(0,2)}) {PLANS_CONTENT.configuracoes.whatsapp_numero.slice(2,7)}-{PLANS_CONTENT.configuracoes.whatsapp_numero.slice(7)}
-                </Text>
-              </CardContent>
-            </Card>
-          </div>
-        </FadeInUp>
-      </div>
-    </div>
-  );
+        </div>
+      </main>
+    </div>;
 };
-
 export default CheckoutPage;

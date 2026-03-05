@@ -248,6 +248,10 @@ export default {
           '100%': {
             boxShadow: '0 0 5px hsl(var(--primary) / 0.3)'
           }
+        },
+        'infinite-scroll': {
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(-50%)' },
         }
 			},
 			animation: {
@@ -267,7 +271,8 @@ export default {
         'pulse-scale': 'pulse-scale 1.5s ease-in-out infinite',
         'ripple': 'ripple 0.6s ease-out',
         'shake': 'shake 0.5s ease-in-out',
-        'glow': 'glow 2s ease-in-out infinite'
+        'glow': 'glow 2s ease-in-out infinite',
+        'infinite-scroll': 'infinite-scroll 40s linear infinite',
 			},
       // iOS-specific utilities
       screens: {

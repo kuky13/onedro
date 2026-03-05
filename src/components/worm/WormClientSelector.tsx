@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { clientsApi } from '@/services/api/clientsApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Plus, User, Phone } from 'lucide-react';
 
@@ -14,13 +15,13 @@ interface Client {
   id: string;
   name: string;
   phone: string;
-  email?: string;
+  email?: string | null;
 }
 
 interface NewClientData {
   name: string;
   phone: string;
-  email?: string;
+  email?: string | null;
 }
 
 interface WormClientSelectorProps {
@@ -48,15 +49,31 @@ export const WormClientSelector = ({
     queryKey: ['worm-clients', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      
-      const { data, error } = await supabase
-        .from('clients')
-        .select('id, name, phone, email')
-        .eq('user_id', user.id)
-        .order('name', { ascending: true });
 
-      if (error) throw error;
-      return data;
+      // Preferir leitura via API (GET). Se falhar ou vier fora do escopo, cair para Supabase.
+      try {
+        const apiData = await clientsApi.list();
+        const scoped = (apiData ?? []).filter((c: any) => {
+          if (typeof c?.user_id !== 'string') return false;
+          return c.user_id === user.id;
+        });
+
+        if ((apiData?.length ?? 0) > 0 && scoped.length === 0) {
+          throw new Error('API retornou dados fora do escopo do usuário');
+        }
+
+        scoped.sort((a: any, b: any) => String(a?.name ?? '').localeCompare(String(b?.name ?? ''), 'pt-BR'));
+        return scoped;
+      } catch {
+        const { data, error } = await supabase
+          .from('clients')
+          .select('id, name, phone, email')
+          .eq('user_id', user.id)
+          .order('name', { ascending: true });
+
+        if (error) throw error;
+        return data;
+      }
     },
     enabled: !!user
   });
@@ -205,13 +222,13 @@ export const WormClientSelector = ({
             
             <div>
               <Label htmlFor="new-client-email">Email (opcional)</Label>
-              <Input
-                id="new-client-email"
-                type="email"
-                value={newClientData.email}
-                onChange={(e) => setNewClientData(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="cliente@email.com"
-              />
+                <Input
+                  id="new-client-email"
+                  type="email"
+                  value={newClientData.email ?? ''}
+                  onChange={(e) => setNewClientData(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="cliente@email.com"
+                />
             </div>
             
             <div className="flex justify-end gap-2 pt-2">

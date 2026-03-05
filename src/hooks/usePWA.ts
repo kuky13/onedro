@@ -110,7 +110,7 @@ export const usePWA = (): PWAState & PWAActions => {
     // Service Worker registration com verificações robustas
     const registerServiceWorker = async () => {
       // Desabilitar Service Worker temporariamente em desenvolvimento para resolver problemas de cache
-      if (import.meta.env.DEV && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      if ((import.meta as any).env?.DEV && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
         console.log('[PWA] Service Worker desabilitado em desenvolvimento para resolver problemas de cache');
         return;
       }
@@ -122,7 +122,7 @@ export const usePWA = (): PWAState & PWAActions => {
 
       // Verificar compatibilidade
       if (!('serviceWorker' in navigator)) {
-        if (import.meta.env.DEV) {
+        if ((import.meta as any).env?.DEV) {
           console.log('[PWA] Service Worker não suportado');
         }
         return;
@@ -130,7 +130,7 @@ export const usePWA = (): PWAState & PWAActions => {
 
       // Verificar estado do documento
       if (document.readyState === 'loading') {
-        if (import.meta.env.DEV) {
+        if ((import.meta as any).env?.DEV) {
           console.log('[PWA] Aguardando DOM estar pronto...');
         }
         return;
@@ -143,7 +143,7 @@ export const usePWA = (): PWAState & PWAActions => {
           return;
         } catch (error) {
           // Se falhou, permitir nova tentativa
-          window.__SW_REGISTRATION_PROMISE__ = undefined;
+          delete window.__SW_REGISTRATION_PROMISE__;
           window.__SW_REGISTERED__ = false;
         }
       }
@@ -156,15 +156,15 @@ export const usePWA = (): PWAState & PWAActions => {
         let existingRegistration;
         try {
           existingRegistration = await navigator.serviceWorker.getRegistration();
-        } catch (getRegError) {
+        } catch (getRegError: any) {
           // Se getRegistration falhar devido ao estado do documento, aguardar um pouco
-          if (getRegError.name === 'InvalidStateError') {
+          if (getRegError?.name === 'InvalidStateError') {
             console.log('[PWA] Documento em estado inválido, aguardando...');
             await new Promise(resolve => setTimeout(resolve, 100));
             try {
               existingRegistration = await navigator.serviceWorker.getRegistration();
-            } catch (retryError) {
-              console.warn('[PWA] Não foi possível verificar registro existente:', retryError.message);
+            } catch (retryError: any) {
+              console.warn('[PWA] Não foi possível verificar registro existente:', retryError?.message);
               existingRegistration = null;
             }
           } else {
@@ -173,9 +173,9 @@ export const usePWA = (): PWAState & PWAActions => {
         }
         
         if (existingRegistration) {
-          if (import.meta.env.DEV) {
-            console.log('[PWA] Service Worker já registrado:', existingRegistration.scope);
-          }
+           if ((import.meta as any).env?.DEV) {
+             console.log('[PWA] Service Worker já registrado:', existingRegistration.scope);
+           }
           
           // Configurar listeners para updates
           setupUpdateListeners(existingRegistration, handleSWUpdate);
@@ -191,18 +191,18 @@ export const usePWA = (): PWAState & PWAActions => {
         const registration = await window.__SW_REGISTRATION_PROMISE__;
         window.__SW_REGISTERED__ = true;
 
-        if (import.meta.env.DEV) {
-          console.log('[PWA] Service Worker registrado com sucesso:', registration.scope);
-        }
+         if ((import.meta as any).env?.DEV) {
+           console.log('[PWA] Service Worker registrado com sucesso:', registration.scope);
+         }
 
         // Configurar listeners para updates
         setupUpdateListeners(registration, handleSWUpdate);
 
       } catch (error) {
         console.error('[PWA] Erro no registro do Service Worker:', error);
-        window.__SW_REGISTERED__ = false;
-        window.__SW_REGISTRATION_PROMISE__ = undefined;
-        registrationAttempted.current = false;
+         window.__SW_REGISTERED__ = false;
+         delete window.__SW_REGISTRATION_PROMISE__;
+         registrationAttempted.current = false;
       }
     };
 
@@ -293,7 +293,8 @@ export const usePWA = (): PWAState & PWAActions => {
       try {
         registration = await navigator.serviceWorker.getRegistration();
       } catch (getRegError) {
-        if (getRegError.name === 'InvalidStateError') {
+        const err = getRegError as { name?: string } | null;
+        if (err?.name === 'InvalidStateError') {
           console.warn('[PWA] Documento em estado inválido para atualização');
           return;
         }

@@ -51,8 +51,22 @@ class LogsService {
   async getAllLogs(filters: LogFilters = {}): Promise<UnifiedLog[]> {
     const { table_filter = null, limit = 100, offset = 0 } = filters;
 
+    const normalize = (rows: any[]): UnifiedLog[] =>
+      (rows || []).map((log: any) => ({
+        id: String(log.id),
+        table_source: String(log.table_source ?? 'admin_logs'),
+        log_type: String(log.log_type ?? 'admin_action'),
+        admin_user_id: log.admin_user_id ?? null,
+        admin_name: String(log.admin_name ?? 'Sistema'),
+        target_user_id: log.target_user_id ?? null,
+        target_name: String(log.target_name ?? '—'),
+        action: String(log.action ?? ''),
+        details: log.details ?? null,
+        created_at: String(log.created_at ?? log.createdAt ?? new Date().toISOString()),
+        additional_info: log.additional_info ?? { source_table: log.table_source ?? 'admin_logs' },
+      }));
+
     try {
-      // Tentar usar a nova função RPC
       const { data, error } = await supabase.rpc('admin_get_all_logs', {
         p_table_filter: table_filter,
         p_limit: limit,
@@ -60,7 +74,7 @@ class LogsService {
       });
 
       if (!error && data) {
-        return data;
+        return normalize(data as any[]);
       }
     } catch (error) {
       console.warn('Nova função RPC não disponível, usando fallback:', error);
@@ -104,13 +118,22 @@ class LogsService {
       const { data, error } = await supabase.rpc('admin_get_logs_statistics');
 
       if (!error && data) {
-        return data;
+        const row = (Array.isArray(data) ? data[0] : data) as any;
+        return {
+          total_logs: Number(row?.total_logs ?? row?.total ?? 0),
+          by_table: {
+            admin_logs: Number(row?.admin_logs ?? 0),
+            budget_deletion_audit: Number(row?.budget_deletion_audit ?? row?.budget_deletion_logs ?? 0),
+            license_validation_audit: Number(row?.license_validation_audit ?? row?.license_validation_logs ?? 0),
+            file_upload_audit: Number(row?.file_upload_audit ?? row?.file_upload_logs ?? 0),
+          },
+          last_updated: String(row?.last_updated ?? new Date().toISOString()),
+        };
       }
     } catch (error) {
       console.warn('Função de estatísticas não disponível:', error);
     }
 
-    // Fallback: retornar estatísticas básicas
     return {
       total_logs: 0,
       by_table: {
@@ -131,13 +154,17 @@ class LogsService {
       const { data, error } = await supabase.rpc('admin_get_log_types');
 
       if (!error && data) {
-        return data;
+        return (data as any[]).map((row: any) => ({
+          table_name: String(row?.table_name ?? row?.table ?? 'admin_logs'),
+          display_name: String(row?.display_name ?? row?.name ?? 'Logs Administrativos'),
+          description: String(row?.description ?? ''),
+          log_count: Number(row?.log_count ?? row?.count ?? 0),
+        }));
       }
     } catch (error) {
       console.warn('Função de tipos de logs não disponível:', error);
     }
 
-    // Fallback: retornar tipos básicos
     return [
       {
         table_name: 'admin_logs',
@@ -164,7 +191,9 @@ class LogsService {
           throw new Error(`Erro ao deletar logs: ${error.message}`);
         }
 
-        return data || logIds.length;
+         if (typeof data === 'number') return data;
+         if (Array.isArray(data)) return data.reduce((sum, row: any) => sum + Number(row?.deleted_count ?? 0), 0);
+         return logIds.length;
       } else {
         // Deletar todos os logs da tabela
         return this.deleteAllLogsFromTable(tableName);
@@ -202,7 +231,9 @@ class LogsService {
         throw new Error(`Erro ao deletar logs da tabela ${tableName}: ${error.message}`);
       }
 
-      return data || tableLogIds.length;
+       if (typeof data === 'number') return data;
+       if (Array.isArray(data)) return data.reduce((sum, row: any) => sum + Number(row?.deleted_count ?? 0), 0);
+       return tableLogIds.length;
     } catch (error) {
       console.error('Erro ao deletar logs da tabela:', error);
       if (error instanceof Error) {

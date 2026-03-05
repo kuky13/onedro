@@ -12,44 +12,99 @@ serve(async (req: Request) => {
   }
 
   try {
-    // Inicializar o cliente Supabase com a chave de serviço para ter privilégios de administrador
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+
+    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
+      return new Response(JSON.stringify({ error: 'Serviço indisponível' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      })
+    }
+
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Não autorizado' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      })
+    }
+
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: { Authorization: authHeader },
+      },
+    })
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey)
+    const token = authHeader.replace('Bearer ', '')
+
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token)
+    if (claimsError || !claimsData?.claims?.sub) {
+      return new Response(JSON.stringify({ error: 'Não autorizado' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      })
+    }
+
+    const { data: isAdmin, error: adminCheckError } = await supabaseAuth.rpc('is_current_user_admin')
+    if (adminCheckError || !isAdmin) {
+      return new Response(JSON.stringify({ error: 'Acesso negado' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 403,
+      })
+    }
 
     const { userId, newPassword } = await req.json()
 
-    if (!userId || !newPassword) {
-      throw new Error('O ID do usuário e a nova senha são obrigatórios.')
+    if (typeof userId !== 'string' || typeof newPassword !== 'string') {
+      return new Response(JSON.stringify({ error: 'Dados inválidos' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      })
     }
 
-    // Primeiro validar via função SQL
+    const normalizedPassword = newPassword.trim()
+    if (!userId.trim() || normalizedPassword.length < 8) {
+      return new Response(JSON.stringify({ error: 'Dados inválidos' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      })
+    }
+
     const { data: validation, error: validationError } = await supabaseAdmin.rpc('validate_admin_password_reset', {
       p_user_id: userId,
-      p_new_password: newPassword
+      p_new_password: normalizedPassword,
     })
 
-    if (validationError || !validation.success) {
-      throw new Error(validation?.error || validationError?.message || 'Erro na validação')
+    if (validationError || !validation?.success) {
+      return new Response(JSON.stringify({ error: 'Solicitação inválida' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      })
     }
 
-    // Usar o cliente admin para atualizar a senha do usuário
-    const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
-      userId,
-      { password: newPassword }
-    )
+    const { data, error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      password: normalizedPassword,
+    })
 
     if (error) {
       console.error('Erro ao atualizar senha do usuário:', error)
-      throw error
+      return new Response(JSON.stringify({ error: 'Não foi possível atualizar a senha' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      })
     }
 
-    // Log da ação bem-sucedida
     await supabaseAdmin.rpc('log_admin_action', {
       p_target_user_id: userId,
       p_action: 'password_reset_by_admin',
-      p_details: { reset_method: 'admin_edge_function', success: true }
+      p_details: {
+        reset_method: 'admin_edge_function',
+        success: true,
+        actor_user_id: claimsData.claims.sub,
+      },
     })
 
     return new Response(JSON.stringify({ success: true, data }), {
@@ -57,8 +112,8 @@ serve(async (req: Request) => {
       status: 200,
     })
   } catch (error) {
-    console.error('Erro na função de edge:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('Erro na função admin-reset-password:', error)
+    return new Response(JSON.stringify({ error: 'Erro ao processar solicitação' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     })

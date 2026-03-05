@@ -1,4 +1,3 @@
-import React from 'react';
 import { X, FileImage, Loader2 } from 'lucide-react';
 import { ImagePreviewProps } from '../../types/imageUpload';
 export function ImagePreview({
@@ -22,7 +21,7 @@ export function ImagePreview({
         {isHeicOrHeif ? <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50">
             <FileImage className="h-8 w-8 text-gray-400 mb-2" />
             <span className="text-xs text-gray-500 font-medium">
-              {file.type.split('/')[1].toUpperCase()}
+              {file.type ? file.type.split('/')[1]?.toUpperCase() || 'IMG' : 'IMG'}
             </span>
           </div> : <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" loading="lazy" />}
 

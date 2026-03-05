@@ -67,35 +67,15 @@ const formatCurrency = (value?: number): string => {
 
 // Função para validar se um valor existe e não está vazio
 const hasValue = (value: any): boolean => {
-  if (value === null || value === undefined) {
-    return false;
-  }
-  
+  if (value === null || value === undefined) return false;
   if (typeof value === 'string') {
     const trimmed = value.trim();
-    
-    // Verificar se é um placeholder de CNPJ
-    if (trimmed === '00.000.000/0000-00' || trimmed === '00000000000000') {
-      return false;
-    }
-    
-    // Verificar se é uma string vazia ou apenas espaços
-    if (trimmed === '') {
-      return false;
-    }
-    
+    if (trimmed === '00.000.000/0000-00' || trimmed === '00000000000000' || trimmed === '') return false;
     return true;
   }
-  
-  if (typeof value === 'number') {
-    // Para números, aceitar qualquer número válido (incluindo 0)
-    return !isNaN(value) && isFinite(value);
-  }
-  
+  if (typeof value === 'number') return !isNaN(value) && isFinite(value);
   return Boolean(value);
 };
-
-
 
 // Função para quebrar texto em múltiplas linhas
 const splitTextToLines = (doc: jsPDF, text: string, maxWidth: number): string[] => {
@@ -226,7 +206,7 @@ const validateCompanyData = async (): Promise<CompanyData> => {
         email: companyInfo?.email || '',
         address: shopProfile?.address || companyInfo?.address || '',
         logo_url: shopProfile?.logo_url || companyInfo?.logo_url || '',
-        warranty_months: shopProfile?.warranty_months || companyInfo?.warranty_months || 3,
+        warranty_months: (shopProfile as any)?.warranty_months ?? (companyInfo as any)?.warranty_months ?? 3,
         warranty_cancellation_terms: companyInfo?.warranty_cancellation_terms || '',
         warranty_legal_reminders: companyInfo?.warranty_legal_reminders || '',
         cnpj: finalCnpj,
@@ -234,617 +214,514 @@ const validateCompanyData = async (): Promise<CompanyData> => {
         contact_phone: shopProfile?.contact_phone || ''
       };
       
-
-      
       return companyData;
     }
     
-    // Fallback para dados padrão
     return {
       shop_name: 'Assistência Técnica',
-      phone: '',
-      email: '',
-      address: '',
-      logo_url: '',
-      warranty_months: 3,
-      warranty_cancellation_terms: '',
-      warranty_legal_reminders: '',
-      cnpj: '',
-      whatsapp_phone: '',
-      contact_phone: ''
+      phone: '', email: '', address: '', logo_url: '',
+      warranty_months: 3, warranty_cancellation_terms: '', warranty_legal_reminders: '',
+      cnpj: '', whatsapp_phone: '', contact_phone: ''
     };
   } catch (error) {
     console.warn('Erro ao obter dados da empresa:', error);
     return {
       shop_name: 'Assistência Técnica',
-      phone: '',
-      email: '',
-      address: '',
-      logo_url: '',
-      warranty_months: 3,
-      warranty_cancellation_terms: '',
-      warranty_legal_reminders: '',
-      cnpj: '',
-      whatsapp_phone: '',
-      contact_phone: ''
+      phone: '', email: '', address: '', logo_url: '',
+      warranty_months: 3, warranty_cancellation_terms: '', warranty_legal_reminders: '',
+      cnpj: '', whatsapp_phone: '', contact_phone: ''
     };
   }
 };
 
+// ─── HELPERS DE DESENHO ─────────────────────────────────────────────
 
+const ACCENT: [number, number, number] = [22, 78, 99];     // teal-900
+const DARK: [number, number, number] = [15, 23, 42];       // slate-900
+const MID: [number, number, number] = [100, 116, 139];     // slate-500
+const LIGHT_BG: [number, number, number] = [241, 245, 249]; // slate-100
+const WHITE: [number, number, number] = [255, 255, 255];
+const ACCENT_LIGHT: [number, number, number] = [204, 251, 241]; // teal-100
 
-// Função principal para gerar PDF da ordem de serviço
+/** Draws a section title with a left accent bar */
+const drawSectionTitle = (
+  doc: jsPDF,
+  title: string,
+  x: number,
+  y: number,
+  contentWidth: number,
+): number => {
+  // Accent bar
+  doc.setFillColor(...ACCENT);
+  doc.rect(x, y, 3, 10, 'F');
+  // Light background
+  doc.setFillColor(...LIGHT_BG);
+  doc.rect(x + 3, y, contentWidth - 3, 10, 'F');
+  // Text
+  doc.setTextColor(...DARK);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text(title, x + 8, y + 7);
+  return y + 14;
+};
+
+/** Draws a key-value row with value aligned to the right */
+const drawField = (
+  doc: jsPDF,
+  label: string,
+  value: string,
+  x: number,
+  y: number,
+  rightEdge: number = 0,
+): number => {
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...MID);
+  doc.text(label, x, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...DARK);
+  if (rightEdge > 0) {
+    doc.text(value, rightEdge, y, { align: 'right' });
+  } else {
+    doc.text(value, x + 45, y);
+  }
+  return y + 5.5;
+};
+
+/** Checks if we need a page break and adds one if so */
+const ensureSpace = (doc: jsPDF, y: number, needed: number, margin: number): number => {
+  const pageH = doc.internal.pageSize.getHeight();
+  if (y + needed > pageH - 25) {
+    doc.addPage();
+    return margin + 10;
+  }
+  return y;
+};
+
+// ─── MAIN PDF GENERATOR ─────────────────────────────────────────────
+
 export const generateServiceOrderPDF = async (serviceOrderData: ServiceOrderData): Promise<void> => {
   try {
-    // Validar dados da empresa
     const companyData = await validateCompanyData();
-    
-    // Criar documento PDF
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 8; // Reduzido de 15 para 8
-    const contentWidth = pageWidth - (margin * 2);
-    
-    // Cores do tema - Esquema profissional de cinza
-    const primaryColor: [number, number, number] = [55, 65, 81]; // Cinza escuro profissional
-    const secondaryColor: [number, number, number] = [107, 114, 128]; // Cinza médio
-    const lightGray: [number, number, number] = [243, 244, 246]; // Cinza muito claro
-    const darkGray: [number, number, number] = [31, 41, 55]; // Cinza muito escuro
-    const accentGray: [number, number, number] = [156, 163, 175]; // Cinza de destaque
-    
-    let yPosition = margin;
+    const margin = 12;
+    const contentWidth = pageWidth - margin * 2;
+    let y = margin;
+
+    // ── HEADER ────────────────────────────────────────────────
+    // Top accent line
+    doc.setFillColor(...ACCENT);
+    doc.rect(0, 0, pageWidth, 3, 'F');
+
+    y = 10;
+
     let logoLoaded = false;
-    
-    // CABEÇALHO DA EMPRESA
-    doc.setFillColor(...lightGray);
-    doc.rect(margin, yPosition, contentWidth, 28, 'F'); // Reduzido de 40 para 28
-    
-    // Tentar carregar logo da empresa
     if (hasValue(companyData.logo_url)) {
       try {
         const logoDataURL = await loadImage(companyData.logo_url!, 3, 8000);
-        doc.addImage(logoDataURL, 'JPEG', margin + 3, yPosition + 3, 16, 16); // Logo menor
+        doc.addImage(logoDataURL, 'JPEG', margin, y, 18, 18);
         logoLoaded = true;
       } catch (error) {
         console.warn('⚠️ Erro ao carregar logo da empresa:', error);
-        logoLoaded = false;
       }
     }
-    
-    // Nome da empresa
-    doc.setTextColor(...darkGray);
-    doc.setFontSize(12); // Reduzido de 14 para 12
+
+    const textX = logoLoaded ? margin + 22 : margin;
+
+    // Company name
+    doc.setTextColor(...DARK);
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    const logoOffset = logoLoaded ? 22 : 3; // Ajustado
-    doc.text(companyData.shop_name, margin + logoOffset, yPosition + 10); // Ajustado
-    
-    // Informações de contato da empresa (renderização condicional)
-    doc.setFontSize(7); // Reduzido de 9 para 7
+    doc.text(companyData.shop_name, textX, y + 7);
+
+    // Contact info line
+    doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
-    let contactYPosition = yPosition + 18; // Reduzido de 20 para 18
-    
-    if (hasValue(companyData.phone)) {
-      doc.text(`Tel: ${companyData.phone}`, margin + logoOffset, contactYPosition);
-      contactYPosition += 3;
+    doc.setTextColor(...MID);
+    const contactParts: string[] = [];
+    if (hasValue(companyData.phone)) contactParts.push(`Tel: ${companyData.phone}`);
+    if (hasValue(companyData.email)) contactParts.push(companyData.email!);
+    if (hasValue(companyData.cnpj)) contactParts.push(`CNPJ: ${companyData.cnpj}`);
+    if (contactParts.length > 0) {
+      doc.text(contactParts.join('  •  '), textX, y + 13);
     }
-    
-    if (hasValue(companyData.email)) {
-      doc.text(`Email: ${companyData.email}`, margin + logoOffset, contactYPosition);
-      contactYPosition += 3;
-    }
-    
+
     if (hasValue(companyData.address)) {
-      const addressLines = splitTextToLines(doc, `Endereço: ${companyData.address}`, contentWidth - logoOffset);
-      addressLines.forEach((line) => {
-        doc.text(line, margin + logoOffset, contactYPosition);
-        contactYPosition += 3;
-      });
+      doc.text(companyData.address!, textX, y + 17);
     }
-    
-    // CNPJ (se disponível)
-    if (hasValue(companyData.cnpj)) {
-      doc.text(`CNPJ: ${companyData.cnpj}`, margin + logoOffset, contactYPosition);
-      contactYPosition += 3;
-    }
-    
-    // SEMPRE mostrar a data de geração do documento
-    const documentGeneratedText = `Documento gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`;
-    doc.text(documentGeneratedText, margin + logoOffset, contactYPosition);
-    contactYPosition += 3;
-    
-    yPosition += 32; // Reduzido de 45 para 32
 
-    // TÍTULO PRINCIPAL
-    doc.setFillColor(...primaryColor);
-    doc.rect(margin, yPosition, contentWidth, 16, 'F'); // Reduzido de 15 para 16
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(12); // Reduzido de 16 para 12
-    doc.setFont('helvetica', 'bold');
-    doc.text('ORDEM DE SERVIÇO', margin + 4, yPosition + 11); // Ajustado
-
-    yPosition += 20;
-
-    // INFORMAÇÕES BÁSICAS DA ORDEM DE SERVIÇO
+    // Order number badge — top right
     const orderNumber = serviceOrderData.sequential_number || serviceOrderData.id?.slice(-4) || '0000';
-    const currentDate = new Date().toLocaleDateString('pt-BR');
-    
-    doc.setFillColor(...lightGray);
-    doc.rect(margin, yPosition, contentWidth, 25, 'F');
-    doc.setTextColor(...darkGray);
+    const orderLabel = `OS #${String(orderNumber).padStart(4, '0')}`;
+
+    doc.setFillColor(...ACCENT);
+    const badgeW = 38;
+    const badgeH = 12;
+    const badgeX = pageWidth - margin - badgeW;
+    doc.roundedRect(badgeX, y, badgeW, badgeH, 2, 2, 'F');
+    doc.setTextColor(...WHITE);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
+    doc.text(orderLabel, badgeX + badgeW / 2, y + 8, { align: 'center' });
 
-    // Primeira linha de informações
-    doc.text(`Nº: ${String(orderNumber).padStart(4, '0')}`, margin + 5, yPosition + 8);
-    const orderDate = formatDateToPT(serviceOrderData.created_at) || currentDate;
-    doc.text(`Data: ${orderDate}`, margin + 60, yPosition + 8);
-    
-    // Segunda linha de informações
-    doc.text(`Status: ${translateStatus(serviceOrderData.status)}`, margin + 5, yPosition + 16);
+    // Date under badge
+    const orderDate = formatDateToPT(serviceOrderData.created_at) || new Date().toLocaleDateString('pt-BR');
+    doc.setTextColor(...MID);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.text(orderDate, badgeX + badgeW / 2, y + 17, { align: 'center' });
+
+    y = 35;
+
+    // Divider
+    doc.setDrawColor(...LIGHT_BG);
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 5;
+
+    // ── STATUS PILLS ──────────────────────────────────────────
+    // Render status and priority as compact pills
+    const pills: { label: string; value: string; bg: [number, number, number]; fg: [number, number, number] }[] = [];
+
+    pills.push({
+      label: 'Status',
+      value: translateStatus(serviceOrderData.status),
+      bg: ACCENT_LIGHT,
+      fg: ACCENT,
+    });
+
     if (hasValue(serviceOrderData.priority)) {
-      doc.text(`Prioridade: ${translatePriority(serviceOrderData.priority!)}`, margin + 60, yPosition + 16);
+      pills.push({
+        label: 'Prioridade',
+        value: translatePriority(serviceOrderData.priority!),
+        bg: [254, 243, 199], // amber-100
+        fg: [146, 64, 14],   // amber-800
+      });
     }
-    
-    // Terceira linha - Status de pagamento (se disponível)
+
     if (hasValue(serviceOrderData.payment_status)) {
-      doc.text(`Pagamento: ${translatePaymentStatus(serviceOrderData.payment_status!)}`, margin + 120, yPosition + 8);
+      const isPaid = serviceOrderData.payment_status === 'paid';
+      pills.push({
+        label: 'Pagamento',
+        value: translatePaymentStatus(serviceOrderData.payment_status!),
+        bg: isPaid ? [220, 252, 231] : [254, 226, 226], // green-100 / red-100
+        fg: isPaid ? [22, 101, 52] : [153, 27, 27],     // green-800 / red-800
+      });
     }
 
-    yPosition += 30;
-
-    // DADOS DO CLIENTE
-    doc.setFillColor(...secondaryColor);
-    doc.rect(margin, yPosition, contentWidth, 10, 'F'); // Reduzido de 12 para 10
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(9); // Reduzido de 10 para 9
-    doc.setFont('helvetica', 'bold');
-    doc.text('DADOS DO CLIENTE', margin + 4, yPosition + 7); // Ajustado
-    
-    yPosition += 14; // Reduzido de 18 para 14
-
-    doc.setTextColor(...darkGray);
-    doc.setFontSize(8); // Reduzido de 10 para 8
-    doc.setFont('helvetica', 'normal');
-
-    // Layout em duas colunas para dados do cliente
-    const labelColumnX = margin + 5; // leve recuo das labels
-    const valueColumnX = margin + 60; // Reduzido de 150 para 60
-    const rowGap = 6; // Reduzido de 7 para 6
-
-    // Nome do cliente
-    doc.setFont('helvetica', 'bold');
-    doc.text('Nome:', labelColumnX, yPosition);
-    doc.setFont('helvetica', 'normal');
-    doc.text(serviceOrderData.client_name, valueColumnX, yPosition);
-    yPosition += rowGap;
-
-    // Telefone do cliente (se disponível)
-    if (serviceOrderData.client_phone && serviceOrderData.client_phone.trim() !== '') {
+    let pillX = margin;
+    for (const pill of pills) {
+      const text = `${pill.label}: ${pill.value}`;
+      doc.setFontSize(7);
       doc.setFont('helvetica', 'bold');
-      doc.text('Telefone:', labelColumnX, yPosition);
-      doc.setFont('helvetica', 'normal');
-      doc.text(serviceOrderData.client_phone.trim(), valueColumnX, yPosition);
-      yPosition += rowGap;
+      const tw = doc.getTextWidth(text) + 8;
+      doc.setFillColor(...pill.bg);
+      doc.roundedRect(pillX, y, tw, 8, 2, 2, 'F');
+      doc.setTextColor(...pill.fg);
+      doc.text(text, pillX + 4, y + 5.5);
+      pillX += tw + 4;
     }
-    // Endereço do cliente (se disponível)
+
+    y += 14;
+
+    // ── DADOS DO CLIENTE ──────────────────────────────────────
+    y = drawSectionTitle(doc, 'DADOS DO CLIENTE', margin, y, contentWidth);
+
+    const fieldRightEdge = pageWidth - margin - 5;
+    y = drawField(doc, 'Nome:', serviceOrderData.client_name, margin + 5, y, fieldRightEdge);
+
+    if (hasValue(serviceOrderData.client_phone)) {
+      y = drawField(doc, 'Telefone:', serviceOrderData.client_phone!.trim(), margin + 5, y, fieldRightEdge);
+    }
     if (hasValue(serviceOrderData.client_address)) {
       doc.setFont('helvetica', 'bold');
-      doc.text('Endereço:', labelColumnX, yPosition);
+      doc.setFontSize(8);
+      doc.setTextColor(...MID);
+      doc.text('Endereço:', margin + 5, y);
       doc.setFont('helvetica', 'normal');
-      const addressLines = splitTextToLines(doc, serviceOrderData.client_address!, contentWidth - 60);
-      addressLines.forEach((line, index) => {
-        doc.text(line, valueColumnX, yPosition + (index * 4));
+      doc.setTextColor(...DARK);
+      const addrLines = splitTextToLines(doc, serviceOrderData.client_address!, contentWidth - 55);
+      addrLines.forEach((line, i) => {
+        doc.text(line, fieldRightEdge, y + i * 4, { align: 'right' });
       });
-      yPosition += addressLines.length * 4;
+      y += addrLines.length * 4 + 2;
     }
 
-    yPosition += 4;
+    y += 4;
 
-    // DADOS DO EQUIPAMENTO
-    doc.setFillColor(...secondaryColor);
-    doc.rect(margin, yPosition, contentWidth, 10, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DADOS DO EQUIPAMENTO', margin + 4, yPosition + 7);
+    // ── DADOS DO EQUIPAMENTO ──────────────────────────────────
+    y = ensureSpace(doc, y, 30, margin);
+    y = drawSectionTitle(doc, 'DADOS DO EQUIPAMENTO', margin, y, contentWidth);
 
-    yPosition += 14;
+    y = drawField(doc, 'Equipamento:', serviceOrderData.device_model, margin + 5, y, fieldRightEdge);
 
-    doc.setTextColor(...darkGray);
-    doc.setFontSize(8); // Reduzido de 10 para 8
-
-    // Layout em duas colunas para dados do equipamento
-    const equipmentLabelColumnX = margin + 5;
-    const equipmentValueColumnX = margin + 60; // Reduzido de 135 para 60
-
-    // Modelo do equipamento
-    doc.setFont('helvetica', 'bold');
-    doc.text('Equipamento:', equipmentLabelColumnX, yPosition);
-    doc.setFont('helvetica', 'normal');
-    doc.text(serviceOrderData.device_model, equipmentValueColumnX, yPosition);
-    yPosition += rowGap;
-
-    // IMEI/Serial (se disponível)
-    if (serviceOrderData.imei_serial && serviceOrderData.imei_serial.trim() !== '') {
-      doc.setFont('helvetica', 'bold');
-      doc.text('IMEI/Serial:', equipmentLabelColumnX, yPosition);
-      doc.setFont('helvetica', 'normal');
-      doc.text(serviceOrderData.imei_serial.trim(), equipmentValueColumnX, yPosition);
-      yPosition += rowGap;
+    if (hasValue(serviceOrderData.imei_serial)) {
+      y = drawField(doc, 'IMEI/Serial:', serviceOrderData.imei_serial!.trim(), margin + 5, y, fieldRightEdge);
     }
 
-    yPosition += 3; // Reduzido de 5 para 3
+    y += 4;
 
-    // PROBLEMA RELATADO (sempre presente)
+    // ── PROBLEMA RELATADO ─────────────────────────────────────
     if (hasValue(serviceOrderData.reported_issue)) {
-      doc.setFillColor(...secondaryColor);
-      doc.rect(margin, yPosition, contentWidth, 10, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'bold');
-      doc.text('PROBLEMA RELATADO', margin + 4, yPosition + 7);
+      y = ensureSpace(doc, y, 30, margin);
+      y = drawSectionTitle(doc, 'PROBLEMA RELATADO', margin, y, contentWidth);
 
-      yPosition += 14;
-
-      doc.setTextColor(...darkGray);
+      doc.setTextColor(...DARK);
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
-      
-      const issueLines = splitTextToLines(doc, serviceOrderData.reported_issue, contentWidth - 8);
+
+      // Light background for the issue text
+      const issueLines = splitTextToLines(doc, serviceOrderData.reported_issue, contentWidth - 14);
+      const issueBlockH = issueLines.length * 4.5 + 6;
+      doc.setFillColor(...LIGHT_BG);
+      doc.roundedRect(margin + 2, y - 2, contentWidth - 4, issueBlockH, 2, 2, 'F');
+
       issueLines.forEach((line) => {
-        doc.text(line, margin + 4, yPosition);
-        yPosition += 5;
+        doc.text(line, margin + 6, y + 2);
+        y += 4.5;
       });
 
-      yPosition += 6;
+      y += 6;
     }
 
-    // VALORES DO SERVIÇO (renderização condicional)
-    const hasFinancialData = hasValue(serviceOrderData.total_price) || 
-                            hasValue(serviceOrderData.labor_cost) || 
+    // ── VALORES DO SERVIÇO ────────────────────────────────────
+    const hasFinancialData = hasValue(serviceOrderData.total_price) ||
+                            hasValue(serviceOrderData.labor_cost) ||
                             hasValue(serviceOrderData.parts_cost);
 
     if (hasFinancialData) {
-      doc.setFillColor(...primaryColor);
-      doc.rect(margin, yPosition, contentWidth, 10, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text('VALORES DO SERVIÇO', margin + 5, yPosition + 7);
+      y = ensureSpace(doc, y, 30, margin);
+      y = drawSectionTitle(doc, 'VALORES DO SERVIÇO', margin, y, contentWidth);
 
-      yPosition += 15;
-
-      doc.setTextColor(...darkGray);
-      doc.setFontSize(10);
-
-      // Total (destacado em verde)
       if (hasValue(serviceOrderData.total_price)) {
-        doc.setFillColor(...secondaryColor);
-        doc.rect(margin, yPosition - 2, contentWidth, 12, 'F');
-        doc.setTextColor(255, 255, 255);
+        // Total highlight box
+        doc.setFillColor(...ACCENT);
+        doc.roundedRect(margin + 2, y - 2, contentWidth - 4, 14, 2, 2, 'F');
+        doc.setTextColor(...WHITE);
+        doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
-        const valuesLabelColumnX = margin + 5;
-        const valuesValueColumnX = margin + 150;
-        doc.text('TOTAL:', valuesLabelColumnX, yPosition + 5);
-        doc.text(formatCurrency(serviceOrderData.total_price), valuesValueColumnX, yPosition + 5);
-        yPosition += 12;
+        doc.text('TOTAL', margin + 8, y + 7);
+        doc.text(formatCurrency(serviceOrderData.total_price), pageWidth - margin - 8, y + 7, { align: 'right' });
+        y += 18;
       }
 
-      yPosition += 5;
+      y += 2;
     }
 
-    // DATAS IMPORTANTES (renderização condicional)
-    const hasDateData = hasValue(serviceOrderData.entry_date) || 
-                        hasValue(serviceOrderData.exit_date) || 
+    // ── DATAS IMPORTANTES ─────────────────────────────────────
+    const hasDateData = hasValue(serviceOrderData.entry_date) ||
+                        hasValue(serviceOrderData.exit_date) ||
                         hasValue(serviceOrderData.estimated_completion) ||
                         hasValue(serviceOrderData.delivery_date);
+
     if (hasDateData) {
-      doc.setFillColor(...primaryColor);
-      doc.rect(margin, yPosition, contentWidth, 10, 'F'); // Reduzido de 8 para 10
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(9); // Reduzido de 10 para 9
-      doc.setFont('helvetica', 'bold');
-      doc.text('DATAS IMPORTANTES', margin + 4, yPosition + 7); // Ajustado
-      yPosition += 14; // Reduzido de 15 para 14
+      y = ensureSpace(doc, y, 35, margin);
+      y = drawSectionTitle(doc, 'DATAS IMPORTANTES', margin, y, contentWidth);
 
-      doc.setTextColor(...darkGray);
-      doc.setFontSize(8); // Reduzido de 10 para 8
-      const datesLabelColumnX = margin + 4; // Reduzido de 5 para 4
-      const datesValueColumnX = margin + 60; // Reduzido de 150 para 60
+      // Render dates in a 2-column grid
+      const dates: { label: string; value: string }[] = [];
+      if (hasValue(serviceOrderData.entry_date)) dates.push({ label: 'Entrada', value: formatDateToPT(serviceOrderData.entry_date) });
+      if (hasValue(serviceOrderData.exit_date)) dates.push({ label: 'Saída', value: formatDateToPT(serviceOrderData.exit_date) });
+      if (hasValue(serviceOrderData.estimated_completion)) dates.push({ label: 'Previsão', value: formatDateToPT(serviceOrderData.estimated_completion) });
+      if (hasValue(serviceOrderData.delivery_date)) dates.push({ label: 'Entrega', value: formatDateToPT(serviceOrderData.delivery_date) });
 
-      if (hasValue(serviceOrderData.entry_date)) {
-        doc.setFont('helvetica', 'bold');
-        doc.text('Entrada:', datesLabelColumnX, yPosition);
-        doc.setFont('helvetica', 'normal');
-        doc.text(formatDateToPT(serviceOrderData.entry_date), datesValueColumnX, yPosition);
-        yPosition += rowGap;
+      const colW = (contentWidth - 10) / 2;
+      for (let i = 0; i < dates.length; i += 2) {
+        const row1 = dates[i]!;
+        y = drawField(doc, `${row1.label}:`, row1.value, margin + 5, y);
+        const row2 = dates[i + 1];
+        if (row2) {
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(...MID);
+          doc.text(`${row2.label}:`, margin + 5 + colW, y - 5.5);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(...DARK);
+          doc.text(row2.value, margin + 5 + colW + 45, y - 5.5);
+        }
       }
 
-      if (hasValue(serviceOrderData.exit_date)) {
-        doc.setFont('helvetica', 'bold');
-        doc.text('Saída:', datesLabelColumnX, yPosition);
-        doc.setFont('helvetica', 'normal');
-        doc.text(formatDateToPT(serviceOrderData.exit_date), datesValueColumnX, yPosition);
-        yPosition += rowGap;
-      }
-
-      if (hasValue(serviceOrderData.estimated_completion)) {
-        doc.setFont('helvetica', 'bold');
-        doc.text('Previsão:', datesLabelColumnX, yPosition);
-        doc.setFont('helvetica', 'normal');
-        doc.text(formatDateToPT(serviceOrderData.estimated_completion), datesValueColumnX, yPosition);
-        yPosition += rowGap;
-      }
-
-      if (hasValue(serviceOrderData.delivery_date)) {
-        doc.setFont('helvetica', 'bold');
-        doc.text('Entrega:', datesLabelColumnX, yPosition);
-        doc.setFont('helvetica', 'normal');
-        doc.text(formatDateToPT(serviceOrderData.delivery_date), datesValueColumnX, yPosition);
-        yPosition += rowGap;
-      }
-
-      yPosition += 3;
+      y += 4;
     }
 
-
-
-    // STATUS E PRIORIDADE (renderização condicional)
-    const hasStatusData = hasValue(serviceOrderData.status) || hasValue(serviceOrderData.priority);
-
-    if (hasStatusData) {
-      doc.setFillColor(...secondaryColor);
-      doc.rect(margin, yPosition, contentWidth, 10, 'F');
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'bold');
-      doc.text('STATUS E PRIORIDADE', margin + 4, yPosition + 7);
-      
-      yPosition += 14;
-      
-      doc.setTextColor(...darkGray);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      
-      // Status
-      if (hasValue(serviceOrderData.status)) {
-        doc.setFont('helvetica', 'bold');
-        doc.text('Status:', margin + 4, yPosition);
-        doc.setFont('helvetica', 'normal');
-        
-        // Definir cor baseada no status - usando tons de cinza
-        let statusColor: [number, number, number] = darkGray;
-        if (serviceOrderData.status === 'completed') {
-          statusColor = [75, 85, 99]; // Cinza escuro
-        } else if (serviceOrderData.status === 'in_progress') {
-          statusColor = [107, 114, 128]; // Cinza médio
-        } else if (serviceOrderData.status === 'pending') {
-          statusColor = [156, 163, 175]; // Cinza claro
-        }
-        
-        doc.setTextColor(...statusColor);
-        doc.text(translateStatus(serviceOrderData.status), margin + 60, yPosition);
-        yPosition += 6;
-      }
-      
-      // Prioridade
-      if (hasValue(serviceOrderData.priority)) {
-        doc.setTextColor(...darkGray);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Prioridade:', margin + 4, yPosition);
-        doc.setFont('helvetica', 'normal');
-        
-        // Definir cor baseada na prioridade - usando tons de cinza
-        let priorityColor: [number, number, number] = darkGray;
-        if (serviceOrderData.priority === 'high') {
-          priorityColor = [31, 41, 55]; // Cinza muito escuro
-        } else if (serviceOrderData.priority === 'medium') {
-          priorityColor = [75, 85, 99]; // Cinza escuro
-        } else if (serviceOrderData.priority === 'low') {
-          priorityColor = [107, 114, 128]; // Cinza médio
-        }
-        
-        doc.setTextColor(...priorityColor);
-        doc.text(translatePriority(serviceOrderData.priority), margin + 60, yPosition);
-        yPosition += 6;
-      }
-      
-      yPosition += 6;
-    }
-
-    // OBSERVAÇÕES GERAIS (renderização condicional)
-    const hasNotesData = hasValue(serviceOrderData.notes) || 
-                        hasValue(serviceOrderData.technician_notes) || 
+    // ── OBSERVAÇÕES GERAIS ────────────────────────────────────
+    const hasNotesData = hasValue(serviceOrderData.notes) ||
+                        hasValue(serviceOrderData.technician_notes) ||
                         hasValue(serviceOrderData.customer_notes);
 
     if (hasNotesData) {
-      doc.setFillColor(...primaryColor);
-      doc.rect(margin, yPosition, contentWidth, 10, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(9); // Reduzido de 12 para 9
-      doc.setFont('helvetica', 'bold');
-      doc.text('OBSERVAÇÕES GERAIS', margin + 4, yPosition + 7); // Ajustado
+      y = ensureSpace(doc, y, 30, margin);
+      y = drawSectionTitle(doc, 'OBSERVAÇÕES', margin, y, contentWidth);
 
-      yPosition += 14; // Reduzido de 15 para 14
-
-      doc.setTextColor(...darkGray);
-      doc.setFontSize(8); // Reduzido de 10 para 8
+      doc.setTextColor(...DARK);
+      doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
 
       if (hasValue(serviceOrderData.notes)) {
-        const notesLines = splitTextToLines(doc, serviceOrderData.notes!, contentWidth - 8); // Ajustado
+        const notesLines = splitTextToLines(doc, String(serviceOrderData.notes ?? ''), contentWidth - 12);
         notesLines.forEach((line) => {
-          doc.text(line, margin + 4, yPosition); // Ajustado
-          yPosition += 4; // Reduzido de 5 para 4
+          y = ensureSpace(doc, y, 6, margin);
+          doc.text(line, margin + 6, y);
+          y += 4;
         });
-        yPosition += 2; // Reduzido de 3 para 2
+        y += 3;
       }
 
       if (hasValue(serviceOrderData.technician_notes)) {
+        y = ensureSpace(doc, y, 12, margin);
         doc.setFont('helvetica', 'bold');
-        doc.text('Observações Técnicas:', margin + 4, yPosition); // Ajustado
-        yPosition += 4; // Reduzido de 5 para 4
+        doc.setTextColor(...ACCENT);
+        doc.text('Observações Técnicas:', margin + 6, y);
+        y += 5;
         doc.setFont('helvetica', 'normal');
-        const techNotesLines = splitTextToLines(doc, serviceOrderData.technician_notes!, contentWidth - 8); // Ajustado
-        techNotesLines.forEach((line) => {
-          doc.text(line, margin + 4, yPosition); // Ajustado
-          yPosition += 4; // Reduzido de 5 para 4
+        doc.setTextColor(...DARK);
+        const techLines = splitTextToLines(doc, String(serviceOrderData.technician_notes ?? ''), contentWidth - 12);
+        techLines.forEach((line) => {
+          y = ensureSpace(doc, y, 6, margin);
+          doc.text(line, margin + 6, y);
+          y += 4;
         });
-        yPosition += 2; // Reduzido de 3 para 2
+        y += 3;
       }
 
       if (hasValue(serviceOrderData.customer_notes)) {
+        y = ensureSpace(doc, y, 12, margin);
         doc.setFont('helvetica', 'bold');
-        doc.text('Observações do Cliente:', margin + 4, yPosition); // Ajustado
-        yPosition += 4; // Reduzido de 5 para 4
+        doc.setTextColor(...ACCENT);
+        doc.text('Observações do Cliente:', margin + 6, y);
+        y += 5;
         doc.setFont('helvetica', 'normal');
-        const customerNotesLines = splitTextToLines(doc, serviceOrderData.customer_notes!, contentWidth - 8); // Ajustado
-        customerNotesLines.forEach((line) => {
-          doc.text(line, margin + 4, yPosition); // Ajustado
-          yPosition += 4; // Reduzido de 5 para 4
+        doc.setTextColor(...DARK);
+        const custLines = splitTextToLines(doc, String(serviceOrderData.customer_notes ?? ''), contentWidth - 12);
+        custLines.forEach((line) => {
+          y = ensureSpace(doc, y, 6, margin);
+          doc.text(line, margin + 6, y);
+          y += 4;
         });
       }
 
-      yPosition += 4; // Reduzido de 5 para 4
+      y += 6;
     }
 
-    // RODAPÉ DA PRIMEIRA PÁGINA
-    const footerY = pageHeight - 20;
-    
-    doc.setDrawColor(...primaryColor);
-    doc.line(margin, footerY, pageWidth - margin, footerY);
-    
-    doc.setTextColor(...primaryColor);
+    // ── FOOTER – PAGE 1 ──────────────────────────────────────
+    const footerY = pageHeight - 12;
+    doc.setDrawColor(...LIGHT_BG);
+    doc.setLineWidth(0.5);
+    doc.line(margin, footerY - 3, pageWidth - margin, footerY - 3);
+    doc.setTextColor(...MID);
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'normal');
+    const genText = `Documento gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`;
+    doc.text(genText, margin, footerY);
+    doc.text('Página 1 de 2', pageWidth - margin, footerY, { align: 'right' });
+
+    // ══════════════════════════════════════════════════════════
+    // SEGUNDA PÁGINA – TERMOS DE GARANTIA
+    // ══════════════════════════════════════════════════════════
+    doc.addPage();
+
+    // Top accent line
+    doc.setFillColor(...ACCENT);
+    doc.rect(0, 0, pageWidth, 3, 'F');
+
+    y = 14;
+
+    // Title
+    doc.setFillColor(...ACCENT);
+    doc.roundedRect(margin, y, contentWidth, 14, 2, 2, 'F');
+    doc.setTextColor(...WHITE);
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TERMOS DE GARANTIA', pageWidth / 2, y + 10, { align: 'center' });
+
+    y += 22;
+
+    // CONDIÇÕES DE CANCELAMENTO DA GARANTIA
+    if (hasValue(companyData.warranty_cancellation_terms ?? '')) {
+      y = drawSectionTitle(doc, 'CONDIÇÕES DE CANCELAMENTO DA GARANTIA', margin, y, contentWidth);
+
+      doc.setTextColor(...DARK);
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'normal');
+
+      const companyName = companyData.shop_name || companyData.name || 'EMPRESA';
+      const cancellationTerms = String(companyData.warranty_cancellation_terms ?? '').replace(/NOMEDALOJA/g, companyName);
+
+      const cancellationLines = splitTextToLines(doc, cancellationTerms, contentWidth - 8);
+      cancellationLines.forEach((line) => {
+        y = ensureSpace(doc, y, 6, margin);
+        doc.text(line, margin + 4, y);
+        y += 4.5;
+      });
+
+      y += 10;
+    }
+
+    // LEMBRETES
+    if (hasValue(companyData.warranty_legal_reminders ?? '')) {
+      y = ensureSpace(doc, y, 30, margin);
+      y = drawSectionTitle(doc, 'LEMBRETES', margin, y, contentWidth);
+
+      doc.setTextColor(...DARK);
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'normal');
+
+      const legalLines = splitTextToLines(doc, String(companyData.warranty_legal_reminders ?? ''), contentWidth - 8);
+      legalLines.forEach((line) => {
+        y = ensureSpace(doc, y, 6, margin);
+        doc.text(line, margin + 4, y);
+        y += 4.5;
+      });
+
+      y += 12;
+    }
+
+    // ── ASSINATURAS ───────────────────────────────────────────
+    const signatureStartY = pageHeight - 65;
+    y = Math.max(y + 10, signatureStartY);
+
+    y = drawSectionTitle(doc, 'ASSINATURAS', margin, y, contentWidth);
+
+    y += 2;
+
+    const signatureGap = 20;
+    const sigWidth = (contentWidth - signatureGap) / 2;
+
+    // Técnico
+    doc.setTextColor(...MID);
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
-    
-    // SEGUNDA PÁGINA - TERMOS DE GARANTIA
-    doc.addPage();
-    
-    // Resetar posição Y para a segunda página - começar mais próximo do topo
-    yPosition = margin + 10;
-    
-    // TÍTULO PRINCIPAL - TERMOS DE GARANTIA
-    doc.setFillColor(...primaryColor);
-    doc.rect(margin, yPosition, contentWidth, 18, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('TERMOS DE GARANTIA', margin + 5, yPosition + 12);
-    
-    yPosition += 25;
-    
-    // CONDIÇÕES DE CANCELAMENTO DA GARANTIA
-    if (hasValue(companyData.warranty_cancellation_terms)) {
-      doc.setFillColor(...primaryColor);
-      doc.rect(margin, yPosition, contentWidth, 12, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text('CONDIÇÕES DE CANCELAMENTO DA GARANTIA', margin + 5, yPosition + 8);
-      
-      yPosition += 18;
-      
-      doc.setTextColor(...darkGray);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      
-      // Substituir NOMEDALOJA pelo nome real da empresa
-      const companyName = companyData.shop_name || companyData.name || 'EMPRESA';
-      const cancellationTerms = companyData.warranty_cancellation_terms.replace(/NOMEDALOJA/g, companyName);
-      
-      const cancellationLines = splitTextToLines(doc, cancellationTerms, contentWidth);
-      cancellationLines.forEach((line) => {
-        doc.text(line, margin, yPosition);
-        yPosition += 4.5;
-      });
-      
-      yPosition += 12;
-    }
-    
-    // LEMBRETES
-    if (hasValue(companyData.warranty_legal_reminders)) {
-      doc.setFillColor(...primaryColor);
-      doc.rect(margin, yPosition, contentWidth, 12, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text('LEMBRETES', margin + 5, yPosition + 8);
-      
-      yPosition += 18;
-      
-      doc.setTextColor(...darkGray);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      
-      const legalRemindersLines = splitTextToLines(doc, companyData.warranty_legal_reminders, contentWidth);
-      legalRemindersLines.forEach((line) => {
-        doc.text(line, margin, yPosition);
-        yPosition += 4.5;
-      });
-      
-      yPosition += 15;
-    }
-    
-    // SEÇÃO DE ASSINATURAS
-    // Posicionar as assinaturas com espaçamento otimizado
-    const signatureStartY = pageHeight - 70; // 70 unidades do final da página
-    yPosition = Math.max(yPosition + 15, signatureStartY);
-    
-    doc.setFillColor(...primaryColor);
-    doc.rect(margin, yPosition, contentWidth, 12, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('ASSINATURAS', margin + 5, yPosition + 8);
-    
-    yPosition += 20;
-    
-    // Layout das assinaturas lado a lado com mais espaçamento
-    const signatureSpacing = 25; // Aumentar espaço entre as colunas
-    const signatureWidth = (contentWidth - signatureSpacing) / 2; // Dividir em duas colunas com mais espaço
-    
-    // ASSINATURA DO TÉCNICO (lado esquerdo)
-    doc.setTextColor(...darkGray);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('ASSINATURA DO TÉCNICO:', margin, yPosition);
-    
-    yPosition += 12; // Mais espaço após o título
-    
-    // Linha para assinatura do técnico
-    doc.setDrawColor(...darkGray);
-    doc.setLineWidth(0.5);
-    doc.line(margin, yPosition + 18, margin + signatureWidth, yPosition + 18);
-    
-    // Campo de data para técnico
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Data: ___/___/______', margin, yPosition + 30);
-    
-    // ASSINATURA DO CLIENTE (lado direito) - resetar yPosition para alinhar
-    const clientSignatureX = margin + signatureWidth + signatureSpacing;
-    const clientYPosition = yPosition - 12; // Voltar para a mesma altura do título do técnico
-    
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('ASSINATURA DO CLIENTE:', clientSignatureX, clientYPosition);
-    
-    // Linha para assinatura do cliente
-    doc.line(clientSignatureX, clientYPosition + 30, clientSignatureX + signatureWidth, clientYPosition + 30);
-    
-    // Campo de data para cliente
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Data: ___/___/______', clientSignatureX, clientYPosition + 42);
+    doc.text('Assinatura do Técnico', margin + sigWidth / 2, y, { align: 'center' });
 
-    // Salvar o PDF
+    const lineY = y + 18;
+    doc.setDrawColor(...DARK);
+    doc.setLineWidth(0.3);
+    doc.line(margin, lineY, margin + sigWidth, lineY);
+    doc.setTextColor(...MID);
+    doc.setFontSize(7);
+    doc.text('Data: ___/___/______', margin, lineY + 7);
+
+    // Cliente
+    const clientX = margin + sigWidth + signatureGap;
+    doc.text('Assinatura do Cliente', clientX + sigWidth / 2, y, { align: 'center' });
+    doc.line(clientX, lineY, clientX + sigWidth, lineY);
+    doc.text('Data: ___/___/______', clientX, lineY + 7);
+
+    // Footer page 2
+    const footer2Y = pageHeight - 12;
+    doc.setDrawColor(...LIGHT_BG);
+    doc.setLineWidth(0.5);
+    doc.line(margin, footer2Y - 3, pageWidth - margin, footer2Y - 3);
+    doc.setTextColor(...MID);
+    doc.setFontSize(6);
+    doc.text(genText, margin, footer2Y);
+    doc.text('Página 2 de 2', pageWidth - margin, footer2Y, { align: 'right' });
+
+    // ── SAVE ──────────────────────────────────────────────────
     const fileDate = new Date().toISOString().split('T')[0];
     const fileName = `ordem-servico-${orderNumber}-${serviceOrderData.client_name.replace(/\s+/g, '-').toLowerCase()}-${fileDate}.pdf`;
-    
     doc.save(fileName);
     console.log('✅ PDF gerado com sucesso:', fileName);
      

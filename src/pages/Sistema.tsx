@@ -3,10 +3,24 @@ import { Desktop } from '@/components/sistema/Desktop';
 import { Taskbar } from '@/components/sistema/Taskbar';
 import { StartMenu } from '@/components/sistema/StartMenu';
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+
+// Mapa de rotas para IDs de apps
+const routeToAppId: Record<string, string> = {
+  '/supadmin': 'supadmin',
+  '/chat': 'chat',
+  '/p': 'peliculas',
+  '/p/edit': 'peliculas',
+  '/worm': 'worm',
+  '/service-orders': 'ordens',
+  '/settings': 'configuracoes',
+  '/dashboard': 'usuarios',
+  '/msg': 'mensagens'
+};
 
 export default function Sistema() {
   const { user, profile } = useAuth();
+  const location = useLocation();
   const [showStartMenu, setShowStartMenu] = useState(false);
   const [time, setTime] = useState(new Date());
   const [taskbarApps, setTaskbarApps] = useState<{ id: string; title: string; isMinimized?: boolean }[]>([]);
@@ -18,6 +32,18 @@ export default function Sistema() {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Detectar subrota e abrir app correspondente
+  useEffect(() => {
+    const path = location.pathname.replace('/sistema', '') || '/';
+    if (path !== '/') {
+      const appId = routeToAppId[path];
+      if (appId) {
+        setRequestOpenId(appId);
+        setTimeout(() => setRequestOpenId(null), 100);
+      }
+    }
+  }, [location.pathname]);
 
   if (!user) {
     return <Navigate to="/auth" replace />;

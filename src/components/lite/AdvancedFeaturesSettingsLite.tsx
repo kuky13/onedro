@@ -1,4 +1,3 @@
-import React from 'react';
 import { UnifiedAdvancedFeaturesSettings } from '../UnifiedAdvancedFeaturesSettings';
 
 interface Profile {

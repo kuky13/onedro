@@ -1,0 +1,30 @@
+{
+    email suporte@kuky.help
+}
+
+# Sua API Original
+api.kuky.help {
+    reverse_proxy api:3000
+}
+
+# Seu WAHA Original
+waha2.kuky.help {
+    reverse_proxy waha:3000
+}
+
+# === NOVOS PAINÉIS ===
+
+# Portainer (Gerenciamento)
+painel.kuky.help {
+    reverse_proxy portainer:9000
+}
+
+# Dozzle (Logs)
+logs.kuky.help {
+    reverse_proxy dozzle:8080
+}
+
+# Netdata (Monitoramento de Recursos)
+monitor.kuky.help {
+    reverse_proxy localhost:19999
+}

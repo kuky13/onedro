@@ -68,7 +68,7 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 }
 
 // Validate VAPID configuration on startup
-if (!validateVAPIDKeys(VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)) {
+if (!validateVAPIDKeys(VAPID_PUBLIC_KEY || '', VAPID_PRIVATE_KEY || '')) {
   console.error('❌ Invalid VAPID configuration')
 }
 
@@ -158,6 +158,7 @@ async function sendPushToSubscription(
     }
   } catch (error) {
     console.error(`❌ Push error for subscription ${subscription.id}:`, error)
+    const errorMessage = error instanceof Error ? error.message : String(error)
     
     // Log the error
     await supabase
@@ -167,11 +168,11 @@ async function sendPushToSubscription(
         subscription_id: subscription.id,
         user_id: subscription.user_id,
         status: 'failed',
-        error_message: error.message,
-        response_data: { error: error.toString() }
+        error_message: errorMessage,
+        response_data: { error: String(error) }
       })
 
-    return { success: false, error: error.message }
+    return { success: false, error: errorMessage }
   }
 }
 
@@ -452,7 +453,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('❌ Push notification error:', error)
-    console.error('❌ Error stack:', error.stack)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
+    console.error('❌ Error stack:', errorStack)
     console.error('❌ VAPID config check:', {
       hasPublicKey: !!VAPID_PUBLIC_KEY,
       hasPrivateKey: !!VAPID_PRIVATE_KEY,
@@ -465,8 +468,8 @@ serve(async (req) => {
       JSON.stringify({ 
         success: false,
         error: 'Internal server error',
-        message: error.message,
-        details: error.stack,
+        message: errorMessage,
+        details: errorStack,
         vapid_config: {
           has_public_key: !!VAPID_PUBLIC_KEY,
           has_private_key: !!VAPID_PRIVATE_KEY,

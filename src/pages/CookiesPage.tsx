@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -182,7 +181,7 @@ export const CookiesPage = () => {
               Política de Cookies
             </CardTitle>
             <p className="text-muted-foreground mt-2">
-              OneDrip - Última atualização: Setembro de 2025
+              OneDrip - Última atualização: Setembro de 2026
             </p>
           </CardHeader>
 
@@ -210,7 +209,7 @@ export const CookiesPage = () => {
               <div className="space-y-6">
                 {cookieTypes.map((type) => {
                   const IconComponent = type.icon;
-                  const isEnabled = preferences[type.id as keyof typeof preferences] || false;
+                  const isEnabled = Boolean(preferences[type.id as keyof typeof preferences]);
                   
                   return (
                     <Card key={type.id} className="border-muted">
@@ -500,7 +499,7 @@ export const CookiesPage = () => {
             {/* Footer */}
             <div className="text-center pt-8 border-t">
               <p className="text-sm text-muted-foreground">
-                © 2025 OneDrip - KukySolutions™ | Todos os direitos reservados
+                © 2026 OneDrip - KukySolutions™ | Todos os direitos reservados
               </p>
             </div>
           </CardContent>

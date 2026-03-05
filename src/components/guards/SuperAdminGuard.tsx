@@ -76,7 +76,7 @@ export function SuperAdminGuard({ children }: SuperAdminGuardProps) {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="text-gray-600">Procurando cookies...</p>
+          <p className="text-gray-600 text-center">Procurando cookies...</p>
           {debugInfo && (
             <p className="text-sm text-gray-500">Debug: {debugInfo}</p>
           )}

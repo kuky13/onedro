@@ -77,14 +77,10 @@ export function useServiceOrderShare() {
     try {
       // Starting service order search with token
       
-      const startTime = Date.now();
       const { data, error } = await supabase
         .rpc('get_service_order_by_share_token', {
           p_share_token: shareToken
         });
-      
-      const endTime = Date.now();
-      // RPC call completed
 
       if (error) {
         console.error('❌ Erro ao buscar ordem de serviço:', error);
@@ -168,32 +164,32 @@ export function useServiceOrderShare() {
       // Verificar permissões do clipboard no iOS
       if (navigator.permissions) {
         try {
-          const permission = await navigator.permissions.query({ name: 'clipboard-write' as PermissionName });
-          if (permission.state === 'denied') {
-            return await lastResortCopy(text, description, isMobile, isIOS);
+            const permission = await navigator.permissions.query({ name: 'clipboard-write' as PermissionName });
+            if (permission.state === 'denied') {
+              return await lastResortCopy(text, isMobile, isIOS, description);
+            }
+          } catch (error) {
+            // Permissões não suportadas, continuar com tentativas
           }
-        } catch (error) {
-          // Permissões não suportadas, continuar com tentativas
         }
-      }
-      
-      // Estratégia 1: Tentar API moderna primeiro no iOS (funciona melhor em contexto de interação)
-      if (navigator.clipboard && window.isSecureContext) {
-        try {
-          await navigator.clipboard.writeText(text);
-          toast.success(description ? `${description} copiado!` : 'Link copiado!');
-          return true;
-        } catch (error) {
-          console.log('iOS clipboard API falhou, tentando execCommand:', error);
+
+        // Estratégia 1: Tentar API moderna primeiro no iOS (funciona melhor em contexto de interação)
+        if (navigator.clipboard && window.isSecureContext) {
+          try {
+            await navigator.clipboard.writeText(text);
+            toast.success(description ? `${description} copiado!` : 'Link copiado!');
+            return true;
+          } catch (error) {
+            console.log('iOS clipboard API falhou, tentando execCommand:', error);
+          }
         }
-      }
-      
-      // Estratégia 2: Método Safari/iOS otimizado
-      const success = await safariCopyMethod(text, description);
-      if (success) return true;
-      
-      // Estratégia 3: Fallback para iOS
-      return await lastResortCopy(text, description, isMobile, isIOS);
+
+        // Estratégia 2: Método Safari/iOS otimizado
+        const success = await safariCopyMethod(text, description);
+        if (success) return true;
+
+        // Estratégia 3: Fallback para iOS
+        return await lastResortCopy(text, isMobile, isIOS, description);
     }
     
     // Para outros navegadores, manter lógica original
@@ -219,7 +215,7 @@ export function useServiceOrderShare() {
     if (success) return true;
     
     // Estratégia 4: Último recurso - cópia manual silenciosa
-    return await lastResortCopy(text, description, isMobile, isIOS);
+    return await lastResortCopy(text, isMobile, isIOS, description);
   };
 
   const safariCopyMethod = async (text: string, description?: string): Promise<boolean> => {
@@ -302,7 +298,7 @@ export function useServiceOrderShare() {
     }
   };
 
-  const lastResortCopy = async (text: string, description?: string, isMobile: boolean, isIOS: boolean): Promise<boolean> => {
+  const lastResortCopy = async (text: string, isMobile: boolean, isIOS: boolean, description?: string): Promise<boolean> => {
     try {
       if (isMobile) {
         if (isIOS) {

@@ -44,7 +44,10 @@ class ASCIIConsoleInterceptor {
     /devToolsDetector\.ts/,
     /debugLogger\.ts/,
     /useAuth\.tsx/,
-    /usePWA\.ts/
+    /usePWA\.ts/,
+    /net::ERR_ABORTED/,
+    /Failed to fetch/,
+    /Erro ao carregar imagem.*\.heic/i
   ];
 
   private constructor() {
@@ -102,7 +105,7 @@ class ASCIIConsoleInterceptor {
 
   private interceptConsoleMethod(
     method: 'log' | 'warn' | 'error' | 'info',
-    originalMethod: Function
+    originalMethod: (...args: any[]) => any
   ) {
     return (...args: any[]) => {
       const message = args.join(' ');
@@ -129,14 +132,14 @@ class ASCIIConsoleInterceptor {
   }
 
   public initialize(): void {
+    // Não interceptar console em produção (mantém logs normais e evita ruído)
+    if (!import.meta.env.DEV) return;
+
     // Intercepta os métodos do console
     console.log = this.interceptConsoleMethod('log', this.originalConsole.log);
     console.warn = this.interceptConsoleMethod('warn', this.originalConsole.warn);
     console.error = this.interceptConsoleMethod('error', this.originalConsole.error);
     console.info = this.interceptConsoleMethod('info', this.originalConsole.info);
-
-    // Mostra a arte ASCII imediatamente na inicialização
-    this.showASCIIArt();
   }
 
   public restore(): void {
@@ -152,4 +155,4 @@ class ASCIIConsoleInterceptor {
   }
 }
 
-export const asciiConsole = ASCIIConsoleInterceptor.getInstance
+export const asciiConsole = ASCIIConsoleInterceptor.getInstance();

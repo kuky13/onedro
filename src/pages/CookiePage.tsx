@@ -1,4 +1,3 @@
-import React from 'react';
 import { DebugInvadersGame } from '@/components/game/DebugInvadersGame';
 import { useAuth } from '@/hooks/useAuth';
 export const CookiePage = () => {

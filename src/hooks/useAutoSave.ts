@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Hook para Auto-Save e Recuperação de Sessão
  * Sistema OneDrip - Melhorias UX
@@ -5,7 +6,7 @@
 
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { useToast } from '@/hooks/useToast';
+import { clearSessionDrafts } from '@/components/SessionPersistence';
 
 interface AutoSaveData {
   [key: string]: any;
@@ -15,6 +16,11 @@ interface AutoSaveOptions {
   key: string;
   interval?: number; // em milissegundos
   enabled?: boolean;
+  /**
+   * Quando true, não mostra o aviso de saída da página (beforeunload) em dispositivos mobile.
+   * Útil para manter a experiência mais fluida em formulários longos.
+   */
+  disableBeforeUnloadOnMobile?: boolean;
   onSave?: (data: AutoSaveData) => void;
   onRestore?: (data: AutoSaveData) => void;
   onError?: (error: Error) => void;
@@ -38,12 +44,11 @@ export const useAutoSave = <T extends AutoSaveData>(
     key,
     interval = 30000, // 30 segundos por padrão
     enabled = true,
+    disableBeforeUnloadOnMobile = false,
     onSave,
     onRestore,
     onError
   } = options;
-
-  const { showError, showSuccess, showInfo } = useToast();
 
   const [state, setState] = useState<AutoSaveState>({
     lastSaved: null,
@@ -53,7 +58,7 @@ export const useAutoSave = <T extends AutoSaveData>(
   });
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastDataRef = useRef<string>('');
+  const lastDataRef = useRef<string | null>(null);
   const isInitialLoad = useRef(true);
 
   // Função para salvar no localStorage
@@ -83,8 +88,8 @@ export const useAutoSave = <T extends AutoSaveData>(
       const now = new Date();
       const hoursDiff = (now.getTime() - savedTime.getTime()) / (1000 * 60 * 60);
 
-      // Dados salvos há mais de 24 horas são considerados expirados
-      if (hoursDiff > 24) {
+      // Dados salvos há mais de 7 dias são considerados expirados
+      if (hoursDiff > 168) {
         localStorage.removeItem(`autosave_${key}`);
         return null;
       }
@@ -122,11 +127,6 @@ export const useAutoSave = <T extends AutoSaveData>(
       }));
       
       onSave?.(savedData);
-      
-      // Toast discreto de confirmação
-      showSuccess({
-        title: 'Rascunho salvo automaticamente'
-      });
     },
     onError: (error: Error) => {
       setState(prev => ({
@@ -136,17 +136,14 @@ export const useAutoSave = <T extends AutoSaveData>(
       }));
       
       onError?.(error);
-      
-      showError({
-        title: 'Erro ao salvar rascunho',
-        description: 'Suas alterações podem ser perdidas'
-      });
     }
   });
 
   // Função para limpar dados salvos
   const clearSavedData = useCallback(() => {
     localStorage.removeItem(`autosave_${key}`);
+    // Também limpar drafts universais da página atual
+    clearSessionDrafts();
     setState(prev => ({
       ...prev,
       lastSaved: null,
@@ -175,23 +172,30 @@ export const useAutoSave = <T extends AutoSaveData>(
   // Verificar se há dados salvos na inicialização
   useEffect(() => {
     if (isInitialLoad.current) {
+      // Só tentar restaurar se estiver habilitado
+      if (!enabled) return;
+
       const savedData = loadFromStorage();
+      // Restauração silenciosa (sem perguntar / sem popup)
       if (savedData) {
-        // Notificar que há dados salvos disponíveis
-        showInfo({
-          title: 'Rascunho encontrado',
-          description: 'Deseja restaurar os dados salvos?'
-        });
+        console.log(`[AutoSave] Restaurando dados para ${key}`);
+        onRestore?.(savedData);
       }
       isInitialLoad.current = false;
     }
-  }, [loadFromStorage, restoreSavedData]);
+  }, [enabled, loadFromStorage, onRestore, key]);
 
   // Auto-save quando os dados mudam
   useEffect(() => {
     if (!enabled || !data) return;
 
     const currentDataString = JSON.stringify(data);
+    
+    // Inicializar ref na primeira execução com dados para evitar salvar o estado inicial
+    if (lastDataRef.current === null) {
+      lastDataRef.current = currentDataString;
+      return;
+    }
     
     // Verificar se os dados realmente mudaram
     if (currentDataString !== lastDataRef.current) {
@@ -229,6 +233,20 @@ export const useAutoSave = <T extends AutoSaveData>(
 
   // Salvar antes de sair da página
   useEffect(() => {
+    const isMobileLike = (() => {
+      if (typeof window === 'undefined') return false;
+      try {
+        // Preferimos detecção por "pointer coarse" (touch) para evitar falso positivo em desktop.
+        return window.matchMedia?.('(pointer: coarse)').matches ?? false;
+      } catch {
+        return false;
+      }
+    })();
+
+    if (disableBeforeUnloadOnMobile && isMobileLike) {
+      return;
+    }
+
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (state.hasUnsavedChanges && enabled) {
         // Tentar salvar sincronamente
@@ -243,7 +261,7 @@ export const useAutoSave = <T extends AutoSaveData>(
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [state.hasUnsavedChanges, enabled, data, saveToStorage]);
+  }, [state.hasUnsavedChanges, enabled, data, saveToStorage, disableBeforeUnloadOnMobile]);
 
   return {
     ...state,

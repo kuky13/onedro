@@ -32,13 +32,11 @@ interface RequestMetadata {
 }
 
 class SecurityMiddleware {
-  private validator: SecurityValidator
   private requestCounts: Map<string, { count: number; resetTime: number }> = new Map()
   private blockedIPs: Set<string> = new Set()
   private suspiciousActivity: Map<string, number> = new Map()
 
   constructor() {
-    this.validator = new SecurityValidator()
     this.startCleanupInterval()
   }
 
@@ -46,9 +44,9 @@ class SecurityMiddleware {
    * Main security check for incoming requests
    */
   async checkSecurity(metadata: RequestMetadata): Promise<SecurityCheckResult> {
-    const { endpoint, method, context } = metadata
+    const { endpoint, context } = metadata
     const key = this.generateKey(context.ipAddress || 'unknown', context.userId)
-    
+
     try {
       // 1. Check if IP is blocked
       if (context.ipAddress && this.blockedIPs.has(context.ipAddress)) {
@@ -108,14 +106,17 @@ class SecurityMiddleware {
    * Check rate limiting for the request
    */
   private async checkRateLimit(
-    endpoint: string, 
-    key: string, 
+    endpoint: string,
+    key: string,
     context: SecurityContext
   ): Promise<SecurityCheckResult> {
-    const limits = SECURITY_CONFIG.RATE_LIMITS[endpoint] || SECURITY_CONFIG.RATE_LIMITS.GENERAL_API
+    type RateLimitConfig = { requests: number; window: number; blockDuration: number }
+    const rateLimits = SECURITY_CONFIG.RATE_LIMITS as Record<string, RateLimitConfig>
+
+    const limits = (rateLimits[endpoint] ?? rateLimits.GENERAL_API)!
     const now = Date.now()
-    const windowStart = now - (limits.windowMs || 60000)
-    
+    const windowStart = now - limits.window
+
     // Get current count for this key
     const current = this.requestCounts.get(key)
     if (!current || current.resetTime < windowStart) {
@@ -129,42 +130,50 @@ class SecurityMiddleware {
     this.requestCounts.set(key, current)
 
     // Check if limit exceeded
-    if (current.count > limits.max) {
-      const blockedUntil = new Date(now + (limits.blockDurationMs || 300000))
-      
+    if (current.count > limits.requests) {
+      const blockedUntil = new Date(now + limits.blockDuration)
+
       // Add to suspicious activity
       const suspiciousCount = this.suspiciousActivity.get(key) || 0
       this.suspiciousActivity.set(key, suspiciousCount + 1)
-      
+
       // Block IP if too many violations
       if (suspiciousCount > 5 && context.ipAddress) {
         this.blockedIPs.add(context.ipAddress)
-        await this.logSecurityEvent('ip_blocked', {
-          endpoint: 'security',
-          method: 'POST',
-          timestamp: new Date(),
-          context
-        }, 'critical')
+        await this.logSecurityEvent(
+          'ip_blocked',
+          {
+            endpoint: 'security',
+            method: 'POST',
+            timestamp: new Date(),
+            context,
+          },
+          'critical'
+        )
       }
 
-      await this.logSecurityEvent('rate_limit_exceeded', {
-        endpoint,
-        method: 'POST',
-        timestamp: new Date(),
-        context,
-        payload: { limit: limits.max, current: current.count }
-      }, 'high')
+      await this.logSecurityEvent(
+        'rate_limit_exceeded',
+        {
+          endpoint,
+          method: 'POST',
+          timestamp: new Date(),
+          context,
+          payload: { limit: limits.requests, current: current.count },
+        },
+        'high'
+      )
 
       return {
         allowed: false,
-        reason: `Rate limit exceeded. Try again after ${new Date(blockedUntil).toLocaleTimeString()}`,
+        reason: `Rate limit exceeded. Try again after ${blockedUntil.toLocaleTimeString()}`,
         riskScore: 90,
         rateLimited: true,
-        blockedUntil
+        blockedUntil,
       }
     }
 
-    return { allowed: true, riskScore: (current.count / limits.max) * 30 }
+    return { allowed: true, riskScore: (current.count / limits.requests) * 30 }
   }
 
   /**
@@ -176,14 +185,14 @@ class SecurityMiddleware {
     const issues: string[] = []
 
     // Validate IP address format
-    if (context.ipAddress && !this.validator.isValidIP(context.ipAddress)) {
-      issues.push('Invalid IP address format')
+    if (context.ipAddress && SecurityValidator.isBlockedIpAddress(context.ipAddress)) {
+      issues.push('IP address is in a blocked range')
       riskScore += 20
     }
 
     // Validate User Agent
     if (context.userAgent) {
-      if (!this.validator.isValidUserAgent(context.userAgent)) {
+      if (SecurityValidator.isSuspiciousUserAgent(context.userAgent)) {
         issues.push('Suspicious user agent')
         riskScore += 30
       }
@@ -191,6 +200,7 @@ class SecurityMiddleware {
       issues.push('Missing user agent')
       riskScore += 10
     }
+
 
     // Validate payload if present
     if (payload) {
@@ -300,27 +310,30 @@ class SecurityMiddleware {
    * Log security events to audit system
    */
   private async logSecurityEvent(
-    eventType: string, 
-    metadata: RequestMetadata, 
+    eventType: string,
+    metadata: RequestMetadata,
     severity: 'info' | 'low' | 'medium' | 'high' | 'critical'
   ): Promise<void> {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      
-      await supabase.from('audit_logs').insert({
-        user_id: user?.id || null,
-        event_type: eventType,
-        severity,
-        ip_address: metadata.context.ipAddress,
-        user_agent: metadata.context.userAgent,
-        endpoint: metadata.endpoint,
-        event_details: {
-          method: metadata.method,
-          timestamp: metadata.timestamp.toISOString(),
-          payload: this.validator.sanitizeSensitiveData(metadata.payload || {}),
-          context: metadata.context
-        }
-      })
+
+      await supabase.from('audit_logs').insert([
+        {
+          id: crypto.randomUUID(),
+          user_id: user?.id || null,
+          event_type: eventType,
+          severity,
+          success: eventType === 'request_allowed',
+          ip_address: metadata.context.ipAddress ?? null,
+          user_agent: metadata.context.userAgent ?? null,
+          event_details: {
+            method: metadata.method,
+            timestamp: metadata.timestamp.toISOString(),
+            payload: SecurityValidator.sanitizeForLogging(metadata.payload || {}) as any,
+            context: SecurityValidator.sanitizeForLogging(metadata.context) as any,
+          } as any,
+        },
+      ])
     } catch (error) {
       console.error('Failed to log security event:', error)
     }
@@ -338,17 +351,17 @@ class SecurityMiddleware {
     return !publicEndpoints.some(ep => endpoint.startsWith(ep))
   }
 
-  private async getRecentRequests(key: string): Promise<any[]> {
+  private async getRecentRequests(_key: string): Promise<any[]> {
     // Simplified - in real implementation, query from database
     return []
   }
 
-  private isUnusualLocation(ip: string): boolean {
+  private isUnusualLocation(_ip: string): boolean {
     // Simplified geolocation check
     return false
   }
 
-  private async hasSessionAnomalies(sessionId: string): Promise<boolean> {
+  private async hasSessionAnomalies(_sessionId: string): Promise<boolean> {
     // Check for session hijacking indicators
     return false
   }
@@ -385,7 +398,10 @@ class SecurityMiddleware {
   /**
    * Public methods for external use
    */
-  async checkRateLimitStatus(userId?: string, ipAddress?: string): Promise<{
+  async checkRateLimitStatus(
+    userId?: string,
+    ipAddress?: string
+  ): Promise<{
     isLimited: boolean
     remainingRequests: number
     resetTime: Date
@@ -393,19 +409,19 @@ class SecurityMiddleware {
     const key = this.generateKey(ipAddress || 'unknown', userId)
     const current = this.requestCounts.get(key)
     const limits = SECURITY_CONFIG.RATE_LIMITS.GENERAL_API
-    
+
     if (!current) {
       return {
         isLimited: false,
-        remainingRequests: limits.max,
-        resetTime: new Date(Date.now() + limits.windowMs)
+        remainingRequests: limits.requests,
+        resetTime: new Date(Date.now() + limits.window),
       }
     }
-    
+
     return {
-      isLimited: current.count >= limits.max,
-      remainingRequests: Math.max(0, limits.max - current.count),
-      resetTime: new Date(current.resetTime + limits.windowMs)
+      isLimited: current.count >= limits.requests,
+      remainingRequests: Math.max(0, limits.requests - current.count),
+      resetTime: new Date(current.resetTime + limits.window),
     }
   }
 

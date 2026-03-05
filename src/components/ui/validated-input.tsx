@@ -10,9 +10,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { AlertCircle, Check, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { hasExcessiveZeros, smartFormatCurrency, formatCurrencyInputDetailed } from '../../utils/currency';
+
 
 interface BaseValidatedFieldProps {
+  id?: string;
   label: string;
   error?: string | null;
   isValid?: boolean;
@@ -24,10 +25,11 @@ interface BaseValidatedFieldProps {
 }
 
 interface ValidatedInputProps extends BaseValidatedFieldProps {
-  type?: 'text' | 'email' | 'tel' | 'number' | 'password' | 'date';
+  type?: 'text' | 'email' | 'tel' | 'number' | 'password' | 'date' | 'datetime-local';
   placeholder?: string;
   value: string;
   onChange: (value: string) => void;
+  onFocus?: () => void;
   onBlur?: () => void;
   disabled?: boolean;
   autoComplete?: string;
@@ -58,35 +60,39 @@ interface CurrencyInputProps extends Omit<ValidatedInputProps, 'type' | 'inputMo
  * Input com validação em tempo real
  */
 export const ValidatedInput = forwardRef<HTMLInputElement, ValidatedInputProps>(
-  ({
-    label,
-    error,
-    isValid = true,
-    touched = false,
-    required = false,
-    description,
-    className,
-    showValidIcon = true,
-    type = 'text',
-    placeholder,
-    value,
-    onChange,
-    onBlur,
-    disabled,
-    autoComplete,
-    inputMode,
-    pattern,
-    min,
-    max,
-    step,
-    autoFocus,
-    maxLength,
-    ...props
-  }, ref) => {
+  (
+    {
+      label,
+      error,
+      isValid = true,
+      touched = false,
+      required = false,
+      description,
+      className,
+      showValidIcon = true,
+      type = 'text',
+      placeholder,
+      value,
+      onChange,
+      onFocus,
+      onBlur,
+      disabled,
+      autoComplete,
+      inputMode,
+      pattern,
+      min,
+      max,
+      step,
+      autoFocus,
+      maxLength,
+      ...props
+    },
+    ref
+  ) => {
     const [showPassword, setShowPassword] = React.useState(false);
-    const hasError = touched && error;
-    const isValidAndTouched = touched && isValid && !error;
-    
+    const hasError = Boolean(touched && error);
+    const isValidAndTouched = Boolean(touched && isValid && !error);
+
     const inputType = type === 'password' && showPassword ? 'text' : type;
 
     return (
@@ -95,7 +101,7 @@ export const ValidatedInput = forwardRef<HTMLInputElement, ValidatedInputProps>(
           {label}
           {required && <span className="text-red-500">*</span>}
         </Label>
-        
+
         <div className="relative">
           <Input
             ref={ref}
@@ -103,6 +109,7 @@ export const ValidatedInput = forwardRef<HTMLInputElement, ValidatedInputProps>(
             placeholder={placeholder}
             value={value}
             onChange={(e) => onChange(e.target.value)}
+            onFocus={onFocus}
             onBlur={onBlur}
             disabled={disabled}
             autoComplete={autoComplete}
@@ -116,11 +123,13 @@ export const ValidatedInput = forwardRef<HTMLInputElement, ValidatedInputProps>(
             className={cn(
               'pr-10',
               hasError && 'border-red-300 focus:border-red-500 focus:ring-red-500',
-              isValidAndTouched && showValidIcon && 'border-green-300 focus:border-green-500 focus:ring-green-500'
+              isValidAndTouched &&
+                showValidIcon &&
+                'border-green-300 focus:border-green-500 focus:ring-green-500'
             )}
             {...props}
           />
-          
+
           {/* Ícones de status */}
           <div className="absolute inset-y-0 right-0 flex items-center pr-3">
             {type === 'password' && (
@@ -129,7 +138,7 @@ export const ValidatedInput = forwardRef<HTMLInputElement, ValidatedInputProps>(
                 variant="ghost"
                 size="sm"
                 className="h-auto p-0 hover:bg-transparent"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={() => setShowPassword((s) => !s)}
               >
                 {showPassword ? (
                   <EyeOff className="h-4 w-4 text-gray-400" />
@@ -138,22 +147,22 @@ export const ValidatedInput = forwardRef<HTMLInputElement, ValidatedInputProps>(
                 )}
               </Button>
             )}
-            
+
             {type !== 'password' && hasError && (
               <AlertCircle className="h-4 w-4 text-red-500" />
             )}
-            
+
             {type !== 'password' && isValidAndTouched && showValidIcon && (
               <Check className="h-4 w-4 text-green-500" />
             )}
           </div>
         </div>
-        
+
         {/* Descrição */}
         {description && !hasError && (
           <p className="text-sm text-muted-foreground">{description}</p>
         )}
-        
+
         {/* Erro */}
         {hasError && (
           <p className="text-sm text-red-600 flex items-center gap-1">

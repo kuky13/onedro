@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
+import { clientsApi } from '@/services/api/clientsApi';
 import { ArrowLeft, Users, Phone, Plus, Edit, MessageCircle, FileText, Search, Loader2, Trash2, MapPin, Star, Shield, Mail, Wrench } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import { Badge } from '@/components/ui/badge';
@@ -73,15 +73,30 @@ export const ClientsLite = ({
       setIsLoading(true);
 
       // Buscar clientes
-      const {
-        data: clientsData,
-        error: clientsError
-      } = await supabase.from('clients').select('*').order('is_favorite', {
-        ascending: false
-      }).order('name', {
-        ascending: true
-      });
-      if (clientsError) throw clientsError;
+      let clientsData: any[] = [];
+      try {
+        const apiData = await clientsApi.list();
+        const scoped = (apiData ?? []).filter((c: any) => typeof c?.user_id === 'string' && c.user_id === userId);
+        if ((apiData?.length ?? 0) > 0 && scoped.length === 0) {
+          throw new Error('API retornou dados fora do escopo do usuário');
+        }
+        scoped.sort((a: any, b: any) => {
+          const favA = Boolean(a?.is_favorite);
+          const favB = Boolean(b?.is_favorite);
+          if (favA !== favB) return favA ? -1 : 1;
+          return String(a?.name ?? '').localeCompare(String(b?.name ?? ''), 'pt-BR');
+        });
+        clientsData = scoped;
+      } catch {
+        const { data, error } = await supabase
+          .from('clients')
+          .select('*')
+          .eq('user_id', userId)
+          .order('is_favorite', { ascending: false })
+          .order('name', { ascending: true });
+        if (error) throw error;
+        clientsData = data || [];
+      }
 
       // Buscar contagens para cada cliente usando funções RPC
       const clientsWithCount = await Promise.all((clientsData || []).map(async client => {
@@ -236,9 +251,7 @@ export const ClientsLite = ({
   const createClient = async (data: ClientFormData) => {
     try {
       setIsSaving(true);
-      const {
-        error
-      } = await supabase.from('clients').insert([data]);
+      const { error } = await supabase.from('clients').insert([{ ...data, user_id: userId }]);
       if (error) throw error;
       toast({
         title: 'Cliente criado!',
@@ -397,153 +410,149 @@ export const ClientsLite = ({
   const favoriteClients = filteredClients.filter(client => client.is_favorite);
   const regularClients = filteredClients.filter(client => !client.is_favorite);
   return <div className="h-[100dvh] bg-background flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" onClick={onBack} className="mr-2">
-            <ArrowLeft className="h-4 w-4" />
+      {/* Header - iOS style */}
+      <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-2xl border-b border-border/30">
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={onBack} className="rounded-xl h-10 w-10 p-0">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-xl font-bold tracking-tight">Clientes</h1>
+          </div>
+          <Button onClick={handleAdd} size="sm" className="rounded-xl h-10 px-4 gap-2 font-medium">
+            <Plus className="h-4 w-4" />
+            Novo
           </Button>
-          <h1 className="text-xl font-bold">Clientes</h1>
         </div>
-        <Button onClick={handleAdd} size="sm" className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Novo
-        </Button>
       </div>
 
-      <div className="flex-1 overflow-auto p-4 space-y-4">
-        {/* Search */}
+      <div className="flex-1 overflow-auto p-4 space-y-4 pb-[env(safe-area-inset-bottom)]">
+        {/* Search - iOS style */}
         <div className="relative">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input type="search" inputMode="search" placeholder="Buscar por nome, telefone, endereço..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input type="search" inputMode="search" placeholder="Buscar por nome, telefone, endereço..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-11 h-11 rounded-2xl bg-muted/30 border-border/50" />
         </div>
 
-        {/* Stats */}
-        <Card>
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                <span className="text-sm font-medium">
-                  {filteredClients.length} cliente(s) encontrado(s)
-                </span>
+        {/* Stats - iOS pill */}
+        <div className="rounded-xl border border-border/30 bg-muted/10 p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-primary/10">
+                <Users className="h-4 w-4 text-primary" />
               </div>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Star className="h-3 w-3 text-yellow-500" />
-                {favoriteClients.length} favorito(s)
-              </div>
+              <span className="text-sm font-medium">
+                {filteredClients.length} cliente{filteredClients.length !== 1 ? 's' : ''}
+              </span>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/20 rounded-lg px-2.5 py-1">
+              <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+              {favoriteClients.length}
+            </div>
+          </div>
+        </div>
 
         {/* Clients List */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Seus Clientes
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {isLoading ? <div className="space-y-3">
-                {[1, 2, 3].map(i => <div key={i} className="animate-pulse border rounded-lg p-3">
-                    <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-muted rounded w-1/2"></div>
-                  </div>)}
-              </div> : filteredClients.length === 0 ? <div className="text-center py-8 text-muted-foreground">
-                {searchTerm ? <>
-                    <Search className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>Nenhum cliente encontrado</p>
-                    <p className="text-xs">Tente buscar por nome, telefone ou endereço</p>
-                  </> : <>
-                    <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>Nenhum cliente cadastrado</p>
-                    <p className="text-xs">Adicione seus primeiros clientes</p>
-                  </>}
-              </div> : <div className="space-y-3 max-h-[400px] overflow-auto">
-                {[...favoriteClients, ...regularClients].map(client => <div key={client.id} className="border rounded-lg p-3 space-y-2">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium text-sm">{client.name}</h4>
-                          {client.is_favorite && <Star className="h-3 w-3 text-yellow-500 fill-current" />}
-                          {client.is_default && <Shield className="h-3 w-3 text-blue-500" />}
-                        </div>
-                        <div className="flex items-center gap-1 mt-1">
-                          <Phone className="h-3 w-3 text-muted-foreground" />
+        <div className="space-y-3">
+          {isLoading ? <div className="space-y-3">
+              {[1, 2, 3].map(i => <div key={i} className="animate-pulse rounded-xl border border-border/30 bg-muted/10 p-4">
+                  <div className="h-4 bg-muted rounded-lg w-3/4 mb-3"></div>
+                  <div className="h-3 bg-muted rounded-lg w-1/2"></div>
+                </div>)}
+            </div> : filteredClients.length === 0 ? <div className="text-center py-12 text-muted-foreground rounded-2xl border border-border/30 bg-muted/5">
+              {searchTerm ? <>
+                  <Search className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p className="font-medium">Nenhum cliente encontrado</p>
+                  <p className="text-xs mt-1">Tente buscar por nome, telefone ou endereço</p>
+                </> : <>
+                  <Users className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p className="font-medium">Nenhum cliente cadastrado</p>
+                  <p className="text-xs mt-1">Adicione seus primeiros clientes</p>
+                </>}
+            </div> : <div className="space-y-3">
+              {[...favoriteClients, ...regularClients].map(client => <div key={client.id} className="rounded-xl border border-border/30 bg-muted/5 p-4 space-y-3 transition-all duration-300 hover:bg-muted/15 active:scale-[0.99]">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-sm">{client.name}</h4>
+                        {client.is_favorite && <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />}
+                        {client.is_default && <Shield className="h-3.5 w-3.5 text-blue-500" />}
+                      </div>
+                      {/* Info pills grid */}
+                      <div className="grid grid-cols-1 gap-1.5">
+                        <div className="flex items-center gap-2 bg-muted/20 border border-border/30 rounded-lg px-2.5 py-1.5">
+                          <Phone className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                           <p className="text-xs text-muted-foreground font-mono">
                             {formatPhone(client.phone)}
                           </p>
                         </div>
-                        {client.email && <div className="flex items-center gap-1 mt-1">
-                            <Mail className="h-3 w-3 text-muted-foreground" />
-                            <p className="text-xs text-muted-foreground">
+                        {client.email && <div className="flex items-center gap-2 bg-muted/20 border border-border/30 rounded-lg px-2.5 py-1.5">
+                            <Mail className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                            <p className="text-xs text-muted-foreground truncate">
                               {client.email}
                             </p>
                           </div>}
-                        {client.address && <div className="flex items-center gap-1 mt-1">
-                            <MapPin className="h-3 w-3 text-muted-foreground" />
-                            <p className="text-xs text-muted-foreground">
+                        {client.address && <div className="flex items-center gap-2 bg-muted/20 border border-border/30 rounded-lg px-2.5 py-1.5">
+                            <MapPin className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                            <p className="text-xs text-muted-foreground truncate">
                               {client.address}
                               {client.city && `, ${client.city}`}
                               {client.state && ` - ${client.state}`}
                             </p>
                           </div>}
-                        {client.notes && <p className="text-xs text-muted-foreground mt-1 italic">{client.notes}</p>}
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="secondary" className="text-xs">
-                            <FileText className="h-3 w-3 mr-1" />
-                            {client.budget_count || 0} OR
-                          </Badge>
-                          <Badge variant="secondary" className="text-xs">
-                            <Wrench className="h-3 w-3 mr-1" />
-                            {client.service_order_count || 0} OS
-                          </Badge>
-                          
-                        </div>
+                      </div>
+                      {client.notes && <p className="text-xs text-muted-foreground italic pl-1">{client.notes}</p>}
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-[10px] rounded-lg bg-muted/30 border border-border/30">
+                          <FileText className="h-3 w-3 mr-1" />
+                          {client.budget_count || 0} OR
+                        </Badge>
+                        <Badge variant="secondary" className="text-[10px] rounded-lg bg-muted/30 border border-border/30">
+                          <Wrench className="h-3 w-3 mr-1" />
+                          {client.service_order_count || 0} OS
+                        </Badge>
                       </div>
                     </div>
-                     <div className="flex flex-wrap gap-1.5 sm:gap-1">
-                       <Button size="sm" variant="outline" onClick={() => toggleFavorite(client)} className="text-xs h-7 px-2 min-w-0 flex-shrink-0">
-                         <Star className={`h-3 w-3 sm:mr-1 ${client.is_favorite ? 'fill-current text-yellow-500' : ''}`} />
-                         <span className="hidden sm:inline ml-1">{client.is_favorite ? 'Remover' : 'Favoritar'}</span>
-                       </Button>
-                       <Button size="sm" variant="outline" onClick={() => handleEdit(client)} className="text-xs h-7 px-2 min-w-0 flex-shrink-0">
-                         <Edit className="h-3 w-3 sm:mr-1" />
-                         <span className="hidden sm:inline ml-1">Editar</span>
-                       </Button>
-                       <Button size="sm" variant="outline" onClick={() => openWhatsApp(`https://wa.me/55${client.phone.replace(/\D/g, '')}`)} className="text-xs h-7 px-2 min-w-0 flex-shrink-0">
-                         <MessageCircle className="h-3 w-3 sm:mr-1" />
-                         <span className="hidden sm:inline ml-1">WhatsApp</span>
-                       </Button>
-                       {!client.is_default && <AlertDialog>
-                           <AlertDialogTrigger asChild>
-                             <Button size="sm" variant="outline" className="text-xs h-7 px-2 min-w-0 flex-shrink-0 text-red-600 hover:text-red-700" disabled={isDeleting === client.id}>
-                               {isDeleting === client.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3 sm:mr-1" />}
-                               <span className="hidden sm:inline ml-1">Excluir</span>
-                             </Button>
-                           </AlertDialogTrigger>
-                           <AlertDialogContent>
-                             <AlertDialogHeader>
-                               <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                               <AlertDialogDescription>
-                                 Tem certeza que deseja excluir o cliente "{client.name}"? 
-                                 Esta ação não pode ser desfeita.
-                               </AlertDialogDescription>
-                             </AlertDialogHeader>
-                             <AlertDialogFooter>
-                               <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                               <AlertDialogAction onClick={() => deleteClient(client.id)} className="bg-red-600 hover:bg-red-700">
-                                 Excluir
-                               </AlertDialogAction>
-                             </AlertDialogFooter>
-                           </AlertDialogContent>
-                         </AlertDialog>}
-                     </div>
-                  </div>)}
-              </div>}
-          </CardContent>
-        </Card>
+                  </div>
+                   <div className="flex flex-wrap gap-2">
+                     <Button size="sm" variant="outline" onClick={() => toggleFavorite(client)} className="text-xs h-9 px-3 rounded-xl min-w-0 flex-shrink-0">
+                       <Star className={`h-3.5 w-3.5 sm:mr-1.5 ${client.is_favorite ? 'fill-current text-yellow-500' : ''}`} />
+                       <span className="hidden sm:inline">{client.is_favorite ? 'Remover' : 'Favoritar'}</span>
+                     </Button>
+                     <Button size="sm" variant="outline" onClick={() => handleEdit(client)} className="text-xs h-9 px-3 rounded-xl min-w-0 flex-shrink-0">
+                       <Edit className="h-3.5 w-3.5 sm:mr-1.5" />
+                       <span className="hidden sm:inline">Editar</span>
+                     </Button>
+                     <Button size="sm" variant="outline" onClick={() => openWhatsApp(`https://wa.me/55${client.phone.replace(/\D/g, '')}`)} className="text-xs h-9 px-3 rounded-xl min-w-0 flex-shrink-0">
+                       <MessageCircle className="h-3.5 w-3.5 sm:mr-1.5" />
+                       <span className="hidden sm:inline">WhatsApp</span>
+                     </Button>
+                     {!client.is_default && <AlertDialog>
+                         <AlertDialogTrigger asChild>
+                           <Button size="sm" variant="outline" className="text-xs h-9 px-3 rounded-xl min-w-0 flex-shrink-0 text-red-600 hover:text-red-700" disabled={isDeleting === client.id}>
+                             {isDeleting === client.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 sm:mr-1.5" />}
+                             <span className="hidden sm:inline">Excluir</span>
+                           </Button>
+                         </AlertDialogTrigger>
+                         <AlertDialogContent>
+                           <AlertDialogHeader>
+                             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                             <AlertDialogDescription>
+                               Tem certeza que deseja excluir o cliente "{client.name}"? 
+                               Esta ação não pode ser desfeita.
+                             </AlertDialogDescription>
+                           </AlertDialogHeader>
+                           <AlertDialogFooter>
+                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                             <AlertDialogAction onClick={() => deleteClient(client.id)} className="bg-red-600 hover:bg-red-700">
+                               Excluir
+                             </AlertDialogAction>
+                           </AlertDialogFooter>
+                         </AlertDialogContent>
+                       </AlertDialog>}
+                   </div>
+                </div>)}
+            </div>}
+        </div>
       </div>
 
       {/* Dialog */}

@@ -1,13 +1,16 @@
-importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
+
 self.__PWA_INSTALLED__ = false;
-const CACHE_NAME = 'one-drip-pwa-v2.9.0';
-const STATIC_CACHE_NAME = 'one-drip-static-v2.9.0';
-const DYNAMIC_CACHE_NAME = 'one-drip-dynamic-v2.9.0';
+
+// Não fixar versões aqui para evitar stale HTML após publish.
+// Estratégia: nomes estáveis + limpeza agressiva de caches antigos no activate.
+const CACHE_PREFIX = 'one-drip';
+const CACHE_NAME = `${CACHE_PREFIX}-pwa`;
+const STATIC_CACHE_NAME = `${CACHE_PREFIX}-static`;
+const DYNAMIC_CACHE_NAME = `${CACHE_PREFIX}-dynamic`;
 
 // Recursos essenciais para cache - atualizados para Vite
 const STATIC_ASSETS = [
   '/',
-  '/index.html',
   '/manifest.json',
   '/icons/icon-512x512.png',
   '/icons/icon-192x192.png',
@@ -30,7 +33,7 @@ const CACHE_STRATEGIES = {
 
 // Instalação do Service Worker
 self.addEventListener('install', event => {
-  console.log('[SW] Installing One Drip Service Worker v2.9.0...');
+  console.log('[SW] Installing One Drip Service Worker...');
   
   event.waitUntil(
     Promise.all([
@@ -90,7 +93,7 @@ async function cacheStaticAssetsWithRetry(maxRetries = 3) {
 
 // Ativação do Service Worker
 self.addEventListener('activate', event => {
-  console.log('[SW] Activating One Drip Service Worker v2.8.3...');
+  console.log('[SW] Activating One Drip Service Worker...');
   
   event.waitUntil(
     Promise.all([
@@ -154,16 +157,18 @@ self.addEventListener('fetch', event => {
     // Ignorar requisições que não são GET para evitar erros de cache
     // POST, PUT, DELETE, PATCH não devem ser interceptados pelo SW
     if (request.method !== 'GET') {
-      console.debug(`[SW] Ignorando requisição ${request.method} para ${request.url}`);
       return;
     }
     
-    // Ignorar requisições para Supabase e APIs externas
-    if (request.url.includes('supabase.co') || 
+    // Ignorar requisições para Supabase (exceto storage público) e APIs externas
+    if ((request.url.includes('supabase.co') && !request.url.includes('/storage/v1/object/public/')) || 
         request.url.includes('/api/') ||
         request.url.includes('googleapis.com') ||
-        request.url.includes('stripe.com')) {
-      console.debug(`[SW] Ignorando requisição para API externa: ${request.url}`);
+        request.url.includes('stripe.com') ||
+        request.url.includes('127.0.0.1') ||
+        request.url.includes('localhost') ||
+        request.url.includes('vercel.com') ||
+        request.url.includes('ingest')) {
       return;
     }
     
@@ -179,12 +184,14 @@ self.addEventListener('fetch', event => {
     // Estratégia baseada no tipo de recurso com fallback
     let strategy;
     try {
-      if (isStaticAsset(url)) {
+      if (isStaticAsset(url) || url.href.includes('/storage/v1/object/public/')) {
         strategy = cacheFirstStrategy(request);
       } else if (isApiRequest(url)) {
         strategy = networkFirstStrategy(request);
       } else if (isNavigationRequest(request)) {
-        strategy = staleWhileRevalidateStrategy(request);
+        // Para evitar tela branca por HTML/chunks desatualizados, navegação deve ser network-first
+        // (atualiza o cache quando online; usa fallback quando offline)
+        strategy = networkFirstStrategy(request);
       } else {
         strategy = networkFirstStrategy(request);
       }
@@ -265,7 +272,18 @@ async function cacheFirstStrategy(request) {
     return networkResponse;
   } catch (error) {
     console.log('[SW] Cache first failed:', error);
-    return await caches.match('/index.html') || new Response('Offline');
+    
+    // Se for navegação, retornar index.html
+    if (request.mode === 'navigate' || request.destination === 'document') {
+      const offlineResponse = await caches.match('/index.html');
+      if (offlineResponse) return offlineResponse;
+    }
+    
+    // Para outros recursos, retornar erro original ou resposta vazia
+    return new Response('Resource not available offline', { 
+      status: 503, 
+      statusText: 'Service Unavailable' 
+    });
   }
 }
 
@@ -339,7 +357,7 @@ function isApiRequest(url) {
 
 function isNavigationRequest(request) {
   return request.mode === 'navigate' || 
-         (request.method === 'GET' && request.headers.get('accept').includes('text/html'));
+         (request.method === 'GET' && (request.headers.get('accept') || '').includes('text/html'));
 }
 
 // Limpeza periódica do cache e gerenciamento de notificações
@@ -442,7 +460,7 @@ function getVapidPublicKey() {
 async function cleanOldCaches() {
   const cacheNames = await caches.keys();
   const oldCaches = cacheNames.filter(name => 
-    name.includes('oliver-') && 
+    name.includes(`${CACHE_PREFIX}-`) && 
     name !== STATIC_CACHE_NAME && 
     name !== DYNAMIC_CACHE_NAME
   );
@@ -465,16 +483,11 @@ async function handleBackgroundSync() {
   console.log('[SW] Handling background sync...');
 }
 
-// Push notifications melhoradas
+// Push notifications melhoradas (sem dependência do OneSignal)
 self.addEventListener('push', event => {
   try {
     if (!self.__PWA_INSTALLED__) {
       console.log('🔔 [SW] Push recebido, mas PWA não está instalado — ignorando exibição');
-      return;
-    }
-    // Evitar duplicidade quando OneSignal já está gerenciando
-    if (typeof self.OneSignal !== 'undefined') {
-      console.log('🔔 [SW] OneSignal ativo — deixando o SDK gerenciar a notificação');
       return;
     }
   } catch (e) {}
@@ -664,4 +677,4 @@ async function markNotificationAsRead(notificationId) {
   }
 }
 
-console.log('[SW] Service Worker loaded successfully');
+// console.log('[SW] Service Worker loaded successfully');

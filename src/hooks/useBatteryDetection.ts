@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react'
 export interface BatteryInfo {
   level: number // 0-1 (0% to 100%)
   charging: boolean
-  chargingTime?: number // seconds until charged
-  dischargingTime?: number // seconds until discharged
+  chargingTime: number | null // seconds until charged
+  dischargingTime: number | null // seconds until discharged
   supported: boolean
 }
 
@@ -25,6 +25,8 @@ export const useBatteryDetection = (): BatteryInfo => {
   const [batteryInfo, setBatteryInfo] = useState<BatteryInfo>({
     level: 1,
     charging: false,
+    chargingTime: null,
+    dischargingTime: null,
     supported: false
   })
 
@@ -34,12 +36,12 @@ export const useBatteryDetection = (): BatteryInfo => {
 
     const updateBatteryInfo = (batteryManager: BatteryManager) => {
       if (!mounted) return
-      
+
       setBatteryInfo({
         level: batteryManager.level,
         charging: batteryManager.charging,
-        chargingTime: batteryManager.chargingTime === Infinity ? undefined : batteryManager.chargingTime,
-        dischargingTime: batteryManager.dischargingTime === Infinity ? undefined : batteryManager.dischargingTime,
+        chargingTime: batteryManager.chargingTime === Infinity ? null : batteryManager.chargingTime,
+        dischargingTime: batteryManager.dischargingTime === Infinity ? null : batteryManager.dischargingTime,
         supported: true
       })
     }
@@ -55,7 +57,7 @@ export const useBatteryDetection = (): BatteryInfo => {
       try {
         // Battery Status API (experimental)
         if ('getBattery' in navigator) {
-          battery = await (navigator as any).getBattery()
+          battery = (await (navigator as any).getBattery()) as BatteryManager
           updateBatteryInfo(battery)
 
           // Adicionar listeners para mudanças

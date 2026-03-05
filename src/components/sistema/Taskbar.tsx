@@ -4,12 +4,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 interface TaskbarProps {
   onStartClick: () => void;
   time: Date;
-  profile: any;
+  // Aceito para compatibilidade com Sistema/SistemaPage (não usado no componente)
+  profile?: unknown;
   apps?: { id: string; title: string; isMinimized?: boolean; icon?: any }[];
   onAppClick?: (id: string) => void;
 }
 
-export function Taskbar({ onStartClick, time, profile, apps = [], onAppClick }: TaskbarProps) {
+export function Taskbar({ onStartClick, time, apps = [], onAppClick }: TaskbarProps) {
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('pt-BR', { 
       hour: '2-digit', 
@@ -36,17 +37,17 @@ export function Taskbar({ onStartClick, time, profile, apps = [], onAppClick }: 
       </button>
 
       <div className="flex-1 flex gap-3 overflow-x-auto py-1">
-        {apps.filter(app => app.isMinimized).map(app => {
+        {apps.filter(app => app.isMinimized && app.icon).map(app => {
           const Icon = app.icon || Folder;
           return (
             <button
               key={app.id}
               onClick={() => onAppClick?.(app.id)}
-              className="group flex flex-col items-center justify-center w-16 shrink-0 rounded-lg p-1 hover:bg-white/10 transition-colors"
+              className="group flex flex-col items-center justify-center w-16 shrink-0 rounded-lg p-1 hover:bg-primary/10 transition-colors"
               title={app.title}
             >
-              <div className="h-10 w-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-md group-hover:bg-white/30">
-                <Icon className="h-5 w-5 text-white" />
+              <div className="h-10 w-10 bg-primary/10 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-md group-hover:bg-primary/20 border border-border">
+                <Icon className="h-5 w-5 text-primary" />
               </div>
             </button>
           );

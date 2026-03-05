@@ -4,16 +4,21 @@
  * Sistema OneDrip - Mobile First Design
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, Suspense, lazy } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { ValidatedInput, ValidatedTextarea, PhoneInput, IMEIInput, CurrencyInput } from '@/components/ui/validated-input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// Lazy load Select components to improve initial render performance
+const Select = lazy(() => import('@/components/ui/select').then(module => ({ default: module.Select })));
+const SelectContent = lazy(() => import('@/components/ui/select').then(module => ({ default: module.SelectContent })));
+const SelectItem = lazy(() => import('@/components/ui/select').then(module => ({ default: module.SelectItem })));
+const SelectTrigger = lazy(() => import('@/components/ui/select').then(module => ({ default: module.SelectTrigger })));
+const SelectValue = lazy(() => import('@/components/ui/select').then(module => ({ default: module.SelectValue })));
+
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -27,21 +32,19 @@ import {
   FileText,
   Search,
   X,
-  Plus,
   Clock,
   CheckCircle
 } from 'lucide-react';
 import { useServiceOrderEdit } from '@/hooks/useServiceOrderEdit';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { DevicePasswordSection } from './DevicePasswordSection';
-import { DeviceChecklist } from './DeviceChecklist';
+import { DeviceTestIntegration } from './DeviceTestIntegration';
 import { ImageUploadSection } from './ImageUploadSection';
 import { MiniToastWithArrow } from '../lite/MiniToastWithArrow';
 
 import { toast } from 'sonner';
 import type { Enums } from '@/integrations/supabase/types';
 
-type ServiceOrderStatus = Enums<'service_order_status'>;
 type ServiceOrderPriority = Enums<'service_order_priority'>;
 
 interface ServiceOrderEditFormProps {
@@ -245,6 +248,7 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                     </div>
                     
                     {/* Client Selection */}
+                    <Suspense fallback={<div className="h-10 w-full bg-muted animate-pulse rounded-md" />}>
                     <Select value={selectedClientId} onValueChange={handleSelectClient}>
                       <SelectTrigger className={!formData.clientId ? "border-red-300" : ""}>
                         <SelectValue placeholder="Selecionar cliente" />
@@ -263,6 +267,7 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                         )}
                       </SelectContent>
                     </Select>
+                    </Suspense>
 
                     {/* Inline New Client Form */}
                     {showNewClientForm && (
@@ -283,6 +288,7 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                           <div>
                             <Label htmlFor="newClientPhone">Telefone *</Label>
                             <PhoneInput
+                              label="Telefone"
                               id="newClientPhone"
                               value={newClientData.phone}
                               onChange={(value) => handleNewClientDataChange('phone', value)}
@@ -378,6 +384,7 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="deviceType">Tipo de Dispositivo *</Label>
+                <Suspense fallback={<div className="h-10 w-full bg-muted animate-pulse rounded-md" />}>
                 <Select value={formData.deviceType} onValueChange={(value) => updateFormData('deviceType', value)}>
                   <SelectTrigger className={!formData.deviceType ? "border-red-300" : ""}>
                     <SelectValue placeholder="Selecione o tipo" />
@@ -396,6 +403,7 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                     )}
                   </SelectContent>
                 </Select>
+                </Suspense>
                 {!formData.deviceType && (
                   <p className="text-sm text-red-600">Tipo de dispositivo é obrigatório</p>
                 )}
@@ -460,6 +468,7 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
 
               <div className="space-y-2">
                 <Label htmlFor="priority">Prioridade</Label>
+                <Suspense fallback={<div className="h-10 w-full bg-muted animate-pulse rounded-md" />}>
                 <Select value={formData.priority} onValueChange={(value) => updateFormData('priority', value as ServiceOrderPriority)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -471,6 +480,7 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                     <SelectItem value="urgent">Urgente</SelectItem>
                   </SelectContent>
                 </Select>
+                </Suspense>
               </div>
 
               <ValidatedTextarea
@@ -485,12 +495,13 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
             </CardContent>
           </Card>
 
-          {/* Device Checklist Card */}
-          <DeviceChecklist
-            value={formData.deviceChecklist}
-            onChange={(data) => updateFormData('deviceChecklist', data)}
-            disabled={isSubmitting}
-          />
+          {/* Device Test Integration - Sistema Interativo */}
+          {formData.id && (
+            <DeviceTestIntegration
+              serviceOrderId={formData.id}
+              disabled={isSubmitting}
+            />
+          )}
 
 
 
@@ -553,9 +564,9 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                   
                   {formData.installments && formData.installments > 1 && (
                     <div className="space-y-2 md:col-span-2">
-                      <Label>Valor por Parcela (R$)</Label>
                       <CurrencyInput
-                        value={formData.installmentValue}
+                        label="Valor por Parcela (R$)"
+                        value={formData.installmentValue || ''}
                         onChange={(value) => updateFormData('installmentValue', value)}
                         placeholder="0,00"
                         className=""
@@ -595,14 +606,19 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                 </div>
               </div>
               
-              {formData.warrantyMonths && formData.warrantyMonths > 0 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-sm text-blue-800">
-                    <strong>Garantia válida até:</strong> {' '}
-                    {new Date(Date.now() + (formData.warrantyMonths * 30 * 24 * 60 * 60 * 1000)).toLocaleDateString('pt-BR')}
-                  </p>
-                </div>
-              )}
+              {(() => {
+                const months = Number(formData.warrantyMonths) || 0;
+                if (months <= 0) return null;
+
+                return (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-sm text-blue-800">
+                      <strong>Garantia válida até:</strong>{' '}
+                      {new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
 
@@ -653,11 +669,20 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
 
           {/* Image Upload Section */}
           <div className="relative">
-            <ImageUploadSection
-              serviceOrderId={id}
-              disabled={isSubmitting}
-              onPendingFilesChange={setHasPendingImages}
-            />
+            {/* Evita passar undefined (exactOptionalPropertyTypes) e evita upload sem ordem criada */}
+            {orderId ? (
+              <ImageUploadSection
+                serviceOrderId={orderId}
+                disabled={isSubmitting}
+                onPendingFilesChange={setHasPendingImages}
+              />
+            ) : (
+              <div className="rounded-lg border border-border/50 bg-muted/30 p-4">
+                <p className="text-sm text-muted-foreground">
+                  Salve a ordem primeiro para habilitar o envio de imagens.
+                </p>
+              </div>
+            )}
             <MiniToastWithArrow
               show={showPendingToast}
               message="Envie as imagens primeiro"

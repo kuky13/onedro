@@ -1,24 +1,20 @@
-import { useState, Suspense, lazy, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, type ComponentType } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { Window } from './Window';
 import { DesktopIcon } from './DesktopIcon';
+import { lazyWithRetry } from '@/utils/lazyWithRetry';
 import { 
-  LayoutDashboard, 
-  Users, 
+  Users,
   Settings, 
   FileText, 
-  BarChart3,
   MessageSquare,
-  Calendar,
-  Folder,
-  Image,
-  Music,
-  Video,
-  Calculator,
-  Trash2
+  Trash2,
+  Shield,
+  Smartphone,
+  Bot,
+  Calculator
 } from 'lucide-react';
 import { OptimizedNotificationPanel } from '@/components/notifications/OptimizedNotificationPanel';
 
@@ -26,8 +22,9 @@ interface App {
   id: string;
   title: string;
   icon: any;
-  component: React.ComponentType<any>;
+  component: ComponentType<any>;
   defaultSize?: { width: number; height: number };
+  route?: string; // Adiciona propriedade route opcional
 }
 
 interface OpenWindow extends App {
@@ -44,42 +41,42 @@ const apps: App[] = [
     id: 'usuarios', 
     title: 'Usuários', 
     icon: Users,
-    component: lazy(() => import('@/components/lite/ClientsLite').then(m => ({ default: m.ClientsLite }))),
+    component: lazyWithRetry(() => import('@/components/lite/ClientsLite').then(m => ({ default: m.ClientsLite }))),
     defaultSize: { width: 800, height: 500 }
   },
   { 
     id: 'configuracoes', 
     title: 'Configurações', 
     icon: Settings,
-    component: lazy(() => import('@/components/ServiceOrdersSettingsHub').then(m => ({ default: m.ServiceOrdersSettingsHub }))),
+    component: lazyWithRetry(() => import('@/components/ServiceOrdersSettingsHub').then(m => ({ default: m.ServiceOrdersSettingsHub }))),
     defaultSize: { width: 700, height: 500 }
   },
   { 
     id: 'worm', 
     title: 'Orçamentos', 
     icon: Calculator,
-    component: lazy(() => import('@/pages/WormPage')),
+    component: lazyWithRetry(() => import('@/pages/WormPage')),
     defaultSize: { width: 900, height: 600 }
   },
   { 
     id: 'ordens', 
     title: 'Criar ordem', 
     icon: FileText,
-    component: lazy(() => import('@/pages/ServiceOrdersPageSimple')),
+    component: lazyWithRetry(() => import('@/pages/ServiceOrdersPageSimple')),
     defaultSize: { width: 1000, height: 700 }
   },
   { 
     id: 'worm-trash', 
     title: 'Lixeira OR', 
     icon: Trash2,
-    component: lazy(() => import('@/pages/WormTrashPage').then(m => ({ default: m.WormTrashPage }))),
+    component: lazyWithRetry(() => import('@/pages/WormTrashPage').then(m => ({ default: m.WormTrashPage }))),
     defaultSize: { width: 900, height: 600 }
   },
   { 
     id: 'ordens-trash', 
     title: 'Lixeira OS', 
     icon: Trash2,
-    component: lazy(() => import('@/components/ServiceOrderTrash').then(m => ({ default: m.ServiceOrderTrash }))),
+    component: lazyWithRetry(() => import('@/components/ServiceOrderTrash').then(m => ({ default: m.ServiceOrderTrash }))),
     defaultSize: { width: 1000, height: 700 }
   },
   // item 'relatorios' removido conforme solicitação
@@ -90,7 +87,30 @@ const apps: App[] = [
     component: () => <div className="p-6"><OptimizedNotificationPanel isFullPage /></div>,
     defaultSize: { width: 600, height: 400 }
   },
-  // calendário removido conforme solicitação
+  { 
+    id: 'supadmin', 
+    title: 'Super Admin', 
+    icon: Shield,
+    component: lazyWithRetry(() => import('@/pages/SuperAdminPage').then(m => ({ default: m.SuperAdminPage }))),
+    defaultSize: { width: 900, height: 600 },
+    route: '/supadmin'
+  },
+  { 
+    id: 'peliculas', 
+    title: 'Películas', 
+    icon: Smartphone,
+    component: lazyWithRetry(() => import('@/pages/PeliculasCompatibilityPage')),
+    defaultSize: { width: 800, height: 600 },
+    route: '/p'
+  },
+  { 
+    id: 'chat', 
+    title: 'IA Chat', 
+    icon: Bot,
+    component: lazyWithRetry(() => import('@/pages/ChatPage')),
+    defaultSize: { width: 700, height: 600 },
+    route: '/chat'
+  },
 ];
 
 interface DesktopProps {
@@ -100,10 +120,10 @@ interface DesktopProps {
   requestOpenId?: string | null;
 }
 
-export function Desktop({ profile, onWindowsChange, requestRestoreId, requestOpenId }: DesktopProps) {
+export function Desktop({ onWindowsChange, requestRestoreId, requestOpenId }: DesktopProps) {
   const [openWindows, setOpenWindows] = useState<OpenWindow[]>([]);
 
-  const openApp = (app: App) => {
+  const openApp = useCallback((app: App) => {
     setOpenWindows(prev => {
       const existing = prev.find(w => w.id === app.id);
       if (existing) {
@@ -126,24 +146,24 @@ export function Desktop({ profile, onWindowsChange, requestRestoreId, requestOpe
       };
       return [...prev, newWindow];
     });
-  };
+  }, []);
 
-  const closeWindow = (id: string) => {
+  const closeWindow = useCallback((id: string) => {
     setOpenWindows(prev => prev.filter(w => w.id !== id));
-  };
+  }, []);
 
-  const toggleMinimize = (id: string) => {
+  const toggleMinimize = useCallback((id: string) => {
     setOpenWindows(prev => prev.map(w =>
       w.id === id ? { ...w, isMinimized: !w.isMinimized } : w
     ));
-  };
+  }, []);
 
-  const bringToFront = (id: string) => {
+  const bringToFront = useCallback((id: string) => {
     setOpenWindows(prev => {
       const maxZ = Math.max(100, ...prev.map(w => w.zIndex));
       return prev.map(w => (w.id === id ? { ...w, zIndex: maxZ + 1 } : w));
     });
-  };
+  }, []);
 
   const updateWindowPosition = (id: string, x: number, y: number) => {
     setOpenWindows(prev => prev.map(w => (w.id === id ? { ...w, x, y } : w)));
@@ -170,7 +190,7 @@ export function Desktop({ profile, onWindowsChange, requestRestoreId, requestOpe
         }
       }
     }
-  }, [requestRestoreId, openWindows]);
+  }, [requestRestoreId, openWindows, bringToFront, toggleMinimize]);
 
   useEffect(() => {
     if (requestOpenId) {
@@ -179,7 +199,7 @@ export function Desktop({ profile, onWindowsChange, requestRestoreId, requestOpe
         openApp(app);
       }
     }
-  }, [requestOpenId]);
+  }, [requestOpenId, openApp]);
 
   return (
     <div className="flex-1 relative overflow-hidden">
@@ -270,17 +290,20 @@ function DesktopIconsArea({ apps, onOpenApp }: { apps: App[]; onOpenApp: (app: A
       try {
         localStorage.setItem('desktop-grid-positions', JSON.stringify(payload));
       } catch {}
+      /* 
+      // Tabela desktop_icon_positions não existe no schema atual
       if (profile?.id) {
         const { error } = await supabase
-          .from('desktop_icon_positions')
+          .from('desktop_icon_positions' as any)
           .upsert(
             { user_id: profile.id, positions: payload },
-            { onConflict: 'user_id', returning: 'minimal' }
+            { onConflict: 'user_id' }
           );
         if (error) {
           console.warn('[desktop] falha ao salvar posições no supabase', error);
         }
       }
+      */
     };
 
     if (!draggingSelected && Object.keys(debouncedPositions).length) {
@@ -290,10 +313,10 @@ function DesktopIconsArea({ apps, onOpenApp }: { apps: App[]; onOpenApp: (app: A
 
   const cellToXY = (col: number, row: number) => ({ x: padX + col * cellW, y: padY + row * cellH });
   const xyToCell = (x: number, y: number) => ({ col: Math.max(0, Math.min(cols - 1, Math.round((x - padX) / cellW))), row: Math.max(0, Math.round((y - padY) / cellH)) });
-  const isOccupied = (col: number, row: number, ignore: Set<string>) => Object.entries(positions).some(([id, p]) => !ignore.has(id) && p.col === col && p.row === row);
+  const isOccupied = (col: number, row: number, ignore: Set<string>) => Object.entries(positions).some(([id, p]) => p && !ignore.has(id) && p.col === col && p.row === row);
   const getOccupantId = (col: number, row: number, ignore: Set<string>) => {
     for (const [id, p] of Object.entries(positions)) {
-      if (!ignore.has(id) && p.col === col && p.row === row) return id;
+      if (p && !ignore.has(id) && p.col === col && p.row === row) return id;
     }
     return null;
   };
@@ -315,33 +338,41 @@ function DesktopIconsArea({ apps, onOpenApp }: { apps: App[]; onOpenApp: (app: A
         if (editMode) {
           return;
         }
-        if (target === e.currentTarget) {
-          if (selected.size > 0) {
-            const ids = Array.from(selected);
-            let anchor = ids[0];
-            ids.forEach(id => {
-              const p = positions[id];
-              const pa = positions[anchor];
-              if (!pa || (p && (p.row < pa.row || (p.row === pa.row && p.col < pa.col)))) {
-                anchor = id;
-              }
-            });
-            const snap: Record<string, { col: number; row: number }> = {};
-            selected.forEach(id => (snap[id] = positions[id]));
-            setSnapshotPositions(snap);
-            setAnchorId(anchor);
-            const cx = e.clientX - rect.left;
-            const cy = e.clientY - rect.top;
-            const startCell = xyToCell(cx, cy);
-            setAnchorStart({ col: startCell.col, row: startCell.row });
-            setDraggingSelected(true);
-            return;
+          if (target === e.currentTarget) {
+            if (selected.size > 0) {
+              const ids = Array.from(selected);
+              const first = ids[0];
+              if (!first) return;
+
+              let anchor = first;
+              ids.forEach(id => {
+                const p = positions[id];
+                const pa = positions[anchor];
+                if (p && pa && (p.row < pa.row || (p.row === pa.row && p.col < pa.col))) {
+                  anchor = id;
+                }
+              });
+
+              const snap: Record<string, { col: number; row: number }> = {};
+              selected.forEach(id => {
+                const p = positions[id];
+                if (p) snap[id] = p;
+              });
+
+              setSnapshotPositions(snap);
+              setAnchorId(anchor);
+              const cx = e.clientX - rect.left;
+              const cy = e.clientY - rect.top;
+              const startCell = xyToCell(cx, cy);
+              setAnchorStart({ col: startCell.col, row: startCell.row });
+              setDraggingSelected(true);
+              return;
+            }
+            setDragStart({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+            setSelectRect({ x: e.clientX - rect.left, y: e.clientY - rect.top, w: 0, h: 0 });
+            setSelected(new Set());
+            setDraggingSelectRect(true);
           }
-          setDragStart({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-          setSelectRect({ x: e.clientX - rect.left, y: e.clientY - rect.top, w: 0, h: 0 });
-          setSelected(new Set());
-          setDraggingSelectRect(true);
-        }
       }}
       onMouseMove={e => {
         const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
@@ -395,7 +426,7 @@ function DesktopIconsArea({ apps, onOpenApp }: { apps: App[]; onOpenApp: (app: A
         });
         setSelected(next);
       }}
-      onMouseUp={e => {
+      onMouseUp={() => {
         setDraggingSelectRect(false);
         setDragStart(null);
         setSelectRect(null);
@@ -411,6 +442,7 @@ function DesktopIconsArea({ apps, onOpenApp }: { apps: App[]; onOpenApp: (app: A
         <div className="absolute" style={{ left: padX, top: padY, width: cols * cellW }}>
           {icons.map(app => {
             const pos = positions[app.id] || { col: 0, row: 0 };
+            if (!positions[app.id]) return null;
             const xy = cellToXY(pos.col, pos.row);
             return (
               <div
@@ -426,7 +458,8 @@ function DesktopIconsArea({ apps, onOpenApp }: { apps: App[]; onOpenApp: (app: A
                     setDraggingSelected(true);
                     setAnchorId(app.id);
                     const snap: Record<string, { col: number; row: number }> = {};
-                    snap[app.id] = positions[app.id];
+                    const p = positions[app.id];
+                    if (p) snap[app.id] = p;
                     setSnapshotPositions(snap);
                     setAnchorStart({ col: pos.col, row: pos.row });
                     return;
@@ -438,10 +471,11 @@ function DesktopIconsArea({ apps, onOpenApp }: { apps: App[]; onOpenApp: (app: A
                     setEditMode(true);
                     setDraggingSelected(true);
                     setAnchorId(app.id);
-                    const snap: Record<string, { col: number; row: number }> = {};
-                    snap[app.id] = positions[app.id];
-                    setSnapshotPositions(snap);
-                    setAnchorStart({ col: pos.col, row: pos.row });
+                     const snap: Record<string, { col: number; row: number }> = {};
+                     const p = positions[app.id];
+                     if (p) snap[app.id] = p;
+                     setSnapshotPositions(snap);
+                     setAnchorStart({ col: pos.col, row: pos.row });
                   }, 500);
                 }}
                 onMouseMove={() => {}}

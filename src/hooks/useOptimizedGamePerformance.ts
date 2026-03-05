@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useDeviceDetection } from './useDeviceDetection'
-import { useMobileDetection } from './useMobileDetection'
 import { useBatteryDetection, useBatteryOptimizedSettings } from './useBatteryDetection'
 import { useIOSDetection } from './useIOSDetection'
 
@@ -8,6 +7,7 @@ export interface GamePerformanceConfig {
   animationQuality: 'low' | 'medium' | 'high'
   particleCount: number
   updateInterval: number
+  targetFPS: number
   enableShadows: boolean
   enableBlur: boolean
   enableGlow: boolean
@@ -27,21 +27,25 @@ export interface BatteryInfo {
  */
 export const useOptimizedGamePerformance = () => {
   const { isMobile, isLowEnd, hasTouch, supportsHaptics } = useDeviceDetection()
-  const { isMobileDevice } = useMobileDetection()
   const batteryInfo = useBatteryDetection()
   const batterySettings = useBatteryOptimizedSettings()
   const { isIOS, isAndroid } = useIOSDetection()
 
   // Configuração adaptativa baseada no dispositivo e bateria
   const config = useMemo((): GamePerformanceConfig => {
-    const isMobileOrTablet = isMobile || isMobileDevice
+    const isMobileOrTablet = isMobile
     const isLowPower = batteryInfo.level < 0.3 && !batteryInfo.charging
     const isVeryLowPower = batteryInfo.level < 0.15 && !batteryInfo.charging
-    
+
+    const animationQuality = (batterySettings.animationQuality as GamePerformanceConfig['animationQuality']) || 'medium'
+
+    const targetFPS = isVeryLowPower ? 24 : isMobileOrTablet ? 30 : 60
+
     return {
-      animationQuality: batterySettings.animationQuality,
+      animationQuality,
       particleCount: batterySettings.maxParticles,
       updateInterval: batterySettings.updateInterval,
+      targetFPS,
       enableShadows: batterySettings.enableShadows && !isMobileOrTablet,
       enableBlur: batterySettings.enableBlur && !isMobileOrTablet,
       enableGlow: batterySettings.enableGlow,
@@ -49,7 +53,7 @@ export const useOptimizedGamePerformance = () => {
       enableHaptics: supportsHaptics && !isVeryLowPower && (isIOS || isAndroid),
       hitboxSize: isMobileOrTablet ? 48 : 32
     }
-  }, [isMobile, isMobileDevice, batteryInfo, batterySettings, supportsHaptics, isIOS, isAndroid])
+  }, [isMobile, batteryInfo, batterySettings, supportsHaptics, isIOS, isAndroid])
 
   // Função para ajustar performance em tempo real
   const adjustPerformance = (adjustment: Partial<GamePerformanceConfig>) => {
@@ -63,10 +67,10 @@ export const useOptimizedGamePerformance = () => {
 
   // Configurações específicas para mobile
   const mobileConfig = useMemo(() => {
-    const isMobileOrTablet = isMobile || isMobileDevice
-    
+    const isMobileOrTablet = isMobile
+
     if (!isMobileOrTablet) return null
-    
+
     return {
       preventZoom: true,
       preventScroll: true,
@@ -75,7 +79,7 @@ export const useOptimizedGamePerformance = () => {
       safeAreaSupport: isIOS,
       gesturePreventionLevel: isLowEnd ? 'aggressive' : 'normal'
     }
-  }, [isMobile, isMobileDevice, config.enableHaptics, isIOS, isLowEnd])
+  }, [isMobile, config.enableHaptics, isIOS, isLowEnd])
 
   return {
     config,
@@ -83,7 +87,7 @@ export const useOptimizedGamePerformance = () => {
     batterySettings,
     shouldUseBatteryMode,
     adjustPerformance,
-    isMobileOptimized: isMobile || isMobileDevice,
+    isMobileOptimized: isMobile,
     isLowEndDevice: isLowEnd,
     hasTouchSupport: hasTouch,
     mobileConfig,
@@ -92,7 +96,7 @@ export const useOptimizedGamePerformance = () => {
       isIOS,
       isAndroid,
       hasTouch,
-      isMobile: isMobile || isMobileDevice
+      isMobile
     }
   }
 }

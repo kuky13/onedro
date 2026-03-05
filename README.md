@@ -1,63 +1,72 @@
-
 <div align="center">
   <img src="/public/lovable-uploads/logoo.png" alt="OneDrip Logo" width="120" height="120">
   
   # OneDrip
 
-  ### *Plataforma completa para assistências técnicas modernas*
+  ### *Plataforma SaaS completa para Assistências Técnicas*
   
   [![License](https://img.shields.io/badge/License-Restricted-red?style=for-the-badge)](./LICENSE)
   [![Security](https://img.shields.io/badge/Security-Hardened-green?style=for-the-badge&logo=shield)](./SECURITY.md)
+  [![Stack](https://img.shields.io/badge/Stack-React_18_%7C_Vite_%7C_Supabase-blue?style=for-the-badge)](./package.json)
   
   ---
 </div>
 
 ## 📋 **Índice**
 
-- [Sobre o OneDrip](#-sobre-o-onedrip)
+- [Sobre o Projeto](#-sobre-o-projeto)
+- [Arquitetura e Stack Tecnológica](#-arquitetura-e-stack-tecnológica)
 - [Funcionalidades Principais](#-funcionalidades-principais)
 - [Acesso ao Sistema](#-acesso-ao-sistema)
-- [Diferenciais Competitivos](#-diferenciais-competitivos)
-- [Roadmap de Desenvolvimento](#-roadmap-de-desenvolvimento)
+- [Módulos do Sistema](#-módulos-do-sistema)
 - [Licença & Suporte](#-licença--suporte)
 
-## ✨ **Sobre o OneDrip**
+---
 
-> **"O sistema mais completo e moderno para gestão de assistências técnicas"**
+## 🪐 **Sobre o Projeto**
 
-O **OneDrip** é uma plataforma SaaS desenvolvida especificamente para assistências técnicas que desejam **profissionalizar** e **otimizar** suas operações. Com tecnologia de ponta e interface intuitiva, oferece tudo que você precisa para transformar seu negócio.
+> **"O sistema definitivo de CRM estendido para assistências e infraestrutura PWA"**
+
+O **OneDrip** é uma plataforma SaaS (Software as a Service) modular desenvolvida usando o que há de mais moderno no ecossistema web/mobile. Desenhado inicialmente para o gerenciamento profissional de assistências técnicas, o sistema evoluiu para uma plataforma robusta que também abriga a criação de lojas virtuais (`Stores`), fluxos nativos de Orçamentos com disparo assíncrono pro WhatsApp (`Worm`), e triagem automatizada com Inteligências Artificiais LLMs.
+
+---
+
+## ⚡ **Arquitetura e Stack Tecnológica**
+
+O sistema é moldado na filosofia **Serverless** e **Offline-first**, sendo muito leve e performático não importando a banda de internet do cliente.
+
+- **Frontend**: `React 18` construído com `Vite` (TypeScript strict). 
+- **Estilização UI**: `TailwindCSS` em simbiose com componentes acessíveis baseados no `Shadcn UI` (Modais complexos, DatePickers, Sonner Toasts).
+- **Core de Estado**: Praticamente todas as mutações e consumos da nuvem passam pelo gerenciamento pesado do cache pelo `@tanstack/react-query`. Caches de sessões voláteis operam com `Zustand`.
+- **Backend Edge**: O coração da aplicação repousa no **Supabase**. Banco de dados PostgreSQL com RLS estrito (Row Level Security), Storage Bucket nativos e dezenas de **Edge Functions** (Serveless em Deno) para controlar tráfego com Mercado Pago, WhatsApp, SMS e disparo de emails sem pesar a conexão do usuário.
+- **Progressive Web App (PWA)**: Pode ser instalável nativamente em iPhones (iOS) e Android sem envio prévio às lojas da Apple/Google.
+
+*(Para IAs ou novos desenvolvedores, veja a pasta `/docs/` para o mapa arquitetônico detalhado 100%).*
 
 ---
 
 ## 🎯 **Funcionalidades Principais**
 
-### 📋 **Sistema de Orçamentos Avançado**
-- ✅ **Criação Inteligente**: Templates personalizáveis com cálculos automáticos
-- ✅ **Workflow Completo**: Novo → Aprovado → Pago → Entregue → Concluído
-- ✅ **Geração de PDF**: Orçamentos profissionais com identidade visual
-- ✅ **Busca Avançada**: Filtros por status, cliente, período, dispositivo
-- ✅ **Alertas de Vencimento**: Notificações automáticas para orçamentos expirados
-- ✅ **Gestão de Partes**: Controle detalhado de peças e serviços
+### 🍪 **PWA Nativo e Interface Acessível**
+- ✅ **Offline-First**: Funciona de forma parcial com cache nativo.
+- ✅ **Guards de Autenticação**: Múltiplos níveis estritos (`AdminGuard`, `UnifiedProtectionGuard`) protegendo acesso a rotas sensíveis a usuários sem licenças.
+- ✅ **Acessibilidade Móvel**: Menus Bottom-tabs que emulam a sensação de um App nativo se acessado num Smartphone.
 
-### 👥 **Gestão Completa de Clientes**
-- 🔍 **Cadastro Completo**: Dados pessoais, contato e histórico
-- 📱 **Integração WhatsApp**: Envio direto de orçamentos
-- 📊 **Histórico Detalhado**: Todos os orçamentos por cliente
-- 🏷️ **Tags e Categorias**: Organização avançada da base de clientes
+### 📋 **Orçamentos Inteligentes & Reparos**
+- ✅ **Workflow Integrado**: Emissão de OS, gerenciamento de senhas (Grid numérico, padrão de arrastar Android), emissão de recibos térmicos em PDF (Gerados internamente via *jspdf*).
+- ✅ **Checklists Interativos**: Controle minucioso de aparelhos defeituosos e triagens de entrada.
+- ✅ **Catálogos em Lote**: Orçamentar serviços ou trocas de telas em frações de segundos.
 
-### 📊 **Dashboard Analytics Avançado**
-- 📈 **Métricas em Tempo Real**: Vendas, conversões e performance
-- 📅 **Relatórios Semanais**: Crescimento e estatísticas
+### 🤖 **Integração Externa (WhatsApp e IA)**
+- ✅ **Multi-Broker**: Pode se plugar nativamente.
+- ✅ **Envio em 1 clique**: Dispara propostas estéticas instantâneas para o cliente.
+- ✅ **Triage-AI**: LLMs nativamente integradas com contextos estritos do fluxo do seu negócio atuando como recepcionistas no chat.
 
-### 🗂️ **Gestão de Dados e Backup**
-- 💾 **Exportação/Importação**: CSV, Excel, PDF
-- 🗑️ **Lixeira Inteligente**: Recuperação de dados excluídos (30 dias)
-- 🔄 **Backup Automático**: Seus dados sempre seguros
+### 🛒 **Store System (Lojas Virtuais)**
+- ✅ Os próprios clientes do plano podem erguer pequenas lojas virtuais dinâmicas vinculadas à URL do OneDrip para vender capas, carregadores ou softwares, já com checkout nativo.
 
-### 🏢 **Gestão Empresarial Multi-usuário**
-- 🎨 **Personalização Total**: Logo, informações da empresa
-- 🔒 **Segurança Avançada**: Criptografia e auditoria
-- 📱 **100% Responsivo**: Otimizado para iOS, Android e Desktop
+### 🍅 **Faturamento SaaS (Mercado Pago)**
+- ✅ Renovação/Processamento Assíncrono via Edge Functions com o Gateway Mercado Pago para Planos Mensais e Anuais.
 
 ---
 
@@ -78,44 +87,23 @@ O **OneDrip** é uma plataforma SaaS desenvolvida especificamente para assistên
 
 ---
 
-
-
-## 💎 **Diferenciais Competitivos**
+## 💎 **Módulos do Sistema**
 
 <div align="center">
 
-| **OneDrip** | **Concorrentes** |
+| **Módulo** | **Função Central** |
 |:----------:|:----------------:|
-| ✅ **Interface Moderna** | ❌ Design Ultrapassado |
-| ✅ **Preço Acessível** | ❌ Mensalidades Altas |
-| ✅ **Suporte Brasileiro** | ❌ Suporte Limitado |
-| ✅ **Atualizações Constantes** | ❌ Funcionalidades Estáticas |
-| ✅ **Sistema Completo** | ❌ Funcionalidades Limitadas |
-| ✅ **Otimizado para Mobile** | ❌ Apenas Desktop |
-
+| ✅ **Reparos/Garantias** | Controle completo de assistência técnica, senhas e manutenções. |
+| ✅ **Orçamentos** | Fatorador e criador de orçamentos ultra rápido com envio no whatsapp. |
+| ✅ **Store System** | Páginas dinâmicas estilo E-commerce acopladas à assistência do dono. |
 </div>
 
 ---
 
-## 🚀 **Roadmap de Desenvolvimento**
-
-### ✅ **Versão 2.7 - Blue berry** - *Atual*
-- [x] Sistema de orçamentos com workflow
-- [x] Dashboard analytics avançado
-- [x] Geração de PDF profissional
-- [x] Gestão completa de clientes
-- [x] Lixeira inteligente com recuperação
-- [x] Exportação/Importação de dados
-- [x] Otimizações para iOS/Android
-
----
-
-
-
 ## 📄 **Licença & Suporte**
 
 ### **Licenciamento**
-📋 Este projeto é licenciado sob a **Licença de Uso Restrito Oliver System** - veja [LICENSE](LICENSE) para detalhes.
+📋 Este software é intelectualmente protegido e licenciado sob a **Licença de Uso Restrito Oliver System** - veja [LICENSE](LICENSE) para detalhes.
 
 ### **Suporte Técnico**
 - 📞 **WhatsApp**: (64) 99602-8022
@@ -126,30 +114,7 @@ O **OneDrip** é uma plataforma SaaS desenvolvida especificamente para assistên
 
 <div align="center">
 
-## 🌟 **Transforme sua Assistência Técnica Hoje!**
-
-**Junte-se a centenas de profissionais que já escolheram o OneDrip**
-
-[![Começar Agora](https://img.shields.io/badge/🚀_COMEÇAR_AGORA-4CAF50?style=for-the-badge&logoColor=white)](https://onedrip.com.br/plans)
-[![Demo Gratuita](https://img.shields.io/badge/🎯_DEMO_GRATUITA-2196F3?style=for-the-badge&logoColor=white)](https://onedrip.com.br)
-
----
-
-## 🏆 **Por que Escolher o OneDrip?**
-
-- **Interface Moderna e Intuitiva**: Design pensado para facilitar o dia a dia
-- **Suporte Nacional**: Atendimento em português com equipe brasileira
-- **Atualizações Constantes**: Sempre evoluindo com novas funcionalidades
-- **Preço Justo**: Valor acessível para assistências técnicas de todos os tamanhos
-- **Dados Seguros**: Seus dados protegidos com tecnologia de ponta
-
----
-
-## 🚀 **Comece Agora Mesmo!**
-
-<div align="center">
-
-### Pronto para revolucionar sua assistência técnica?
+## 🌟 **Transformando assistências técnicas em negócios de sucesso** 🚀
 
 **Experimente o OneDrip gratuitamente e veja a diferença!**
 
@@ -159,11 +124,7 @@ O **OneDrip** é uma plataforma SaaS desenvolvida especificamente para assistên
 
 ---
 
-**© 2025 KuktSolutions. Todos os direitos reservados.**
+**© 2026 KukySolutions / One Drip. Todos os direitos reservados.**
 
-*Transformando assistências técnicas em negócios de sucesso* 🚀
 
 </div>
-
-
-

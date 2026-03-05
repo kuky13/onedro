@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 
 interface BudgetServiceOrderItem {
   orderId: string;
-  formattedId?: string;
+  formattedId: string | null;
   createdAt: string;
 }
 
@@ -40,11 +40,15 @@ export const useBudgetServiceOrder = (budgetId: string) => {
             return daysDiff <= 30;
           });
 
-          if (validOrders.length > 0) {
-            const last = validOrders[validOrders.length - 1];
-            setCreatedOrderId(last.orderId);
-            setFormattedId(last.formattedId || null);
-            setCreatedOrderCount(validOrders.length);
+           if (validOrders.length > 0) {
+             const last = validOrders.at(-1);
+             if (!last) {
+               localStorage.removeItem(storageKey);
+               return;
+             }
+             setCreatedOrderId(last.orderId);
+             setFormattedId(last.formattedId || null);
+             setCreatedOrderCount(validOrders.length);
             // Persistir limpeza se houve remoção
             if (validOrders.length !== parsedData.orders.length) {
               const sanitized: BudgetServiceOrdersData = { budgetId, orders: validOrders };
@@ -73,7 +77,7 @@ export const useBudgetServiceOrder = (budgetId: string) => {
 
       const newItem: BudgetServiceOrderItem = {
         orderId,
-        formattedId: orderFormattedId,
+        formattedId: orderFormattedId ?? null,
         createdAt: new Date().toISOString()
       };
 

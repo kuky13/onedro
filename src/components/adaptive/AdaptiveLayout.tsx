@@ -8,7 +8,6 @@ import '@/styles/hamburger-menu.css';
 import { ResponsiveContainer } from '@/components/ui/ResponsiveContainer';
 import { MobileMenuProvider } from '@/components/mobile/MobileMenuProvider';
 import { AppSidebar } from '@/components/AppSidebar';
-import { TabletHeaderNav } from './TabletHeaderNav';
 import { cn } from '@/lib/utils';
 import { MobileLoading } from '@/components/ui/mobile-loading';
 import { NotificationIndicator } from '@/components/NotificationIndicator';
@@ -79,6 +78,7 @@ const MobileLayoutContent = ({
       <MobileHamburgerMenu isOpen={isOpen} onClose={closeMenu} onTabChange={onTabChange} menuData={menuData} onLogout={handleLogout} />
     </div>;
 };
+
 export const AdaptiveLayout = ({
   children,
   activeTab,
@@ -117,7 +117,9 @@ export const AdaptiveLayout = ({
     orientation,
     isUltraWide
   } = layoutContext;
-  if (isDesktop) {
+
+  // Para Desktop E Tablet usar o mesmo layout com menu hambúrguer
+  if (isDesktop || isTablet) {
     return (
       <MobileMenuProvider>
         <DesktopWithMobileMenu 
@@ -132,23 +134,6 @@ export const AdaptiveLayout = ({
         </DesktopWithMobileMenu>
       </MobileMenuProvider>
     );
-  }
-  if (isTablet) {
-    return <ResponsiveContainer className="min-h-screen bg-background" padding="none" maxWidth="full" optimized={true} breakpointBehavior={{
-      tablet: isLandscape ? 'landscape-tablet-optimized' : 'portrait-tablet-optimized'
-    }}>
-        <TabletHeaderNav activeTab={activeTab} onTabChange={onTabChange} />
-        
-        <main className={cn("flex-1 overflow-y-auto w-full relative", "scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent", orientation === 'landscape' ? "pb-2" : "pb-4")}>
-          <ResponsiveContainer padding="adaptive" maxWidth={containerMaxWidth === 'none' ? 'full' : '2xl'} className="min-h-full" breakpointBehavior={{
-          tablet: isLandscape ? 'grid-adaptive landscape-tablet-grid' : 'portrait-tablet-grid'
-        }}>
-            <div key={activeTab} className="w-full h-full transition-opacity duration-100">
-              {children}
-            </div>
-          </ResponsiveContainer>
-        </main>
-      </ResponsiveContainer>;
   }
 
   // Enhanced Mobile layout

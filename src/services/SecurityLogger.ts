@@ -53,14 +53,16 @@ class SecurityLogger {
     reason: string,
     additionalData?: Record<string, any>
   ): Promise<void> {
+    const sessionId = this.getSessionId();
+
     const logEntry: AccessLogEntry = {
       user_id: userId,
       attempted_path: attemptedPath,
-      reason: reason,
+      reason,
       timestamp: new Date().toISOString(),
       user_agent: this.getUserAgent(),
-      session_id: this.getSessionId(),
-      additional_data: additionalData
+      ...(sessionId ? { session_id: sessionId } : {}),
+      ...(additionalData ? { additional_data: additionalData } : {})
     };
 
     this.addToQueue(logEntry);
@@ -82,7 +84,7 @@ class SecurityLogger {
       user_id: userId,
       activity_type: activityType,
       description: description,
-      metadata: metadata,
+      ...(metadata ? { metadata } : {}),
       timestamp: new Date().toISOString(),
       user_agent: this.getUserAgent()
     };
@@ -186,6 +188,19 @@ class SecurityLogger {
     const batch = this.logQueue.splice(0, this.BATCH_SIZE);
 
     try {
+      // Verificar se temos sessão antes de tentar inserir logs
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        // Se houver erro ou não houver sessão, recolocar logs na fila e aguardar
+        if (sessionError && !sessionError.message.includes('aborted')) {
+          console.warn('⚠️ [SecurityLogger] Erro ao obter sessão:', sessionError.message);
+        }
+        this.logQueue.unshift(...batch);
+        this.isProcessing = false;
+        return;
+      }
+
       // Separar logs por tipo
       const accessLogs = batch.filter(entry => 'attempted_path' in entry) as AccessLogEntry[];
       const activityLogs = batch.filter(entry => 'activity_type' in entry) as UserActivityLogEntry[];
@@ -219,8 +234,10 @@ class SecurityLogger {
           console.log(`✅ [SecurityLogger] ${activityLogs.length} user_activity_logs inseridos`);
         }
       }
-    } catch (error) {
-      console.error('❌ [SecurityLogger] Erro geral ao processar fila:', error);
+    } catch (error: any) {
+      if (error?.name !== 'AbortError' && !error?.message?.includes('aborted')) {
+        console.error('❌ [SecurityLogger] Erro geral ao processar fila:', error);
+      }
       // Recolocar todos os logs na fila
       this.logQueue.unshift(...batch);
     } finally {
@@ -268,13 +285,8 @@ class SecurityLogger {
    * Obtém o ID da sessão atual
    */
   private getSessionId(): string | undefined {
-    // Tentar obter da sessão do Supabase
-    try {
-      const session = supabase.auth.getSession();
-      return session ? 'supabase_session' : undefined;
-    } catch {
-      return undefined;
-    }
+    // Evitar depender de getSession() async aqui (e evitar setar undefined explicitamente em campos opcionais)
+    return undefined;
   }
 
   /**

@@ -19,37 +19,13 @@ export const GLOBAL_DEFAULT_TEMPLATE = `📱 *{nome_empresa}*
 *Serviço:* {nome_reparo} 
 
 {qualidades_inicio}*{qualidade_nome}* – {peca_garantia_meses} meses de garantia 
-💰 À vista {peca_preco_vista} ou {peca_preco_parcelado} no cartão em {peca_parcelas}x de {peca_valor_parcela} 
+💰 À vista {peca_preco_vista} ou {peca_preco_parcelado} no cartão em até {peca_parcelas}x de {peca_valor_parcela} 
 
-{qualidades_fim} 
-*📦 Serviços Inclusos:* 
+{qualidades_fim}*📦 Serviços Inclusos:* 
 {servicos_inclusos} 
-
 🚫 Não cobre danos por água ou molhado 
-
-📝 *Observações:* 
-{observacoes} 
-
 📅 Válido até: {data_validade}`;
 
-// Template com placeholders (mantido para uso futuro quando desejado)
-const DEFAULT_TEMPLATE = `📱{nome_empresa}
-
-*Aparelho:* {aparelho}
-*Serviço:* {nome_reparo}
-
-{detalhes_pecas}
-
-*Serviços Adicionais:*
-{servicos_inclusos}
-
-*🛡️ Garantia até {garantia_meses} meses*
-🚫 Não cobre danos por água ou quedas
-
-📝 *OBSERVAÇÕES*
-{observacoes}
-
-📅 Válido até: {data_validade}`;
 
 // Hook para buscar templates do usuário
 export const useWhatsAppTemplates = (userId: string | undefined) => {
@@ -57,7 +33,7 @@ export const useWhatsAppTemplates = (userId: string | undefined) => {
     queryKey: ['whatsapp-templates', userId],
     queryFn: async () => {
       if (!userId) return [];
-      
+
       const { data, error } = await supabase
         .from('whatsapp_message_templates')
         .select('*')
@@ -77,7 +53,7 @@ export const useDefaultTemplate = (userId: string | undefined) => {
     queryKey: ['whatsapp-default-template', userId],
     queryFn: async () => {
       if (!userId) return null;
-      
+
       const { data, error } = await supabase
         .from('whatsapp_message_templates')
         .select('*')
@@ -105,7 +81,7 @@ export const useCreateTemplate = () => {
         .eq('user_id', template.user_id);
 
       if (countError) throw countError;
-      
+
       if (existingTemplates && existingTemplates.length >= 1) {
         throw new Error('Limite de 1 template por usuário atingido');
       }
@@ -147,10 +123,10 @@ export const useUpdateTemplate = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, userId, updates }: { 
-      id: string; 
+    mutationFn: async ({ id, userId, updates }: {
+      id: string;
       userId: string;
-      updates: Partial<Omit<WhatsAppTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>> 
+      updates: Partial<Omit<WhatsAppTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
     }) => {
       // Se for definir como padrão, primeiro remover is_default de outros
       if (updates.is_default === true) {
@@ -297,6 +273,7 @@ export const useResetDefaultTemplate = () => {
       return data;
     },
     onSuccess: (data) => {
+      if (!data) return;
       queryClient.invalidateQueries({ queryKey: ['whatsapp-templates', data.user_id] });
       queryClient.invalidateQueries({ queryKey: ['whatsapp-default-template', data.user_id] });
       toast.success('Template padrão restaurado com sucesso!');

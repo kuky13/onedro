@@ -1,11 +1,10 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { OptimizedNotificationPanel } from '@/components/notifications/OptimizedNotificationPanel';
 
-const NotificationsPage: React.FC = () => {
+const NotificationsPage = () => {
   const navigate = useNavigate();
 
   return (
@@ -31,12 +30,27 @@ const NotificationsPage: React.FC = () => {
         </div>
         
         {/* Main content with mobile-optimized padding */}
-        <div className="px-0 sm:px-6 pb-safe-bottom">
-          <OptimizedNotificationPanel 
-            isFullPage={true}
-            className="w-full h-[calc(100vh-4rem)] sm:h-auto"
-          />
-        </div>
+        <main className="px-0 sm:px-6 pb-safe-bottom pt-2 sm:pt-4 flex flex-col sm:block">
+          {/* Mobile full-page panel */}
+          <div className="sm:hidden">
+            <OptimizedNotificationPanel
+              isFullPage
+              className="w-full h-full"
+            />
+          </div>
+
+          {/* Desktop / tablet card layout */}
+          <div className="hidden sm:block max-w-4xl mx-auto">
+            <Card className="shadow-md border-border/60 bg-card/95 backdrop-blur-sm">
+              <CardContent className="p-0">
+                <OptimizedNotificationPanel
+                  isFullPage
+                  className="w-full h-[600px]"
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </main>
       </div>
     </div>
   );

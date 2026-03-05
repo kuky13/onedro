@@ -27,10 +27,14 @@ export interface BudgetData {
   shop_name?: string;
   parts?: Array<{
     name?: string;
+    part_type?: string;
     quantity?: number;
     price?: number;
     cash_price?: number;
     installment_price?: number;
+    installments?: number;
+    installment_count?: number;
+    installments_count?: number;
     warranty_months?: number;
   }>;
   [key: string]: any;
@@ -71,18 +75,50 @@ export function generateWhatsAppMessageFromTemplate(
     if (count <= 1) count = 0
     return count
   }
+  type BudgetPartTemplate = NonNullable<BudgetData['parts']>[number];
+
   // Map Worm budget_parts → parts when necessário
   const wormParts: any[] = (budgetData as any).budget_parts
   if (!budgetData.parts && Array.isArray(wormParts) && wormParts.length > 0) {
-    budgetData.parts = wormParts.map((bp: any) => ({
-      name: bp.name || bp.part_type || bp.quality || 'Peça',
-      quantity: bp.quantity || 1,
-      price: bp.price ?? bp.cash_price ?? 0,
-      cash_price: bp.cash_price ?? bp.price ?? 0,
-      installment_price: bp.installment_price ?? bp.price ?? 0,
-      warranty_months: bp.warranty_months ?? 0,
-      installments: bp.installments_count ?? bp.installments ?? undefined,
-    }))
+    budgetData.parts = wormParts.map((bp: any) => {
+      const installments = bp.installments_count ?? bp.installments;
+
+      return {
+        name: bp.name || bp.part_type || bp.quality || 'Peça',
+        part_type: bp.part_type ?? bp.quality,
+        quantity: bp.quantity || 1,
+        price: bp.price ?? bp.cash_price ?? 0,
+        cash_price: bp.cash_price ?? bp.price ?? 0,
+        installment_price: bp.installment_price ?? bp.price ?? 0,
+        warranty_months: bp.warranty_months ?? 0,
+        ...(installments != null ? { installments } : {}),
+      } satisfies BudgetPartTemplate
+    })
+  }
+
+  // CRITICAL: Se ainda não tiver partes (ex: orçamento simples sem itens), criar uma peça virtual
+  // baseada nos dados globais para que o bloco de preço/garantia renderize
+  if (!budgetData.parts || budgetData.parts.length === 0) {
+    const globalQuality = budgetData.part_quality || budgetData.part_type || 'Serviço Padrão';
+    const globalPrice = budgetData.total_price || budgetData.cash_price || 0;
+
+    // Só cria peça virtual se houver algum descritivo ou preço relevante
+    if (globalQuality || globalPrice > 0) {
+      const installments = budgetData.installments;
+
+      budgetData.parts = [
+        {
+          name: globalQuality,
+          part_type: budgetData.part_type ?? budgetData.part_quality ?? 'Serviço',
+          quantity: 1,
+          price: globalPrice,
+          cash_price: budgetData.cash_price || globalPrice,
+          installment_price: budgetData.installment_price || globalPrice,
+          warranty_months: budgetData.warranty_months || 0,
+          ...(installments != null ? { installments } : {}),
+        } satisfies BudgetPartTemplate,
+      ];
+    }
   }
   // Se o template contém seções antigas indesejadas, usar formato simples
   const legacySections = [
@@ -110,10 +146,10 @@ export function generateWhatsAppMessageFromTemplate(
   const deviceModel = budgetData.device_model || 'Dispositivo não informado';
   const deviceIssue = budgetData.issue || 'N/A';
 
-  // Dados do serviço - usar part_quality como Nome do Reparo
-  const serviceName = budgetData.part_quality || budgetData.part_type || 'Serviço';
+  // Dados do serviço - PRIORIZAR defeito/problema relatado (issue) como Nome do Reparo
+  const serviceName = budgetData.issue || budgetData.part_quality || budgetData.part_type || 'Serviço';
   // Pegar qualidade da primeira peça se disponível, senão usar campos globais
-  const qualityPiece = budgetData.parts?.[0]?.part_type || budgetData.parts?.[0]?.name || budgetData.part_quality || budgetData.part_type || 'Peça padrão';
+  const qualityPiece = budgetData.parts?.[0]?.name || budgetData.parts?.[0]?.part_type || budgetData.part_quality || budgetData.part_type || 'Peça padrão';
 
   // Preços (tratando como centavos do banco)
   const cashPrice = budgetData.cash_price || budgetData.total_price || 0;
@@ -130,7 +166,7 @@ export function generateWhatsAppMessageFromTemplate(
       if (cnt > bestInstallmentsCount && ip > cp) bestInstallmentsCount = cnt;
     }
   }
-  
+
   // Usar formatCurrency que espera centavos
   const formattedCashPrice = formatSmart(cashPrice as number);
   const formattedInstallmentPrice = (() => {
@@ -171,7 +207,7 @@ export function generateWhatsAppMessageFromTemplate(
   const services = [];
   if (budgetData.includes_delivery) services.push('Buscamos e entregamos o seu aparelho');
   if (budgetData.includes_screen_protector) services.push('Película 3D de brinde');
-  
+
   // Adicionar serviços personalizados
   if (budgetData.custom_services) {
     const customServicesText = budgetData.custom_services.trim();
@@ -184,14 +220,14 @@ export function generateWhatsAppMessageFromTemplate(
       });
     }
   }
-  
+
   // Vamos calcular o texto dos serviços após processar peças/garantia
   let servicesText = '';
 
   // Processar detalhes das peças se disponíveis
   let partsText = '';
   let maxWarranty = 0;
-  
+
   if (budgetData.parts && Array.isArray(budgetData.parts) && budgetData.parts.length > 0) {
     // Encontrar a maior garantia entre as peças
     budgetData.parts.forEach((part: any) => {
@@ -199,39 +235,38 @@ export function generateWhatsAppMessageFromTemplate(
         maxWarranty = part.warranty_months;
       }
     });
-    
+
     budgetData.parts.forEach((part: any, index: number) => {
       const partName = part.name || part.part_type || `Peça ${index + 1}`;
-      const quantity = part.quantity || 1;
       const price = part.price || part.cash_price || 0;
       const installmentPrice = part.installment_price || price;
       const warranty = part.warranty_months || 0;
       const installmentCount = resolveInstallmentsCount(budgetData, part); // prioriza configuração da peça
-      
+
       // Nome da peça/qualidade com garantia (formato limpo)
       partsText += `*${partName}*${warranty > 0 ? ` – ${warranty} meses de garantia` : ''}\n`;
-      
+
       // Preços (formato limpo)
       if (price > 0) {
-      if (installmentCount > 0 && installmentPrice && installmentPrice !== price) {
-        const ip = installmentPrice as number;
-        const cp = price as number;
-        
-        // Validação: verificar se installmentCount é numérico e maior que zero
-        const validInstallments = installmentCount > 0 ? installmentCount : 1;
-        
-        // Cálculo correto do valor total e parcela mensal
-        const totalInstallment = ip > cp ? ip : ip * validInstallments;
-        
-        // CORREÇÃO: Dividir o valor total pelo número de parcelas
-        const monthlyValue = totalInstallment / validInstallments;
-        
-        partsText += `💰 À vista ${formatSmart(price)} | no cartão (crédito) ${formatSmart(totalInstallment)} ${validInstallments}x de ${formatSmartWithRef(monthlyValue, totalInstallment)}\n`;
+        if (installmentCount > 0 && installmentPrice && installmentPrice !== price) {
+          const ip = installmentPrice as number;
+          const cp = price as number;
+
+          // Validação: verificar se installmentCount é numérico e maior que zero
+          const validInstallments = installmentCount > 0 ? installmentCount : 1;
+
+          // Cálculo correto do valor total e parcela mensal
+          const totalInstallment = ip > cp ? ip : ip * validInstallments;
+
+          // CORREÇÃO: Dividir o valor total pelo número de parcelas
+          const monthlyValue = totalInstallment / validInstallments;
+
+          partsText += `💰 À vista ${formatSmart(price)} | no cartão (crédito) ${formatSmart(totalInstallment)} ${validInstallments}x de ${formatSmartWithRef(monthlyValue, totalInstallment)}\n`;
         } else if (price) {
           partsText += `💰 À vista ${formatSmart(price)}\n`;
         }
       }
-      
+
       partsText += '\n'; // Espaço entre peças
     });
   }
@@ -246,7 +281,7 @@ export function generateWhatsAppMessageFromTemplate(
 
   // Data de validade
   const validUntil = budgetData.valid_until || budgetData.expires_at;
-  const validDate = validUntil 
+  const validDate = validUntil
     ? new Date(validUntil).toLocaleDateString('pt-BR')
     : new Date(Date.now() + (budgetWarningDays || 15) * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR');
 
@@ -289,20 +324,21 @@ export function generateWhatsAppMessageFromTemplate(
     { start: '{inicio_pecas}', end: '{fim_pecas}' }
   ];
 
-  let blockProcessed = false;
   for (const pattern of blockPatterns) {
-    if (message.includes(pattern.start) && message.includes(pattern.end)) {
-      const before = message.split(pattern.start)[0];
-      const middle = message.split(pattern.start)[1].split(pattern.end)[0];
-      const after = message.split(pattern.end)[1] || '';
-      
+    const startIdx = message.indexOf(pattern.start);
+    const endIdx = message.indexOf(pattern.end);
+    if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+      const before = message.slice(0, startIdx);
+      const middle = message.slice(startIdx + pattern.start.length, endIdx);
+      const after = message.slice(endIdx + pattern.end.length);
+
       let processedParts = '';
-      
+
       if (budgetData.parts && Array.isArray(budgetData.parts) && budgetData.parts.length > 0) {
         // Processar cada peça com o template do bloco
         budgetData.parts.forEach((part: any, index: number) => {
           let partText = middle;
-          
+
           const partName = part.name || part.part_type || `Peça ${index + 1}`;
           const quantity = part.quantity || 1;
           const price = part.price || part.cash_price || 0;
@@ -318,19 +354,19 @@ export function generateWhatsAppMessageFromTemplate(
           );
           const ip = installmentPrice as number;
           const base = price as number;
-          
+
           // Validações: installmentCount deve ser numérico, positivo e maior que zero
           const validInstallmentCount = installmentCount > 0 ? installmentCount : 0;
-          
+
           // Cálculo correto: sempre dividir o valor total pelo número de parcelas
           let totalInstallment: number;
           let monthlyValue: number;
-          
+
           if (validInstallmentCount > 0) {
             // Se ip > base, ip é o valor total parcelado
             // Se ip <= base, ip * installmentCount é o valor total parcelado
             totalInstallment = ip > base ? ip : ip * validInstallmentCount;
-            
+
             // CORREÇÃO: Sempre dividir o valor total pelo número de parcelas
             monthlyValue = totalInstallment / validInstallmentCount;
           } else {
@@ -338,45 +374,43 @@ export function generateWhatsAppMessageFromTemplate(
             totalInstallment = ip;
             monthlyValue = ip;
           }
-          
+
           // Placeholders específicos para cada peça no bloco
           const partReplacements: Record<string, string> = {
-            '{qualidade_nome}': partName,
-            '{peca_nome}': partName,
-            '{qualidade_tipo}': partName,
+            '{qualidade_nome}': partName || 'Peça',
+            '{peca_nome}': partName || 'Peça',
+            '{qualidade_tipo}': partName || 'Peça',
             '{peca_quantidade}': quantity.toString(),
-            '{peca_preco_vista}': formatSmart(price),
-            '{peca_preco_parcelado}': formatSmart(totalInstallment),
-            '{peca_parcelas}': installmentCount > 0 ? installmentCount.toString() : '',
-            '{peca_valor_parcela}': formatSmartWithRef(monthlyValue, totalInstallment),
+            '{peca_preco_vista}': (formatSmart(price) || replacements['{preco_vista}']) || 'R$ 0,00',
+            '{peca_preco_parcelado}': (formatSmart(totalInstallment) || replacements['{preco_parcelado}']) || 'R$ 0,00',
+            '{peca_parcelas}': ((installmentCount > 0 ? installmentCount.toString() : '') || replacements['{num_parcelas}']) || '',
+            '{peca_valor_parcela}': (formatSmartWithRef(monthlyValue, totalInstallment) || replacements['{valor_parcela}']) || 'R$ 0,00',
             '{peca_garantia}': warranty > 0 ? `${warranty} meses` : 'Sem garantia',
             '{peca_garantia_meses}': warranty.toString(),
           };
-          
+
           Object.entries(partReplacements).forEach(([key, value]) => {
-            partText = partText.replaceAll(key, value);
+            partText = partText.split(key).join(value);
           });
-          
+
           processedParts += partText;
         });
       }
-      
+
       message = `${before}${processedParts}${after}`;
-      blockProcessed = true;
       break;
     }
   }
 
   // Substituições globais (aplicadas fora dos blocos)
   Object.entries(replacements).forEach(([key, value]) => {
-    message = message.replaceAll(key, value);
+    message = message.split(key).join(value);
   });
 
-  // Normalização universal de linhas de preço em templates personalizados
-  // Forma com placeholders (antiga): "💰 À vista {preco_vista} | {preco_parcelado} {num_parcelas}x de {valor_parcela} no cartão (crédito)"
+  // Sistema inteligente de normalização de preços
   message = message.replace(
-    /💰\s*À vista\s*\{preco_vista\}\s*\|\s*\{preco_parcelado\}\s*\{num_parcelas\}x\s*de\s*\{valor_parcela\}\s*no cartão\s*\(crédito\)/g,
-    '💰 À vista {preco_vista} | no cartão (crédito) {preco_parcelado} {num_parcelas}x de {valor_parcela}'
+    /💰\s*À vista\s*(.+?)\s*(?:\||ou)\s*(?:no cartão \(crédito\))?\s*(.+?)\s*no cartão\s*(?:em\s+até\s+)?(\d+)x\s*de\s*(.+?)/g,
+    '💰 À vista $1 ou $2 no cartão em até $3x de $4'
   );
 
   // Forma com valores literais: "💰 À vista R$ XXX | R$ YYY Zx de R$ WWW no cartão (crédito)"
@@ -448,11 +482,11 @@ export const getCompanyName = async (userId: string): Promise<string> => {
       .select('name')
       .eq('owner_id', userId)
       .maybeSingle();
-    
+
     if (error || !data?.name) {
       return DEFAULT_COMPANY_NAME;
     }
-    
+
     return data.name;
   } catch (error) {
     console.error('Error fetching company name:', error);

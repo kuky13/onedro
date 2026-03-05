@@ -29,7 +29,9 @@ export const useMaintenanceMode = () => {
         .maybeSingle();
 
       if (error) {
-        console.error('❌ Erro ao buscar status do sistema:', error);
+        if (!error.message?.includes('aborted')) {
+          console.error('❌ Erro ao buscar status do sistema:', error);
+        }
         throw error;
       }
 

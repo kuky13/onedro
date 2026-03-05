@@ -1,18 +1,52 @@
-import React, { useEffect, useState } from 'react';
+ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, MessageCircle, ArrowLeft, Copy, Loader2, Key } from 'lucide-react';
+import { CheckCircle, MessageCircle, ArrowLeft, Copy, Loader2, Key, AlertTriangle, ExternalLink, Shield, Save } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAppInfo, useContactInfo } from '@/hooks/useAppConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 
+// Chave para localStorage
+const LICENSE_STORAGE_KEY = 'onedrip_purchased_license';
+
 interface LicenseData {
   code: string;
-  expires_at: string;
-  activated_at: string;
+  expires_at: string | null;
+  activated_at: string | null;
 }
+
+// Funções para salvar e recuperar licença do localStorage
+const saveLicenseToStorage = (license: LicenseData) => {
+  try {
+    localStorage.setItem(LICENSE_STORAGE_KEY, JSON.stringify({
+      ...license,
+      savedAt: new Date().toISOString()
+    }));
+    console.log('PurchaseSuccess: Licença salva em localStorage');
+  } catch (error) {
+    console.error('PurchaseSuccess: Erro ao salvar licença em localStorage:', error);
+  }
+};
+
+const getLicenseFromStorage = (): LicenseData | null => {
+  try {
+    const stored = localStorage.getItem(LICENSE_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      console.log('PurchaseSuccess: Licença recuperada do localStorage');
+      return {
+        code: parsed.code,
+        expires_at: parsed.expires_at ?? null,
+        activated_at: parsed.activated_at ?? null
+      };
+    }
+  } catch (error) {
+    console.error('PurchaseSuccess: Erro ao recuperar licença do localStorage:', error);
+  }
+  return null;
+};
 
 export const PurchaseSuccessPage = () => {
   const { name, logo } = useAppInfo();
@@ -27,6 +61,15 @@ export const PurchaseSuccessPage = () => {
   const [showLoginMessage, setShowLoginMessage] = useState(false);
   
   const orderId = searchParams.get('order_id');
+
+  // Tentar carregar do localStorage na inicialização
+  useEffect(() => {
+    const storedLicense = getLicenseFromStorage();
+    if (storedLicense) {
+      console.log('PurchaseSuccess: Licença encontrada em localStorage');
+      setLicense(storedLicense);
+    }
+  }, []);
 
   // Buscar licença do usuário (com ou sem login)
   const fetchLicense = async () => {
@@ -53,15 +96,62 @@ export const PurchaseSuccessPage = () => {
         if (data) {
           console.log('PurchaseSuccess: Licença encontrada:', data);
           setLicense(data);
+          saveLicenseToStorage(data); // Salvar em localStorage
           setIsLoading(false);
           return;
+        }
+      }
+      
+      // Tentar buscar pela última purchase_registration com código de licença
+      // (para usuários não logados que acabaram de fazer compra)
+      console.log('PurchaseSuccess: Buscando última purchase_registration com código de licença');
+      const { data: purchaseReg, error: purchaseRegError } = await supabase
+        .from('purchase_registrations')
+        .select('license_code, license_id')
+        .not('license_code', 'is', null)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!purchaseRegError && purchaseReg?.license_code) {
+        // Buscar detalhes da licença
+        if (purchaseReg.license_id) {
+          const { data: licenseData, error: licenseError } = await supabase
+            .from('licenses')
+            .select('code, expires_at, activated_at')
+            .eq('id', purchaseReg.license_id)
+            .maybeSingle();
+
+          if (!licenseError && licenseData) {
+            console.log('PurchaseSuccess: Licença encontrada via purchase_registration:', licenseData);
+            setLicense(licenseData);
+            saveLicenseToStorage(licenseData); // Salvar em localStorage
+            setIsLoading(false);
+            return;
+          }
+        } else if (purchaseReg.license_code) {
+          // Se não tem license_id, buscar pelo código
+          const { data: licenseData, error: licenseError } = await supabase
+            .from('licenses')
+            .select('code, expires_at, activated_at')
+            .eq('code', purchaseReg.license_code)
+            .maybeSingle();
+
+          if (!licenseError && licenseData) {
+            console.log('PurchaseSuccess: Licença encontrada via código:', licenseData);
+            setLicense(licenseData);
+            saveLicenseToStorage(licenseData); // Salvar em localStorage
+            setIsLoading(false);
+            return;
+          }
         }
       }
       
       // Se não encontrou licença e tem orderId, buscar a última licença criada (assumindo que é a mais recente)
       if (orderId) {
         console.log('PurchaseSuccess: Buscando última licença criada (order_id presente)');
-        const { data, error } = await supabase
+        const { data, error: _error } = await supabase
           .from('licenses')
           .select('code, expires_at, activated_at')
           .eq('is_active', true)
@@ -72,6 +162,7 @@ export const PurchaseSuccessPage = () => {
         if (data) {
           console.log('PurchaseSuccess: Última licença encontrada:', data);
           setLicense(data);
+          saveLicenseToStorage(data); // Salvar em localStorage
           setIsLoading(false);
           return;
         }
@@ -113,7 +204,8 @@ export const PurchaseSuccessPage = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
@@ -182,8 +274,12 @@ export const PurchaseSuccessPage = () => {
                       <h3 className="font-bold text-lg">Sua Licença está Pronta!</h3>
                     </div>
                     
-                    <div className="bg-background/80 backdrop-blur-sm rounded-lg p-4 space-y-3">
-                      <div className="flex items-center justify-between">
+                    <div className="bg-background/80 backdrop-blur-sm rounded-lg p-4 space-y-3 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 bg-green-500/10 text-green-600 dark:text-green-400 text-[10px] px-2 py-1 rounded-bl-lg flex items-center gap-1">
+                        <Save className="h-3 w-3" />
+                        Salvo no dispositivo
+                      </div>
+                      <div className="flex items-center justify-between pt-2">
                         <span className="text-sm text-muted-foreground">Código da Licença:</span>
                         <Button
                           onClick={copyLicenseCode}
@@ -195,9 +291,13 @@ export const PurchaseSuccessPage = () => {
                           Copiar
                         </Button>
                       </div>
-                      <div className="font-mono text-xl font-bold text-center tracking-wider text-foreground bg-muted/50 rounded-lg py-3 px-4 break-all">
+                      <div className="font-mono text-xl font-bold text-center tracking-wider text-foreground bg-muted/50 rounded-lg py-3 px-4 break-all border border-border/50">
                         {license.code}
                       </div>
+                      <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
+                        <Shield className="h-3 w-3" />
+                        Não compartilhe este código com ninguém
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 pt-2">
@@ -212,12 +312,49 @@ export const PurchaseSuccessPage = () => {
                     </div>
                   </div>
 
-                  {/* Botão para ir ao Dashboard */}
-                  <Link to="/dashboard">
-                    <Button className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl" size="lg">
-                      Acessar Dashboard
-                    </Button>
-                  </Link>
+                  {/* Aviso sobre criar conta */}
+                  <div className="bg-blue-50 dark:bg-blue-950/30 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-4 space-y-2">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="font-semibold text-blue-900 dark:text-blue-100 text-sm mb-1">
+                          Crie uma conta e use este código para ativar sua licença
+                        </p>
+                        <p className="text-xs text-blue-700 dark:text-blue-300">
+                          Esta licença pode ser ativada apenas <strong>1 vez</strong> quando o pagamento for aprovado.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Link para suporte */}
+                  <div className="bg-muted/50 border border-border rounded-lg p-4">
+                    <p className="text-sm text-muted-foreground mb-2 text-center">
+                      Perdeu o código ou precisa de ajuda?
+                    </p>
+                    <Link to="/suporte" className="block">
+                      <Button variant="outline" className="w-full" size="sm">
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Entre em contato com o suporte
+                        <ExternalLink className="h-3 w-3 ml-2" />
+                      </Button>
+                    </Link>
+                  </div>
+
+                  {/* Botão para ir ao Dashboard ou criar conta */}
+                  {user?.id ? (
+                    <Link to="/dashboard">
+                      <Button className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl" size="lg">
+                        Acessar Dashboard
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link to="/auth">
+                      <Button className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl" size="lg">
+                        Criar Conta e Ativar Licença
+                      </Button>
+                    </Link>
+                  )}
                 </>
               ) : showLoginMessage ? (
                 <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">

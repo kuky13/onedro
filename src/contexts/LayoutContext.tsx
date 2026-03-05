@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import { createContext, useContext, type ReactNode, useState, useEffect } from 'react';
 import { useDeviceType, DeviceInfo } from '@/hooks/useDeviceType';
 
 interface LayoutContextType extends DeviceInfo {

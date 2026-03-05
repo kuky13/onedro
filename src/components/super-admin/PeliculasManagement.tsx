@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/useResponsive';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +13,7 @@ import { toast } from 'sonner';
 import { Loader2, Plus, Edit, Trash2, Search } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
+
 interface Pelicula {
   id: string;
   modelo: string;
@@ -21,6 +23,8 @@ interface Pelicula {
 }
 
 export function PeliculasManagement() {
+  const isMobile = useIsMobile();
+
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -283,51 +287,77 @@ export function PeliculasManagement() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : filteredPeliculas && filteredPeliculas.length > 0 ? (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Modelo</TableHead>
-                    <TableHead>Compatibilidades</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredPeliculas.map((pelicula) => (
-                    <TableRow key={pelicula.id}>
-                      <TableCell className="font-medium">{pelicula.modelo}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {pelicula.compatibilidades.map((comp, idx) => (
-                            <span key={idx} className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 text-primary text-xs">
-                              {comp}
-                            </span>
-                          ))}
+            isMobile ? (
+              <div className="space-y-3">
+                {filteredPeliculas.map((pelicula) => (
+                  <Card key={pelicula.id} className="border-border/60 bg-background/40">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="font-medium truncate">{pelicula.modelo}</div>
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {pelicula.compatibilidades.map((comp, idx) => (
+                              <span
+                                key={idx}
+                                className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 text-primary text-xs"
+                              >
+                                {comp}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEditDialog(pelicula)}
-                          >
+                        <div className="flex items-center gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => openEditDialog(pelicula)} aria-label="Editar">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openDeleteDialog(pelicula)}
-                          >
+                          <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(pelicula)} aria-label="Excluir">
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
-                      </TableCell>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Modelo</TableHead>
+                      <TableHead>Compatibilidades</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredPeliculas.map((pelicula) => (
+                      <TableRow key={pelicula.id}>
+                        <TableCell className="font-medium">{pelicula.modelo}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {pelicula.compatibilidades.map((comp, idx) => (
+                              <span key={idx} className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 text-primary text-xs">
+                                {comp}
+                              </span>
+                            ))}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => openEditDialog(pelicula)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => openDeleteDialog(pelicula)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               {searchTerm ? (
@@ -350,40 +380,77 @@ export function PeliculasManagement() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : suggestions && suggestions.length > 0 ? (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Modelo</TableHead>
-                    <TableHead>Marca</TableHead>
-                    <TableHead>Notas</TableHead>
-                    <TableHead>Usuário</TableHead>
-                    <TableHead>Enviado em</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {suggestions.map((s) => (
-                    <TableRow key={s.id}>
-                      <TableCell className="font-medium">{s.model}</TableCell>
-                      <TableCell>{s.brand || '-'}</TableCell>
-                      <TableCell className="max-w-md truncate">{s.notes || '-'}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{s.user_id}</TableCell>
-                      <TableCell>{new Date(s.created_at).toLocaleString()}</TableCell>
-                      <TableCell className="text-right">
+            isMobile ? (
+              <div className="space-y-3">
+                {suggestions.map((s) => (
+                  <Card key={s.id} className="border-border/60 bg-background/40">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="font-medium truncate">{s.model}</div>
+                          <div className="text-xs text-muted-foreground">{s.brand || '-'}</div>
+                        </div>
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
                           onClick={() => deleteSuggestionMutation.mutate(s.id)}
+                          aria-label="Excluir"
+                          className="text-destructive"
                         >
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      </TableCell>
+                      </div>
+
+                      <div className="mt-3 grid gap-2 text-xs">
+                        <div>
+                          <div className="text-muted-foreground">Notas</div>
+                          <div className="break-words">{s.notes || '-'}</div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Usuário</span>
+                          <span className="font-mono text-[11px] truncate">{s.user_id}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Enviado em</span>
+                          <span>{new Date(s.created_at).toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Modelo</TableHead>
+                      <TableHead>Marca</TableHead>
+                      <TableHead>Notas</TableHead>
+                      <TableHead>Usuário</TableHead>
+                      <TableHead>Enviado em</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {suggestions.map((s) => (
+                      <TableRow key={s.id}>
+                        <TableCell className="font-medium">{s.model}</TableCell>
+                        <TableCell>{s.brand || '-'}</TableCell>
+                        <TableCell className="max-w-md truncate">{s.notes || '-'}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{s.user_id}</TableCell>
+                        <TableCell>{new Date(s.created_at).toLocaleString()}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm" onClick={() => deleteSuggestionMutation.mutate(s.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )
           ) : (
             <div className="text-center py-8 text-muted-foreground">Nenhuma sugestão enviada</div>
           )}

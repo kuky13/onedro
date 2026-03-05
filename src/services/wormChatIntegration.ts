@@ -41,7 +41,7 @@ async function searchWormBudgetsFallback(userId: string, filters: WormSearchFilt
   try {
     const numericSearch = (filters.search || '').trim()
     const searchNum = numericSearch && /^\d+$/.test(numericSearch) ? parseInt(numericSearch, 10) : null
-    
+
     let query = supabase
       .from('budgets')
       .select('*')
@@ -72,7 +72,7 @@ async function searchWormBudgetsFallback(userId: string, filters: WormSearchFilt
 
     const { data, error } = await query
     if (error) throw error
-    
+
     return { budgets: data || [], error: null }
   } catch (error) {
     console.error('Exception in Worm fallback search:', error)
@@ -86,11 +86,11 @@ async function searchWormBudgetsFallback(userId: string, filters: WormSearchFilt
 export async function formatBudgetResultsForAI(budgets: BudgetData[], searchTerm: string, userId?: string, companyName?: string): Promise<string> {
   if (!budgets || budgets.length === 0) {
     return `🔍 **Nenhum orçamento encontrado para "${searchTerm}"**\n\n` +
-           `💡 **Dicas de busca:**\n` +
-           `• Tente buscar por modelo: "A12", "iPhone 13"\n` +
-           `• Tente buscar por serviço: "troca de tela", "bateria"\n` +
-           `• Tente buscar por cliente: "João", "Maria"\n` +
-           `• Tente buscar por número: "38", "123"`
+      `💡 **Dicas de busca:**\n` +
+      `• Tente buscar por modelo: "A12", "iPhone 13"\n` +
+      `• Tente buscar por serviço: "troca de tela", "bateria"\n` +
+      `• Tente buscar por cliente: "João", "Maria"\n` +
+      `• Tente buscar por número: "38", "123"`
   }
 
   // Helper: ensure budget_parts are hydrated for template expansion
@@ -105,26 +105,27 @@ export async function formatBudgetResultsForAI(budgets: BudgetData[], searchTerm
         if (Array.isArray(data) && data.length > 0) {
           budget.budget_parts = data as any
         }
-      } catch {}
+      } catch {
+        // Ignore errors fetching parts
+      }
     }
     return budget
   }
 
   // For single budget, return EXACT WhatsApp template message only
   if (budgets.length === 1) {
-    let budget = budgets[0]
-    budget = await ensureParts(budget)
-    const remainingDays = calculateRemainingDays(budget.created_at)
-    const isValid = remainingDays > 0
-    
+    let budget = budgets[0]!;
+    budget = await ensureParts(budget);
+
+
     // Get the actual WhatsApp template from the user
     let template = null
     let whatsappMessage = ''
-    
+
     if (userId) {
       const { template: userTemplate } = await getUserDefaultTemplate(userId)
       template = userTemplate
-      
+
       if (template && template.message_template) {
         // Generate the actual WhatsApp message using the template
         whatsappMessage = generateWhatsAppMessageFromTemplate(
@@ -135,7 +136,7 @@ export async function formatBudgetResultsForAI(budgets: BudgetData[], searchTerm
         )
       }
     }
-    
+
     // If no template found, use the default WhatsApp template format exactly
     if (!whatsappMessage) {
       whatsappMessage = generateWhatsAppMessageFromTemplate(
@@ -147,15 +148,9 @@ export async function formatBudgetResultsForAI(budgets: BudgetData[], searchTerm
 {qualidades_inicio}*{qualidade_nome}* – {peca_garantia_meses} meses de garantia 
 💰 À vista {peca_preco_vista} ou {peca_preco_parcelado} no cartão em até {peca_parcelas}x de {peca_valor_parcela} 
 
-{qualidades_fim} 
-*📦 Serviços Inclusos:* 
+{qualidades_fim}*📦 Serviços Inclusos:* 
 {servicos_inclusos} 
-
 🚫 Não cobre danos por água ou molhado 
-
-📝 *Observações* 
-{observacoes} 
-
 📅 Válido até: {data_validade}`,
         budget,
         companyName || 'OneDrip',
@@ -167,14 +162,14 @@ export async function formatBudgetResultsForAI(budgets: BudgetData[], searchTerm
   }
 
   // For multiple budgets, return ONLY the template messages joined by separators
-  let messages: string[] = []
+  const messages: string[] = []
   // Get user template if available (only once for efficiency)
   let userTemplate = null
   if (userId) {
     const { template } = await getUserDefaultTemplate(userId)
     userTemplate = template
   }
-  
+
   for (let budget of budgets) {
     budget = await ensureParts(budget)
     let whatsappMessage = ''
@@ -196,15 +191,9 @@ export async function formatBudgetResultsForAI(budgets: BudgetData[], searchTerm
 {qualidades_inicio}*{qualidade_nome}* – {peca_garantia_meses} meses de garantia 
 💰 À vista {peca_preco_vista} ou {peca_preco_parcelado} no cartão em até {peca_parcelas}x de {peca_valor_parcela} 
 
-{qualidades_fim} 
-*📦 Serviços Inclusos:* 
+{qualidades_fim}*📦 Serviços Inclusos:* 
 {servicos_inclusos} 
-
 🚫 Não cobre danos por água ou molhado 
-
-📝 *Observações* 
-{observacoes} 
-
 📅 Válido até: {data_validade}`,
         budget,
         companyName || 'OneDrip',
@@ -213,37 +202,8 @@ export async function formatBudgetResultsForAI(budgets: BudgetData[], searchTerm
     }
     messages.push(whatsappMessage)
   }
-  
-  return messages.join('\n\n---\n\n')
-}
 
-/**
- * Format single budget with detailed header and WhatsApp template
- */
-function formatSingleBudgetDetailed(budget: BudgetData): string {
-  const remainingDays = calculateRemainingDays(budget.created_at)
-  const createdDate = new Date(budget.created_at).toLocaleDateString('pt-BR')
-  
-  // Header section
-  let result = `[🔍 Orçamento OR: ${budget.sequential_number.toString().padStart(4, '0')}]\n`
-  result += `📅 Data de criação: ${createdDate}\n`
-  result += `⏳ Restam ${remainingDays} dias\n\n`
-  
-  // Generate WhatsApp template
-  const whatsappMessage = generateWhatsAppMessage(budget, 'OneDrip', '(11) 99999-9999')
-  
-  // WhatsApp template section
-  result += `📱 **Template WhatsApp:**\n`
-  result += `${whatsappMessage}\n\n`
-  
-  // Action buttons
-  result += `🔧 **Ações disponíveis:**\n`
-  result += `• Compartilhar via WhatsApp\n`
-  result += `• Copiar conteúdo completo\n\n`
-  
-  result += `💡 **Dica:** Use os botões acima para compartilhar este orçamento!`
-  
-  return result
+  return messages.join('\n\n---\n\n')
 }
 
 /**
@@ -252,25 +212,22 @@ function formatSingleBudgetDetailed(budget: BudgetData): string {
 export async function formatSingleBudgetBeautiful(budget: BudgetData, userId?: string, companyName?: string): Promise<string> {
   const remainingDays = calculateRemainingDays(budget.created_at)
   const createdDate = new Date(budget.created_at).toLocaleDateString('pt-BR')
-  
+
   // Get the actual WhatsApp template from the user with enhanced error handling
-  let template = null
-  let templateError = null
-  
+  let template = null;
+
   if (userId) {
     try {
-      const { template: userTemplate, error } = await getUserDefaultTemplate(userId)
-      template = userTemplate
-      templateError = error
+      const { template: userTemplate } = await getUserDefaultTemplate(userId);
+      template = userTemplate;
     } catch (error) {
-      console.error('Error fetching user template:', error)
-      templateError = error
+      console.error('Error fetching user template:', error);
     }
   }
-  
+
   // Enhanced template processing with fallback options
   let whatsappMessage = ''
-  
+
   if (template && template.message_template) {
     try {
       // Use the proper template processing with placeholders and enhanced data
@@ -286,7 +243,7 @@ export async function formatSingleBudgetBeautiful(budget: BudgetData, userId?: s
       template = null
     }
   }
-  
+
   // If no template or template failed, use enhanced default template
   if (!whatsappMessage) {
     try {
@@ -335,41 +292,37 @@ export async function formatSingleBudgetBeautiful(budget: BudgetData, userId?: s
 📅 *Validade:* ${remainingDays} dias`
     }
   }
-  
+
   // Professional header with enhanced formatting
   let result = `✨ **ORÇAMENTO EXCLUSIVO** ✨\n\n`
   result += `🎯 **Número:** #${budget.sequential_number.toString().padStart(4, '0')}\n`
   result += `📊 **Status:** ${remainingDays > 0 ? '✅ Válido' : '⚠️ Expirado'} (${remainingDays} dias restantes)\n`
   result += `📅 **Emitido em:** ${createdDate}\n\n`
-  
+
   // Enhanced client section with complete information
   result += `👑 **CLIENTE ESPECIAL**\n`
   result += `└─ 🧑‍💼 **Nome:** ${budget.client_name}\n`
   if (budget.client_phone) {
     result += `└─ 📱 **Contato:** ${budget.client_phone}\n`
   }
-  if (parsedCommand.clientName && parsedCommand.clientName !== budget.client_name) {
-    result += `└─ 🔍 **Buscado como:** ${parsedCommand.clientName}\n`
-  }
   result += `\n`
-  
+
   // Enhanced device section with detailed information
   result += `📱 **DISPOSITIVO**\n`
   result += `└─ 🏷️ **Tipo:** ${budget.device_type}\n`
   result += `└─ 📲 **Modelo:** ${budget.device_model}\n`
-  result += `└─ 🔧 **Serviço/Sintoma:** ${budget.part_quality || budget.part_type || budget.issue || 'Serviço não especificado'}\n`
-  if (parsedCommand.deviceModel) {
-    result += `└─ 🔍 **Buscado como:** ${parsedCommand.deviceModel}\n`
-  }
-  if (parsedCommand.serviceType) {
-    result += `└─ 🎯 **Tipo de serviço:** ${parsedCommand.serviceType}\n`
-  }
+  const serviceText =
+    budget.issue ||
+    budget.part_quality ||
+    (budget as any).part_type ||
+    'Serviço não especificado';
+  result += `└─ 🔧 **Serviço/Sintoma:** ${serviceText}\n`
   result += `\n`
-  
+
   // Enhanced financial section with detailed calculations
   const partsTotal = budget.budget_parts?.reduce((sum, part) => sum + part.cash_price, 0) || 0
   const totalValue = budget.cash_price + partsTotal
-  
+
   result += `💰 **INVESTIMENTO**\n`
   result += `└─ 💵 **À Vista:** ${formatCurrency(budget.cash_price)}\n`
   if (budget.installment_price > 0) {
@@ -386,13 +339,13 @@ export async function formatSingleBudgetBeautiful(budget: BudgetData, userId?: s
     })
   }
   result += `└─ 💎 **Total:** ${formatCurrency(totalValue)}\n\n`
-  
+
   // Enhanced additional services with real data
   const additionalServices = []
   if (budget.includes_delivery) additionalServices.push('🚚 Entrega Inclusa')
   if (budget.includes_screen_protector) additionalServices.push('📱 Película Protetora de Brinde')
   if (budget.warranty_months > 0) additionalServices.push(`🛡️ Garantia ${budget.warranty_months} meses`)
-  
+
   if (additionalServices.length > 0) {
     result += `🎁 **SERVIÇOS ESPECIAIS INCLUSOS**\n`
     additionalServices.forEach((service, index) => {
@@ -401,29 +354,29 @@ export async function formatSingleBudgetBeautiful(budget: BudgetData, userId?: s
     })
     result += `\n`
   }
-  
+
   // Enhanced notes section with professional formatting
   if (budget.notes) {
     result += `📝 **OBSERVAÇÕES IMPORTANTES**\n`
     result += `└─ ${budget.notes}\n\n`
   }
-  
+
   // Template section with professional WhatsApp formatting
   result += `📲 **MENSAGEM PRONTA PARA WHATSAPP**\n`
   result += `${whatsappMessage}\n\n`
-  
+
   // Enhanced action suggestions
   result += `🔧 **AÇÕES DISPONÍVEIS:**\n`
   result += `• "Enviar orçamento #${budget.sequential_number} via WhatsApp"\n`
   result += `• "Editar orçamento #${budget.sequential_number}"\n`
   result += `• "Duplicar orçamento #${budget.sequential_number}"\n`
   result += `• "Excluir orçamento #${budget.sequential_number}"\n\n`
-  
+
   // Professional closing with company branding
   result += `✨ **AGRADECEMOS A CONFIANÇA!** ✨\n`
   result += `💡 *${companyName || 'OneDrip'} - Sua melhor escolha em assistência técnica*\n`
   result += `📞 *Dúvidas? Estamos sempre à disposição!*`
-  
+
   return result
 }
 
@@ -432,26 +385,26 @@ export async function formatSingleBudgetBeautiful(budget: BudgetData, userId?: s
  */
 async function getUserDefaultTemplate(userId: string) {
   try {
-    const { data: userData, error: userError } = await supabase
+    const { data: userData, error: userError } = await (supabase as any)
       .from('users')
       .select('default_template_id')
       .eq('id', userId)
-      .single()
+      .single();
 
     if (userError || !userData?.default_template_id) {
-      return { template: null, error: userError }
+      return { template: null, error: userError };
     }
 
-    const { data: template, error: templateError } = await supabase
+    const { data: template, error: templateError } = await (supabase as any)
       .from('whatsapp_message_templates')
       .select('*')
       .eq('id', userData.default_template_id)
-      .single()
+      .single();
 
-    return { template, error: templateError }
+    return { template, error: templateError };
   } catch (error) {
-    console.error('Error getting user default template:', error)
-    return { template: null, error }
+    console.error('Error getting user default template:', error);
+    return { template: null, error };
   }
 }
 
@@ -460,54 +413,54 @@ async function getUserDefaultTemplate(userId: string) {
  */
 export function formatBudgetDetailsForAI(budget: BudgetData): string {
   let response = `📋 **Detalhes do Orçamento #${budget.sequential_number}**\n\n`
-  
+
   response += `👤 **Cliente:** ${budget.client_name}\n`
   if (budget.client_phone) {
     response += `📞 **Telefone:** ${budget.client_phone}\n`
   }
-  
+
   response += `📱 **Dispositivo:** ${budget.device_type} ${budget.device_model}\n`
   response += `🔧 **Problema/Serviço:** ${budget.issue || 'Sem descrição'}\n`
-  
+
   response += `\n💰 **Valores:**\n`
   response += `• À vista: ${formatCurrency(budget.cash_price)}\n`
   if (budget.installment_price > 0) {
     response += `• Parcelado: ${formatCurrency(budget.installment_price)}\n`
   }
-  
+
   if (budget.warranty_months > 0) {
     response += `\n🛡️ **Garantia:** ${budget.warranty_months} meses\n`
   }
-  
+
   if (budget.includes_delivery) {
     response += `🚚 **Inclui entrega:** Sim\n`
   }
-  
+
   if (budget.includes_screen_protector) {
     response += `📱 **Inclui película:** Sim\n`
   }
-  
+
   if (budget.custom_services) {
     response += `\n🔧 **Serviços adicionais:** ${budget.custom_services}\n`
   }
-  
+
   if (budget.notes) {
     response += `\n📝 **Observações:** ${budget.notes}\n`
   }
-  
+
   if (budget.budget_parts && budget.budget_parts.length > 0) {
     response += `\n🔧 **Peças/Componentes:**\n`
     budget.budget_parts.forEach((part, index) => {
       response += `${index + 1}. ${part.name} - ${formatCurrency(part.cash_price)}\n`
     })
   }
-  
+
   response += `\n📅 **Criado em:** ${new Date(budget.created_at).toLocaleDateString()}\n`
-  
+
   response += `\n💡 **Ações disponíveis:**\n`
   response += `• "Enviar orçamento #${budget.sequential_number} via WhatsApp"\n`
   response += `• "Editar orçamento #${budget.sequential_number}"`
-  
+
   return response
 }
 

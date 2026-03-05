@@ -15,7 +15,6 @@ interface LicenseActivationIOSProps {
 }
 
 export const LicenseActivationIOS = ({
-  user,
   onLicenseActivated
 }: LicenseActivationIOSProps) => {
   const [licenseCode, setLicenseCode] = useState('');
@@ -47,8 +46,8 @@ export const LicenseActivationIOS = ({
       if (validateLicenseFormat(value)) {
         setIsPreviewLoading(true);
         try {
-          const days = await previewLicense(value);
-          setPreviewDays(days);
+          const preview = await previewLicense(value);
+          setPreviewDays(preview?.days ?? null);
         } catch (error) {
           console.warn('Erro ao obter preview da licença:', error);
           setPreviewDays(null);
@@ -71,8 +70,8 @@ export const LicenseActivationIOS = ({
     }
 
     try {
-      const result = await activateLicense(licenseCode, user.id);
-      if (result.success) {
+      const result = await activateLicense(licenseCode);
+      if (result && result.success) {
         showSuccess({
           title: 'Licença Ativada!',
           description: result.message || 'Sua licença foi ativada com sucesso.'
@@ -89,11 +88,12 @@ export const LicenseActivationIOS = ({
 
   const handleCreateTrialLicense = async () => {
     try {
-      const result = await createTrialLicense(user.id);
-      if (result.success) {
+      const result = await createTrialLicense();
+      if (result === true || (result && typeof result === 'object')) {
+        const licenseCode = (result && typeof result === 'object' && 'license_code' in result) ? (result as any).license_code : 'N/A';
         showSuccess({
           title: 'Licença de Teste Criada!',
-          description: `Você recebeu 7 dias de acesso gratuito. Código: ${result.license_code}`
+          description: `Você recebeu 7 dias de acesso gratuito. Código: ${licenseCode}`
         });
         setTimeout(() => {
           onLicenseActivated();

@@ -7,7 +7,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { 
-  Update, 
   PopupState, 
   UsePopupStateReturn 
 } from '@/types/update';
@@ -43,7 +42,18 @@ export const usePopupState = (): UsePopupStateReturn => {
         throw new Error(updateError.message);
       }
 
-      const activeUpdate = activeUpdates && activeUpdates.length > 0 ? activeUpdates[0] : null;
+      const activeUpdateRaw = activeUpdates && activeUpdates.length > 0 ? activeUpdates[0] : null;
+
+      const activeUpdate = activeUpdateRaw
+        ? {
+            ...activeUpdateRaw,
+            is_active: activeUpdateRaw.is_active ?? false,
+            link_text: activeUpdateRaw.link_text ?? '',
+            link_url: activeUpdateRaw.link_url ?? '',
+            created_at: activeUpdateRaw.created_at ?? new Date().toISOString(),
+            updated_at: activeUpdateRaw.updated_at ?? new Date().toISOString(),
+          }
+        : null;
 
       if (!activeUpdate) {
         setPopupState(prev => ({ 
@@ -62,7 +72,7 @@ export const usePopupState = (): UsePopupStateReturn => {
         .eq('user_id', user.id)
         .eq('update_id', activeUpdate.id)
         .eq('dismissed', true)
-        .single();
+        .maybeSingle();
 
       const shouldShow = !dismissedRecord;
 

@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,14 +10,13 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FileText, Shield, Trash2, Download, Filter, BarChart3, RefreshCw, CheckSquare, Square } from 'lucide-react';
 import { toast } from 'sonner';
-import { logsService, UnifiedLog, LogType } from '@/services/logsService';
+import { logsService } from '@/services/logsService';
 
 export const AdminLogs = () => {
   const [selectedLogs, setSelectedLogs] = useState<Set<string>>(new Set());
   const [tableFilter, setTableFilter] = useState<string>('all');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteMode, setDeleteMode] = useState<'selected' | 'table' | 'all'>('selected');
-  const [selectedTable, setSelectedTable] = useState<string>('');
 
   const queryClient = useQueryClient();
 
@@ -26,7 +24,7 @@ export const AdminLogs = () => {
   const { data: logs = [], isLoading: logsLoading, refetch: refetchLogs } = useQuery({
     queryKey: ['admin-all-logs', tableFilter],
     queryFn: () => logsService.getAllLogs({
-      table_filter: tableFilter === 'all' ? undefined : tableFilter,
+      table_filter: tableFilter === 'all' ? '' : tableFilter,
       limit: 200
     }),
     refetchInterval: 30000, // Atualizar a cada 30 segundos
@@ -50,7 +48,7 @@ export const AdminLogs = () => {
     mutationFn: async ({ tableName, logIds }: { tableName: string; logIds?: string[] }) => {
       return logsService.deleteLogs(tableName, logIds);
     },
-    onSuccess: (deletedCount, variables) => {
+    onSuccess: (deletedCount) => {
       toast.success(`${deletedCount} log(s) deletado(s) com sucesso`);
       setSelectedLogs(new Set());
       setShowDeleteDialog(false);
@@ -115,11 +113,6 @@ export const AdminLogs = () => {
     setShowDeleteDialog(true);
   };
 
-  const handleDeleteTable = (tableName: string) => {
-    setSelectedTable(tableName);
-    setDeleteMode('table');
-    setShowDeleteDialog(true);
-  };
 
   const handleDeleteAll = () => {
     setDeleteMode('all');
@@ -129,23 +122,24 @@ export const AdminLogs = () => {
   const confirmDelete = () => {
     if (deleteMode === 'all') {
       deleteAllMutation.mutate();
-    } else if (deleteMode === 'table') {
-      deleteMutation.mutate({ tableName: selectedTable });
-    } else if (deleteMode === 'selected') {
+    } else if (deleteMode === 'selected' && selectedLogs.size > 0) {
       // Agrupar logs selecionados por tabela
-      const logsByTable: { [table: string]: string[] } = {};
+      const logsByTable: Record<string, string[]> = {};
       filteredLogs.forEach(log => {
-        if (selectedLogs.has(log.id)) {
-          if (!logsByTable[log.table_source]) {
-            logsByTable[log.table_source] = [];
+        if (selectedLogs.has(log.id) && log.table_source) {
+          const tableName = log.table_source;
+          if (!logsByTable[tableName]) {
+            logsByTable[tableName] = [];
           }
-          logsByTable[log.table_source].push(log.id);
+          logsByTable[tableName].push(log.id);
         }
       });
 
       // Deletar logs de cada tabela
       Object.entries(logsByTable).forEach(([tableName, logIds]) => {
-        deleteMutation.mutate({ tableName, logIds });
+        if (logIds && logIds.length > 0 && tableName) {
+          deleteMutation.mutate({ tableName, logIds });
+        }
       });
     }
   };
@@ -411,7 +405,7 @@ export const AdminLogs = () => {
             <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
             <AlertDialogDescription>
               {deleteMode === 'all' && 'Esta ação irá deletar TODOS os logs de TODAS as tabelas do sistema.'}
-              {deleteMode === 'table' && `Esta ação irá deletar todos os logs da tabela "${logsService.formatTableName(selectedTable)}".`}
+              {deleteMode === 'all' && 'Esta ação irá deletar TODOS os logs de TODAS as tabelas do sistema.'}
               {deleteMode === 'selected' && `Esta ação irá deletar ${selectedLogs.size} log(s) selecionado(s).`}
               <br />
               <strong>Esta ação não pode ser desfeita.</strong>

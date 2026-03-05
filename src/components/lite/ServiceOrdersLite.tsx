@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ArrowLeft, Plus, Search, Wrench, Clock, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -82,7 +82,7 @@ export const ServiceOrdersLite = ({ userId, onBack }: ServiceOrdersLiteProps) =>
     isLoading,
     error
   } = useSecureServiceOrders(userId, {
-    search: searchTerm || undefined,
+    search: searchTerm || '',
     status: statusFilter === 'all' ? undefined : (statusFilter as any)
   });
 
@@ -144,6 +144,12 @@ export const ServiceOrdersLite = ({ userId, onBack }: ServiceOrdersLiteProps) =>
     );
   }
 
+  const [visibleCount, setVisibleCount] = useState(10);
+  
+  const handleLoadMore = () => {
+    setVisibleCount(prev => prev + 10);
+  };
+
   const filteredOrders = serviceOrders?.filter(order => {
     const matchesSearch = !searchTerm || 
       order.device_model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -153,6 +159,8 @@ export const ServiceOrdersLite = ({ userId, onBack }: ServiceOrdersLiteProps) =>
     
     return matchesSearch && matchesStatus;
   }) || [];
+
+  const visibleOrders = filteredOrders.slice(0, visibleCount);
 
   return (
     <PageTransition type="slideLeft">
@@ -236,57 +244,67 @@ export const ServiceOrdersLite = ({ userId, onBack }: ServiceOrdersLiteProps) =>
               )}
             </GlassCard>
           ) : (
-            filteredOrders.map((order, index) => (
-              <motion.div
-                key={order.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Card 
-                  className="hover:shadow-md transition-shadow"
+            <>
+              {visibleOrders.map((order, index) => (
+                <motion.div
+                  key={order.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(index * 0.05, 0.3) }} // Limit delay for better UX
                 >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <CardTitle className="text-lg">
-                          {order.device_model || 'Dispositivo'}
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                          {order.device_type}
-                        </p>
-                      </div>
-                      <Badge 
-                        variant="outline" 
-                        className={`${getStatusColor(order.status)} flex items-center gap-1`}
-                      >
-                        {getStatusIcon(order.status)}
-                        {getStatusLabel(order.status)}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="pt-0">
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {order.reported_issue || 'Sem descrição'}
-                      </p>
+                  <Card 
+                    className="hover:shadow-md transition-shadow"
+                  >
+                    <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1">
+                            <CardTitle className="text-lg">
+                              {order.device_model || 'Dispositivo'}
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                              {order.device_type}
+                            </p>
+                          </div>
+                          <Badge 
+                            variant="outline" 
+                            className={`${getStatusColor(order.status || 'pending')} flex items-center gap-1`}
+                          >
+                            {getStatusIcon(order.status || 'pending')}
+                            {getStatusLabel(order.status || 'pending')}
+                          </Badge>
+                        </div>
+                      </CardHeader>
                       
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>
-                          Criado em {format(new Date(order.created_at), 'dd/MM/yyyy', { locale: ptBR })}
-                        </span>
-                        {order.total_price && (
-                          <span className="font-medium text-foreground">
-                            R$ {(Number(order.total_price) || 0).toFixed(2)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))
+                      <CardContent className="pt-0">
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {order.reported_issue || 'Sem descrição'}
+                          </p>
+                          
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>
+                              Criado em {format(new Date(order.created_at || new Date().toISOString()), 'dd/MM/yyyy', { locale: ptBR })}
+                            </span>
+                            {order.total_price && (
+                              <span className="font-medium text-foreground">
+                                R$ {(Number(order.total_price) || 0).toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+              
+              {visibleCount < filteredOrders.length && (
+                <div className="flex justify-center pt-4">
+                  <Button variant="outline" onClick={handleLoadMore}>
+                    Carregar mais ordens
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

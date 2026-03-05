@@ -15,7 +15,7 @@ interface MetaTagsConfig {
 
 const defaultMetaTags: MetaTagsConfig = {
   title: 'OneDrip',
-  description: 'Sistema completo para assistências técnicas gerenciarem orçamentos, clientes e relatórios de forma eficiente e organizada.',
+  description: 'Um Sistema completo para assistências técnicas gerenciarem orçamentos, clientes e relatórios de forma eficiente e organizada.',
   ogTitle: 'OneDrip',
   ogDescription: 'O melhor sistema de orçamentos para sua empresa',
   ogImage: '/icons/icon-512x512.png',
