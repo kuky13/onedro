@@ -275,6 +275,9 @@ export const WormBudgetList = ({
                 <h3 className="font-semibold text-lg leading-tight truncate">
                   {group.device_model}
                 </h3>
+                <Badge variant="outline" className="shrink-0 font-mono text-xs">
+                  OR: {(group.budgets[0]?.sequential_number || 0).toString().padStart(4, '0')}
+                </Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-0.5">
                 {group.device_type} • {group.totalCount} orçamento(s)

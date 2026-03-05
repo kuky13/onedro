@@ -5,13 +5,13 @@ export interface CreateBudgetParams {
   client_phone: string;
   device_model: string;
   device_type: string;
-  service_name: string; // maps to issue
+  service_name: string;
   validity_days: number;
   parts: Array<{
     name: string;
-    quality: string; // maps to part_type
-    price_cash: number; // in centavos
-    price_installment: number; // in centavos
+    quality: string;
+    price_cash: number;
+    price_installment: number;
     installments: number;
     warranty_months: number;
   }>;
@@ -29,22 +29,44 @@ export async function createBudget(
 ) {
   console.log(`[CREATE-BUDGET] Iniciando criação para ${params.client_name}`);
 
-  const { data: maxSeq, error: seqError } = await supabase
+  // Check if there's already a budget for this (owner_id, device_model) — reuse sequential
+  const { data: existingBudget, error: existingError } = await supabase
     .from("budgets")
     .select("sequential_number")
     .eq("owner_id", userId)
     .eq("device_model", params.device_model)
-    .order("sequential_number", { ascending: false })
+    .not("sequential_number", "is", null)
     .limit(1)
     .maybeSingle();
 
-  if (seqError) {
-    console.error("[CREATE-BUDGET] Erro ao buscar sequencial:", seqError);
-    throw new Error("Erro ao gerar número do orçamento");
+  if (existingError) {
+    console.error("[CREATE-BUDGET] Erro ao buscar existente:", existingError);
   }
 
-  const nextSeq = (maxSeq?.sequential_number || 0) + 1;
-  console.log(`[CREATE-BUDGET] Próximo sequencial: #${nextSeq}`);
+  let nextSeq: number;
+
+  if (existingBudget?.sequential_number) {
+    // Reuse the same sequential_number for this device_model
+    nextSeq = existingBudget.sequential_number;
+    console.log(`[CREATE-BUDGET] Reutilizando sequencial existente: #${nextSeq}`);
+  } else {
+    // New device_model — get max sequential across all device_models for this user
+    const { data: maxSeq, error: seqError } = await supabase
+      .from("budgets")
+      .select("sequential_number")
+      .eq("owner_id", userId)
+      .order("sequential_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (seqError) {
+      console.error("[CREATE-BUDGET] Erro ao buscar sequencial:", seqError);
+      throw new Error("Erro ao gerar número do orçamento");
+    }
+
+    nextSeq = (maxSeq?.sequential_number || 0) + 1;
+    console.log(`[CREATE-BUDGET] Novo sequencial: #${nextSeq}`);
+  }
 
   const mainPart = params.parts[0];
 
