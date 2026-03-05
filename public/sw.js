@@ -4,9 +4,10 @@ self.__PWA_INSTALLED__ = false;
 // Não fixar versões aqui para evitar stale HTML após publish.
 // Estratégia: nomes estáveis + limpeza agressiva de caches antigos no activate.
 const CACHE_PREFIX = 'one-drip';
-const CACHE_NAME = `${CACHE_PREFIX}-pwa`;
-const STATIC_CACHE_NAME = `${CACHE_PREFIX}-static`;
-const DYNAMIC_CACHE_NAME = `${CACHE_PREFIX}-dynamic`;
+const CACHE_VERSION = 'v3';
+const CACHE_NAME = `${CACHE_PREFIX}-pwa-${CACHE_VERSION}`;
+const STATIC_CACHE_NAME = `${CACHE_PREFIX}-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE_NAME = `${CACHE_PREFIX}-dynamic-${CACHE_VERSION}`;
 
 // Recursos essenciais para cache - atualizados para Vite
 const STATIC_ASSETS = [
@@ -184,7 +185,15 @@ self.addEventListener('fetch', event => {
     // Estratégia baseada no tipo de recurso com fallback
     let strategy;
     try {
-      if (isStaticAsset(url) || url.href.includes('/storage/v1/object/public/')) {
+      if (
+        request.destination === 'script' ||
+        request.destination === 'style' ||
+        url.pathname.endsWith('.js') ||
+        url.pathname.endsWith('.css')
+      ) {
+        // Evita servir JS/CSS desatualizados e reduz risco de tela preta pós-deploy
+        strategy = networkFirstStrategy(request);
+      } else if (isStaticAsset(url) || url.href.includes('/storage/v1/object/public/')) {
         strategy = cacheFirstStrategy(request);
       } else if (isApiRequest(url)) {
         strategy = networkFirstStrategy(request);
@@ -342,7 +351,8 @@ async function staleWhileRevalidateStrategy(request) {
 
 // Helpers para identificar tipos de requisição
 function isStaticAsset(url) {
-  const staticExtensions = ['.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.woff', '.woff2', '.ttf'];
+  // JS/CSS ficam fora daqui para evitar cache-first de bundles versionados
+  const staticExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.woff', '.woff2', '.ttf'];
   return staticExtensions.some(ext => url.pathname.includes(ext)) || 
          url.pathname.includes('/static/') ||
          url.pathname.includes('/lovable-uploads/') ||
