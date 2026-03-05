@@ -89,6 +89,7 @@ export function DiagnosticShareDialog({
   const [session, setSession] = useState<TestSession | null>(null);
   const [diagnosticUrl, setDiagnosticUrl] = useState<string>("");
   const [userId, setUserId] = useState<string | null>(null);
+  const [pendingQRRegeneration, setPendingQRRegeneration] = useState(false);
 
   // Carregar sessão existente ou criar nova quando o dialog abre
   useEffect(() => {
@@ -103,8 +104,29 @@ export function DiagnosticShareDialog({
       setShowQR(false);
       setQrDataUrl(null);
       setCopied(false);
+      setPendingQRRegeneration(false);
     }
   }, [isOpen]);
+
+  // Auto-regenerar QR quando diagnosticUrl muda após redefinir link
+  useEffect(() => {
+    if (pendingQRRegeneration && diagnosticUrl) {
+      setPendingQRRegeneration(false);
+      (async () => {
+        try {
+          const dataUrl = await QRCode.toDataURL(diagnosticUrl, {
+            margin: 1,
+            width: 180,
+            color: { dark: "#000000", light: "#FFFFFF" },
+          });
+          setQrDataUrl(dataUrl);
+          setShowQR(true);
+        } catch (err) {
+          console.error("Erro ao regenerar QR:", err);
+        }
+      })();
+    }
+  }, [pendingQRRegeneration, diagnosticUrl]);
 
   // Função para mapear resultados do teste para o novo checklist sincronizado
   const mapTestResultsToChecklist = (testResults: Record<string, any>) => {
