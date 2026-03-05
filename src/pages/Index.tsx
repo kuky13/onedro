@@ -255,7 +255,7 @@ const Index = () => {
               src={logo} 
               width="36"
               height="36"
-              fetchPriority="high"
+              loading="eager"
             />
             <span className="font-bold text-lg lg:text-xl text-foreground">{name}</span>
           </Link>
