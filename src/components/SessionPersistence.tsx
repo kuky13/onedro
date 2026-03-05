@@ -42,8 +42,14 @@ export const SessionPersistence = () => {
       }
     };
 
+    // Rotas excluídas da restauração (segurança / conflito com React state)
+    const excludedRoutes = ['/auth', '/sign', '/login', '/register'];
+
     // Restaurar dados ao montar ou mudar de rota (sem popups)
     const restoreDrafts = () => {
+      // Não restaurar em páginas de autenticação
+      if (excludedRoutes.some(route => location.pathname.startsWith(route))) return;
+
       const inputs = document.querySelectorAll('input, textarea');
 
       inputs.forEach((input: any) => {
@@ -55,10 +61,16 @@ export const SessionPersistence = () => {
         const savedValue = localStorage.getItem(key);
         if (!savedValue) return;
 
-        input.value = savedValue;
-        // Disparar eventos para que frameworks como React/Vue percebam a mudança
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.dispatchEvent(new Event('change', { bubbles: true }));
+        // Usar native value setter para que React detecte a mudança em inputs controlados
+        const nativeSetter = input.tagName === 'TEXTAREA'
+          ? Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set
+          : Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+
+        if (nativeSetter) {
+          nativeSetter.call(input, savedValue);
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
       });
     };
 
