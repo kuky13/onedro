@@ -342,12 +342,6 @@ export function DiagnosticShareDialog({
     await createNewSession(userId);
     setIsLoading(false);
   };
-        } catch (err) {
-          console.error("Erro ao regenerar QR:", err);
-        }
-      }, 500);
-    }
-  };
 
   const handleCopyLink = async () => {
     if (!diagnosticUrl) return;
