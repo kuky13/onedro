@@ -62,8 +62,12 @@ const WarrantyPageContent = () => {
     reopenWarranty,
     isReopening,
     deleteWarranty,
-    isDeleting
+    isDeleting,
+    updateDeviceChecklist,
+    isUpdatingChecklist
   } = useWarranties(user?.id, filters);
+
+  const [expandedChecklist, setExpandedChecklist] = useState<string | null>(null);
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'in_progress':
@@ -185,6 +189,22 @@ const WarrantyPageContent = () => {
                   Excluir
                 </Button>
               </div>
+
+              {/* Checklist de Funcionamento */}
+              <Collapsible open={expandedChecklist === w.id} onOpenChange={(open) => setExpandedChecklist(open ? w.id : null)}>
+                <CollapsibleTrigger className="flex items-center gap-2 w-full text-xs text-muted-foreground hover:text-foreground transition-colors pt-1">
+                  {expandedChecklist === w.id ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                  <Smartphone className="h-3.5 w-3.5" />
+                  Checklist de Funcionamento
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-3">
+                  <DeviceChecklist
+                    value={w.device_checklist as DeviceChecklistData | null}
+                    onChange={(data) => updateDeviceChecklist({ id: w.id, device_checklist: data })}
+                    disabled={isUpdatingChecklist}
+                  />
+                </CollapsibleContent>
+              </Collapsible>
             </div>)}
           {warranties.length === 0 && !isLoading && <div className="text-center py-12 text-muted-foreground rounded-2xl border border-border/30 bg-muted/5">
               <p className="font-medium">Nenhuma garantia encontrada</p>
