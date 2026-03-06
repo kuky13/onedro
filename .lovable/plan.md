@@ -1,41 +1,134 @@
 
 
-## Plano: 3 Melhorias no /worm
+# Expansao da Documentacao do Projeto OneDrip
 
-### 1. Mover código OR para não cortar o nome do dispositivo
+## Objetivo
+Criar documentacao tecnica completa e detalhada para que qualquer desenvolvedor que entre no projeto consiga entender rapidamente como tudo funciona. Vamos expandir os 5 arquivos existentes e criar 7 novos arquivos `.md`.
 
-**Problema**: Na listagem `/worm`, o badge `OR: 0090` está na mesma linha do nome do dispositivo (linha 274-281 de `WormBudgetList.tsx`), causando truncamento em nomes longos de dispositivos móveis.
+---
 
-**Solução**: Mover o badge OR para uma linha separada abaixo do nome do dispositivo, junto com o texto de tipo/contagem.
+## Arquivos Existentes - Melhorias
 
-**Arquivo**: `src/components/worm/WormBudgetList.tsx` (~linhas 272-286)
-- Remover o `<Badge>` OR de dentro do `flex items-center` do título
-- Adicionar o OR code na linha de subtítulo (`<p>` abaixo), ficando: `"Celular • OR: 0090 • 3 orçamento(s) • Último em ..."`
+### `0-ai-project-context.md` - Atualizar
+- Adicionar secao sobre o sistema de Diagnostico de Dispositivos (`/testar/:token`)
+- Documentar o modulo de Peliculas (`/p`)
+- Mencionar o sistema de Gamificacao (HamsterPage/CookiePage)
+- Atualizar a lista de Guards com `MobileMenuProvider`
 
-### 2. Cancelar na edição deve funcionar + IA não deve preencher "Cliente WhatsApp"
+### `1-visao-geral.md` - Expandir
+- Adicionar modulo de Garantias (`/garantia`)
+- Documentar Central de Ajuda (`/central-de-ajuda`)
+- Adicionar secao sobre Notificacoes Push e sistema de Updates
+- Mencionar Apps Page e Sistema (mini-OS no browser)
 
-**Problema A**: O botão Cancelar em `/worm/edit/:id` chama `onCancel` que é `() => navigate('/worm')` — isso já deveria funcionar. Vou verificar se há algo impedindo a navegação (o form pode estar bloqueando com dirty state). O `onCancel` está correto no `WormAIBudgetEditPage` (linha 60). Possível causa: o botão tem `text-white` que pode torná-lo invisível em tema claro, mas funcionalidade deveria estar ok.
+### `2-frontend-estrutura.md` - Detalhar
+- Documentar o sistema de `lazyWithRetry` com telemetria de chunks
+- Explicar `ChunkLoadRecoveryBanner` e `useChunkLoadTelemetry`
+- Detalhar o `SessionPersistence` e `secureStorage`
+- Documentar o `MobileMenuProvider` e navegacao mobile
 
-**Problema B**: A IA do WhatsApp define `client_name = "Cliente WhatsApp"` quando não encontra cliente (linha 1639 do edge function). A tabela `clients` tem coluna `is_default`. Em vez de "Cliente WhatsApp", a IA deve buscar o cliente padrão do usuário (`is_default = true`).
+### `3-backend-supabase.md` - Expandir
+- Listar todas as 40+ Edge Functions com descricao curta
+- Documentar o fluxo de `rate-limiter` e `security-api`
+- Explicar o sistema de notificacoes push (`send-push-notification`)
 
-**Arquivos**:
-- `supabase/functions/whatsapp-zapi-orcamentos/index.ts` (~linha 1639): Antes de usar fallback "Cliente WhatsApp", buscar cliente com `is_default = true` e `user_id = ownerId`. Se encontrar, usar seu `id`, `name` e `phone`.
-- `src/components/worm/WormBudgetForm.tsx` (linha 689): Corrigir cor do botão cancelar — remover `text-white` que pode estar invisível em tema claro.
+### `4-integracoes-externas.md` - Atualizar
+- Adicionar secao sobre Evolution API e multi-broker completo
+- Documentar o sistema de download de video via VPS proxy
 
-### 3. Pesquisa mais inteligente
+---
 
-**Problema**: O filtro de busca (linha 93 de `WormBudgetList.tsx`) só busca por `client_name`, `device_model`, `device_type` e `sequential_number`. Não busca por `part_quality`, `issue`, preço, etc.
+## Novos Arquivos
 
-**Solução**: Expandir o filtro para incluir `part_quality`, `issue`, `notes`, `custom_services` e busca por número de OR com/sem zeros.
+### `5-typescript-tipos.md` - Tipos e Interfaces
+Documentar todas as interfaces criticas do sistema:
+- `ServiceOrderData` (OS com campos de senha, checklist, etc.)
+- `Budget` (tipo canonico via Supabase Tables)
+- `User`, `UserProfile`, `DebugInfo`
+- `CompanyInfo`, `CompanyData`, `CompanyFormData`
+- `TestSession`, `TestResult`, `TestDetails`, `TestConfig`
+- `DevicePasswordType` e seus valores
+- `CheckoutParams`, `PixPaymentData`
+- `BudgetData`, `BudgetPartData` (para PDFs)
+- `AuthContextType` e `UserRole`
+- Tabela visual com cada tipo e onde e usado
 
-**Arquivo**: `src/components/worm/WormBudgetList.tsx` (~linha 93)
-- Adicionar ao filtro: `budget.part_quality?.toLowerCase().includes(searchLower)`, `budget.issue?.toLowerCase().includes(searchLower)`, `budget.notes?.toLowerCase().includes(searchLower)`
+### `6-hooks-referencia.md` - Guia de Hooks
+Catalogar os 60+ hooks com categorias:
+- **Autenticacao**: `useAuth`, `useTokenRotation`, `useSecurity`
+- **Licenciamento**: `useLicense`, `useLicenseVerification`, `useLicenseCache`, `useTrialLicense`
+- **Dispositivo**: `useDeviceDetection`, `useIOSDetection`, `useMobileDetection`, `useBatteryDetection`
+- **Ordens de Servico**: `useSecureServiceOrders`, `useServiceOrderEdit`, `useServiceOrderRealTime`, `useServiceOrderShare`
+- **Orcamentos (Worm)**: `useBudgetData`, `useBudgetDeletion`, `useBudgetServiceOrder`, `useCreateServiceOrderFromBudget`
+- **PWA/Offline**: `usePWA`, `useOfflineDetection`, `useSwipeGesture`
+- **UI/UX**: `useResponsive`, `useMobileMenu`, `usePopupState`, `useDebounce`
+- **Store**: `useShopProfile`, `useImportBudgetToStore`
+- **Config**: `useAppConfig`, `useCompanyBranding`, `useDrippySettings`, `useCookiePreferences`
+- Exemplos de uso para os mais importantes
 
-### Resumo de Arquivos
+### `7-rotas-e-guards.md` - Mapa de Rotas
+Tabela completa com todas as rotas do `App.tsx`:
+- Rota, Componente, Guard aplicado, Lazy/Estatico
+- Fluxo visual de redirecionamentos (auth -> licenca -> dashboard)
+- Explicacao de cada Guard: `UnifiedProtectionGuard`, `AdminGuard`, `MaintenanceGuard`
+- Como adicionar uma nova rota (passo a passo)
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/components/worm/WormBudgetList.tsx` | Mover badge OR para subtítulo; expandir filtro de busca |
-| `src/components/worm/WormBudgetForm.tsx` | Corrigir cor do botão Cancelar |
-| `supabase/functions/whatsapp-zapi-orcamentos/index.ts` | Buscar cliente padrão (`is_default`) ao invés de "Cliente WhatsApp" |
+### `8-edge-functions.md` - Backend Serverless
+Documentacao detalhada de cada Edge Function:
+- **Pagamentos**: `create-mercadopago-checkout`, `check-mercadopago-payment`, `mercadopago-webhook`, `cancel-mercadopago-payment`, `create-mercadopago-subscription`
+- **WhatsApp**: `whatsapp-proxy`, `whatsapp-webhook`, `whatsapp-qr-connect`, `whatsapp-ai-reply`, `whatsapp-instance-manage`, `waha-proxy`
+- **IA**: `chat-ai`, `triage-ai`, `analyze-budgets`
+- **Seguranca**: `security-api`, `rate-limiter`, `real-time-monitoring`, `audit-system`
+- **Usuarios**: `manage-user-profile`, `admin-reset-password`, `admin-update-user-email`, `validate-license`
+- **Comunicacao**: `send-license-email`, `send-payment-receipt-email`, `send-push-notification`, `notification-system`
+- Fluxo de request/response de cada grupo
+
+### `9-seguranca.md` - Arquitetura de Seguranca
+- Sistema `secureStorage` com criptografia AES-GCM e PBKDF2
+- `SecurityLogger` e auditoria de acessos
+- RLS (Row Level Security) - regras e padroes
+- `botDetection`, `secureCSP`, `secureNavigation`
+- Rate limiting nas Edge Functions
+- Token rotation (`useTokenRotation`)
+- Fluxo de validacao de licencas
+
+### `10-pdf-e-utils.md` - Utilitarios e Geracao de PDFs
+- Como funciona o `pdfUtils.ts` (jsPDF client-side)
+- `serviceOrderPdfUtils.ts` para recibos de OS
+- `currency.ts` - formatacao BRL
+- `whatsappUtils.ts` e `whatsappTemplateUtils.ts`
+- `authCleanup.ts` - limpeza de sessao
+- `pwaDetection.ts` e `pwaReset.ts`
+- `debugLogger.ts` e `asciiConsole.ts`
+
+### `11-guia-contribuicao.md` - Guia para Novos Devs
+- Como rodar o projeto localmente
+- Convencoes de codigo (React Query > useEffect, Zustand para global state)
+- Como criar uma nova pagina (registrar rota, escolher Guard, lazy vs estatico)
+- Como criar um novo hook
+- Como adicionar uma Edge Function
+- Checklist de PR/review
+- Erros comuns e como evitar (RLS, chunks, offline)
+
+---
+
+## Detalhes Tecnicos
+
+### Arquivos a criar:
+1. `.documentação/docs/5-typescript-tipos.md`
+2. `.documentação/docs/6-hooks-referencia.md`
+3. `.documentação/docs/7-rotas-e-guards.md`
+4. `.documentação/docs/8-edge-functions.md`
+5. `.documentação/docs/9-seguranca.md`
+6. `.documentação/docs/10-pdf-e-utils.md`
+7. `.documentação/docs/11-guia-contribuicao.md`
+
+### Arquivos a editar:
+1. `.documentação/docs/0-ai-project-context.md`
+2. `.documentação/docs/1-visao-geral.md`
+3. `.documentação/docs/2-frontend-estrutura.md`
+4. `.documentação/docs/3-backend-supabase.md`
+5. `.documentação/docs/4-integracoes-externas.md`
+
+Total: **12 arquivos** (7 novos + 5 atualizados)
 
