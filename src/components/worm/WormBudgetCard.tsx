@@ -185,9 +185,6 @@ export const WormBudgetCard = ({
                 <DropdownMenuItem onClick={() => setIsEditOpen(true)} className="cursor-pointer font-medium">
                   <Edit className="h-4 w-4 mr-2" /> Editar
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate(`/worm/edit/${budget.id}`, { state: { budget } })} className="cursor-pointer text-purple-600 focus:text-purple-700">
-                  <Sparkles className="h-4 w-4 mr-2" /> Editar com IA
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleWhatsAppClick} className="cursor-pointer">
                   <MessageCircle className="h-4 w-4 mr-2" /> Enviar WhatsApp
                 </DropdownMenuItem>
