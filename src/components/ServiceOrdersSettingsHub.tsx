@@ -38,27 +38,6 @@ const SECTIONS = [
     icon: User,
     color: 'bg-violet-500',
   },
-  {
-    id: 'termos',
-    label: 'Termos de Uso',
-    description: 'Condições e regras da plataforma',
-    icon: FileText,
-    color: 'bg-amber-500',
-  },
-  {
-    id: 'privacidade',
-    label: 'Privacidade',
-    description: 'Proteção e uso dos seus dados',
-    icon: Eye,
-    color: 'bg-emerald-500',
-  },
-  {
-    id: 'cookies',
-    label: 'Cookies',
-    description: 'Preferências de rastreamento',
-    icon: CookieIcon,
-    color: 'bg-orange-500',
-  },
 ] as const;
 
 const TRUST_BADGES = [
