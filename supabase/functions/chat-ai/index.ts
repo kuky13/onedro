@@ -1572,6 +1572,15 @@ async function callAI(
         } else {
           finalResponse = choice.message.content;
           shouldContinue = false;
+
+          // Log success for OpenAI-compatible providers
+          await logAIRequest({
+            provider, model, source: meta?.source || "app",
+            input_tokens: data.usage?.prompt_tokens,
+            output_tokens: data.usage?.completion_tokens,
+            duration_ms: Date.now() - aiStartTime,
+            status: 'success', user_id: userId,
+          }, supabase);
         }
       }
     }
@@ -1579,6 +1588,16 @@ async function callAI(
     return finalResponse;
   } catch (error) {
     console.error(`[AI-CALL] Erro ao chamar ${config.provider}:`, error);
+
+    // Log error
+    await logAIRequest({
+      provider: config.provider, model: config.model, source: meta?.source || "app",
+      duration_ms: Date.now() - (Date.now()),
+      status: 'error',
+      error_message: error instanceof Error ? error.message : String(error),
+      user_id: userId,
+    }, supabase).catch(() => {});
+
     return "Erro ao processar sua mensagem. Por favor, tente novamente.";
   }
 }
