@@ -74,7 +74,15 @@ export const useWormBudgets = (userId: string | undefined, filters: BudgetFilter
 
           if (filters.search) {
             const term = filters.search.replace(/,/g, ' ');
-            const baseOr = `client_name.ilike.%${term}%,device_model.ilike.%${term}%,device_type.ilike.%${term}%`;
+            const baseOr = [
+              `client_name.ilike.%${term}%`,
+              `device_model.ilike.%${term}%`,
+              `device_type.ilike.%${term}%`,
+              `issue.ilike.%${term}%`,
+              `part_quality.ilike.%${term}%`,
+              `notes.ilike.%${term}%`,
+              `custom_services.ilike.%${term}%`
+            ].join(',');
             query = searchNum != null
               ? query.or(`${baseOr},sequential_number.eq.${searchNum}`)
               : query.or(baseOr);
