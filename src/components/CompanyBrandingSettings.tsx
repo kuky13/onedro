@@ -461,30 +461,28 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
       setGeneratingPDF(false);
     }
   };
-  return <div className="min-h-screen bg-background p-4 md:p-6">
+  return <div className="min-h-screen bg-background px-3 py-4 sm:p-4 md:p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-3">
-            
-            <div className="p-3 bg-primary/10 rounded-xl">
-              <Building2 className="w-8 h-8 text-primary" />
+        <div className="mb-6 md:mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 sm:p-3 bg-primary/10 rounded-xl flex-shrink-0">
+              <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground truncate">
                 Marca da Empresa
               </h1>
-              <p className="text-muted-foreground mt-1">Configure dados da sua empresa</p>
+              <p className="text-sm text-muted-foreground mt-0.5">Configure dados da sua empresa</p>
             </div>
           </div>
-          
-          <Separator className="my-6" />
+          <Separator className="my-4 md:my-6" />
         </div>
 
         {/* Status Cards */}
         
 
-        <div className="grid grid-cols-1 gap-8">
+        <div className="grid grid-cols-1 gap-5 md:gap-8">
           {/* Budget Warning Settings - enhanced (inline) */}
           <Card className="border-border bg-card">
             <CardHeader>
@@ -533,10 +531,10 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
               <div>
                 <Label>Logo da Empresa</Label>
                 <div className="mt-2">
-                  {companyData.logo_url ? <div className="flex items-center space-x-4">
-                      <img src={companyData.logo_url} alt="Logo da empresa" className="w-16 h-16 object-contain border rounded-lg" />
-                      <div className="flex-1">
-                        <p className="text-sm text-gray-600">Logo atual</p>
+                  {companyData.logo_url ? <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                      <img src={companyData.logo_url} alt="Logo da empresa" className="w-14 h-14 sm:w-16 sm:h-16 object-contain border rounded-lg flex-shrink-0" />
+                      <div className="flex-1 w-full">
+                        <p className="text-sm text-muted-foreground">Logo atual</p>
                         <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2 mt-2">
                           <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploadingLogo} className="min-h-[44px] px-4 py-2 w-full sm:w-auto">
                             <Upload className="w-4 h-4 mr-2" />
@@ -548,9 +546,9 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
                           </Button>
                         </div>
                       </div>
-                    </div> : <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600 mb-4">Nenhum logo enviado</p>
+                    </div> : <div className="border-2 border-dashed border-border rounded-lg p-4 sm:p-6 text-center">
+                      <ImageIcon className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground/50 mx-auto mb-3 sm:mb-4" />
+                      <p className="text-muted-foreground mb-3 sm:mb-4 text-sm">Nenhum logo enviado</p>
                       <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploadingLogo} className="min-h-[44px] px-6 py-3 text-base">
                         <Upload className="w-5 h-5 mr-2" />
                         {uploadingLogo ? 'Enviando...' : 'Enviar Logo'}
@@ -559,7 +557,7 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
                   
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
                   
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     Formatos aceitos: PNG, JPG, SVG. Tamanho máximo: 5MB
                   </p>
                 </div>
@@ -573,7 +571,7 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
                     <AlertCircle className="w-4 h-4 mr-1" />
                     {companyErrors.cnpj}
                   </p>}
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   CNPJ da empresa para documentos formais (14 dígitos)
                 </p>
               </div>
@@ -586,7 +584,7 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
                     <AlertCircle className="w-4 h-4 mr-1" />
                     {companyErrors.whatsapp_phone}
                   </p>}
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Apenas números, sem espaços ou caracteres especiais
                 </p>
               </div>
@@ -602,7 +600,7 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
                     <AlertCircle className="w-4 h-4 mr-1" />
                     {companyErrors.address}
                   </p>}
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Endereço completo da empresa para documentos
                 </p>
               </div>
@@ -618,7 +616,7 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
                     <AlertCircle className="w-4 h-4 mr-1" />
                     {companyErrors.email}
                   </p>}
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Email de contato da empresa
                 </p>
               </div>
@@ -631,7 +629,7 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
                 description: e.target.value
               })} placeholder="Breve descrição da empresa..." rows={3} maxLength={100} className="w-full" />
                 <div className="flex justify-end mt-1">
-                  <p className={`text-xs ${companyData.description.length > 80 ? 'text-red-500 font-medium' : 'text-gray-500'}`}>
+                  <p className={`text-xs ${companyData.description.length > 80 ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
                     {companyData.description.length}/100 caracteres
                   </p>
                 </div>
@@ -663,11 +661,11 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
                 ...companyData,
                 warranty_cancellation_terms: e.target.value
               })} placeholder="Digite as condições que cancelam a garantia..." rows={6} className="mt-2" maxLength={900} />
-                <div className="flex justify-between items-center mt-1">
-                  <p className="text-xs text-gray-500">
-                    Use "NOMEDALOJA" como placeholder - será substituído automaticamente pelo nome da empresa
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 mt-1">
+                  <p className="text-xs text-muted-foreground">
+                    Use "NOMEDALOJA" como placeholder - será substituído automaticamente
                   </p>
-                  <p className={`text-xs ${companyData.warranty_cancellation_terms.length > 800 ? 'text-red-500 font-medium' : 'text-gray-500'}`}>
+                  <p className={`text-xs flex-shrink-0 ${companyData.warranty_cancellation_terms.length > 800 ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
                     {companyData.warranty_cancellation_terms.length}/900 caracteres
                   </p>
                 </div>
@@ -680,11 +678,11 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
                 ...companyData,
                 warranty_legal_reminders: e.target.value
               })} placeholder="Digite os lembretes sobre a garantia..." rows={8} className="mt-2" maxLength={900} />
-                <div className="flex justify-between items-center mt-1">
-                  <p className="text-xs text-gray-500">
-                    Informações sobre direitos do consumidor e limitações da garantia
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 mt-1">
+                  <p className="text-xs text-muted-foreground">
+                    Direitos do consumidor e limitações da garantia
                   </p>
-                  <p className={`text-xs ${companyData.warranty_legal_reminders.length > 800 ? 'text-red-500 font-medium' : 'text-gray-500'}`}>
+                  <p className={`text-xs flex-shrink-0 ${companyData.warranty_legal_reminders.length > 800 ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
                     {companyData.warranty_legal_reminders.length}/900 caracteres
                   </p>
                 </div>
@@ -709,7 +707,7 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
               </div>
 
               {/* Preview Section */}
-              {showWarrantyPreview && <div className="border rounded-lg p-4 bg-gray-50">
+              {showWarrantyPreview && <div className="border rounded-lg p-3 sm:p-4 bg-muted/50">
                   <h4 className="font-semibold mb-3 text-black">Preview dos Termos de Garantia</h4>
                   <div className="space-y-4 text-sm">
                     <div>
