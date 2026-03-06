@@ -18,12 +18,6 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * URL base da API VPS.
- *
- * - Em produção (Vercel/etc): defina VITE_API_URL
- * - Fallback local: https://api.kuky.help
- */
 export const API_BASE_URL = (import.meta as any)?.env?.VITE_API_URL || 'https://api.kuky.help';
 
 const buildUrl = (
@@ -47,49 +41,123 @@ const getAccessToken = async () => {
   return data.session?.access_token ?? null;
 };
 
-export const apiGet = async <T,>(
+const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+const isNetworkError = (e: any): boolean =>
+  e?.name === 'AbortError' || e?.name === 'TypeError' || e?.message === 'Failed to fetch';
+
+type RequestOpts = {
+  params?: Record<string, string | number | boolean | undefined | null>;
+  timeoutMs?: number;
+  retries?: number;
+};
+
+async function apiFetch<T>(
+  method: string,
   path: string,
-  opts?: {
-    params?: Record<string, string | number | boolean | undefined | null>;
-    timeoutMs?: number;
-  }
-): Promise<T> => {
+  body?: unknown,
+  opts?: RequestOpts
+): Promise<T> {
   const endpoint = path.startsWith('/') ? path : `/${path}`;
   const url = buildUrl(endpoint, opts?.params);
   const token = await getAccessToken();
+  const maxRetries = opts?.retries ?? 1;
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), opts?.timeoutMs ?? 12_000);
+  let lastError: any;
 
-  try {
-    const res = await fetch(url, {
-      method: 'GET',
-      signal: controller.signal,
-      headers: {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    if (attempt > 0) {
+      await delay(1500 * attempt); // backoff: 1.5s, 3s, ...
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), opts?.timeoutMs ?? 12_000);
+
+    try {
+      const headers: Record<string, string> = {
         Accept: 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
+      };
 
-    if (!res.ok) {
-      throw new ApiError(`Erro HTTP ${res.status} ao chamar API`, { status: res.status, endpoint });
-    }
+      if (body !== undefined) {
+        headers['Content-Type'] = 'application/json';
+      }
 
-    const json = (await res.json()) as ApiEnvelope<T>;
-    if (!json || typeof json !== 'object') {
-      throw new ApiError('Resposta inválida da API', { status: res.status, endpoint });
-    }
-    if (json.success !== true) {
-      throw new ApiError(json.message || 'API retornou success=false', { status: res.status, endpoint });
-    }
+      const res = await fetch(url, {
+        method,
+        signal: controller.signal,
+        headers,
+        ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+      });
 
-    return json.data;
-  } catch (e: any) {
-    if (e?.name === 'AbortError') {
-      throw new ApiError('Timeout ao chamar API', { endpoint });
+      if (!res.ok) {
+        const status = res.status;
+        // Don't retry on client errors (4xx)
+        if (status >= 400 && status < 500) {
+          throw new ApiError(`Erro HTTP ${status} ao chamar API`, { status, endpoint });
+        }
+        throw new ApiError(`Erro HTTP ${status} ao chamar API`, { status, endpoint });
+      }
+
+      // DELETE may return 204 No Content
+      if (res.status === 204) {
+        return undefined as unknown as T;
+      }
+
+      const json = (await res.json()) as ApiEnvelope<T>;
+      if (!json || typeof json !== 'object') {
+        throw new ApiError('Resposta inválida da API', { status: res.status, endpoint });
+      }
+      if (json.success !== true) {
+        throw new ApiError(json.message || 'API retornou success=false', { status: res.status, endpoint });
+      }
+
+      return json.data;
+    } catch (e: any) {
+      lastError = e;
+      clearTimeout(timer);
+
+      // Don't retry on 4xx errors
+      if (e instanceof ApiError && e.status && e.status >= 400 && e.status < 500) {
+        throw e;
+      }
+
+      // Retry only on network errors
+      if (isNetworkError(e) && attempt < maxRetries) {
+        console.warn(`[apiClient] Tentativa ${attempt + 1} falhou para ${endpoint}, retentando...`);
+        continue;
+      }
+
+      if (e?.name === 'AbortError') {
+        throw new ApiError('Timeout ao chamar API', { endpoint });
+      }
+      throw e;
+    } finally {
+      clearTimeout(timer);
     }
-    throw e;
-  } finally {
-    clearTimeout(timer);
   }
-};
+
+  throw lastError;
+}
+
+export const apiGet = <T,>(
+  path: string,
+  opts?: RequestOpts
+): Promise<T> => apiFetch<T>('GET', path, undefined, opts);
+
+export const apiPost = <T,>(
+  path: string,
+  body: unknown,
+  opts?: RequestOpts
+): Promise<T> => apiFetch<T>('POST', path, body, opts);
+
+export const apiPut = <T,>(
+  path: string,
+  body: unknown,
+  opts?: RequestOpts
+): Promise<T> => apiFetch<T>('PUT', path, body, opts);
+
+export const apiDelete = <T = void,>(
+  path: string,
+  opts?: RequestOpts
+): Promise<T> => apiFetch<T>('DELETE', path, undefined, opts);
