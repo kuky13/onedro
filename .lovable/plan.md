@@ -1,134 +1,67 @@
 
 
-# Expansao da Documentacao do Projeto OneDrip
+## Redesign completo da página /settings
 
-## Objetivo
-Criar documentacao tecnica completa e detalhada para que qualquer desenvolvedor que entre no projeto consiga entender rapidamente como tudo funciona. Vamos expandir os 5 arquivos existentes e criar 7 novos arquivos `.md`.
+### Problema atual
+A página de settings está funcional mas visualmente desconectada do design premium usado em `/suporte` e `/landing`. Os elementos estão achatados no mobile, o layout é genérico, e falta a identidade visual da marca.
 
----
+### Redesign proposto
 
-## Arquivos Existentes - Melhorias
+Reescrever `ServiceOrdersSettingsHub.tsx` com o design language do `/suporte`:
 
-### `0-ai-project-context.md` - Atualizar
-- Adicionar secao sobre o sistema de Diagnostico de Dispositivos (`/testar/:token`)
-- Documentar o modulo de Peliculas (`/p`)
-- Mencionar o sistema de Gamificacao (HamsterPage/CookiePage)
-- Atualizar a lista de Guards com `MobileMenuProvider`
+#### 1. Header simplificado e limpo
+- Mesmo padrão do suporte: `sticky top-0 bg-background/95 backdrop-blur-sm border-b border-border/40`
+- Logo "OneDrip" à esquerda com seta de voltar, botões de ação à direita
+- Altura compacta `h-14`
 
-### `1-visao-geral.md` - Expandir
-- Adicionar modulo de Garantias (`/garantia`)
-- Documentar Central de Ajuda (`/central-de-ajuda`)
-- Adicionar secao sobre Notificacoes Push e sistema de Updates
-- Mencionar Apps Page e Sistema (mini-OS no browser)
+#### 2. Mini hero section leve (não o hero gigante removido antes)
+- Badge pill: "Configurações" com ícone Settings
+- Título: "Gerencie sua **conta**"
+- Subtítulo discreto
+- Trust badges inline: "Dados seguros", "Salvamento automático"
+- Estilo idêntico ao hero do `/suporte` mas menor/mais contido
 
-### `2-frontend-estrutura.md` - Detalhar
-- Documentar o sistema de `lazyWithRetry` com telemetria de chunks
-- Explicar `ChunkLoadRecoveryBanner` e `useChunkLoadTelemetry`
-- Detalhar o `SessionPersistence` e `secureStorage`
-- Documentar o `MobileMenuProvider` e navegacao mobile
+#### 3. Card Drippy redesenhado
+- Desktop: card lateral no grid como no `/suporte` (gradient `from-primary/10 via-background to-primary/5`, border `border-border/60`, `rounded-2xl`)
+- Mobile: card compacto como no `/suporte` mobile (rounded-xl, menor)
+- Avatar redondo com indicador online verde
 
-### `3-backend-supabase.md` - Expandir
-- Listar todas as 40+ Edge Functions com descricao curta
-- Documentar o fluxo de `rate-limiter` e `security-api`
-- Explicar o sistema de notificacoes push (`send-push-notification`)
+#### 4. Navegação por seções redesenhada
+- Substituir as TabsList por cards clicáveis em grid (como os canais de suporte)
+- Cada seção é um card com: ícone colorido em box, título, descrição curta, badge de status
+- Grid `lg:grid-cols-3` no desktop, stack no mobile
+- Hover com `hover:border-primary/40 hover:shadow-lg transition-all`
+- Ao clicar, abre o conteúdo da seção abaixo (mantém tabs internamente mas UI é de cards)
 
-### `4-integracoes-externas.md` - Atualizar
-- Adicionar secao sobre Evolution API e multi-broker completo
-- Documentar o sistema de download de video via VPS proxy
+#### 5. Conteúdo das seções
+- Cards internos com `bg-card border border-border/60 rounded-xl` (padrão suporte)
+- Sem gradientes pesados, visual limpo
+- Perfil pessoal: layout mais espaçado, campos com labels melhores
+- Botões de ação (Redefinir Senha, Sair etc): estilo pill com ícones
 
----
+#### 6. Quick links row
+- 3 botões horizontais estilo pill: Central de Ajuda, Suporte, Chat Drippy
+- Background sutil, ícones coloridos
 
-## Novos Arquivos
+#### 7. Footer
+- Idêntico ao do `/suporte`: copyright, links para Termos/Privacidade/Cookies
+- Limpo e mínimo
 
-### `5-typescript-tipos.md` - Tipos e Interfaces
-Documentar todas as interfaces criticas do sistema:
-- `ServiceOrderData` (OS com campos de senha, checklist, etc.)
-- `Budget` (tipo canonico via Supabase Tables)
-- `User`, `UserProfile`, `DebugInfo`
-- `CompanyInfo`, `CompanyData`, `CompanyFormData`
-- `TestSession`, `TestResult`, `TestDetails`, `TestConfig`
-- `DevicePasswordType` e seus valores
-- `CheckoutParams`, `PixPaymentData`
-- `BudgetData`, `BudgetPartData` (para PDFs)
-- `AuthContextType` e `UserRole`
-- Tabela visual com cada tipo e onde e usado
+#### 8. Mobile drawer
+- Redesenhar o Sheet para ter visual mais premium
+- Seções com ícones coloridos e descrições
+- Links rápidos para Drippy/Ajuda/Suporte no final
 
-### `6-hooks-referencia.md` - Guia de Hooks
-Catalogar os 60+ hooks com categorias:
-- **Autenticacao**: `useAuth`, `useTokenRotation`, `useSecurity`
-- **Licenciamento**: `useLicense`, `useLicenseVerification`, `useLicenseCache`, `useTrialLicense`
-- **Dispositivo**: `useDeviceDetection`, `useIOSDetection`, `useMobileDetection`, `useBatteryDetection`
-- **Ordens de Servico**: `useSecureServiceOrders`, `useServiceOrderEdit`, `useServiceOrderRealTime`, `useServiceOrderShare`
-- **Orcamentos (Worm)**: `useBudgetData`, `useBudgetDeletion`, `useBudgetServiceOrder`, `useCreateServiceOrderFromBudget`
-- **PWA/Offline**: `usePWA`, `useOfflineDetection`, `useSwipeGesture`
-- **UI/UX**: `useResponsive`, `useMobileMenu`, `usePopupState`, `useDebounce`
-- **Store**: `useShopProfile`, `useImportBudgetToStore`
-- **Config**: `useAppConfig`, `useCompanyBranding`, `useDrippySettings`, `useCookiePreferences`
-- Exemplos de uso para os mais importantes
+### Arquivo modificado
 
-### `7-rotas-e-guards.md` - Mapa de Rotas
-Tabela completa com todas as rotas do `App.tsx`:
-- Rota, Componente, Guard aplicado, Lazy/Estatico
-- Fluxo visual de redirecionamentos (auth -> licenca -> dashboard)
-- Explicacao de cada Guard: `UnifiedProtectionGuard`, `AdminGuard`, `MaintenanceGuard`
-- Como adicionar uma nova rota (passo a passo)
+| Arquivo | Mudança |
+|---|---|
+| `src/components/ServiceOrdersSettingsHub.tsx` | Redesign completo seguindo padrões visuais do SuportePage |
 
-### `8-edge-functions.md` - Backend Serverless
-Documentacao detalhada de cada Edge Function:
-- **Pagamentos**: `create-mercadopago-checkout`, `check-mercadopago-payment`, `mercadopago-webhook`, `cancel-mercadopago-payment`, `create-mercadopago-subscription`
-- **WhatsApp**: `whatsapp-proxy`, `whatsapp-webhook`, `whatsapp-qr-connect`, `whatsapp-ai-reply`, `whatsapp-instance-manage`, `waha-proxy`
-- **IA**: `chat-ai`, `triage-ai`, `analyze-budgets`
-- **Seguranca**: `security-api`, `rate-limiter`, `real-time-monitoring`, `audit-system`
-- **Usuarios**: `manage-user-profile`, `admin-reset-password`, `admin-update-user-email`, `validate-license`
-- **Comunicacao**: `send-license-email`, `send-payment-receipt-email`, `send-push-notification`, `notification-system`
-- Fluxo de request/response de cada grupo
-
-### `9-seguranca.md` - Arquitetura de Seguranca
-- Sistema `secureStorage` com criptografia AES-GCM e PBKDF2
-- `SecurityLogger` e auditoria de acessos
-- RLS (Row Level Security) - regras e padroes
-- `botDetection`, `secureCSP`, `secureNavigation`
-- Rate limiting nas Edge Functions
-- Token rotation (`useTokenRotation`)
-- Fluxo de validacao de licencas
-
-### `10-pdf-e-utils.md` - Utilitarios e Geracao de PDFs
-- Como funciona o `pdfUtils.ts` (jsPDF client-side)
-- `serviceOrderPdfUtils.ts` para recibos de OS
-- `currency.ts` - formatacao BRL
-- `whatsappUtils.ts` e `whatsappTemplateUtils.ts`
-- `authCleanup.ts` - limpeza de sessao
-- `pwaDetection.ts` e `pwaReset.ts`
-- `debugLogger.ts` e `asciiConsole.ts`
-
-### `11-guia-contribuicao.md` - Guia para Novos Devs
-- Como rodar o projeto localmente
-- Convencoes de codigo (React Query > useEffect, Zustand para global state)
-- Como criar uma nova pagina (registrar rota, escolher Guard, lazy vs estatico)
-- Como criar um novo hook
-- Como adicionar uma Edge Function
-- Checklist de PR/review
-- Erros comuns e como evitar (RLS, chunks, offline)
-
----
-
-## Detalhes Tecnicos
-
-### Arquivos a criar:
-1. `.documentação/docs/5-typescript-tipos.md`
-2. `.documentação/docs/6-hooks-referencia.md`
-3. `.documentação/docs/7-rotas-e-guards.md`
-4. `.documentação/docs/8-edge-functions.md`
-5. `.documentação/docs/9-seguranca.md`
-6. `.documentação/docs/10-pdf-e-utils.md`
-7. `.documentação/docs/11-guia-contribuicao.md`
-
-### Arquivos a editar:
-1. `.documentação/docs/0-ai-project-context.md`
-2. `.documentação/docs/1-visao-geral.md`
-3. `.documentação/docs/2-frontend-estrutura.md`
-4. `.documentação/docs/3-backend-supabase.md`
-5. `.documentação/docs/4-integracoes-externas.md`
-
-Total: **12 arquivos** (7 novos + 5 atualizados)
+### Detalhes técnicos
+- Manter toda lógica existente (tabs value/onChange, mutations, license, lazy imports)
+- Usar mesmos padrões CSS do SuportePage: `border-border/60`, `rounded-xl`, `bg-card`, `hover:border-primary/40`
+- Tabs continuam funcionando internamente mas a UI de navegação muda para cards clicáveis
+- Mobile: seção atual indicada com destaque visual, drawer para trocar
+- Responsivo: `lg:grid-cols-3` para seções, stack vertical no mobile
 
