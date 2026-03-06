@@ -95,7 +95,7 @@ export const WormBudgetList = ({
   const [visibleGroupsCount, setVisibleGroupsCount] = useState(5);
 
   const handleLoadMore = () => {
-    setVisibleGroupsCount(prev => prev + 5);
+    setVisibleGroupsCount((prev) => prev + 5);
   };
 
   const deviceGroups = useMemo<DeviceGroup[]>(() => {
@@ -264,7 +264,7 @@ export const WormBudgetList = ({
             Criar Primeiro Orçamento
           </Button>}
         </CardContent>
-      </Card> : 
+      </Card> :
       <>
         {visibleDeviceGroups.map((group) => <Card key={group.key} className="rounded-2xl">
         <CardContent className="p-4 sm:p-6">
@@ -288,13 +288,13 @@ export const WormBudgetList = ({
 
             <div className="relative">
               <Button variant="outline" size="sm" onClick={() => {
-                if (isIOS()) {
-                  setSharingBudgets(group.budgets);
-                  setIsShareSheetOpen(true);
-                } else {
-                  handleCopyDeviceBudgets(group.budgets);
-                }
-              }} className="rounded-xl shrink-0 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
+                  if (isIOS()) {
+                    setSharingBudgets(group.budgets);
+                    setIsShareSheetOpen(true);
+                  } else {
+                    handleCopyDeviceBudgets(group.budgets);
+                  }
+                }} className="rounded-xl shrink-0 border-primary/20 bg-success text-primary-foreground">
                 <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
                 Copiar
               </Button>
@@ -321,35 +321,35 @@ export const WormBudgetList = ({
                     </div>
                   </div>
                 </div>
-              }
+                }
             </div>
           </div>
 
           {/* Budgets inside group */}
           <div className="space-y-3">
             {group.budgets.map((budget) => {
-              return (
-                <WormBudgetCard
-                  key={budget.id}
-                  budget={budget}
-                  onDelete={handleBudgetDeleted}
-                  onWhatsAppShare={handleWhatsAppShare}
-                  onUpdate={refetch}
-                  isDeleting={isDeleting === budget.id} />);
+                return (
+                  <WormBudgetCard
+                    key={budget.id}
+                    budget={budget}
+                    onDelete={handleBudgetDeleted}
+                    onWhatsAppShare={handleWhatsAppShare}
+                    onUpdate={refetch}
+                    isDeleting={isDeleting === budget.id} />);
 
 
-            })}
+              })}
           </div>
         </CardContent>
       </Card>)}
       
-      {visibleGroupsCount < deviceGroups.length && (
+      {visibleGroupsCount < deviceGroups.length &&
         <div className="flex justify-center pt-4">
           <Button variant="outline" onClick={handleLoadMore} className="rounded-xl">
             Carregar mais modelos
           </Button>
         </div>
-      )}
+        }
       </>
       }
     </section>
