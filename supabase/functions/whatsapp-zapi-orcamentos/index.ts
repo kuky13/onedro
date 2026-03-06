@@ -1787,15 +1787,16 @@ serve(async (req: Request) => {
     const findBudgetToReplace = async (params: {
       ownerId: string;
       clientPhone: string | null;
+      clientName: string | null;
       deviceModel: string;
       issue: string | null;
       partQuality: string;
       cashPrice: number;
       chatId: string | null;
     }): Promise<any | null> => {
-      const { ownerId, clientPhone, deviceModel, partQuality, chatId } = params;
+      const { ownerId, clientPhone, clientName, deviceModel, partQuality, chatId } = params;
 
-      // 1) Busca ampla: mesmo owner, phone, device_model, part_quality, pendente (sem janela de 24h)
+      // 1) Busca por phone + device + quality (quando phone disponível)
       if (clientPhone) {
         const { data: directMatch } = await supabase
           .from("budgets")
@@ -1813,7 +1814,42 @@ serve(async (req: Request) => {
         if (directMatch) return directMatch;
       }
 
-      // 2) Fallback por chatId nos logs
+      // 2) Busca por owner + device + quality + client_name (cobre grupos sem phone)
+      if (clientName) {
+        const { data: nameMatch } = await supabase
+          .from("budgets")
+          .select("*")
+          .eq("owner_id", ownerId)
+          .eq("client_name", clientName)
+          .eq("device_model", deviceModel)
+          .eq("part_quality", partQuality)
+          .eq("workflow_status", "pending")
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (nameMatch) return nameMatch;
+      }
+
+      // 3) Busca ampla por owner + device + quality apenas (último recurso antes do chatId)
+      {
+        const { data: broadMatch } = await supabase
+          .from("budgets")
+          .select("*")
+          .eq("owner_id", ownerId)
+          .eq("device_model", deviceModel)
+          .eq("part_quality", partQuality)
+          .eq("workflow_status", "pending")
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (broadMatch) return broadMatch;
+      }
+
+      // 4) Fallback por chatId nos logs
       if (chatId) {
         const { data: lastLog } = await supabase
           .from("whatsapp_zapi_logs")
