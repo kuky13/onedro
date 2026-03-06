@@ -80,7 +80,13 @@ export async function getAIConfig(supabase?: any): Promise<AIConfig> {
       .order('updated_at', { ascending: false })
       .limit(1);
 
-    if (!keyData?.api_key) {
+    if (keyError) {
+      console.error('[AI-PROVIDER] Error fetching API key:', keyError);
+    }
+
+    const apiKey = keyRows?.[0]?.api_key ?? null;
+
+    if (!apiKey) {
       return {
         provider: active_provider,
         model: active_model,
@@ -92,7 +98,7 @@ export async function getAIConfig(supabase?: any): Promise<AIConfig> {
     return {
       provider: active_provider,
       model: active_model,
-      apiKey: keyData.api_key,
+      apiKey,
     };
   } catch (error) {
     console.error('[AI-PROVIDER] Error getting config:', error);

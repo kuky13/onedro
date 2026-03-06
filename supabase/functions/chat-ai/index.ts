@@ -918,7 +918,13 @@ async function getAIConfiguration(supabase: any): Promise<{
       .order('updated_at', { ascending: false })
       .limit(1);
 
-    if (!keyData?.api_key) {
+    if (keyError) {
+      console.error(`[AI-CONFIG] Erro ao buscar API Key para ${active_provider}:`, keyError);
+    }
+
+    const apiKey = keyRows?.[0]?.api_key ?? null;
+
+    if (!apiKey) {
       console.error(`[AI-CONFIG] API Key não encontrada para ${active_provider}`);
       return {
         provider: active_provider,
@@ -932,7 +938,7 @@ async function getAIConfiguration(supabase: any): Promise<{
     return {
       provider: active_provider,
       model: active_model,
-      apiKey: keyData.api_key
+      apiKey
     };
   } catch (error) {
     console.error('[AI-CONFIG] Erro ao buscar configuração:', error);
