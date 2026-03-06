@@ -39,25 +39,11 @@ export const useMobileMenu = () => {
         
         const menuItems: MenuItem[] = [
           {
-            id: 'new-budget',
-            label: 'Novo Orçamento',
-            icon: 'Plus',
+            id: 'worm',
+            label: 'Orçamentos',
+            icon: 'Calculator',
             href: '/worm',
-            description: 'Criar um novo orçamento'
-          },
-          {
-            id: 'drippy-ia',
-            label: 'Drippy IA',
-            icon: 'Brain',
-            href: '/chat',
-            description: 'Conversar com a assistente IA'
-          },
-          {
-            id: 'settings',
-            label: 'Configurações',
-            icon: 'Settings',
-            href: '/settings',
-            description: 'Configurações do sistema'
+            description: 'Gerenciar orçamentos'
           },
           {
             id: 'service-orders',
@@ -65,6 +51,63 @@ export const useMobileMenu = () => {
             icon: 'FileText',
             href: '/service-orders',
             description: 'Gerenciar ordens de serviço'
+          },
+          {
+            id: 'chat',
+            label: 'Drippy IA',
+            icon: 'Bot',
+            href: '/chat',
+            description: 'Conversar com a assistente IA'
+          },
+          {
+            id: 'peliculas',
+            label: 'Películas',
+            icon: 'Smartphone',
+            href: '/p',
+            description: 'Consultar películas compatíveis'
+          },
+          {
+            id: 'mensagens',
+            label: 'Mensagens',
+            icon: 'MessageSquare',
+            href: '/msg',
+            description: 'Central de mensagens'
+          },
+          {
+            id: 'usuarios',
+            label: 'Usuários',
+            icon: 'Users',
+            href: '/dashboard',
+            description: 'Gerenciar usuários'
+          },
+          {
+            id: 'configuracoes',
+            label: 'Configurações',
+            icon: 'Settings',
+            href: '/settings',
+            description: 'Configurações do sistema'
+          },
+          {
+            id: 'worm-trash',
+            label: 'Lixeira Orçamentos',
+            icon: 'Trash2',
+            href: '/worm/trash',
+            description: 'Orçamentos excluídos'
+          },
+          {
+            id: 'ordens-trash',
+            label: 'Lixeira Ordens',
+            icon: 'Trash2',
+            href: '/service-orders/trash',
+            description: 'Ordens de serviço excluídas'
+          },
+          {
+            id: 'supadmin',
+            label: 'Super Admin',
+            icon: 'Shield',
+            href: '/supadmin',
+            description: 'Painel de administração',
+            permission: 'admin'
           },
           {
             id: 'support',
