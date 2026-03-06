@@ -49,3 +49,14 @@ export const getBudgetGroupConfirmation = (
 
   return variants[Math.floor(Math.random() * variants.length)];
 };
+
+export const getBudgetUpdateConfirmation = (changesSummary: string) => {
+  const prefix = [
+    "Orçamento atualizado!",
+    "Atualizado!",
+    "Pronto, atualizei!",
+  ];
+  const p = prefix[Math.floor(Math.random() * prefix.length)];
+  const full = `${p} ${changesSummary}`.trim();
+  return full.length > 160 ? full.slice(0, 157) + "…" : full;
+};
