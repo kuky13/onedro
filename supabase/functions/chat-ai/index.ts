@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { logAIRequest } from "../_shared/ai-provider.ts";
 import { CHAT_AI_SYSTEM_PROMPT } from "./prompts/system-prompt.ts";
 import { AIContext } from "./types.ts";
 import {
@@ -1257,8 +1258,32 @@ async function callAI(
         break;
       }
 
+      case "claude": {
+        endpoint = "https://api.anthropic.com/v1/messages";
+        headers = {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+        };
+
+        const systemMsgs = messages.filter((m: any) => m.role === "system");
+        const nonSystemMsgs = messages.filter((m: any) => m.role !== "system");
+        const claudeMsgs = nonSystemMsgs.map((m: any) => ({
+          role: m.role === "tool" ? "user" : m.role,
+          content: m.content,
+        }));
+
+        requestBody = {
+          model: model,
+          system: systemMsgs.map((m: any) => m.content).join("\n\n"),
+          messages: claudeMsgs,
+          max_tokens: 4096,
+        };
+        break;
+      }
+
       default:
-        return `Provider ${provider} não suportado. Use: lovable, deepseek ou gemini.`;
+        return `Provider ${provider} não suportado. Use: lovable, deepseek, gemini ou claude.`;
     }
 
     let finalResponse = "";
