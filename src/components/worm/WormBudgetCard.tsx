@@ -185,9 +185,6 @@ export const WormBudgetCard = ({
                 <DropdownMenuItem onClick={() => setIsEditOpen(true)} className="cursor-pointer font-medium">
                   <Edit className="h-4 w-4 mr-2" /> Editar
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate(`/worm/edit/${budget.id}`, { state: { budget } })} className="cursor-pointer text-purple-600 focus:text-purple-700">
-                  <Sparkles className="h-4 w-4 mr-2" /> Editar com IA
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleWhatsAppClick} className="cursor-pointer">
                   <MessageCircle className="h-4 w-4 mr-2" /> Enviar WhatsApp
                 </DropdownMenuItem>
@@ -197,9 +194,6 @@ export const WormBudgetCard = ({
                 <DropdownMenuItem onClick={handleCreateServiceOrder} className="cursor-pointer text-primary focus:text-primary" disabled={isCreating || isLoadingOrder}>
                   <Wrench className="h-4 w-4 mr-2" />
                   {createdOrderCount > 0 ? `Criar OS (${createdOrderCount} já criadas)` : 'Criar OS'}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleOpenWarranty} className="cursor-pointer text-orange-600 focus:text-orange-700" disabled={!hasCreatedOrder || !createdOrderId}>
-                  <Shield className="h-4 w-4 mr-2" /> Abrir Garantia
                 </DropdownMenuItem>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
