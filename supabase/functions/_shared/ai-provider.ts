@@ -191,6 +191,7 @@ export async function callAIProvider(
 
     case "gemini": {
       const safeModel = model.startsWith("gemini-") ? model : "gemini-2.5-flash";
+      console.log(`[AI-PROVIDER] Gemini model resolved: ${safeModel}`);
       endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${safeModel}:generateContent?key=${apiKey}`;
       headers = { "Content-Type": "application/json" };
 
