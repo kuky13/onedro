@@ -461,7 +461,7 @@ export default function ChatPage() {
               variant="ghost"
               size="icon"
               onClick={() => setShowSettings(!showSettings)}
-              className="h-9 w-9 rounded-full hover:bg-primary/10">
+              className="h-9 w-9 rounded-full bg-muted/60 hover:bg-muted">
               
               <Settings className="h-4 w-4 text-muted-foreground" />
             </Button>
