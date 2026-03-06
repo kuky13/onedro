@@ -36,7 +36,22 @@ export const WormConfigPage = () => {
                         </CardContent>
                     </Card>
 
-                    
+                    <Card className="cursor-pointer hover:shadow-lg transition-all border-l-4 border-l-blue-500" onClick={() => navigate('/worm/config/pdf')}>
+                        <CardContent className="p-6 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-blue-100 rounded-full dark:bg-blue-900/20">
+                                    <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-semibold">PDF e Impressão</h3>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                        Layouts de impressão térmica (58mm/80mm) e A4.
+                                    </p>
+                                </div>
+                            </div>
+                            <ChevronRight className="h-6 w-6 text-muted-foreground" />
+                        </CardContent>
+                    </Card>
                 </div>
             </main>
         </div>;

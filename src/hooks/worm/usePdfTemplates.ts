@@ -12,12 +12,19 @@ export interface PdfTemplate {
     updated_at: string;
 }
 
-export const DEFAULT_PDF_SERVICE_TEMPLATE = `*Serviço:* {nome_reparo}
+export const DEFAULT_PDF_SERVICE_TEMPLATE = `{nome_empresa} 
+{num_or} 
+{telefone_contato} 
+Aparelho:{modelo_dispositivo} 
+Serviço: {nome_reparo} 
 
-{qualidades_inicio}*{qualidade_nome}* – {peca_garantia_meses} meses de garantia 
-💰 À vista {peca_preco_vista} ou {peca_preco_parcelado} no cartão em até {peca_parcelas}x de {peca_valor_parcela}
+{qualidades_inicio}{qualidade_nome} – {peca_garantia_meses} meses de garantia 
+À vista {peca_preco_vista} ou {peca_preco_parcelado} no cartão em até {peca_parcelas}x de {peca_valor_parcela} no cartão 
 
-{qualidades_fim}`;
+{qualidades_fim} 
+Observações: {observacoes} 
+
+Valido até {data_validade}`;
 
 export const usePdfTemplates = (userId: string | undefined) => {
     return useQuery({

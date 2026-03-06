@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import {
   MessageCircle, Edit, Trash2, MoreVertical, Calendar, Wrench, FilePlus,
   Package, Clock, Store, Shield, Smartphone, DollarSign, CreditCard,
-  ChevronDown, ChevronUp, Sparkles,
+  ChevronDown, ChevronUp, Sparkles, Printer
 } from 'lucide-react';
 import { formatCurrencyFromReais, formatCurrency } from '@/utils/currency';
 import { WormBudgetForm } from './WormBudgetForm';
@@ -20,16 +20,22 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent
 } from '@/components/ui/dropdown-menu';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
   AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
 import { useBudgetParts } from '@/hooks/worm/useBudgetParts';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { generateBudgetPdf } from '@/utils/wormPdfGenerator';
+import { supabase } from '@/integrations/supabase/client';
+import { usePdfTemplates } from '@/hooks/worm/usePdfTemplates';
 
 interface Budget {
   id: string;
@@ -82,12 +88,14 @@ export const WormBudgetCard = ({
   const [isNewBudgetWithDataOpen, setIsNewBudgetWithDataOpen] = useState(false);
   const [isImportToStoreOpen, setIsImportToStoreOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isPdfDialogOpen, setIsPdfDialogOpen] = useState(false);
 
   const { createServiceOrderFromBudget, isCreating, isSuccess, data: createdOrderData } =
     useCreateServiceOrderFromBudget(profile?.id);
   const { createdOrderId, formattedId, createdOrderCount, hasCreatedOrder, saveCreatedOrder, isLoading: isLoadingOrder } =
     useBudgetServiceOrder(budget.id);
   const { data: parts = [] } = useBudgetParts(budget.id);
+  const { data: pdfTemplates = [] } = usePdfTemplates(profile?.id);
 
   useEffect(() => {
     if (isSuccess && createdOrderData && !hasCreatedOrder) {
@@ -120,6 +128,76 @@ export const WormBudgetCard = ({
   };
 
   const handleNewBudgetSuccess = () => { setIsNewBudgetWithDataOpen(false); onUpdate(); };
+
+  const handleGeneratePdf = async (paperWidth: '58mm' | '80mm') => {
+    try {
+      toast.loading('Gerando PDF...');
+      
+      let companyName = 'Nossa Loja';
+      let companyPhone = '';
+      
+      // Tenta pegar dados da empresa (similar ao WhatsAppSelector)
+      try {
+        const { data: companyData } = await supabase
+          .from('company_info')
+          .select('name, phone')
+          .eq('owner_id', profile?.id)
+          .maybeSingle();
+        if (companyData) {
+          if (companyData.name) companyName = companyData.name;
+          if (companyData.phone) companyPhone = companyData.phone;
+        }
+      } catch (e) { console.error(e); }
+
+      if (companyName === 'Nossa Loja') {
+        try {
+          const { data: shopData } = await supabase
+            .from('shop_profiles')
+            .select('shop_name, whatsapp')
+            .eq('user_id', profile?.id)
+            .maybeSingle();
+          if (shopData) {
+            if (shopData.shop_name) companyName = shopData.shop_name;
+            if (shopData.whatsapp) companyPhone = shopData.whatsapp;
+          }
+        } catch (e) { console.error(e); }
+      }
+
+      // Encontrar template
+      const defaultTemplate = pdfTemplates?.find((t: any) => t.is_default) || pdfTemplates?.[0];
+      const templateContent = defaultTemplate?.service_section_template || `
+{nome_empresa} 
+{num_or} 
+{telefone_contato} 
+Aparelho:{modelo_dispositivo} 
+Serviço: {nome_reparo} 
+
+{qualidades_inicio}{qualidade_nome} – {peca_garantia_meses} meses de garantia 
+À vista {peca_preco_vista} ou {peca_preco_parcelado} no cartão em até {peca_parcelas}x de {peca_valor_parcela} no cartão 
+
+{qualidades_fim} 
+Observações: {observacoes} 
+
+Valido até {data_validade}
+`;
+
+      generateBudgetPdf({
+        budget,
+        parts,
+        template: templateContent,
+        paperWidth,
+        companyName,
+        companyPhone
+      });
+      
+      toast.dismiss();
+      toast.success('PDF gerado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast.dismiss();
+      toast.error('Erro ao gerar PDF');
+    }
+  };
 
   const duplicatedBudgetData = { ...budget, id: undefined, created_at: undefined, updated_at: undefined, sequential_number: undefined, workflow_status: 'pending' };
 
@@ -185,6 +263,11 @@ export const WormBudgetCard = ({
                 <DropdownMenuItem onClick={() => setIsEditOpen(true)} className="cursor-pointer font-medium">
                   <Edit className="h-4 w-4 mr-2" /> Editar
                 </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={() => setIsPdfDialogOpen(true)} className="cursor-pointer">
+                  <Printer className="h-4 w-4 mr-2" /> Imprimir PDF
+                </DropdownMenuItem>
+
                 <DropdownMenuItem onClick={handleWhatsAppClick} className="cursor-pointer">
                   <MessageCircle className="h-4 w-4 mr-2" /> Enviar WhatsApp
                 </DropdownMenuItem>
@@ -432,6 +515,41 @@ export const WormBudgetCard = ({
       </Sheet>
 
       <ImportToStoreDialog open={isImportToStoreOpen} onOpenChange={setIsImportToStoreOpen} budget={budget} parts={parts} />
+
+      <Dialog open={isPdfDialogOpen} onOpenChange={setIsPdfDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Imprimir Orçamento</DialogTitle>
+            <DialogDescription>
+              Escolha o tamanho do papel para gerar o PDF térmico.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <Button
+              variant="outline"
+              className="h-32 flex flex-col gap-3 hover:bg-muted/50 hover:border-primary/50 transition-all"
+              onClick={() => { handleGeneratePdf('58mm'); setIsPdfDialogOpen(false); }}
+            >
+              <Printer className="h-8 w-8 text-primary" />
+              <div className="space-y-1">
+                <div className="font-semibold">58mm</div>
+                <div className="text-xs text-muted-foreground">Pequeno</div>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-32 flex flex-col gap-3 hover:bg-muted/50 hover:border-primary/50 transition-all"
+              onClick={() => { handleGeneratePdf('80mm'); setIsPdfDialogOpen(false); }}
+            >
+              <Printer className="h-10 w-10 text-primary" />
+              <div className="space-y-1">
+                <div className="font-semibold">80mm</div>
+                <div className="text-xs text-muted-foreground">Padrão</div>
+              </div>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

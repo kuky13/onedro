@@ -142,9 +142,19 @@ export const PdfTemplateEditor = ({ template, onSuccess, onCancel }: PdfTemplate
         }
 
         const replacements: Record<string, string> = {
+            '{nome_empresa}': 'Minha Loja de Celulares',
+            '{telefone_contato}': '(11) 99999-9999',
             '{nome_reparo}': 'Troca de Tela Frontal',
             '{modelo_dispositivo}': 'iPhone 11',
             '{tipo_dispositivo}': 'Smartphone',
+            '{serviços}': 'Limpeza Interna\n• Película de Vidro',
+            '{observacoes}': 'Cliente relatou que o aparelho caiu na água.',
+            '{data_validade}': '30/12/2023',
+            '{num_or}': 'OR: 1234',
+            '{data_criacao}': '15/12/2023',
+            '{nome_cliente}': 'João da Silva',
+            '{telefone_cliente}': '(11) 98888-8888',
+            '{status}': 'Pendente',
             '{preco_vista}': 'R$ 450,00',
             '{preco_parcelado}': 'R$ 490,00',
             '{num_parcelas}': '6',
@@ -165,7 +175,7 @@ export const PdfTemplateEditor = ({ template, onSuccess, onCancel }: PdfTemplate
                     {isEditing ? 'Editar Template PDF' : 'Novo Template PDF'}
                 </SheetTitle>
                 <SheetDescription>
-                    Personalize como a seção "Valores do Serviço" aparecerá no PDF.
+                    Personalize o layout do PDF para impressão térmica (58mm/80mm).
                 </SheetDescription>
             </SheetHeader>
 
@@ -175,7 +185,7 @@ export const PdfTemplateEditor = ({ template, onSuccess, onCancel }: PdfTemplate
                     <Input
                         value={templateName}
                         onChange={(e) => setTemplateName(e.target.value)}
-                        placeholder="Ex: Padrão Loja"
+                        placeholder="Ex: Cupom Térmico Padrão"
                     />
                 </div>
 
@@ -190,20 +200,15 @@ export const PdfTemplateEditor = ({ template, onSuccess, onCancel }: PdfTemplate
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label>Conteúdo do Serviço/Reparo</Label>
+                        <Label>Conteúdo do Template</Label>
                         <div className="bg-muted p-2 rounded-md mb-2 flex flex-wrap gap-2 text-xs">
-                            <span className="font-semibold w-full block mb-1">Placeholders disponíveis:</span>
+                            <span className="font-semibold w-full block mb-1">Dados da Loja/Cliente:</span>
                             {[
-                                '{nome_reparo}',
-                                '{modelo_dispositivo}',
-                                '{qualidades_inicio}',
-                                '{qualidade_nome}',
-                                '{peca_preco_vista}',
-                                '{peca_preco_parcelado}',
-                                '{peca_parcelas}',
-                                '{peca_valor_parcela}',
-                                '{peca_garantia_meses}',
-                                '{qualidades_fim}'
+                                '{nome_empresa}', '{telefone_contato}', 
+                                '{num_or}', '{data_criacao}', '{status}',
+                                '{nome_cliente}', '{telefone_cliente}',
+                                '{modelo_dispositivo}', '{nome_reparo}', 
+                                '{observacoes}', '{data_validade}', '{serviços}'
                             ].map(p => (
                                 <button
                                     key={p}
@@ -213,19 +218,29 @@ export const PdfTemplateEditor = ({ template, onSuccess, onCancel }: PdfTemplate
                                     {p}
                                 </button>
                             ))}
+                            <span className="font-semibold w-full block mb-1 mt-2">Loop de Peças/Qualidades:</span>
+                            {['{qualidades_inicio}', '{qualidade_nome}', '{peca_garantia_meses}', '{peca_preco_vista}', '{peca_preco_parcelado}', '{qualidades_fim}'].map(p => (
+                                <button
+                                    key={p}
+                                    onClick={() => insertPlaceholder(p)}
+                                    className="px-2 py-1 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 transition-colors dark:bg-blue-900/20 dark:border-blue-800"
+                                >
+                                    {p}
+                                </button>
+                            ))}
                         </div>
                         <Textarea
                             ref={textareaRef}
                             value={serviceTemplate}
                             onChange={(e) => setServiceTemplate(e.target.value)}
-                            className="h-[300px] font-mono text-sm"
+                            className="h-[400px] font-mono text-sm"
                             placeholder="Digite o conteúdo..."
                         />
                     </div>
 
                     <div className="space-y-2">
                         <Label>Pré-visualização (Simulação)</Label>
-                        <div className="h-[300px] w-full rounded-md border bg-slate-50 p-4 overflow-auto whitespace-pre-wrap text-sm font-mono text-slate-800">
+                        <div className="h-[400px] w-full rounded-md border bg-white p-4 overflow-auto whitespace-pre-wrap text-sm font-mono text-black shadow-sm">
                             {generatePreview()}
                         </div>
                     </div>
