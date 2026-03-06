@@ -1782,6 +1782,7 @@ serve(async (req: Request) => {
     const createdBudgets: any[] = [];
     let createdCount = 0;
     let replacedCount = 0;
+    const updateSummaries: string[] = [];
 
     const findBudgetToReplace = async (params: {
       ownerId: string;
@@ -1891,6 +1892,8 @@ serve(async (req: Request) => {
       let budgetRow: any = null;
 
       if (existingBudget) {
+        const summary = buildUpdateSummary(existingBudget, budgetInsertData, validUntilStr);
+        updateSummaries.push(summary);
         const { data: updatedBudget } = await supabase
           .from("budgets")
           .update({ ...budgetInsertData, updated_at: new Date().toISOString() })
