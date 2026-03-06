@@ -484,7 +484,7 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
 
         <div className="grid grid-cols-1 gap-5 md:gap-8">
           {/* Budget Warning Settings - enhanced (inline) */}
-          <Card className="border-0 bg-muted/30 rounded-2xl shadow-none">
+          <Card className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 
@@ -503,7 +503,7 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
           </Card>
 
           {/* Company Information */}
-          <Card className="border-0 bg-muted/30 rounded-2xl shadow-none">
+          <Card className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Building2 className="w-5 h-5" />
@@ -643,7 +643,7 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
           </Card>
 
           {/* Warranty Terms Section */}
-          <Card className="border-0 bg-muted/30 rounded-2xl shadow-none">
+          <Card className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <FileText className="w-5 h-5" />
