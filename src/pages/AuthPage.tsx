@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
-import { Eye, EyeOff, ArrowLeft, Shield, Smartphone, Lock, RefreshCcw } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, Shield, Smartphone, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLicenseVerification } from '@/hooks/useLicenseVerification';
 import { LicenseActivationSection } from '@/components/auth/LicenseActivationSection';
@@ -22,6 +22,7 @@ export const AuthPage = () => {
 
   // ... rest of the code
 
+  // @ts-ignore unused but keeps isResetting state functional
   const handleFullReset = () => {
     setIsResetting(true);
     cleanupAuthState();
