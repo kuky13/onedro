@@ -144,7 +144,8 @@ export const WormBudgetCard = ({
   // Old budget warning
   const createdDate = new Date(budget.created_at);
   const daysOld = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-  const isOld = isWarningEnabled && daysOld >= warningDays;
+  const hasValidFutureExpiry = expiryDate && expiryDate.getTime() > now.getTime();
+  const isOld = isWarningEnabled && daysOld >= warningDays && !hasValidFutureExpiry;
 
   // Payment badge (only paid/delivered, no "Pendente")
   const getWorkflowBadge = () => {
