@@ -70,7 +70,7 @@ export function ProviderSelector({
   return (
     <div className="space-y-6">
       {/* Provider Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {AVAILABLE_PROVIDERS.map((provider) => {
           const Icon = providerIcons[provider.id as keyof typeof providerIcons];
           const isActive = selectedProvider === provider.id;
