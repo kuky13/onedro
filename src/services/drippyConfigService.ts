@@ -37,7 +37,7 @@ export const AVAILABLE_PROVIDERS: ProviderInfo[] = [
     description: 'API direta Anthropic Claude',
     models: [
       { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', description: 'Equilíbrio performance/custo' },
-      { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', description: 'Ultra rápido e barato' },
+      { id: 'claude-3-5-haiku-latest', name: 'Claude 3.5 Haiku', description: 'Ultra rápido e barato' },
     ],
     color: 'hsl(25, 95%, 53%)',
   },
