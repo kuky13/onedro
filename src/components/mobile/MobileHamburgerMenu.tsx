@@ -14,6 +14,7 @@ interface MenuItem {
   icon: string;
   permission?: string;
   action?: () => void;
+  href?: string;
 }
 interface MenuData {
   items: MenuItem[];
@@ -77,39 +78,15 @@ export const MobileHamburgerMenu = ({
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);
-  const handleTabChange = (tab: string) => {
-    if (tab === 'new-budget') {
-      onClose();
-      navigate('/worm');
-      return;
-    }
-    if (tab === 'whatsapp-crm') {
-      onClose();
-      navigate('/whats');
-      return;
-    }
-    if (tab === 'drippy-ia') {
-      onClose();
-      navigate('/chat');
-      return;
-    }
-    if (tab === 'settings') {
-      onClose();
-      navigate('/settings');
-      return;
-    }
-    if (tab === 'service-orders') {
-      onClose();
-      navigate('/service-orders');
-      return;
-    }
-    if (tab === 'support') {
-      onClose();
-      navigate('/suporte');
-      return;
-    }
-    onTabChange(tab);
+  const handleTabChange = (item: MenuItem) => {
     onClose();
+    if (item.href) {
+      navigate(item.href);
+    } else if (item.action) {
+      item.action();
+    } else {
+      onTabChange(item.id);
+    }
   };
   const handleLogout = () => {
     onLogout();
@@ -236,7 +213,7 @@ export const MobileHamburgerMenu = ({
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 + (index * 0.05) }}
                     >
-                      <Button variant="ghost" className={navButtonClass} onClick={() => handleTabChange(item.id)}>
+                      <Button variant="ghost" className={navButtonClass} onClick={() => handleTabChange(item)}>
                         <div className={navIconWrapClass}>
                           <IconComponent className="h-4 w-4 text-muted-foreground transition-all duration-200 group-hover:scale-110 group-hover:text-primary-foreground shrink-0" />
                         </div>
