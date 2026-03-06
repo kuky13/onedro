@@ -144,36 +144,6 @@ export function ServiceOrdersSettingsHub() {
 
         <div className="p-4 md:p-6 space-y-6">
 
-        {/* === HERO SECTION === */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 p-6 md:p-8">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/15 border border-primary/30 mb-4">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              <span className="text-xs font-semibold text-primary">Configurações OneDrip</span>
-            </div>
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-              Personalize sua <span className="text-primary">experiência</span>
-            </h2>
-            <p className="text-muted-foreground max-w-lg mb-4">
-              Gerencie sua empresa, perfil e preferências em um só lugar. Tudo seguro e com salvamento automático.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Shield className="h-3.5 w-3.5 text-primary" />
-                <span>Dados seguros</span>
-              </div>
-              <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                <span>Salvamento automático</span>
-              </div>
-              <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Zap className="h-3.5 w-3.5 text-primary" />
-                <span>Alterações em tempo real</span>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* === DRIPPY + QUICK LINKS ROW === */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
