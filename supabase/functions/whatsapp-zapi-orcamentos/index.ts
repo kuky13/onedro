@@ -2,7 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
-import { getBudgetGroupConfirmation } from "../_shared/ai-messages.ts";
+import { getBudgetGroupConfirmation, getBudgetUpdateConfirmation } from "../_shared/ai-messages.ts";
 
 // Tipos internos simples para normalizar o payload da Z-API
 
@@ -1782,6 +1782,7 @@ serve(async (req: Request) => {
     const createdBudgets: any[] = [];
     let createdCount = 0;
     let replacedCount = 0;
+    const updateSummaries: string[] = [];
 
     const findBudgetToReplace = async (params: {
       ownerId: string;
@@ -1792,28 +1793,27 @@ serve(async (req: Request) => {
       cashPrice: number;
       chatId: string | null;
     }): Promise<any | null> => {
-      const { ownerId, clientPhone, deviceModel, issue, partQuality, cashPrice, chatId } = params;
-      const windowStartIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { ownerId, clientPhone, deviceModel, partQuality, chatId } = params;
 
+      // 1) Busca ampla: mesmo owner, phone, device_model, part_quality, pendente (sem janela de 24h)
       if (clientPhone) {
-        const { data: directFlexible } = await supabase
+        const { data: directMatch } = await supabase
           .from("budgets")
           .select("*")
           .eq("owner_id", ownerId)
           .eq("client_phone", clientPhone)
           .eq("device_model", deviceModel)
-          .eq("issue", issue)
           .eq("part_quality", partQuality)
           .eq("workflow_status", "pending")
           .is("deleted_at", null)
-          .gte("created_at", windowStartIso)
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
 
-        if (directFlexible) return directFlexible;
+        if (directMatch) return directMatch;
       }
 
+      // 2) Fallback por chatId nos logs
       if (chatId) {
         const { data: lastLog } = await supabase
           .from("whatsapp_zapi_logs")
@@ -1840,6 +1840,29 @@ serve(async (req: Request) => {
         }
       }
       return null;
+    };
+
+    // Gera resumo breve das diferenças entre orçamento existente e novos dados
+    const buildUpdateSummary = (existing: any, newData: any, newValidUntil: string): string => {
+      const changes: string[] = [];
+      const fmtR$ = (v: number) => `R$${(v / 100).toFixed(0)}`;
+
+      if (existing.cash_price !== newData.cash_price && newData.cash_price)
+        changes.push(`à vista ${fmtR$(existing.cash_price)}→${fmtR$(newData.cash_price)}`);
+      else if (existing.total_price !== newData.total_price && newData.total_price)
+        changes.push(`preço ${fmtR$(existing.total_price)}→${fmtR$(newData.total_price)}`);
+
+      if (existing.issue !== newData.issue && newData.issue)
+        changes.push("serviço atualizado");
+
+      if (existing.warranty_months !== newData.warranty_months && newData.warranty_months)
+        changes.push(`garantia ${newData.warranty_months}m`);
+
+      const dtPart = newValidUntil.split("-");
+      const dtFmt = dtPart.length === 3 ? `${dtPart[2]}/${dtPart[1]}` : newValidUntil;
+      changes.push(`validade até ${dtFmt}`);
+
+      return changes.join(", ").slice(0, 140);
     };
 
     for (const part of effectivePartsPayload) {
@@ -1869,6 +1892,8 @@ serve(async (req: Request) => {
       let budgetRow: any = null;
 
       if (existingBudget) {
+        const summary = buildUpdateSummary(existingBudget, budgetInsertData, validUntilStr);
+        updateSummaries.push(summary);
         const { data: updatedBudget } = await supabase
           .from("budgets")
           .update({ ...budgetInsertData, updated_at: new Date().toISOString() })
@@ -1994,10 +2019,15 @@ serve(async (req: Request) => {
     }
 
     if (createdBudgets.length > 0) {
-      const successMessage = getBudgetGroupConfirmation({
-        budgetCount: createdBudgets.length,
-        deviceModel,
-      });
+      let successMessage: string;
+      if (replacedCount > 0 && updateSummaries.length > 0) {
+        successMessage = getBudgetUpdateConfirmation(updateSummaries[0]);
+      } else {
+        successMessage = getBudgetGroupConfirmation({
+          budgetCount: createdBudgets.length,
+          deviceModel,
+        });
+      }
       const replyResult = await sendWhatsAppResponse(normalized, successMessage);
 
       await supabase.from("whatsapp_zapi_logs").insert({
