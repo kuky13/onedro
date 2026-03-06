@@ -104,6 +104,51 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_request_logs: {
+        Row: {
+          created_at: string | null
+          duration_ms: number | null
+          error_message: string | null
+          id: string
+          input_tokens: number | null
+          metadata: Json | null
+          model: string
+          output_tokens: number | null
+          provider: string
+          source: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          input_tokens?: number | null
+          metadata?: Json | null
+          model: string
+          output_tokens?: number | null
+          provider: string
+          source?: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          input_tokens?: number | null
+          metadata?: Json | null
+          model?: string
+          output_tokens?: number | null
+          provider?: string
+          source?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       api_keys: {
         Row: {
           api_key: string
