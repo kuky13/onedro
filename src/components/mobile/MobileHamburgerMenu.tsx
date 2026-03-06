@@ -14,6 +14,7 @@ interface MenuItem {
   icon: string;
   permission?: string;
   action?: () => void;
+  href?: string;
 }
 interface MenuData {
   items: MenuItem[];
