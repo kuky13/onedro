@@ -1918,6 +1918,7 @@ serve(async (req: Request) => {
       const existingBudget = await findBudgetToReplace({
         ownerId,
         clientPhone: client_phone ?? null,
+        clientName: client_name ?? null,
         deviceModel,
         issue: budgetInsertData.issue ?? null,
         partQuality,
