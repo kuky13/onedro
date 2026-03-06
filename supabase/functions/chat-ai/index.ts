@@ -1287,8 +1287,33 @@ async function callAI(
     }
 
     let finalResponse = "";
+    const aiStartTime = Date.now();
 
-    if (provider === "gemini") {
+    if (provider === "claude") {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[claude] API error:`, response.status, errorText);
+        return `Erro ao conectar com Claude. Status: ${response.status}`;
+      }
+
+      const data = await response.json();
+      finalResponse = data.content?.[0]?.text || "Sem resposta da IA.";
+
+      // Log
+      await logAIRequest({
+        provider, model, source: meta?.source || "app",
+        input_tokens: data.usage?.input_tokens,
+        output_tokens: data.usage?.output_tokens,
+        duration_ms: Date.now() - aiStartTime,
+        status: 'success', user_id: userId,
+      }, supabase);
+    } else if (provider === "gemini") {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: headers,
@@ -1304,6 +1329,15 @@ async function callAI(
       const data = await response.json();
       finalResponse =
         data.candidates?.[0]?.content?.parts?.[0]?.text || "Sem resposta da IA.";
+
+      // Log
+      await logAIRequest({
+        provider, model, source: meta?.source || "app",
+        input_tokens: data.usageMetadata?.promptTokenCount,
+        output_tokens: data.usageMetadata?.candidatesTokenCount,
+        duration_ms: Date.now() - aiStartTime,
+        status: 'success', user_id: userId,
+      }, supabase);
     } else {
       let shouldContinue = true;
       let iterationCount = 0;
