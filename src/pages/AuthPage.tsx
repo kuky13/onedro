@@ -19,7 +19,7 @@ export const AuthPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showResetForm, setShowResetForm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
-  
+
   // ... rest of the code
 
   const handleFullReset = () => {
@@ -83,9 +83,9 @@ export const AuthPage = () => {
       if (error) {
         showError({
           title: 'Erro no login',
-          description: error.message === 'Provider is not enabled' 
-            ? 'Google não configurado.' 
-            : error.message
+          description: error.message === 'Provider is not enabled' ?
+          'Google não configurado.' :
+          error.message
         });
       }
     } catch {
@@ -105,14 +105,14 @@ export const AuthPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <div className="p-4">
-          {isIOS ? (
-            <LicenseActivationIOS user={user} onLicenseActivated={handleLicenseActivated} />
-          ) : (
-            <LicenseActivationSection user={user} onLicenseActivated={handleLicenseActivated} />
-          )}
+          {isIOS ?
+          <LicenseActivationIOS user={user} onLicenseActivated={handleLicenseActivated} /> :
+
+          <LicenseActivationSection user={user} onLicenseActivated={handleLicenseActivated} />
+          }
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -149,9 +149,9 @@ export const AuthPage = () => {
               {showResetForm ? 'Recuperar senha' : 'Entrar na sua conta'}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {showResetForm 
-                ? 'Digite seu email para receber o link de recuperação'
-                : 'Acesse seu painel de orçamentos'
+              {showResetForm ?
+              'Digite seu email para receber o link de recuperação' :
+              'Acesse seu painel de orçamentos'
               }
             </p>
           </div>
@@ -172,16 +172,16 @@ export const AuthPage = () => {
             </div>
           </div>
 
-          {!showResetForm ? (
-            <>
+          {!showResetForm ?
+          <>
               {/* Botão Google */}
               <Button
-                type="button"
-                variant="outline"
-                className="w-full h-12 text-base font-medium border-border/60 hover:bg-muted/50"
-                onClick={handleSocialLogin}
-                disabled={loading || isResetting}
-              >
+              type="button"
+              variant="outline"
+              className="w-full h-12 text-base font-medium border-border/60 hover:bg-muted/50"
+              onClick={handleSocialLogin}
+              disabled={loading || isResetting}>
+              
                 <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                   <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                   <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -210,15 +210,15 @@ export const AuthPage = () => {
                     Email
                   </Label>
                   <Input
-                    type="email"
-                    id="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="h-12 text-base"
-                    autoComplete="email"
-                    disabled={isResetting}
-                  />
+                  type="email"
+                  id="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-12 text-base"
+                  autoComplete="email"
+                  disabled={isResetting} />
+                
                 </div>
 
                 <div className="space-y-2">
@@ -227,41 +227,41 @@ export const AuthPage = () => {
                       Senha
                     </Label>
                     <button
-                      type="button"
-                      onClick={() => setShowResetForm(true)}
-                      className="text-xs text-primary hover:underline"
-                      disabled={isResetting}
-                    >
+                    type="button"
+                    onClick={() => setShowResetForm(true)}
+                    className="text-xs text-primary hover:underline"
+                    disabled={isResetting}>
+                    
                       Esqueci a senha
                     </button>
                   </div>
                   <div className="relative">
                     <Input
-                      type={showPassword ? 'text' : 'password'}
-                      id="password"
-                      placeholder="Sua senha"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="h-12 text-base pr-12"
-                      autoComplete="current-password"
-                      disabled={isResetting}
-                    />
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    placeholder="Sua senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-12 text-base pr-12"
+                    autoComplete="current-password"
+                    disabled={isResetting} />
+                  
                     <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      disabled={isResetting}
-                    >
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    disabled={isResetting}>
+                    
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
 
                 <Button
-                  type="submit"
-                  className="w-full h-12 text-base font-semibold"
-                  disabled={loading || isResetting}
-                >
+                type="submit"
+                className="w-full h-12 text-base font-semibold"
+                disabled={loading || isResetting}>
+                
                   {loading ? 'Entrando...' : 'Entrar'}
                 </Button>
               </form>
@@ -276,21 +276,21 @@ export const AuthPage = () => {
                 </p>
 
                 <div className="flex justify-center">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-xs text-muted-foreground hover:text-destructive flex items-center gap-2"
-                    onClick={handleFullReset}
-                    disabled={isResetting}
-                  >
-                    <RefreshCcw className={`w-3 h-3 ${isResetting ? 'animate-spin' : ''}`} />
-                    Limpar Cookies e Resetar App
-                  </Button>
+                  
+
+
+
+
+
+
+
+
+                
                 </div>
               </div>
-            </>
-          ) : (
-            <>
+            </> :
+
+          <>
               {/* Form de recuperação */}
               <form onSubmit={handleResetPassword} className="space-y-4">
                 <div className="space-y-2">
@@ -298,34 +298,34 @@ export const AuthPage = () => {
                     Email
                   </Label>
                   <Input
-                    type="email"
-                    id="reset-email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="h-12 text-base"
-                    autoComplete="email"
-                  />
+                  type="email"
+                  id="reset-email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-12 text-base"
+                  autoComplete="email" />
+                
                 </div>
 
                 <Button
-                  type="submit"
-                  className="w-full h-12 text-base font-semibold"
-                  disabled={loading}
-                >
+                type="submit"
+                className="w-full h-12 text-base font-semibold"
+                disabled={loading}>
+                
                   {loading ? 'Enviando...' : 'Enviar link de recuperação'}
                 </Button>
 
                 <button
-                  type="button"
-                  onClick={() => setShowResetForm(false)}
-                  className="w-full text-center text-sm text-muted-foreground hover:text-foreground"
-                >
+                type="button"
+                onClick={() => setShowResetForm(false)}
+                className="w-full text-center text-sm text-muted-foreground hover:text-foreground">
+                
                   Voltar para o login
                 </button>
               </form>
             </>
-          )}
+          }
         </div>
       </main>
 
@@ -339,6 +339,6 @@ export const AuthPage = () => {
           <Link to="/suporte" className="hover:text-foreground">Suporte</Link>
         </div>
       </footer>
-    </div>
-  );
+    </div>);
+
 };
