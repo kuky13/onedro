@@ -1,11 +1,11 @@
-import React, { Suspense, useState } from 'react';
+import { Suspense, useState } from 'react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Settings, Building2, User, FileText, Eye, EyeOff, Cookie as CookieIcon,
+  Settings, Building2, User, Eye, EyeOff,
   ArrowLeft, Save, LogOut, HelpCircle, Lock, Mail, Menu, Home, BookOpen,
   Headphones, MessageCircle, Shield, CheckCircle2, Zap
 } from 'lucide-react';
@@ -19,9 +19,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/useToast';
 
-const TermsPageLazy = React.lazy(() => import('@/pages/TermsPage').then((m) => ({ default: m.TermsPage })));
-const PrivacyPageLazy = React.lazy(() => import('@/pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage })));
-const CookiesPageLazy = React.lazy(() => import('@/pages/CookiesPage').then((m) => ({ default: m.CookiesPage })));
 
 const SECTIONS = [
   {
@@ -37,27 +34,6 @@ const SECTIONS = [
     description: 'Conta, segurança e preferências',
     icon: User,
     color: 'bg-violet-500',
-  },
-  {
-    id: 'termos',
-    label: 'Termos de Uso',
-    description: 'Condições e regras da plataforma',
-    icon: FileText,
-    color: 'bg-amber-500',
-  },
-  {
-    id: 'privacidade',
-    label: 'Privacidade',
-    description: 'Proteção e uso dos seus dados',
-    icon: Eye,
-    color: 'bg-emerald-500',
-  },
-  {
-    id: 'cookies',
-    label: 'Cookies',
-    description: 'Preferências de rastreamento',
-    icon: CookieIcon,
-    color: 'bg-orange-500',
   },
 ] as const;
 
@@ -365,59 +341,8 @@ export function ServiceOrdersSettingsHub() {
                 </Card>
               </TabsContent>
 
-              {/* Termos */}
-              <TabsContent value="termos" className="mt-0">
-                <Card className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-primary" /> Termos de Uso</CardTitle>
-                    <CardDescription>Consulte os termos e condições de uso da plataforma</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Button variant="outline" className="h-11 rounded-xl" onClick={() => navigate('/terms')}>Abrir página completa</Button>
-                    <div className="max-h-[70vh] overflow-auto rounded-xl border border-border/40 bg-background p-1">
-                      <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-muted" />}>
-                        <TermsPageLazy />
-                      </Suspense>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
 
-              {/* Privacidade */}
-              <TabsContent value="privacidade" className="mt-0">
-                <Card className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Eye className="h-5 w-5 text-primary" /> Política de Privacidade</CardTitle>
-                    <CardDescription>Saiba como protegemos e utilizamos seus dados pessoais</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Button variant="outline" className="h-11 rounded-xl" onClick={() => navigate('/privacy')}>Abrir página completa</Button>
-                    <div className="max-h-[70vh] overflow-auto rounded-xl border border-border/40 bg-background p-1">
-                      <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-muted" />}>
-                        <PrivacyPageLazy />
-                      </Suspense>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
 
-              {/* Cookies */}
-              <TabsContent value="cookies" className="mt-0">
-                <Card className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><CookieIcon className="h-5 w-5 text-primary" /> Política de Cookies</CardTitle>
-                    <CardDescription>Entenda como utilizamos cookies para melhorar sua experiência</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Button variant="outline" className="h-11 rounded-xl" onClick={() => navigate('/cookies')}>Abrir página completa</Button>
-                    <div className="max-h-[70vh] overflow-auto rounded-xl border border-border/40 bg-background p-1">
-                      <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-muted" />}>
-                        <CookiesPageLazy />
-                      </Suspense>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
             </Tabs>
           </div>
         </section>
