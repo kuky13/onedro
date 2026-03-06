@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import {
   MessageCircle, Edit, Trash2, MoreVertical, Calendar, Wrench, FilePlus,
   Package, Clock, Store, Shield, Smartphone, DollarSign, CreditCard,
-  ChevronDown, ChevronUp,
+  ChevronDown, ChevronUp, Sparkles,
 } from 'lucide-react';
 import { formatCurrencyFromReais, formatCurrency } from '@/utils/currency';
 import { WormBudgetForm } from './WormBudgetForm';
@@ -182,8 +182,11 @@ export const WormBudgetCard = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => navigate(`/worm/edit/${budget.id}`, { state: { budget } })} className="cursor-pointer">
+                <DropdownMenuItem onClick={() => setIsEditOpen(true)} className="cursor-pointer font-medium">
                   <Edit className="h-4 w-4 mr-2" /> Editar
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate(`/worm/edit/${budget.id}`, { state: { budget } })} className="cursor-pointer text-purple-600 focus:text-purple-700">
+                  <Sparkles className="h-4 w-4 mr-2" /> Editar com IA
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleWhatsAppClick} className="cursor-pointer">
                   <MessageCircle className="h-4 w-4 mr-2" /> Enviar WhatsApp

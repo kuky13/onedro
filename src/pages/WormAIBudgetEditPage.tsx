@@ -6,17 +6,6 @@ import { useWormBudgetById } from '@/hooks/worm/useWormBudgetById';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
-const goBackToWorm = (navigate: ReturnType<typeof useNavigate>) => {
-  navigate('/worm', { replace: true, state: null });
-
-  // Fallback defensivo para evitar ficar preso em /worm/edit
-  window.setTimeout(() => {
-    if (window.location.pathname.startsWith('/worm/edit')) {
-      window.location.replace('/worm');
-    }
-  }, 120);
-};
-
 export const WormAIBudgetEditPage = () => {
   const {
     id
@@ -33,6 +22,26 @@ export const WormAIBudgetEditPage = () => {
     user
   } = useAuth();
   const navigate = useNavigate();
+
+  const handleGoBack = () => {
+    try {
+      console.log("Tentando navegar para /worm via SPA...");
+      navigate('/worm', { replace: true });
+      
+      // Fallback de segurança: se a URL não mudar em 100ms, força reload
+      // Isso resolve casos onde o router pode ficar preso ou bloqueado
+      setTimeout(() => {
+        if (window.location.pathname.includes('/worm/edit')) {
+          console.warn("Navegação SPA falhou ou bloqueada, forçando redirecionamento via window.location");
+          window.location.href = '/worm';
+        }
+      }, 100);
+    } catch (error) {
+      console.error("Erro ao navegar, usando fallback imediato:", error);
+      window.location.href = '/worm';
+    }
+  };
+
   const {
     data: queryResult,
     isLoading
@@ -53,7 +62,7 @@ export const WormAIBudgetEditPage = () => {
   if (!budget) {
     return <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground gap-4">
         <p>Orçamento não encontrado.</p>
-        <Button variant="outline" onClick={() => goBackToWorm(navigate)}>
+        <Button variant="outline" onClick={handleGoBack}>
           Voltar para os orçamentos
         </Button>
       </div>;
@@ -61,7 +70,7 @@ export const WormAIBudgetEditPage = () => {
   if (!isAiBudget) {
     return <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground gap-4 px-4 text-center">
         <p>Este orçamento não foi criado pela IA. Apenas orçamentos criados pela IA podem ser editados nesta tela.</p>
-        <Button variant="outline" onClick={() => goBackToWorm(navigate)}>
+        <Button variant="outline" onClick={handleGoBack}>
           Voltar para os orçamentos
         </Button>
       </div>;
@@ -72,7 +81,7 @@ export const WormAIBudgetEditPage = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => goBackToWorm(navigate)}
+            onClick={handleGoBack}
             className="gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -81,7 +90,7 @@ export const WormAIBudgetEditPage = () => {
         </div>
         
         <div className="bg-card text-card-foreground shadow-sm border border-border p-4 sm:p-6 rounded-2xl">
-          <WormBudgetForm budget={budget} onSuccess={() => goBackToWorm(navigate)} onCancel={() => goBackToWorm(navigate)} className="rounded-3xl" />
+          <WormBudgetForm budget={budget} onSuccess={handleGoBack} onCancel={handleGoBack} className="rounded-3xl" />
         </div>
       </div>
     </div>;
