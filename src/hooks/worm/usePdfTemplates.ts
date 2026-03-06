@@ -13,6 +13,7 @@ export interface PdfTemplate {
 }
 
 export const DEFAULT_PDF_SERVICE_TEMPLATE = `{nome_empresa} 
+{endereco}
 {num_or} 
 {telefone_contato} 
 Aparelho:{modelo_dispositivo} 

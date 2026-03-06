@@ -455,6 +455,12 @@ export const generateBudgetPDF = async (budget: BudgetData, companyData?: Compan
       '{modelo_dispositivo}': budget.device_model,
       '{parcelas}': primaryInstallmentsCount.toString(),
       '{num_parcelas}': primaryInstallmentsCount.toString(),
+      '{nome_empresa}': validatedCompanyData.shop_name,
+      '{endereco}': validatedCompanyData.address || '',
+      '{telefone_contato}': validatedCompanyData.contact_phone || '',
+      '{observacoes}': budget.notes || '',
+      '{num_or}': budget.sequential_number ? `OR: ${budget.sequential_number.toString().padStart(4, '0')}` : `OR-${budget.id?.slice(-8)}`,
+      '{data_validade}': budget.validity_date ? new Date(budget.validity_date).toLocaleDateString('pt-BR') : '',
     };
 
     Object.entries(replacements).forEach(([key, value]) => {

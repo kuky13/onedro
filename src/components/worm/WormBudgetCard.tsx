@@ -135,17 +135,19 @@ export const WormBudgetCard = ({
       
       let companyName = 'Nossa Loja';
       let companyPhone = '';
+      let companyAddress = '';
       
       // Tenta pegar dados da empresa (similar ao WhatsAppSelector)
       try {
         const { data: companyData } = await supabase
           .from('company_info')
-          .select('name, phone')
+          .select('name, phone, address')
           .eq('owner_id', profile?.id)
           .maybeSingle();
         if (companyData) {
           if (companyData.name) companyName = companyData.name;
           if (companyData.phone) companyPhone = companyData.phone;
+          if (companyData.address) companyAddress = companyData.address;
         }
       } catch (e) { console.error(e); }
 
@@ -153,12 +155,13 @@ export const WormBudgetCard = ({
         try {
           const { data: shopData } = await supabase
             .from('shop_profiles')
-            .select('shop_name, whatsapp')
+            .select('shop_name, whatsapp, address')
             .eq('user_id', profile?.id)
             .maybeSingle();
           if (shopData) {
             if (shopData.shop_name) companyName = shopData.shop_name;
             if (shopData.whatsapp) companyPhone = shopData.whatsapp;
+            if (shopData.address) companyAddress = shopData.address;
           }
         } catch (e) { console.error(e); }
       }
@@ -167,6 +170,7 @@ export const WormBudgetCard = ({
       const defaultTemplate = pdfTemplates?.find((t: any) => t.is_default) || pdfTemplates?.[0];
       const templateContent = defaultTemplate?.service_section_template || `
 {nome_empresa} 
+{endereco}
 {num_or} 
 {telefone_contato} 
 Aparelho:{modelo_dispositivo} 
@@ -187,7 +191,8 @@ Valido até {data_validade}
         template: templateContent,
         paperWidth,
         companyName,
-        companyPhone
+        companyPhone,
+        companyAddress
       });
       
       toast.dismiss();

@@ -8,6 +8,7 @@ interface PdfGeneratorOptions {
   paperWidth: '58mm' | '80mm';
   companyName: string;
   companyPhone?: string;
+  companyAddress?: string;
 }
 
 export const generateBudgetPdf = ({
@@ -16,7 +17,8 @@ export const generateBudgetPdf = ({
   template,
   paperWidth,
   companyName,
-  companyPhone
+  companyPhone,
+  companyAddress
 }: PdfGeneratorOptions) => {
   // Configuração do documento
   const width = paperWidth === '58mm' ? 58 : 80;
@@ -99,6 +101,8 @@ export const generateBudgetPdf = ({
   const globalReplacements: Record<string, string> = {
     '{nome_empresa}': companyName,
     '{telefone_contato}': companyPhone || '',
+    '{endereco}': companyAddress || '',
+    '{endereço}': companyAddress || '', // Alias para facilitar
     '{modelo_dispositivo}': budget.device_model || 'Não informado',
     '{tipo_dispositivo}': budget.device_type || 'Dispositivo',
     '{nome_reparo}': budget.issue || budget.part_quality || 'Reparo',

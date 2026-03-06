@@ -144,6 +144,7 @@ export const PdfTemplateEditor = ({ template, onSuccess, onCancel }: PdfTemplate
         const replacements: Record<string, string> = {
             '{nome_empresa}': 'Minha Loja de Celulares',
             '{telefone_contato}': '(11) 99999-9999',
+            '{endereco}': 'Rua das Flores, 123 - Centro, SP',
             '{nome_reparo}': 'Troca de Tela Frontal',
             '{modelo_dispositivo}': 'iPhone 11',
             '{tipo_dispositivo}': 'Smartphone',
@@ -204,7 +205,7 @@ export const PdfTemplateEditor = ({ template, onSuccess, onCancel }: PdfTemplate
                         <div className="bg-muted p-2 rounded-md mb-2 flex flex-wrap gap-2 text-xs">
                             <span className="font-semibold w-full block mb-1">Dados da Loja/Cliente:</span>
                             {[
-                                '{nome_empresa}', '{telefone_contato}', 
+                                '{nome_empresa}', '{telefone_contato}', '{endereco}',
                                 '{num_or}', '{data_criacao}', '{status}',
                                 '{nome_cliente}', '{telefone_cliente}',
                                 '{modelo_dispositivo}', '{nome_reparo}', 
