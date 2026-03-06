@@ -422,6 +422,23 @@ export const WormBudgetForm = ({
       setIsLoading(false);
     }
   };
+
+  const handleCancel = () => {
+    try {
+      clearSavedData();
+    } catch (error) {
+      console.warn("Erro ao limpar rascunho no cancelamento:", error);
+    }
+
+    try {
+      reset();
+    } catch (error) {
+      console.warn("Erro ao resetar formulário no cancelamento:", error);
+    }
+
+    onCancel();
+  };
+
   return <div className="flex flex-col h-full bg-background/95 backdrop-blur-sm">
       <header className="shrink-0 bg-card/50 border-b border-border/40 p-4 sm:p-6 backdrop-blur-md sticky top-0 z-20 shadow-sm rounded-3xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -686,7 +703,7 @@ export const WormBudgetForm = ({
         <div className="shrink-0 bg-card/80 backdrop-blur-md border-t border-border/40 p-4 sm:p-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] sticky bottom-0 z-20 rounded-3xl">
           <div className="max-w-2xl mx-auto w-full">
             <div className="flex flex-col-reverse xs:flex-row gap-3 sm:gap-4">
-              <Button type="button" variant="outline" onClick={() => { clearSavedData(); reset(); onCancel(); }} className="flex-1 h-12 text-base font-medium border-2 hover:bg-muted/50 transition-all duration-300 active:scale-[0.98] rounded-xl text-foreground">
+              <Button type="button" variant="outline" onClick={handleCancel} className="flex-1 h-12 text-base font-medium border-2 hover:bg-muted/50 transition-all duration-300 active:scale-[0.98] rounded-xl text-foreground">
                 <X className="h-5 w-5 mr-2" />
                 Cancelar
               </Button>

@@ -7,7 +7,14 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
 const goBackToWorm = (navigate: ReturnType<typeof useNavigate>) => {
-  navigate('/worm', { replace: true });
+  navigate('/worm', { replace: true, state: null });
+
+  // Fallback defensivo para evitar ficar preso em /worm/edit
+  window.setTimeout(() => {
+    if (window.location.pathname.startsWith('/worm/edit')) {
+      window.location.replace('/worm');
+    }
+  }, 120);
 };
 
 export const WormAIBudgetEditPage = () => {
