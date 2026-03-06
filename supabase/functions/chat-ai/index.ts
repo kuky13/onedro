@@ -1243,9 +1243,7 @@ async function callAI(
         break;
 
       case "gemini": {
-        const safeGeminiModel = model === "gemini-1.5-flash" || model === "gemini-1.5-pro"
-          ? model
-          : "gemini-1.5-flash";
+        const safeGeminiModel = model.startsWith("gemini-") ? model : "gemini-2.5-flash";
         endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${safeGeminiModel}:generateContent?key=${apiKey}`;
         headers = {
           "Content-Type": "application/json",
