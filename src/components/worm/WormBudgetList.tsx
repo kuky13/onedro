@@ -90,7 +90,7 @@ export const WormBudgetList = ({
     if (aiResults.length > 0) return aiResults as WormBudget[];
     if (!activeSearchTerm.trim()) return budgetsList;
     const searchLower = activeSearchTerm.toLowerCase();
-    return budgetsList.filter((budget) => budget.client_name?.toLowerCase().includes(searchLower) || budget.device_model?.toLowerCase().includes(searchLower) || budget.device_type?.toLowerCase().includes(searchLower) || budget.sequential_number?.toString().padStart(4, '0').includes(activeSearchTerm) || budget.sequential_number?.toString().includes(activeSearchTerm));
+    return budgetsList.filter((budget) => budget.client_name?.toLowerCase().includes(searchLower) || budget.device_model?.toLowerCase().includes(searchLower) || budget.device_type?.toLowerCase().includes(searchLower) || budget.sequential_number?.toString().padStart(4, '0').includes(activeSearchTerm) || budget.sequential_number?.toString().includes(activeSearchTerm) || budget.part_quality?.toLowerCase().includes(searchLower) || budget.issue?.toLowerCase().includes(searchLower) || budget.notes?.toLowerCase().includes(searchLower) || budget.custom_services?.toLowerCase().includes(searchLower) || budget.status?.toLowerCase().includes(searchLower) || budget.workflow_status?.toLowerCase().includes(searchLower));
   }, [budgetsList, activeSearchTerm, aiResults]);
   const [visibleGroupsCount, setVisibleGroupsCount] = useState(5);
 
@@ -276,13 +276,13 @@ export const WormBudgetList = ({
                 <h3 className="font-semibold text-lg leading-tight truncate">
                   {group.device_model}
                 </h3>
+              </div>
+              <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
                 <Badge variant="outline" className="shrink-0 font-mono text-xs">
                   OR: {(group.budgets[0]?.sequential_number || 0).toString().padStart(4, '0')}
                 </Badge>
-              </div>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {group.device_type} • {group.totalCount} orçamento(s)
-                {group.lastCreatedAt && ` • Último em ${new Date(group.lastCreatedAt).toLocaleDateString('pt-BR')}`}
+                <span>• {group.device_type} • {group.totalCount} orçamento(s)</span>
+                {group.lastCreatedAt && <span>• Último em {new Date(group.lastCreatedAt).toLocaleDateString('pt-BR')}</span>}
               </p>
             </div>
 

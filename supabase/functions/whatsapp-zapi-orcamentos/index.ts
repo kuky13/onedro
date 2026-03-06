@@ -1636,6 +1636,23 @@ serve(async (req: Request) => {
       }
     }
 
+    // Se não encontrou cliente pelo telefone, buscar cliente padrão do usuário
+    if (!matchedClient) {
+      try {
+        const { data: defaultClient } = await supabaseClient
+          .from("clients")
+          .select("id, name, phone")
+          .eq("user_id", ownerId)
+          .eq("is_default", true)
+          .maybeSingle();
+        if (defaultClient) {
+          matchedClient = defaultClient as any;
+        }
+      } catch (defaultClientError) {
+        console.error("Erro ao buscar cliente padrão:", defaultClientError);
+      }
+    }
+
     const client_name = matchedClient?.name?.trim() || parsedCustomerName || "Cliente WhatsApp";
     const client_phone = finalPhone ?? matchedClient?.phone ?? null;
 
