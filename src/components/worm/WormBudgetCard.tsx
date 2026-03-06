@@ -339,14 +339,14 @@ export const WormBudgetCard = ({
                           {cashTotal > 0 && (
                             <div>
                               <div className="text-xs text-muted-foreground mb-0.5">À vista</div>
-                              <div className="font-medium text-sm text-green-600 dark:text-green-400">{formatCurrencyFromReais(cashTotal)}</div>
+                              <div className="font-medium text-sm text-green-600 dark:text-green-400">{formatCurrency(cashTotal)}</div>
                             </div>
                           )}
                           {installmentTotal && (
                             <div>
                               <div className="text-xs text-muted-foreground mb-0.5">Parcelado</div>
                               <div className="font-medium text-sm text-blue-600 dark:text-blue-400">
-                                {formatCurrencyFromReais(installmentTotal)}{count ? ` • ${count}x` : ''}
+                                {formatCurrency(installmentTotal)}{count ? ` • ${count}x` : ''}
                               </div>
                             </div>
                           )}

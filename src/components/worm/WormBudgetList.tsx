@@ -273,7 +273,7 @@ export const WormBudgetList = ({
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <Smartphone className="h-4 w-4 text-primary" />
-                <h3 className="font-semibold text-lg leading-tight truncate">
+                <h3 className="font-semibold text-lg leading-tight break-words">
                   {group.device_model}
                 </h3>
               </div>
