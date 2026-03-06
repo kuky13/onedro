@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
-import { Settings, Building2, User, FileText, Eye, EyeOff, Cookie as CookieIcon, ArrowLeft, Save, LogOut, HelpCircle, Lock, Mail, Menu, Home } from 'lucide-react';
+import { Settings, Building2, User, FileText, Eye, EyeOff, Cookie as CookieIcon, ArrowLeft, Save, LogOut, HelpCircle, Lock, Mail, Menu, Home, BookOpen, Headphones, MessageCircle, Shield, Zap, CheckCircle2, Sparkles } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { CompanyBrandingSettings } from '@/components/CompanyBrandingSettings';
 import { ResetAppButton } from './ResetAppButton';
@@ -142,7 +142,84 @@ export function ServiceOrdersSettingsHub() {
           </div>
         </div>
 
-        <div className="p-4 md:p-6">
+        <div className="p-4 md:p-6 space-y-6">
+
+        {/* === HERO SECTION === */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 p-6 md:p-8">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="relative z-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/15 border border-primary/30 mb-4">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <span className="text-xs font-semibold text-primary">Configurações OneDrip</span>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+              Personalize sua <span className="text-primary">experiência</span>
+            </h2>
+            <p className="text-muted-foreground max-w-lg mb-4">
+              Gerencie sua empresa, perfil e preferências em um só lugar. Tudo seguro e com salvamento automático.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Shield className="h-3.5 w-3.5 text-primary" />
+                <span>Dados seguros</span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                <span>Salvamento automático</span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Zap className="h-3.5 w-3.5 text-primary" />
+                <span>Alterações em tempo real</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* === DRIPPY + QUICK LINKS ROW === */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Card da Drippy */}
+          <Card className="lg:col-span-2 rounded-2xl border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+            <CardContent className="p-5 flex items-start gap-4">
+              <div className="relative flex-shrink-0">
+                <img
+                  src="/lovable-uploads/e12ec9f1-06ab-4f49-8d81-78a481c5b4c0.png"
+                  alt="Drippy IA"
+                  className="w-14 h-14 rounded-2xl object-cover border-2 border-primary/30"
+                  loading="eager"
+                />
+                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-foreground mb-1">Drippy IA — Sua assistente</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Precisa de ajuda com as configurações? A Drippy pode te guiar passo a passo e tirar suas dúvidas!
+                </p>
+                <Button size="sm" className="rounded-xl" onClick={() => navigate('/chat')}>
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Conversar com Drippy
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick links */}
+          <div className="flex flex-col gap-2">
+            <Button variant="outline" className="h-12 rounded-xl justify-start" onClick={() => navigate('/help')}>
+              <BookOpen className="h-4 w-4 mr-3 text-primary" />
+              Central de Ajuda
+            </Button>
+            <Button variant="outline" className="h-12 rounded-xl justify-start" onClick={() => navigate('/suporte')}>
+              <Headphones className="h-4 w-4 mr-3 text-primary" />
+              Falar com Suporte
+            </Button>
+            <Button variant="outline" className="h-12 rounded-xl justify-start" onClick={() => navigate('/chat')}>
+              <MessageCircle className="h-4 w-4 mr-3 text-primary" />
+              Chat com Drippy
+            </Button>
+          </div>
+        </div>
+
+        {/* === TABS CONTENT === */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Tabs - iOS segmented control style */}
           <TabsList className="hidden sm:flex flex-wrap gap-1 bg-muted/30 p-1 rounded-2xl border border-border/30">
@@ -173,7 +250,7 @@ export function ServiceOrdersSettingsHub() {
 
           {/* Empresa / Branding */}
           <TabsContent value="empresa" className="space-y-4">
-            <Card className="rounded-2xl border-border/30">
+            <Card className="rounded-2xl border-border/30 bg-gradient-to-br from-primary/[0.03] to-transparent">
               <CardContent className="pt-6">
                 <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-muted" aria-busy="true" aria-live="polite" />}>
                   <CompanyBrandingSettings />
@@ -184,10 +261,10 @@ export function ServiceOrdersSettingsHub() {
 
           {/* Perfil Pessoal */}
           <TabsContent value="perfil" className="space-y-4">
-            <Card className="rounded-2xl border-border/30">
+            <Card className="rounded-2xl border-border/30 bg-gradient-to-br from-primary/[0.03] to-transparent">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2"><User className="h-5 w-5" /> Perfil Pessoal</CardTitle>
-                <CardDescription>Informações da sua conta</CardDescription>
+                <CardTitle className="flex items-center gap-2"><User className="h-5 w-5 text-primary" /> Perfil Pessoal</CardTitle>
+                <CardDescription>Gerencie suas informações pessoais e preferências de conta</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {user ? <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -266,13 +343,11 @@ export function ServiceOrdersSettingsHub() {
             </Card>
           </TabsContent>
 
-          {/* Segurança removida */}
-
           {/* Termos de Uso */}
           <TabsContent value="termos" className="space-y-4">
-            <Card className="rounded-2xl border-border/30">
+            <Card className="rounded-2xl border-border/30 bg-gradient-to-br from-primary/[0.03] to-transparent">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" /> Termos de Uso</CardTitle>
+                <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-primary" /> Termos de Uso</CardTitle>
                 <CardDescription>Consulte os termos e condições de uso da plataforma</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -290,10 +365,10 @@ export function ServiceOrdersSettingsHub() {
 
           {/* Privacidade */}
           <TabsContent value="privacidade" className="space-y-4">
-            <Card className="rounded-2xl border-border/30">
+            <Card className="rounded-2xl border-border/30 bg-gradient-to-br from-primary/[0.03] to-transparent">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Eye className="h-5 w-5" /> Política de Privacidade</CardTitle>
-                <CardDescription>Saiba como protegemos e utilizamos seus dados</CardDescription>
+                <CardTitle className="flex items-center gap-2"><Eye className="h-5 w-5 text-primary" /> Política de Privacidade</CardTitle>
+                <CardDescription>Saiba como protegemos e utilizamos seus dados pessoais</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex gap-2">
@@ -310,10 +385,10 @@ export function ServiceOrdersSettingsHub() {
 
           {/* Cookies */}
           <TabsContent value="cookies" className="space-y-4">
-            <Card className="rounded-2xl border-border/30">
+            <Card className="rounded-2xl border-border/30 bg-gradient-to-br from-primary/[0.03] to-transparent">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2"><CookieIcon className="h-5 w-5" /> Política de Cookies</CardTitle>
-                <CardDescription>Entenda como utilizamos cookies em nosso site</CardDescription>
+                <CardTitle className="flex items-center gap-2"><CookieIcon className="h-5 w-5 text-primary" /> Política de Cookies</CardTitle>
+                <CardDescription>Entenda como utilizamos cookies para melhorar sua experiência</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex gap-2">
@@ -329,7 +404,36 @@ export function ServiceOrdersSettingsHub() {
           </TabsContent>
         </Tabs>
 
-        <div className="mt-8 flex justify-center">
+        {/* === FOOTER CONTEXTUAL === */}
+        <div className="rounded-2xl border border-border/30 bg-muted/10 p-6 mt-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-primary/10">
+                <Sparkles className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">Dúvidas? A Drippy está sempre disponível para ajudar.</p>
+                <p className="text-xs text-muted-foreground">Central de Ajuda · Suporte · Termos · Privacidade</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="ghost" size="sm" className="rounded-xl text-xs" onClick={() => navigate('/help')}>
+                <BookOpen className="h-3.5 w-3.5 mr-1.5" /> Ajuda
+              </Button>
+              <Button variant="ghost" size="sm" className="rounded-xl text-xs" onClick={() => navigate('/suporte')}>
+                <Headphones className="h-3.5 w-3.5 mr-1.5" /> Suporte
+              </Button>
+              <Button variant="ghost" size="sm" className="rounded-xl text-xs" onClick={() => navigate('/terms')}>
+                <FileText className="h-3.5 w-3.5 mr-1.5" /> Termos
+              </Button>
+              <Button variant="ghost" size="sm" className="rounded-xl text-xs" onClick={() => navigate('/privacy')}>
+                <Shield className="h-3.5 w-3.5 mr-1.5" /> Privacidade
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 flex justify-center">
           <Button variant="ghost" onClick={() => navigate(-1)} className="h-11 rounded-xl text-muted-foreground hover:text-foreground transition-colors" aria-label="Voltar" title="Voltar">
             <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
           </Button>
@@ -365,6 +469,17 @@ export function ServiceOrdersSettingsHub() {
           }}>
                 <Icon className="h-5 w-5 mr-3" /> {label}
               </Button>)}
+            
+            <Separator className="my-3" />
+            <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-primary" onClick={() => { navigate('/chat'); setIsMenuOpen(false); }}>
+              <MessageCircle className="h-5 w-5 mr-3" /> Drippy IA
+            </Button>
+            <Button variant="ghost" className="w-full justify-start h-12 rounded-xl" onClick={() => { navigate('/help'); setIsMenuOpen(false); }}>
+              <BookOpen className="h-5 w-5 mr-3" /> Central de Ajuda
+            </Button>
+            <Button variant="ghost" className="w-full justify-start h-12 rounded-xl" onClick={() => { navigate('/suporte'); setIsMenuOpen(false); }}>
+              <Headphones className="h-5 w-5 mr-3" /> Suporte
+            </Button>
           </div>
         </SheetContent>
       </Sheet>
