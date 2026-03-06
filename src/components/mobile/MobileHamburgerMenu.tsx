@@ -78,39 +78,15 @@ export const MobileHamburgerMenu = ({
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);
-  const handleTabChange = (tab: string) => {
-    if (tab === 'new-budget') {
-      onClose();
-      navigate('/worm');
-      return;
-    }
-    if (tab === 'whatsapp-crm') {
-      onClose();
-      navigate('/whats');
-      return;
-    }
-    if (tab === 'drippy-ia') {
-      onClose();
-      navigate('/chat');
-      return;
-    }
-    if (tab === 'settings') {
-      onClose();
-      navigate('/settings');
-      return;
-    }
-    if (tab === 'service-orders') {
-      onClose();
-      navigate('/service-orders');
-      return;
-    }
-    if (tab === 'support') {
-      onClose();
-      navigate('/suporte');
-      return;
-    }
-    onTabChange(tab);
+  const handleTabChange = (item: MenuItem) => {
     onClose();
+    if (item.href) {
+      navigate(item.href);
+    } else if (item.action) {
+      item.action();
+    } else {
+      onTabChange(item.id);
+    }
   };
   const handleLogout = () => {
     onLogout();
