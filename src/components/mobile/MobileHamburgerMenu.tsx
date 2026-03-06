@@ -213,7 +213,7 @@ export const MobileHamburgerMenu = ({
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 + (index * 0.05) }}
                     >
-                      <Button variant="ghost" className={navButtonClass} onClick={() => handleTabChange(item.id)}>
+                      <Button variant="ghost" className={navButtonClass} onClick={() => handleTabChange(item)}>
                         <div className={navIconWrapClass}>
                           <IconComponent className="h-4 w-4 text-muted-foreground transition-all duration-200 group-hover:scale-110 group-hover:text-primary-foreground shrink-0" />
                         </div>
