@@ -22,6 +22,7 @@ import { IOSRedirectHandler } from "./components/IOSRedirectHandler";
 import { PWAProvider } from "./components/PWAProvider";
 import { SmartNavigation } from "@/components/SmartNavigation";
 import { ChunkLoadRecoveryBanner } from "@/components/ChunkLoadRecoveryBanner";
+import { VpsStatusBanner } from "@/components/VpsStatusBanner";
 import { useChunkLoadTelemetry } from "@/hooks/useChunkLoadTelemetry";
 import { setSecureItem, getSecureItem } from "@/utils/secureStorage";
 import { RootRedirect } from "./components/RootRedirect";
@@ -166,6 +167,7 @@ const AppContent = () => {
   // Fluxo de aceite removido
 
   return <>
+    <VpsStatusBanner />
     <ChunkLoadRecoveryBanner />
     <ReloadMonitor />
     <Suspense fallback={null}><SessionPersistence /></Suspense>
