@@ -265,7 +265,7 @@ export function ServiceOrdersSettingsHub() {
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               {/* Empresa / Branding */}
               <TabsContent value="empresa" className="mt-0">
-                <Card className="border-0 bg-muted/30 rounded-2xl shadow-none">
+                <Card className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none">
                   <CardContent className="pt-6">
                     <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-muted" />}>
                       <CompanyBrandingSettings />
@@ -276,7 +276,7 @@ export function ServiceOrdersSettingsHub() {
 
               {/* Perfil Pessoal */}
               <TabsContent value="perfil" className="mt-0">
-                <Card className="border-0 bg-muted/30 rounded-2xl shadow-none">
+                <Card className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <User className="h-5 w-5 text-primary" /> Perfil Pessoal
@@ -367,7 +367,7 @@ export function ServiceOrdersSettingsHub() {
 
               {/* Termos */}
               <TabsContent value="termos" className="mt-0">
-                <Card className="border-0 bg-muted/30 rounded-2xl shadow-none">
+                <Card className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-primary" /> Termos de Uso</CardTitle>
                     <CardDescription>Consulte os termos e condições de uso da plataforma</CardDescription>
@@ -385,7 +385,7 @@ export function ServiceOrdersSettingsHub() {
 
               {/* Privacidade */}
               <TabsContent value="privacidade" className="mt-0">
-                <Card className="border-0 bg-muted/30 rounded-2xl shadow-none">
+                <Card className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2"><Eye className="h-5 w-5 text-primary" /> Política de Privacidade</CardTitle>
                     <CardDescription>Saiba como protegemos e utilizamos seus dados pessoais</CardDescription>
@@ -403,7 +403,7 @@ export function ServiceOrdersSettingsHub() {
 
               {/* Cookies */}
               <TabsContent value="cookies" className="mt-0">
-                <Card className="border-0 bg-muted/30 rounded-2xl shadow-none">
+                <Card className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2"><CookieIcon className="h-5 w-5 text-primary" /> Política de Cookies</CardTitle>
                     <CardDescription>Entenda como utilizamos cookies para melhorar sua experiência</CardDescription>
