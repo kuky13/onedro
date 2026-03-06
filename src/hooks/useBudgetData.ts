@@ -21,13 +21,18 @@ export const useBudgetData = (userId: string) => {
     // Preferir leitura via API (GET). Se falhar (CORS/5xx/etc), cai no Supabase.
     try {
       const apiData = await budgetsApi.list();
-      const scoped = (apiData ?? []).filter((b: any) => {
+
+      // Se a API retornou vazio, fallback para Supabase
+      if (!apiData || apiData.length === 0) {
+        throw new Error('API retornou vazio, fallback para Supabase');
+      }
+
+      const scoped = apiData.filter((b: any) => {
         if (typeof b?.owner_id !== 'string') return false;
         return b.owner_id === userId && b.deleted_at == null;
       });
 
-      // Se a API retornou dados mas nenhum está no escopo, evitamos exibir dados globais.
-      if ((apiData?.length ?? 0) > 0 && scoped.length === 0) {
+      if (scoped.length === 0) {
         throw new Error('API retornou dados fora do escopo do usuário');
       }
 

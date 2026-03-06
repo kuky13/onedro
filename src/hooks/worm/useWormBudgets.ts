@@ -43,7 +43,12 @@ export const useWormBudgets = (userId: string | undefined, filters: BudgetFilter
 
           const apiData = await budgetsApi.list(params as any);
 
-          const scoped = (apiData ?? []).filter((b: any) => {
+          // Se a API retornou array vazio, fazer fallback para Supabase
+          if (!apiData || apiData.length === 0) {
+            throw new Error('API retornou vazio, fallback para Supabase');
+          }
+
+          const scoped = apiData.filter((b: any) => {
             if (typeof b?.owner_id !== 'string') return false;
             if (b.owner_id !== userId) return false;
             if (b.deleted_at != null) return false;
@@ -52,7 +57,7 @@ export const useWormBudgets = (userId: string | undefined, filters: BudgetFilter
           });
 
           // Se a API retornou dados mas nenhum está no escopo, não exibimos dados globais.
-          if ((apiData?.length ?? 0) > 0 && scoped.length === 0) {
+          if (scoped.length === 0) {
             throw new Error('API retornou dados fora do escopo do usuário');
           }
 
