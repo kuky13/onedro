@@ -7,7 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Settings, Building2, User, FileText, Eye, EyeOff, Cookie as CookieIcon,
   ArrowLeft, Save, LogOut, HelpCircle, Lock, Mail, Menu, Home, BookOpen,
-  Headphones, MessageCircle, Shield, Sparkles, CheckCircle2, Zap, Clock
+  Headphones, MessageCircle, Shield, CheckCircle2, Zap
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { CompanyBrandingSettings } from '@/components/CompanyBrandingSettings';
