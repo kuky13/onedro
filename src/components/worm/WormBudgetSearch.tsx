@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface WormBudgetSearchProps {
   searchTerm: string;
@@ -26,15 +27,15 @@ export const WormBudgetSearch = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="relative flex-1">
+    <form onSubmit={handleSubmit} className="relative flex-1 flex gap-2">
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           type="text"
-          placeholder="Buscar por cliente, dispositivo, modelo ou código..."
+          placeholder="Buscar por cliente, modelo, OR, peça, serviço..."
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          className="pl-10 bg-background/50"
+          className="pl-10 pr-9 bg-background/50"
         />
         {inputValue && (
           <button
@@ -46,6 +47,10 @@ export const WormBudgetSearch = ({
           </button>
         )}
       </div>
+      <Button type="submit" size="sm" className="shrink-0">
+        <Search className="h-4 w-4" />
+        Buscar
+      </Button>
     </form>
   );
 };
