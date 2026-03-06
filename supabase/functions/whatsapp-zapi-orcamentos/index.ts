@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getBudgetGroupConfirmation, getBudgetUpdateConfirmation } from "../_shared/ai-messages.ts";
+import { getAIConfig, callAIProvider, logAIRequest } from "../_shared/ai-provider.ts";
 
 // Tipos internos simples para normalizar o payload da Z-API
 
@@ -701,19 +702,15 @@ function normalizeIncomingPayload(body: any): NormalizedMessage {
 }
 
 async function callGeminiViaLovable(prompt: string): Promise<ParsedBudgetFromAi> {
-  const apiKey = Deno.env.get("LOVABLE_API_KEY");
+  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const aiConfig = await getAIConfig(supabase);
 
-  if (!apiKey) {
-    console.error("LOVABLE_API_KEY não configurada");
-    throw new Error("LOVABLE_API_KEY is not configured");
+  if (!aiConfig.apiKey) {
+    console.error("No AI provider configured:", aiConfig.error);
+    throw new Error("No AI provider configured");
   }
 
-  const body = {
-    model: "google/gemini-2.5-flash",
-    messages: [
-      {
-        role: "system",
-        content: `Você é um assistente que transforma mensagens de WhatsApp em pedidos de orçamento técnicos.
+  const systemPrompt = `Você é um assistente que transforma mensagens de WhatsApp em pedidos de orçamento técnicos.
 Responda APENAS com JSON válido, sem texto antes ou depois.
 
 - Nunca use o nome genérico do serviço (por exemplo, "Troca de tela", "Troca de bateria") no campo "label" das opções; use sempre apenas a qualidade/tipo da peça (por exemplo, "Original Nacional", "Original importada", "Incell").
@@ -742,7 +739,7 @@ Pelicula 3d de brinde, buscamos e entregamos o seu aparelho. Cliente disse que p
 Saída JSON esperada (APENAS para guiar o formato):
 {
   "customer_name": null,
-  "customer_phone": "5511999999999", // use o telefone do remetente
+  "customer_phone": "5511999999999",
   "service_type": "Troca de tela",
   "device": "Samsung A11",
   "details": "Troca de tela Samsung A11",
@@ -776,71 +773,50 @@ Saída JSON esperada (APENAS para guiar o formato):
   "annotations": "Cliente precisa pra hoje urgente. Garantia não cobre quebrado ou molhado."
 }
 
-OUTRO EXEMPLO (Moto G24):
-Mensagem:
-*01/03/26 Orçamento valido por 15 dias*
-Tela Moto G24
-Original Nacional *Garantia de 6 meses* R$410,00 até em 4x no cartão avista R$380,00.
-Original importada *Garantia de 3 meses* R$310,00 até em 4x no cartão avista R$280,00.
+Siga SEMPRE esse formato de saída JSON e esses campos.`;
 
-Saída JSON esperada:
-{
-  "device": "Moto G24",
-  "service_type": "Troca de tela",
-  "options": [
-     { "label": "Original Nacional", "warranty": "Garantia de 6 meses", "price_card": 410, "price_cash": 380, "installments_card": 4 },
-     { "label": "Original importada", "warranty": "Garantia de 3 meses", "price_card": 310, "price_cash": 280, "installments_card": 4 }
-  ],
-  "annotations": "Orçamento valido por 15 dias"
-}
-
-Siga SEMPRE esse formato de saída JSON e esses campos.`,
-      },
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
-  } as const;
-
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    console.error("Lovable AI error:", response.status, text);
-
-    if (response.status === 429) {
-      throw new Error("Rate limits exceeded, please try again later.");
-    }
-
-    if (response.status === 402) {
-      throw new Error("Payment required, please add funds to your Lovable AI workspace.");
-    }
-
-    throw new Error("Failed to call Lovable AI");
-  }
-
-  const json = await response.json();
-  const content: string = json.choices?.[0]?.message?.content ?? "";
-
-  const cleaned = content
-    .replace(/```json/gi, "")
-    .replace(/```/g, "")
-    .trim();
+  const startTime = Date.now();
 
   try {
+    const result = await callAIProvider(aiConfig, {
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: prompt },
+      ],
+    });
+
+    // Log success
+    await logAIRequest({
+      provider: aiConfig.provider,
+      model: aiConfig.model,
+      source: 'whatsapp',
+      input_tokens: result.usage?.input_tokens,
+      output_tokens: result.usage?.output_tokens,
+      duration_ms: Date.now() - startTime,
+      status: 'success',
+    }, supabase);
+
+    const content = result.content;
+    const cleaned = content
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
+
     const parsed = JSON.parse(cleaned) as ParsedBudgetFromAi;
     return parsed;
   } catch (error) {
-    console.error("Erro ao fazer JSON.parse da resposta da IA:", error, cleaned);
-    throw new Error("Failed to parse AI response as JSON");
+    // Log error
+    await logAIRequest({
+      provider: aiConfig.provider,
+      model: aiConfig.model,
+      source: 'whatsapp',
+      duration_ms: Date.now() - startTime,
+      status: 'error',
+      error_message: error instanceof Error ? error.message : String(error),
+    }, supabase);
+
+    console.error("Erro ao chamar IA para budget WhatsApp:", error);
+    throw error;
   }
 }
 

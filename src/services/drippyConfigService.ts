@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface DrippySettings {
   id: string;
-  active_provider: 'lovable' | 'deepseek' | 'gemini';
+  active_provider: 'lovable' | 'deepseek' | 'gemini' | 'claude';
   active_model: string;
   temperature: number;
   max_tokens: number;
@@ -30,6 +30,16 @@ export const AVAILABLE_PROVIDERS: ProviderInfo[] = [
       { id: 'openai/gpt-5-mini', name: 'GPT-5 Mini', description: 'Rápido e eficiente' },
     ],
     color: 'hsl(var(--primary))',
+  },
+  {
+    id: 'claude',
+    name: 'Claude (Anthropic)',
+    description: 'API direta Anthropic Claude',
+    models: [
+      { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', description: 'Equilíbrio performance/custo' },
+      { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', description: 'Ultra rápido e barato' },
+    ],
+    color: 'hsl(25, 95%, 53%)',
   },
   {
     id: 'deepseek',
@@ -67,7 +77,6 @@ export class DrippyConfigService {
         return null;
       }
 
-      // Supabase retorna strings genéricas; garantimos o cast para o union
       return data as unknown as DrippySettings;
     } catch (error) {
       console.error('Exception fetching drippy settings:', error);

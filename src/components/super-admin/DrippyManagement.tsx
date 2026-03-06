@@ -1,10 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Settings, Key } from 'lucide-react';
+import { Brain, Settings, Key, Activity } from 'lucide-react';
 import { useDrippySettings } from '@/hooks/useDrippySettings';
 import { ProviderSelector } from './drippy/ProviderSelector';
 import { ApiKeysManager } from './drippy/ApiKeysManager';
+import { AiLogsViewer } from './drippy/AiLogsViewer';
 import { DrippyConfigService } from '@/services/drippyConfigService';
 
 export function DrippyManagement() {
@@ -81,7 +82,7 @@ export function DrippyManagement() {
 
       {/* Tabs */}
       <Tabs defaultValue="provider" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="provider" className="gap-2">
             <Brain className="h-4 w-4" />
             Provedor e Modelo
@@ -89,6 +90,10 @@ export function DrippyManagement() {
           <TabsTrigger value="keys" className="gap-2">
             <Key className="h-4 w-4" />
             API Keys
+          </TabsTrigger>
+          <TabsTrigger value="logs" className="gap-2">
+            <Activity className="h-4 w-4" />
+            Logs
           </TabsTrigger>
         </TabsList>
 
@@ -120,6 +125,10 @@ export function DrippyManagement() {
         <TabsContent value="keys">
           <ApiKeysManager />
         </TabsContent>
+
+        <TabsContent value="logs">
+          <AiLogsViewer />
+        </TabsContent>
       </Tabs>
 
       {/* Information Card */}
@@ -139,8 +148,15 @@ export function DrippyManagement() {
             adicionais.
           </p>
           <p>
+            • <strong>Claude (Anthropic):</strong> Cadastre a chave como "anthropic" na aba API Keys.
+          </p>
+          <p>
             • <strong>Outros provedores:</strong> Necessitam que você cadastre as API keys
             correspondentes na tabela api_keys.
+          </p>
+          <p>
+            • <strong>Logs:</strong> Todas as chamadas de IA (chat, WhatsApp, análise, triagem) são
+            registradas automaticamente na aba Logs.
           </p>
         </CardContent>
       </Card>

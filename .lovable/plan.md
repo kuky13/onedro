@@ -1,93 +1,134 @@
 
 
-## Plano: Substituir Lovable AI por provedores próprios (Claude, DeepSeek, Gemini) em TODO o site
+# Expansao da Documentacao do Projeto OneDrip
 
-### Analise completa - Onde a Lovable AI é usada
+## Objetivo
+Criar documentacao tecnica completa e detalhada para que qualquer desenvolvedor que entre no projeto consiga entender rapidamente como tudo funciona. Vamos expandir os 5 arquivos existentes e criar 7 novos arquivos `.md`.
 
-| Edge Function | O que faz | Usa Lovable AI? |
-|---|---|---|
-| `chat-ai` | Chat Drippy principal | Sim (mas já suporta DeepSeek/Gemini via `getAIConfiguration`) |
-| `whatsapp-zapi-orcamentos` | Parser de orçamentos via WhatsApp | Sim (hardcoded `LOVABLE_API_KEY`) |
-| `analyze-budgets` | Análise de orçamentos com tool calling | Sim (hardcoded `LOVABLE_API_KEY`) |
-| `triage-ai` | Triagem de suporte via WhatsApp | Sim (hardcoded `LOVABLE_API_KEY`) |
+---
 
-**Problema central**: Só o `chat-ai` lê a config de `drippy_settings`. Os outros 3 edge functions ignoram a configuração e usam Lovable AI diretamente.
+## Arquivos Existentes - Melhorias
 
-### Alterações
+### `0-ai-project-context.md` - Atualizar
+- Adicionar secao sobre o sistema de Diagnostico de Dispositivos (`/testar/:token`)
+- Documentar o modulo de Peliculas (`/p`)
+- Mencionar o sistema de Gamificacao (HamsterPage/CookiePage)
+- Atualizar a lista de Guards com `MobileMenuProvider`
 
-#### 1. Criar shared helper `_shared/ai-provider.ts`
-Extrair a lógica de `getAIConfiguration` + `callAI` do `chat-ai` para um módulo compartilhado que todas as edge functions possam usar. Incluir suporte a **Claude (Anthropic)** como novo provider.
+### `1-visao-geral.md` - Expandir
+- Adicionar modulo de Garantias (`/garantia`)
+- Documentar Central de Ajuda (`/central-de-ajuda`)
+- Adicionar secao sobre Notificacoes Push e sistema de Updates
+- Mencionar Apps Page e Sistema (mini-OS no browser)
 
-Providers suportados:
-- **Claude** (Anthropic): `https://api.anthropic.com/v1/messages` com header `x-api-key` e `anthropic-version`
-- **DeepSeek**: `https://api.deepseek.com/v1/chat/completions` (OpenAI-compatible)
-- **Gemini Direct**: `https://generativelanguage.googleapis.com/v1beta/...`
-- **Lovable AI**: `https://ai.gateway.lovable.dev/v1/chat/completions` (fallback)
+### `2-frontend-estrutura.md` - Detalhar
+- Documentar o sistema de `lazyWithRetry` com telemetria de chunks
+- Explicar `ChunkLoadRecoveryBanner` e `useChunkLoadTelemetry`
+- Detalhar o `SessionPersistence` e `secureStorage`
+- Documentar o `MobileMenuProvider` e navegacao mobile
 
-#### 2. Atualizar os 3 edge functions hardcoded
-- **`whatsapp-zapi-orcamentos`**: Substituir `callGeminiViaLovable` para usar o shared helper
-- **`analyze-budgets`**: Substituir chamada direta para usar o shared helper
-- **`triage-ai`**: Substituir chamada direta para usar o shared helper
+### `3-backend-supabase.md` - Expandir
+- Listar todas as 40+ Edge Functions com descricao curta
+- Documentar o fluxo de `rate-limiter` e `security-api`
+- Explicar o sistema de notificacoes push (`send-push-notification`)
 
-Todos passam a ler `drippy_settings` + `api_keys` do Supabase para saber qual provider usar.
+### `4-integracoes-externas.md` - Atualizar
+- Adicionar secao sobre Evolution API e multi-broker completo
+- Documentar o sistema de download de video via VPS proxy
 
-#### 3. Adicionar Claude aos providers disponíveis
+---
 
-**`src/services/drippyConfigService.ts`**: Adicionar provider `claude` com modelos:
-- `claude-sonnet-4-20250514` (Claude Sonnet 4)
-- `claude-3-5-haiku-20241022` (Claude 3.5 Haiku - rápido)
+## Novos Arquivos
 
-**`src/components/super-admin/drippy/ApiKeysManager.tsx`**: Adicionar `anthropic`/`claude` na lista SERVICES.
+### `5-typescript-tipos.md` - Tipos e Interfaces
+Documentar todas as interfaces criticas do sistema:
+- `ServiceOrderData` (OS com campos de senha, checklist, etc.)
+- `Budget` (tipo canonico via Supabase Tables)
+- `User`, `UserProfile`, `DebugInfo`
+- `CompanyInfo`, `CompanyData`, `CompanyFormData`
+- `TestSession`, `TestResult`, `TestDetails`, `TestConfig`
+- `DevicePasswordType` e seus valores
+- `CheckoutParams`, `PixPaymentData`
+- `BudgetData`, `BudgetPartData` (para PDFs)
+- `AuthContextType` e `UserRole`
+- Tabela visual com cada tipo e onde e usado
 
-**`src/components/super-admin/drippy/ProviderSelector.tsx`**: Adicionar ícone para claude.
+### `6-hooks-referencia.md` - Guia de Hooks
+Catalogar os 60+ hooks com categorias:
+- **Autenticacao**: `useAuth`, `useTokenRotation`, `useSecurity`
+- **Licenciamento**: `useLicense`, `useLicenseVerification`, `useLicenseCache`, `useTrialLicense`
+- **Dispositivo**: `useDeviceDetection`, `useIOSDetection`, `useMobileDetection`, `useBatteryDetection`
+- **Ordens de Servico**: `useSecureServiceOrders`, `useServiceOrderEdit`, `useServiceOrderRealTime`, `useServiceOrderShare`
+- **Orcamentos (Worm)**: `useBudgetData`, `useBudgetDeletion`, `useBudgetServiceOrder`, `useCreateServiceOrderFromBudget`
+- **PWA/Offline**: `usePWA`, `useOfflineDetection`, `useSwipeGesture`
+- **UI/UX**: `useResponsive`, `useMobileMenu`, `usePopupState`, `useDebounce`
+- **Store**: `useShopProfile`, `useImportBudgetToStore`
+- **Config**: `useAppConfig`, `useCompanyBranding`, `useDrippySettings`, `useCookiePreferences`
+- Exemplos de uso para os mais importantes
 
-**`src/hooks/useDrippySettings.ts`**: Expandir tipo do provider para incluir `'claude'`.
+### `7-rotas-e-guards.md` - Mapa de Rotas
+Tabela completa com todas as rotas do `App.tsx`:
+- Rota, Componente, Guard aplicado, Lazy/Estatico
+- Fluxo visual de redirecionamentos (auth -> licenca -> dashboard)
+- Explicacao de cada Guard: `UnifiedProtectionGuard`, `AdminGuard`, `MaintenanceGuard`
+- Como adicionar uma nova rota (passo a passo)
 
-#### 4. Criar tabela `ai_request_logs` + UI de logs no /supadmin/drippy
+### `8-edge-functions.md` - Backend Serverless
+Documentacao detalhada de cada Edge Function:
+- **Pagamentos**: `create-mercadopago-checkout`, `check-mercadopago-payment`, `mercadopago-webhook`, `cancel-mercadopago-payment`, `create-mercadopago-subscription`
+- **WhatsApp**: `whatsapp-proxy`, `whatsapp-webhook`, `whatsapp-qr-connect`, `whatsapp-ai-reply`, `whatsapp-instance-manage`, `waha-proxy`
+- **IA**: `chat-ai`, `triage-ai`, `analyze-budgets`
+- **Seguranca**: `security-api`, `rate-limiter`, `real-time-monitoring`, `audit-system`
+- **Usuarios**: `manage-user-profile`, `admin-reset-password`, `admin-update-user-email`, `validate-license`
+- **Comunicacao**: `send-license-email`, `send-payment-receipt-email`, `send-push-notification`, `notification-system`
+- Fluxo de request/response de cada grupo
 
-**Migration SQL**:
-```sql
-create table public.ai_request_logs (
-  id uuid primary key default gen_random_uuid(),
-  created_at timestamptz default now(),
-  provider text not null,
-  model text not null,
-  source text not null default 'unknown', -- 'chat', 'whatsapp', 'analyze', 'triage'
-  input_tokens int,
-  output_tokens int,
-  duration_ms int,
-  status text not null default 'success', -- 'success', 'error'
-  error_message text,
-  user_id uuid references auth.users(id),
-  metadata jsonb default '{}'
-);
-alter table public.ai_request_logs enable row level security;
-```
+### `9-seguranca.md` - Arquitetura de Seguranca
+- Sistema `secureStorage` com criptografia AES-GCM e PBKDF2
+- `SecurityLogger` e auditoria de acessos
+- RLS (Row Level Security) - regras e padroes
+- `botDetection`, `secureCSP`, `secureNavigation`
+- Rate limiting nas Edge Functions
+- Token rotation (`useTokenRotation`)
+- Fluxo de validacao de licencas
 
-**Shared helper**: Após cada chamada AI, registrar automaticamente na tabela `ai_request_logs`.
+### `10-pdf-e-utils.md` - Utilitarios e Geracao de PDFs
+- Como funciona o `pdfUtils.ts` (jsPDF client-side)
+- `serviceOrderPdfUtils.ts` para recibos de OS
+- `currency.ts` - formatacao BRL
+- `whatsappUtils.ts` e `whatsappTemplateUtils.ts`
+- `authCleanup.ts` - limpeza de sessao
+- `pwaDetection.ts` e `pwaReset.ts`
+- `debugLogger.ts` e `asciiConsole.ts`
 
-**Nova aba "Logs" no DrippyManagement.tsx**: Tabela com filtros por provider, source, status, data. Mostrar:
-- Timestamp, provider, modelo, source, tokens (in/out), duração, status
-- Resumo com totais por provider e contagem de erros
+### `11-guia-contribuicao.md` - Guia para Novos Devs
+- Como rodar o projeto localmente
+- Convencoes de codigo (React Query > useEffect, Zustand para global state)
+- Como criar uma nova pagina (registrar rota, escolher Guard, lazy vs estatico)
+- Como criar um novo hook
+- Como adicionar uma Edge Function
+- Checklist de PR/review
+- Erros comuns e como evitar (RLS, chunks, offline)
 
-#### 5. Atualizar `chat-ai/index.ts`
-- Adicionar case `claude` no switch de providers com formato Anthropic Messages API
-- Importar shared helper ou manter inline (já tem a lógica, só falta Claude)
+---
 
-### Arquivos alterados
+## Detalhes Tecnicos
 
-| Arquivo | Tipo |
-|---|---|
-| `supabase/functions/_shared/ai-provider.ts` | Novo - helper centralizado |
-| `supabase/functions/chat-ai/index.ts` | Editar - adicionar Claude + logging |
-| `supabase/functions/whatsapp-zapi-orcamentos/index.ts` | Editar - usar config dinâmica |
-| `supabase/functions/analyze-budgets/index.ts` | Editar - usar config dinâmica |
-| `supabase/functions/triage-ai/index.ts` | Editar - usar config dinâmica |
-| `src/services/drippyConfigService.ts` | Editar - adicionar Claude |
-| `src/components/super-admin/drippy/ApiKeysManager.tsx` | Editar - adicionar Claude/Anthropic |
-| `src/components/super-admin/drippy/ProviderSelector.tsx` | Editar - ícone Claude |
-| `src/hooks/useDrippySettings.ts` | Editar - tipo provider |
-| `src/components/super-admin/DrippyManagement.tsx` | Editar - aba Logs |
-| `src/components/super-admin/drippy/AiLogsViewer.tsx` | Novo - componente de logs |
-| Migration SQL | Novo - tabela `ai_request_logs` |
+### Arquivos a criar:
+1. `.documentação/docs/5-typescript-tipos.md`
+2. `.documentação/docs/6-hooks-referencia.md`
+3. `.documentação/docs/7-rotas-e-guards.md`
+4. `.documentação/docs/8-edge-functions.md`
+5. `.documentação/docs/9-seguranca.md`
+6. `.documentação/docs/10-pdf-e-utils.md`
+7. `.documentação/docs/11-guia-contribuicao.md`
+
+### Arquivos a editar:
+1. `.documentação/docs/0-ai-project-context.md`
+2. `.documentação/docs/1-visao-geral.md`
+3. `.documentação/docs/2-frontend-estrutura.md`
+4. `.documentação/docs/3-backend-supabase.md`
+5. `.documentação/docs/4-integracoes-externas.md`
+
+Total: **12 arquivos** (7 novos + 5 atualizados)
 

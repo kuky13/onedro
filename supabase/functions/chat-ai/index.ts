@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { logAIRequest } from "../_shared/ai-provider.ts";
 import { CHAT_AI_SYSTEM_PROMPT } from "./prompts/system-prompt.ts";
 import { AIContext } from "./types.ts";
 import {
@@ -1257,13 +1258,62 @@ async function callAI(
         break;
       }
 
+      case "claude": {
+        endpoint = "https://api.anthropic.com/v1/messages";
+        headers = {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+        };
+
+        const systemMsgs = messages.filter((m: any) => m.role === "system");
+        const nonSystemMsgs = messages.filter((m: any) => m.role !== "system");
+        const claudeMsgs = nonSystemMsgs.map((m: any) => ({
+          role: m.role === "tool" ? "user" : m.role,
+          content: m.content,
+        }));
+
+        requestBody = {
+          model: model,
+          system: systemMsgs.map((m: any) => m.content).join("\n\n"),
+          messages: claudeMsgs,
+          max_tokens: 4096,
+        };
+        break;
+      }
+
       default:
-        return `Provider ${provider} não suportado. Use: lovable, deepseek ou gemini.`;
+        return `Provider ${provider} não suportado. Use: lovable, deepseek, gemini ou claude.`;
     }
 
     let finalResponse = "";
+    const aiStartTime = Date.now();
 
-    if (provider === "gemini") {
+    if (provider === "claude") {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[claude] API error:`, response.status, errorText);
+        return `Erro ao conectar com Claude. Status: ${response.status}`;
+      }
+
+      const data = await response.json();
+      finalResponse = data.content?.[0]?.text || "Sem resposta da IA.";
+
+      // Log
+      await logAIRequest({
+        provider, model, source: meta?.source || "app",
+        input_tokens: data.usage?.input_tokens,
+        output_tokens: data.usage?.output_tokens,
+        duration_ms: Date.now() - aiStartTime,
+        status: 'success', user_id: userId,
+      }, supabase);
+    } else if (provider === "gemini") {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: headers,
@@ -1279,6 +1329,15 @@ async function callAI(
       const data = await response.json();
       finalResponse =
         data.candidates?.[0]?.content?.parts?.[0]?.text || "Sem resposta da IA.";
+
+      // Log
+      await logAIRequest({
+        provider, model, source: meta?.source || "app",
+        input_tokens: data.usageMetadata?.promptTokenCount,
+        output_tokens: data.usageMetadata?.candidatesTokenCount,
+        duration_ms: Date.now() - aiStartTime,
+        status: 'success', user_id: userId,
+      }, supabase);
     } else {
       let shouldContinue = true;
       let iterationCount = 0;
@@ -1513,6 +1572,15 @@ async function callAI(
         } else {
           finalResponse = choice.message.content;
           shouldContinue = false;
+
+          // Log success for OpenAI-compatible providers
+          await logAIRequest({
+            provider, model, source: meta?.source || "app",
+            input_tokens: data.usage?.prompt_tokens,
+            output_tokens: data.usage?.completion_tokens,
+            duration_ms: Date.now() - aiStartTime,
+            status: 'success', user_id: userId,
+          }, supabase);
         }
       }
     }
@@ -1520,6 +1588,16 @@ async function callAI(
     return finalResponse;
   } catch (error) {
     console.error(`[AI-CALL] Erro ao chamar ${config.provider}:`, error);
+
+    // Log error
+    await logAIRequest({
+      provider: config.provider, model: config.model, source: meta?.source || "app",
+      duration_ms: Date.now() - (Date.now()),
+      status: 'error',
+      error_message: error instanceof Error ? error.message : String(error),
+      user_id: userId,
+    }, supabase).catch(() => {});
+
     return "Erro ao processar sua mensagem. Por favor, tente novamente.";
   }
 }

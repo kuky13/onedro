@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getAIConfig, callAIProvider, logAIRequest } from "../_shared/ai-provider.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -94,9 +95,12 @@ Deno.serve(async (req) => {
         custom_services: b.custom_services,
       }));
 
-      // 3. Call Lovable AI with tool calling for structured output
-      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-      if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+      // 3. Get dynamic AI configuration
+      const aiConfig = await getAIConfig(supabaseAdmin);
+
+      if (!aiConfig.apiKey) {
+        throw new Error(aiConfig.error || "No AI provider configured");
+      }
 
       const systemPrompt = `Você é um especialista em assistência técnica de celulares. Analise os orçamentos abaixo e extraia informações estruturadas.
 
@@ -119,79 +123,127 @@ IMPORTANTE:
 - Se não conseguir identificar a marca, use "Outros"
 - Se não conseguir identificar o serviço, use "Troca de Tela" como padrão (é o mais comum)`;
 
-      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: `Analise estes ${budgetSummaries.length} orçamentos e retorne os dados estruturados:\n\n${JSON.stringify(budgetSummaries)}` },
-          ],
-          tools: [
-            {
-              type: "function",
-              function: {
-                name: "catalog_services",
-                description: "Retorna a lista de serviços catalogados a partir dos orçamentos analisados",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    services: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        properties: {
-                          budget_id: { type: "string", description: "ID do orçamento original" },
-                          brand: { type: "string", description: "Marca do dispositivo (Apple, Samsung, etc)" },
-                          model: { type: "string", description: "Modelo normalizado do dispositivo" },
-                          service_category: { type: "string", description: "Categoria do serviço" },
-                          service_name: { type: "string", description: "Nome descritivo do serviço" },
-                          cash_price_reais: { type: "number", description: "Preço à vista em reais" },
-                          credit_card_total_reais: { type: "number", description: "Preço TOTAL no cartão de crédito em reais (parcela × quantidade de parcelas)" },
-                          max_installments: { type: "number", description: "Número máximo de parcelas" },
-                          quality: { type: "string", description: "Qualidade da peça" },
-                          warranty_days: { type: "number", description: "Garantia em dias" },
-                        },
-                        required: ["budget_id", "brand", "model", "service_category", "service_name", "cash_price_reais", "quality", "warranty_days"],
-                        additionalProperties: false,
-                      },
+      const startTime = Date.now();
+
+      // For providers that support tool calling (lovable, deepseek, openai), use tools
+      // For claude/gemini, use regular messages and parse JSON
+      const toolsDef = [
+        {
+          type: "function",
+          function: {
+            name: "catalog_services",
+            description: "Retorna a lista de serviços catalogados a partir dos orçamentos analisados",
+            parameters: {
+              type: "object",
+              properties: {
+                services: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      budget_id: { type: "string", description: "ID do orçamento original" },
+                      brand: { type: "string", description: "Marca do dispositivo (Apple, Samsung, etc)" },
+                      model: { type: "string", description: "Modelo normalizado do dispositivo" },
+                      service_category: { type: "string", description: "Categoria do serviço" },
+                      service_name: { type: "string", description: "Nome descritivo do serviço" },
+                      cash_price_reais: { type: "number", description: "Preço à vista em reais" },
+                      credit_card_total_reais: { type: "number", description: "Preço TOTAL no cartão de crédito em reais (parcela × quantidade de parcelas)" },
+                      max_installments: { type: "number", description: "Número máximo de parcelas" },
+                      quality: { type: "string", description: "Qualidade da peça" },
+                      warranty_days: { type: "number", description: "Garantia em dias" },
                     },
+                    required: ["budget_id", "brand", "model", "service_category", "service_name", "cash_price_reais", "quality", "warranty_days"],
+                    additionalProperties: false,
                   },
-                  required: ["services"],
-                  additionalProperties: false,
                 },
               },
+              required: ["services"],
+              additionalProperties: false,
             },
+          },
+        },
+      ];
+
+      let aiItems: any[] = [];
+
+      if (aiConfig.provider === "claude" || aiConfig.provider === "gemini") {
+        // Claude/Gemini: ask for JSON output
+        const result = await callAIProvider(aiConfig, {
+          messages: [
+            { role: "system", content: systemPrompt + "\n\nResponda APENAS com JSON no formato: {\"services\": [...]}" },
+            { role: "user", content: `Analise estes ${budgetSummaries.length} orçamentos e retorne os dados estruturados:\n\n${JSON.stringify(budgetSummaries)}` },
           ],
-          tool_choice: { type: "function", function: { name: "catalog_services" } },
-        }),
-      });
+        });
 
-      if (!aiResponse.ok) {
-        const errText = await aiResponse.text();
-        console.error("AI error:", aiResponse.status, errText);
-        if (aiResponse.status === 429) {
-          return new Response(JSON.stringify({ error: "Rate limit atingido. Tente novamente em alguns segundos." }), {
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
+        await logAIRequest({
+          provider: aiConfig.provider, model: aiConfig.model, source: 'analyze',
+          input_tokens: result.usage?.input_tokens, output_tokens: result.usage?.output_tokens,
+          duration_ms: Date.now() - startTime, status: 'success', user_id: user.id,
+        }, supabaseAdmin);
+
+        const cleaned = result.content.replace(/```json/gi, "").replace(/```/g, "").trim();
+        const parsed = JSON.parse(cleaned);
+        aiItems = parsed.services || [];
+      } else {
+        // Lovable/DeepSeek/OpenAI: use tool calling
+        const aiResponse = await fetch(
+          aiConfig.provider === "lovable"
+            ? "https://ai.gateway.lovable.dev/v1/chat/completions"
+            : aiConfig.provider === "deepseek"
+              ? "https://api.deepseek.com/v1/chat/completions"
+              : "https://ai.gateway.lovable.dev/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${aiConfig.apiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: aiConfig.model,
+              messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: `Analise estes ${budgetSummaries.length} orçamentos e retorne os dados estruturados:\n\n${JSON.stringify(budgetSummaries)}` },
+              ],
+              tools: toolsDef,
+              tool_choice: { type: "function", function: { name: "catalog_services" } },
+            }),
+          }
+        );
+
+        if (!aiResponse.ok) {
+          const errText = await aiResponse.text();
+          console.error("AI error:", aiResponse.status, errText);
+          
+          await logAIRequest({
+            provider: aiConfig.provider, model: aiConfig.model, source: 'analyze',
+            duration_ms: Date.now() - startTime, status: 'error',
+            error_message: `${aiResponse.status}: ${errText}`, user_id: user.id,
+          }, supabaseAdmin);
+
+          if (aiResponse.status === 429) {
+            return new Response(JSON.stringify({ error: "Rate limit atingido. Tente novamente em alguns segundos." }), {
+              status: 429,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+          throw new Error("AI analysis failed");
         }
-        throw new Error("AI analysis failed");
+
+        const aiData = await aiResponse.json();
+        
+        await logAIRequest({
+          provider: aiConfig.provider, model: aiConfig.model, source: 'analyze',
+          input_tokens: aiData.usage?.prompt_tokens, output_tokens: aiData.usage?.completion_tokens,
+          duration_ms: Date.now() - startTime, status: 'success', user_id: user.id,
+        }, supabaseAdmin);
+
+        const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+        if (!toolCall || toolCall.function.name !== "catalog_services") {
+          throw new Error("AI did not return structured data");
+        }
+        const parsed = JSON.parse(toolCall.function.arguments);
+        aiItems = parsed.services || [];
       }
-
-      const aiData = await aiResponse.json();
-      const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-
-      if (!toolCall || toolCall.function.name !== "catalog_services") {
-        throw new Error("AI did not return structured data");
-      }
-
-      const parsed = JSON.parse(toolCall.function.arguments);
-      const aiItems = parsed.services || [];
 
       // 4. Cross-reference with existing catalog
       const { data: existingBrands } = await supabaseAdmin
