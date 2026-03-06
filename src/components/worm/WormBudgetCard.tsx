@@ -309,14 +309,15 @@ export const WormBudgetCard = ({
           {/* Expanded details */}
           {isExpanded && (
             <div className="space-y-3 pt-3 border-t border-border/30 animate-in slide-in-from-top-2 duration-300">
-              {/* Parts / Services */}
-              {parts && parts.length > 0 && (
-                <div className="bg-muted/30 p-3 rounded-xl border border-border/50">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Package className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium text-sm text-foreground">Peças / Serviços</span>
-                  </div>
-                  <div className="space-y-2">
+              {/* Informações */}
+              <div className="bg-muted/30 p-3 rounded-xl border border-border/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <Package className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium text-sm text-foreground">Informações</span>
+                </div>
+
+                {parts && parts.length > 0 ? (
+                  <div className="space-y-3">
                     {parts.map((part: any) => {
                       const qty = part.quantity || 1;
                       const cashUnit = part.cash_price ? part.cash_price : part.price ?? 0;
@@ -326,48 +327,35 @@ export const WormBudgetCard = ({
                       const installmentTotal = instUnit !== undefined ? (count && count > 1 ? instUnit * count * qty : instUnit * qty) : undefined;
 
                       return (
-                        <div key={part.id} className="p-2.5 rounded-lg border border-border/40 bg-background/50">
-                          <div className="text-xs">
-                            <span className="text-muted-foreground">Qualidade:</span>{' '}
-                            <span className="text-primary font-semibold">{part.part_type || '—'}</span>
+                        <div key={part.id} className="grid grid-cols-2 gap-3">
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-0.5">Qualidade</div>
+                            <div className="font-medium text-sm">{part.part_type || '—'}</div>
                           </div>
-                          <div className="flex flex-wrap gap-2 mt-1.5">
-                            {cashTotal > 0 && (
-                              <span className="bg-green-500/10 px-2 py-0.5 rounded-lg text-green-700 dark:text-green-400 text-[11px]">
-                                À vista: {formatCurrencyFromReais(cashTotal)}
-                              </span>
-                            )}
-                            {installmentTotal && (
-                              <span className="bg-blue-500/10 px-2 py-0.5 rounded-lg text-blue-700 dark:text-blue-400 text-[11px]">
-                                Parcelado: {formatCurrencyFromReais(installmentTotal)}{count ? ` • até ${count}x` : ''}
-                              </span>
-                            )}
-                            {part.warranty_months && (
-                              <span className="bg-amber-500/10 px-2 py-0.5 rounded-lg text-amber-700 dark:text-amber-400 text-[11px]">
-                                Garantia: {part.warranty_months} meses
-                              </span>
-                            )}
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-0.5">Garantia</div>
+                            <div className="font-medium text-sm">{part.warranty_months ? `${part.warranty_months} meses` : '—'}</div>
                           </div>
+                          {cashTotal > 0 && (
+                            <div>
+                              <div className="text-xs text-muted-foreground mb-0.5">À vista</div>
+                              <div className="font-medium text-sm text-green-600 dark:text-green-400">{formatCurrencyFromReais(cashTotal)}</div>
+                            </div>
+                          )}
+                          {installmentTotal && (
+                            <div>
+                              <div className="text-xs text-muted-foreground mb-0.5">Parcelado</div>
+                              <div className="font-medium text-sm text-blue-600 dark:text-blue-400">
+                                {formatCurrencyFromReais(installmentTotal)}{count ? ` • ${count}x` : ''}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
                   </div>
-
-                  <Button variant="outline" size="sm" onClick={() => setIsImportToStoreOpen(true)} className="w-full mt-3 rounded-xl border-primary/30 hover:bg-primary/10 text-foreground">
-                    <Store className="h-4 w-4 mr-2" />
-                    Adicionar à Loja
-                  </Button>
-                </div>
-              )}
-
-              {/* Fallback when no parts */}
-              {(!parts || parts.length === 0) && (
-                <div className="bg-muted/30 p-3 rounded-xl border border-border/50">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Package className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium text-sm text-foreground">Informações</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
                       <div className="text-xs text-muted-foreground mb-0.5">Qualidade</div>
                       <div className="font-medium text-sm">{budget.part_quality || '—'}</div>
@@ -391,7 +379,15 @@ export const WormBudgetCard = ({
                       </div>
                     )}
                   </div>
-                </div>
+                )}
+              </div>
+
+              {/* Botão Adicionar à Loja separado */}
+              {parts && parts.length > 0 && (
+                <Button variant="outline" size="sm" onClick={() => setIsImportToStoreOpen(true)} className="w-full rounded-xl border-primary/30 hover:bg-primary/10 text-foreground">
+                  <Store className="h-4 w-4 mr-2" />
+                  Adicionar à Loja
+                </Button>
               )}
 
               {/* Service Order Actions */}
