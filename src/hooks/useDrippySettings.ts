@@ -13,7 +13,7 @@ export function useDrippySettings() {
 
   const updateProviderMutation = useMutation({
     mutationFn: ({ provider, model, temperature, maxTokens }: {
-      provider: 'deepseek' | 'gemini' | 'lovable';
+      provider: 'deepseek' | 'gemini' | 'lovable' | 'claude';
       model: string;
       temperature?: number;
       maxTokens?: number;
