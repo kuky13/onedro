@@ -900,13 +900,23 @@ async function getAIConfiguration(supabase: any): Promise<{
       return { provider: active_provider, model: active_model, apiKey };
     }
 
-    // 3. Para outros providers, buscar na tabela api_keys
-    const { data: keyData } = await supabase
+    // 3. Para outros providers, buscar na tabela api_keys com aliases aceitos
+    const providerServiceNameMap: Record<string, string[]> = {
+      claude: ['claude', 'anthropic'],
+      deepseek: ['deepseek'],
+      gemini: ['gemini'],
+      openai: ['openai'],
+    };
+
+    const serviceNamesToCheck = providerServiceNameMap[active_provider] || [active_provider];
+
+    const { data: keyRows, error: keyError } = await supabase
       .from('api_keys')
-      .select('api_key')
-      .eq('service_name', active_provider)
+      .select('api_key, updated_at')
+      .in('service_name', serviceNamesToCheck)
       .eq('is_active', true)
-      .single();
+      .order('updated_at', { ascending: false })
+      .limit(1);
 
     if (!keyData?.api_key) {
       console.error(`[AI-CONFIG] API Key não encontrada para ${active_provider}`);
