@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
-import { Settings, Building2, User, FileText, Eye, EyeOff, Cookie as CookieIcon, ArrowLeft, Save, LogOut, HelpCircle, Lock, Mail, Menu, Home } from 'lucide-react';
+import { Settings, Building2, User, FileText, Eye, EyeOff, Cookie as CookieIcon, ArrowLeft, Save, LogOut, HelpCircle, Lock, Mail, Menu, Home, BookOpen, Headphones, MessageCircle, Shield, Zap, CheckCircle2, Sparkles } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { CompanyBrandingSettings } from '@/components/CompanyBrandingSettings';
 import { ResetAppButton } from './ResetAppButton';
