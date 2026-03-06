@@ -62,24 +62,31 @@ export async function getAIConfig(supabase?: any): Promise<AIConfig> {
       };
     }
 
-    // Map provider to api_keys service_name
-    const serviceNameMap: Record<string, string> = {
-      'claude': 'anthropic',
-      'deepseek': 'deepseek',
-      'gemini': 'gemini',
-      'openai': 'openai',
+    // Map provider to possible api_keys service_name aliases
+    const serviceNamesMap: Record<string, string[]> = {
+      claude: ['claude', 'anthropic'],
+      deepseek: ['deepseek'],
+      gemini: ['gemini'],
+      openai: ['openai'],
     };
 
-    const serviceName = serviceNameMap[active_provider] || active_provider;
+    const serviceNames = serviceNamesMap[active_provider] || [active_provider];
 
-    const { data: keyData } = await client
+    const { data: keyRows, error: keyError } = await client
       .from('api_keys')
-      .select('api_key')
-      .eq('service_name', serviceName)
+      .select('api_key, updated_at')
+      .in('service_name', serviceNames)
       .eq('is_active', true)
-      .single();
+      .order('updated_at', { ascending: false })
+      .limit(1);
 
-    if (!keyData?.api_key) {
+    if (keyError) {
+      console.error('[AI-PROVIDER] Error fetching API key:', keyError);
+    }
+
+    const apiKey = keyRows?.[0]?.api_key ?? null;
+
+    if (!apiKey) {
       return {
         provider: active_provider,
         model: active_model,
@@ -91,7 +98,7 @@ export async function getAIConfig(supabase?: any): Promise<AIConfig> {
     return {
       provider: active_provider,
       model: active_model,
-      apiKey: keyData.api_key,
+      apiKey,
     };
   } catch (error) {
     console.error('[AI-PROVIDER] Error getting config:', error);
