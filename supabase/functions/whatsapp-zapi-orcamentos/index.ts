@@ -2019,10 +2019,15 @@ serve(async (req: Request) => {
     }
 
     if (createdBudgets.length > 0) {
-      const successMessage = getBudgetGroupConfirmation({
-        budgetCount: createdBudgets.length,
-        deviceModel,
-      });
+      let successMessage: string;
+      if (replacedCount > 0 && updateSummaries.length > 0) {
+        successMessage = getBudgetUpdateConfirmation(updateSummaries[0]);
+      } else {
+        successMessage = getBudgetGroupConfirmation({
+          budgetCount: createdBudgets.length,
+          deviceModel,
+        });
+      }
       const replyResult = await sendWhatsAppResponse(normalized, successMessage);
 
       await supabase.from("whatsapp_zapi_logs").insert({
