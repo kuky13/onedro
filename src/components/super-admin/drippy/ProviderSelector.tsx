@@ -20,6 +20,12 @@ const providerIcons: Record<string, any> = {
   claude: MessageSquare,
 };
 
+const providerServiceNameMap: Record<string, string[]> = {
+  claude: ['claude', 'anthropic'],
+  deepseek: ['deepseek'],
+  gemini: ['gemini'],
+};
+
 export function ProviderSelector({
   currentProvider,
   currentModel,
@@ -38,25 +44,29 @@ export function ProviderSelector({
     // Validar se API Key existe para providers externos
     if (selectedProvider !== 'lovable') {
       const { supabase } = await import('@/integrations/supabase/client');
-      
-      const { data: keyExists } = await supabase
+      const { toast } = await import('sonner');
+
+      const serviceNamesToCheck = providerServiceNameMap[selectedProvider] ?? [selectedProvider];
+
+      const { data: keyMatches, error } = await supabase
         .from('api_keys')
         .select('id')
-        .eq('service_name', selectedProvider)
+        .in('service_name', serviceNamesToCheck)
         .eq('is_active', true)
-        .maybeSingle();
+        .limit(1);
 
-      if (!keyExists) {
-        const { toast } = await import('sonner');
+      if (error) {
+        toast.error('Erro ao validar API Key', { description: error.message });
+        return;
+      }
+
+      if (!keyMatches?.length) {
         const providerName = AVAILABLE_PROVIDERS.find(p => p.id === selectedProvider)?.name || selectedProvider;
-        
-        toast.error(
-          `⚠️ Nenhuma API Key ativa encontrada para ${providerName}`,
-          {
-            description: 'Adicione uma chave na aba "API Keys" antes de ativar este provedor.',
-            duration: 5000,
-          }
-        );
+
+        toast.error(`⚠️ Nenhuma API Key ativa encontrada para ${providerName}`, {
+          description: 'Adicione uma chave na aba "API Keys" antes de ativar este provedor.',
+          duration: 5000,
+        });
         return;
       }
     }
