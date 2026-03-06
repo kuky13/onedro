@@ -24,7 +24,7 @@ interface QuickAccessAction {
 
 const quickAccessActions: QuickAccessAction[] = [{
   id: 'budgets',
-  label: 'Ver Orçamentos',
+  label: 'Orçamentos',
   icon: List,
   tab: 'budgets',
   permission: 'view_own_budgets',
