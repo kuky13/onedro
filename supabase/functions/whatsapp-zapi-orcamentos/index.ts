@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getBudgetGroupConfirmation, getBudgetUpdateConfirmation } from "../_shared/ai-messages.ts";
+import { getAIConfig, callAIProvider, logAIRequest } from "../_shared/ai-provider.ts";
 
 // Tipos internos simples para normalizar o payload da Z-API
 
