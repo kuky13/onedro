@@ -195,9 +195,6 @@ export const WormBudgetCard = ({
                   <Wrench className="h-4 w-4 mr-2" />
                   {createdOrderCount > 0 ? `Criar OS (${createdOrderCount} já criadas)` : 'Criar OS'}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleOpenWarranty} className="cursor-pointer text-orange-600 focus:text-orange-700" disabled={!hasCreatedOrder || !createdOrderId}>
-                  <Shield className="h-4 w-4 mr-2" /> Abrir Garantia
-                </DropdownMenuItem>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer" onSelect={(e) => e.preventDefault()}>
