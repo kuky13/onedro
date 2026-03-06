@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Settings, Building2, User, FileText, Eye, EyeOff, Cookie as CookieIcon,
+  Settings, Building2, User, Eye, EyeOff,
   ArrowLeft, Save, LogOut, HelpCircle, Lock, Mail, Menu, Home, BookOpen,
   Headphones, MessageCircle, Shield, CheckCircle2, Zap
 } from 'lucide-react';
@@ -19,9 +19,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/useToast';
 
-const TermsPageLazy = React.lazy(() => import('@/pages/TermsPage').then((m) => ({ default: m.TermsPage })));
-const PrivacyPageLazy = React.lazy(() => import('@/pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage })));
-const CookiesPageLazy = React.lazy(() => import('@/pages/CookiesPage').then((m) => ({ default: m.CookiesPage })));
 
 const SECTIONS = [
   {
