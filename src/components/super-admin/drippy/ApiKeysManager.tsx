@@ -28,6 +28,7 @@ interface ApiKey {
 }
 
 const SERVICES = [
+  { value: 'anthropic', label: 'Anthropic (Claude)', description: 'Claude AI API - Anthropic' },
   { value: 'deepseek', label: 'DeepSeek', description: 'DeepSeek AI API' },
   { value: 'gemini', label: 'Google Gemini (Direct)', description: 'Google Gemini API Direct' },
   { value: 'openai', label: 'OpenAI', description: 'OpenAI GPT API' },

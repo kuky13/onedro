@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Bot, Sparkles, Zap, Check } from 'lucide-react';
+import { Bot, Sparkles, Zap, Check, MessageSquare } from 'lucide-react';
 import { AVAILABLE_PROVIDERS, ProviderInfo } from '@/services/drippyConfigService';
 import { useState } from 'react';
 
@@ -13,10 +13,11 @@ interface ProviderSelectorProps {
   isUpdating: boolean;
 }
 
-const providerIcons = {
+const providerIcons: Record<string, any> = {
   lovable: Sparkles,
   deepseek: Zap,
   gemini: Bot,
+  claude: MessageSquare,
 };
 
 export function ProviderSelector({
