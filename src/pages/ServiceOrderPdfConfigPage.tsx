@@ -152,29 +152,12 @@ export const ServiceOrderPdfConfigPage = () => {
           <ChevronLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Configuração de PDFs</h1>
-          <p className="text-muted-foreground text-sm">Personalize os templates de PDF e etiquetas térmicas das Ordens de Serviço</p>
+          <h1 className="text-2xl font-bold text-foreground">Configuração de Etiqueta Térmica</h1>
+          <p className="text-muted-foreground text-sm">Personalize o layout da etiqueta térmica das Ordens de Serviço</p>
         </div>
       </div>
 
-      <Tabs defaultValue="os_receipt" className="w-full">
-        <TabsList className="w-full max-w-md">
-          <TabsTrigger value="os_receipt" className="flex-1 gap-2">
-            <FileText className="h-4 w-4" />PDF da OS
-          </TabsTrigger>
-          <TabsTrigger value="thermal_label" className="flex-1 gap-2">
-            <Printer className="h-4 w-4" />Etiqueta Térmica
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="os_receipt">
-          <TemplateList type="os_receipt" userId={user.id} />
-        </TabsContent>
-
-        <TabsContent value="thermal_label">
-          <TemplateList type="thermal_label" userId={user.id} />
-        </TabsContent>
-      </Tabs>
+      <TemplateList type="thermal_label" userId={user.id} />
     </div>
   );
 };
