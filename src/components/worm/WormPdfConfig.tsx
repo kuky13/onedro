@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePdfTemplates, useDeletePdfTemplate, useUpdatePdfTemplate, useEnsureDefaultPdfTemplate } from '@/hooks/worm/usePdfTemplates';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Plus, Star, Edit, Trash2 } from 'lucide-react';
+import { FileText, Plus, Star, Edit, Copy, Trash2 } from 'lucide-react';
 import { HamsterLoader } from '@/components/ui/hamster-loader';
 import { PdfTemplateEditor } from './PdfTemplateEditor';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -76,10 +76,10 @@ export const WormPdfConfig = () => {
                         </p>
                     </div>
                     <div className="flex gap-2">
-                        <Button onClick={handleNewTemplate}>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Novo Template
-                        </Button>
+                        
+
+
+            
                     </div>
                 </div>
 
@@ -120,9 +120,27 @@ export const WormPdfConfig = () => {
                                                 </CardDescription>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <Button variant="ghost" size="sm" onClick={() => handleEditTemplate(template)}>
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
+                                                
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      
 
                                                 {!template.is_default && !isGlobal &&
                       <Button variant="ghost" size="sm" onClick={() => setDeletingId(template.id)}>
