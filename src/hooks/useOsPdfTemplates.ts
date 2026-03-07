@@ -39,7 +39,7 @@ export const useOsPdfTemplates = (userId: string | undefined, type?: OsTemplateT
 
       const { data, error } = await query;
       if (error) throw error;
-      return (data || []) as OsPdfTemplate[];
+      return (data || []) as unknown as OsPdfTemplate[];
     },
   });
 };
@@ -64,7 +64,7 @@ export const useDefaultOsPdfTemplate = (userId: string | undefined, type: OsTemp
       if (error) throw error;
       if (!data || data.length === 0) return null;
 
-      const templates = data as OsPdfTemplate[];
+      const templates = data as unknown as OsPdfTemplate[];
       const userDefault = templates.find(t => t.user_id === userId);
       return userDefault || templates[0];
     },
@@ -81,7 +81,7 @@ export const useCreateOsPdfTemplate = () => {
         .select()
         .single();
       if (error) throw error;
-      return data as OsPdfTemplate;
+      return data as unknown as OsPdfTemplate;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
@@ -103,7 +103,7 @@ export const useUpdateOsPdfTemplate = () => {
         .select()
         .single();
       if (error) throw error;
-      return data as OsPdfTemplate;
+      return data as unknown as OsPdfTemplate;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
