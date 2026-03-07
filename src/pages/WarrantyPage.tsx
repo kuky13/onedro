@@ -40,11 +40,7 @@ const WarrantyPageContent = () => {
   }, [prefill]);
   const {
     isOpen,
-    toggleMenu,
-    closeMenu,
-    menuData,
-    handleLogout
-  } = useMobileMenuContext();
+  const { isOpen, toggleMenu } = useMobileMenuContext();
   const filters = useMemo(() => ({
     search: search || undefined,
     status: statusFilter !== 'all' ? statusFilter : undefined,
