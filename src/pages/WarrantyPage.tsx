@@ -12,8 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MobileHamburgerButton } from '@/components/mobile/MobileHamburgerButton';
 import { useMobileMenuContext } from '@/components/mobile/MobileMenuProvider';
-import { MobileMenuProvider } from '@/components/mobile/MobileMenuProvider';
-import { MobileHamburgerMenu } from '@/components/mobile/MobileHamburgerMenu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { DeviceChecklist, DeviceChecklistData } from '@/components/service-orders/DeviceChecklist';
@@ -40,13 +38,7 @@ const WarrantyPageContent = () => {
     navigate(location.pathname, { replace: true, state: null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefill]);
-  const {
-    isOpen,
-    toggleMenu,
-    closeMenu,
-    menuData,
-    handleLogout
-  } = useMobileMenuContext();
+  const { isOpen, toggleMenu } = useMobileMenuContext();
   const filters = useMemo(() => ({
     search: search || undefined,
     status: statusFilter !== 'all' ? statusFilter : undefined,
@@ -222,14 +214,6 @@ const WarrantyPageContent = () => {
     }}
       />
 
-      {/* Mobile Menu Overlay */}
-      <MobileHamburgerMenu isOpen={isOpen} onClose={closeMenu} onTabChange={tab => {
-      // Navegação básica baseada nas tabs do menu
-      if (tab === 'dashboard') navigate('/dashboard');
-      if (tab === 'service-orders') navigate('/service-orders');
-      if (tab === 'settings') navigate('/settings');
-      closeMenu();
-    }} menuData={menuData} onLogout={handleLogout} />
 
       <AlertDialog open={!!deleteConfirmation} onOpenChange={open => !open && setDeleteConfirmation(null)}>
         <AlertDialogContent>
@@ -252,8 +236,6 @@ const WarrantyPageContent = () => {
 
 // Wrapper com o Provider
 const WarrantyPage = () => {
-  return <MobileMenuProvider>
-      <WarrantyPageContent />
-    </MobileMenuProvider>;
+  return <WarrantyPageContent />;
 };
 export default WarrantyPage;
