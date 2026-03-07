@@ -24,6 +24,7 @@ import { useDeviceDetection } from '@/hooks/useDeviceDetection';
 import { saveServiceOrderPDF, ServiceOrderData } from '@/utils/serviceOrderPdfUtils';
 import { useServiceOrdersRealTime } from '@/hooks/useServiceOrdersRealTime';
 import { PrintLabelDialog } from '@/components/printing/PrintLabelDialog';
+import { useDefaultOsPdfTemplate } from '@/hooks/useOsPdfTemplates';
 type ServiceOrder = Tables<'service_orders'>;
 export const ServiceOrdersPageSimple = () => {
   const navigate = useNavigate();
