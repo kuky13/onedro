@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, CheckCircle2, Clock, Smartphone, MessageCircle, ArrowLeft } from 'lucide-react';
@@ -31,12 +31,12 @@ export const OrderStatusPage = () => {
       try {
         setLoading(true);
         // Call the RPC function created in migration
-        const { data, error } = await supabase.rpc('get_public_os_status', { p_order_id: id });
+        const { data, error } = await (supabase as any).rpc('get_public_os_status', { p_order_id: id });
 
         if (error) throw error;
 
-        if (data && data.length > 0) {
-          setOrder(data[0]);
+        if (data && Array.isArray(data) && data.length > 0) {
+          setOrder(data[0] as PublicOrderStatus);
         } else {
           setError('Ordem de serviço não encontrada.');
         }

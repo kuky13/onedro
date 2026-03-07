@@ -3117,6 +3117,41 @@ export type Database = {
           },
         ]
       }
+      service_order_photos: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          photo_type: string | null
+          photo_url: string
+          service_order_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          photo_type?: string | null
+          photo_url: string
+          service_order_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          photo_type?: string | null
+          photo_url?: string
+          service_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_order_photos_service_order_id_fkey"
+            columns: ["service_order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_order_shares: {
         Row: {
           created_at: string | null
@@ -6439,6 +6474,19 @@ export type Database = {
               warranty_months: number
             }[]
           }
+      get_public_os_status: {
+        Args: { p_order_id: string }
+        Returns: {
+          device_model: string
+          entry_date: string
+          id: string
+          sequential_number: number
+          shop_name: string
+          shop_phone: string
+          status: string
+          updated_at: string
+        }[]
+      }
       get_public_service_order_images: {
         Args: { share_token: string }
         Returns: {

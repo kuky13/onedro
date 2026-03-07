@@ -281,6 +281,7 @@ export const useServiceOrderEdit = (serviceOrderId?: string) => {
               deviceChecklist,
               // Observações
               notes: so.notes ?? '',
+              photos: [],
               created_at: so.created_at ?? undefined,
               updated_at: so.updated_at ?? undefined,
             });
@@ -542,7 +543,7 @@ export const useServiceOrderEdit = (serviceOrderId?: string) => {
               .from('service-order-photos')
               .getPublicUrl(fileName);
 
-            await supabase.from('service_order_photos').insert({
+            await (supabase as any).from('service_order_photos').insert({
               service_order_id: targetId,
               photo_url: publicUrl,
               photo_type: 'other',
