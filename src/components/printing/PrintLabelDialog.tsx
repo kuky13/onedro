@@ -144,26 +144,33 @@ export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, compa
     },
     pageStyle: `
       @page {
-        size: ${size === '58mm' ? '58mm' : '80mm'} auto;
-        margin: 0mm;
+        size: ${size} auto !important;
+        margin: 0mm !important;
       }
-      @media print {
-        html, body {
-          width: ${size === '58mm' ? '58mm' : '80mm'};
-          min-height: 100%;
-          margin: 0 !important;
-          padding: 0 !important;
-          overflow: hidden;
-        }
-        .thermal-label {
-          width: 100% !important;
-          max-width: ${size === '58mm' ? '58mm' : '80mm'} !important;
-          padding: 3mm !important;
-          border: none !important;
-          box-shadow: none !important;
-          margin: 0 auto !important;
-          page-break-inside: avoid;
-        }
+      * {
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+      }
+      html, body {
+        width: ${size} !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .thermal-label {
+        width: ${size} !important;
+        max-width: ${size} !important;
+        min-width: ${size} !important;
+        padding: 2mm !important;
+        border: none !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        page-break-inside: avoid !important;
+        font-size: ${size === '58mm' ? '10px' : '12px'} !important;
       }
     `,
   });
