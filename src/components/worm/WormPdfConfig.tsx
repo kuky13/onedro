@@ -120,27 +120,9 @@ export const WormPdfConfig = () => {
                                                 </CardDescription>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                      
+                                                <Button variant="ghost" size="sm" onClick={() => handleEditTemplate(template)}>
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
 
                                                 {!template.is_default && !isGlobal &&
                       <Button variant="ghost" size="sm" onClick={() => setDeletingId(template.id)}>
