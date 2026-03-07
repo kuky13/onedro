@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePdfTemplates, useDeletePdfTemplate, useUpdatePdfTemplate, useEnsureDefaultPdfTemplate } from '@/hooks/worm/usePdfTemplates';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Plus, Star, Edit, Copy, Trash2 } from 'lucide-react';
+import { FileText, Star, Edit, Trash2 } from 'lucide-react';
 import { HamsterLoader } from '@/components/ui/hamster-loader';
 import { PdfTemplateEditor } from './PdfTemplateEditor';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
