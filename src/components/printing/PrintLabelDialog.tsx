@@ -145,7 +145,6 @@ export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, compa
 
   const clientName = order.client_name || (order as any).clients?.name || 'Balcão';
   const issue = order.issue || (order as any).reported_issue;
-  const qrValue = `${window.location.origin}/status/${order.id}`;
 
   const drawLabel = useCallback(async (doc: jsPDF, widthMM: number) => {
     const marginMM = 3;
