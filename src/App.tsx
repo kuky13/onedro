@@ -372,24 +372,24 @@ const AppContent = () => {
         <Route path="/cookies" element={<CookiesPage />} />
         <Route path="/consentimento" element={<ConsentimentoPage />} />
         <Route path="/concentimento" element={<Navigate to="/consentimento" replace />} />
-        <Route path="/suporte" element={<SuportePage />} />
+        <Route path="/suporte" element={<AppShell><SuportePage /></AppShell>} />
         <Route path="/drippy" element={<DrippyPage />} />
         <Route path="/ia" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>
-            <IAPage />
+            <AppShell><IAPage /></AppShell>
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
-        <Route path="/chat" element={<MobileMenuProvider>
+        <Route path="/chat" element={<AppShell>
           <ChatPage />
-        </MobileMenuProvider>} />
+        </AppShell>} />
         <Route path="/kukysolutions" element={<KukySolutions />} />
         <Route path="/detalhes" element={<UnifiedProtectionGuard>
-          <UpdateDetailsPage />
+          <AppShell><UpdateDetailsPage /></AppShell>
         </UnifiedProtectionGuard>} />
 
         <Route path="/reparos/*" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>
-            <RepairsLayout />
+            <AppShell><RepairsLayout /></AppShell>
           </UnifiedProtectionGuard>
         </MaintenanceGuard>}>
           <Route index element={<RepairsDashboard />} />
@@ -406,7 +406,7 @@ const AppContent = () => {
 
         <Route path="/store" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>
-            <StoreLayout />
+            <AppShell><StoreLayout /></AppShell>
           </UnifiedProtectionGuard>
         </MaintenanceGuard>}>
           <Route path="nova" element={<StoreCreatePage />} />
