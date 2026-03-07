@@ -145,175 +145,124 @@ export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, compa
 
   const clientName = order.client_name || (order as any).clients?.name || 'Balcão';
   const issue = order.issue || (order as any).reported_issue;
-  const qrValue = `${window.location.origin}/status/${order.id}`;
+
+  const drawLabel = useCallback(async (doc: jsPDF, widthMM: number) => {
+    const marginMM = 3;
+    const usableW = widthMM - marginMM * 2;
+    const fontSizeBase = size === '58mm' ? 7 : 8;
+    const fontSizeLarge = size === '58mm' ? 9 : 11;
+    const fontSizeXL = size === '58mm' ? 14 : 16;
+    const centerX = widthMM / 2;
+    const lineHeight = size === '58mm' ? 3 : 3.5;
+    let y = marginMM + 3;
+
+    const drawDashedLine = (yPos: number) => {
+      doc.setDrawColor(0);
+      doc.setLineWidth(0.3);
+      // Draw individual dashes for clean rendering
+      const dashLen = 1.5;
+      const gapLen = 1;
+      let x = marginMM;
+      const endX = widthMM - marginMM;
+      while (x < endX) {
+        const end = Math.min(x + dashLen, endX);
+        doc.line(x, yPos, end, yPos);
+        x = end + gapLen;
+      }
+    };
+
+    // Shop name
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(fontSizeLarge);
+    doc.text(safeCompanyData.shop_name.toUpperCase(), centerX, y, { align: 'center' });
+    y += 4;
+
+    // Phone
+    if (safeCompanyData.phone) {
+      doc.setFontSize(fontSizeBase);
+      doc.setFont('courier', 'normal');
+      doc.text(safeCompanyData.phone, centerX, y, { align: 'center' });
+      y += 3;
+    }
+
+    // Dashed line
+    y += 1;
+    drawDashedLine(y);
+    y += 3;
+
+    // Order number (big)
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(fontSizeXL);
+    doc.text(orderNumber, centerX, y, { align: 'center' });
+    y += 5;
+
+    // Date
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(fontSizeBase);
+    doc.text(entryDate, centerX, y, { align: 'center' });
+    y += 3;
+
+    // Dashed line
+    y += 1;
+    drawDashedLine(y);
+    y += 3;
+
+    // Client, Device, Issue - left aligned
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(fontSizeBase);
+
+    const clLines = doc.splitTextToSize(`CL: ${clientName}`, usableW);
+    doc.text(clLines, marginMM, y);
+    y += clLines.length * lineHeight;
+
+    const apLines = doc.splitTextToSize(`AP: ${order.device_model || 'N/A'}`, usableW);
+    doc.text(apLines, marginMM, y);
+    y += apLines.length * lineHeight;
+
+    if (issue) {
+      const defLines = doc.splitTextToSize(`DEF: ${issue}`, usableW);
+      doc.text(defLines, marginMM, y);
+      y += defLines.length * lineHeight;
+    }
+
+    // Dashed line
+    y += 1;
+    drawDashedLine(y);
+    y += 3;
+
+    // QR Code
+    const svgEl = contentRef.current?.querySelector('svg');
+    if (svgEl) {
+      const qrDataUrl = await qrSvgToDataUrl(svgEl as SVGSVGElement);
+      const qrSizeMM = size === '58mm' ? 28 : 35;
+      const qrX = centerX - qrSizeMM / 2;
+      doc.addImage(qrDataUrl, 'PNG', qrX, y, qrSizeMM, qrSizeMM);
+      y += qrSizeMM + 2;
+    }
+
+    // Footer
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(fontSizeBase - 1);
+    doc.text('CONSULTE STATUS ONLINE', centerX, y, { align: 'center' });
+    y += 3;
+
+    return y;
+  }, [size, safeCompanyData, orderNumber, entryDate, clientName, issue, order]);
 
   const handleDownloadPDF = useCallback(async () => {
     setIsGenerating(true);
     try {
       const widthMM = size === '58mm' ? 58 : 80;
-      const marginMM = 2;
-      const usableW = widthMM - marginMM * 2;
 
-      // Create PDF with exact thermal paper width, auto height
-      const doc = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: [widthMM, 200], // tall enough, we'll trim
-      });
+      // First pass: measure height
+      const measureDoc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [widthMM, 300] });
+      const totalHeight = await drawLabel(measureDoc, widthMM);
 
-      const fontSizeBase = size === '58mm' ? 7 : 8;
-      const fontSizeLarge = size === '58mm' ? 9 : 11;
-      const fontSizeXL = size === '58mm' ? 14 : 16;
-      const centerX = widthMM / 2;
-      let y = marginMM + 2;
+      // Second pass: create with exact height
+      const finalDoc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [widthMM, totalHeight + 3] });
+      await drawLabel(finalDoc, widthMM);
 
-      // Shop name
-      doc.setFont('courier', 'bold');
-      doc.setFontSize(fontSizeLarge);
-      doc.text(safeCompanyData.shop_name.toUpperCase(), centerX, y, { align: 'center' });
-      y += 4;
-
-      // Phone
-      if (safeCompanyData.phone) {
-        doc.setFontSize(fontSizeBase);
-        doc.text(safeCompanyData.phone, centerX, y, { align: 'center' });
-        y += 3;
-      }
-
-      // Dashed line
-      y += 1;
-      doc.setLineDashPattern([1, 1], 0);
-      doc.setLineWidth(0.3);
-      doc.line(marginMM, y, widthMM - marginMM, y);
-      y += 3;
-
-      // Order number (big)
-      doc.setFontSize(fontSizeXL);
-      doc.text(orderNumber, centerX, y, { align: 'center' });
-      y += 5;
-
-      // Date
-      doc.setFontSize(fontSizeBase);
-      doc.text(entryDate, centerX, y, { align: 'center' });
-      y += 3;
-
-      // Dashed line
-      y += 1;
-      doc.line(marginMM, y, widthMM - marginMM, y);
-      y += 3;
-
-      // Client
-      doc.setFontSize(fontSizeBase);
-      doc.setFont('courier', 'bold');
-      const clLines = doc.splitTextToSize(`CL: ${clientName}`, usableW);
-      doc.text(clLines, marginMM, y);
-      y += clLines.length * 3.5;
-
-      // Device
-      const apLines = doc.splitTextToSize(`AP: ${order.device_model || 'N/A'}`, usableW);
-      doc.text(apLines, marginMM, y);
-      y += apLines.length * 3.5;
-
-      // Issue
-      if (issue) {
-        const defLines = doc.splitTextToSize(`DEF: ${issue}`, usableW);
-        doc.text(defLines, marginMM, y);
-        y += defLines.length * 3.5;
-      }
-
-      // Dashed line
-      y += 1;
-      doc.line(marginMM, y, widthMM - marginMM, y);
-      y += 3;
-
-      // QR Code - render from the preview SVG
-      const svgEl = contentRef.current?.querySelector('svg');
-      if (svgEl) {
-        const qrDataUrl = await qrSvgToDataUrl(svgEl as SVGSVGElement);
-        const qrSizeMM = size === '58mm' ? 28 : 35;
-        const qrX = centerX - qrSizeMM / 2;
-        doc.addImage(qrDataUrl, 'PNG', qrX, y, qrSizeMM, qrSizeMM);
-        y += qrSizeMM + 2;
-      }
-
-      // Footer text
-      doc.setFontSize(fontSizeBase - 1);
-      doc.text('CONSULTE STATUS ONLINE', centerX, y, { align: 'center' });
-      y += 5;
-
-      // Trim the page to actual content height
-      const finalHeight = y + 2;
-      const trimmedDoc = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: [widthMM, finalHeight],
-      });
-
-      // Re-draw everything on the trimmed doc
-      let y2 = marginMM + 2;
-
-      trimmedDoc.setFont('courier', 'bold');
-      trimmedDoc.setFontSize(fontSizeLarge);
-      trimmedDoc.text(safeCompanyData.shop_name.toUpperCase(), centerX, y2, { align: 'center' });
-      y2 += 4;
-
-      if (safeCompanyData.phone) {
-        trimmedDoc.setFontSize(fontSizeBase);
-        trimmedDoc.text(safeCompanyData.phone, centerX, y2, { align: 'center' });
-        y2 += 3;
-      }
-
-      y2 += 1;
-      trimmedDoc.setLineDashPattern([1, 1], 0);
-      trimmedDoc.setLineWidth(0.3);
-      trimmedDoc.line(marginMM, y2, widthMM - marginMM, y2);
-      y2 += 3;
-
-      trimmedDoc.setFontSize(fontSizeXL);
-      trimmedDoc.text(orderNumber, centerX, y2, { align: 'center' });
-      y2 += 5;
-
-      trimmedDoc.setFontSize(fontSizeBase);
-      trimmedDoc.text(entryDate, centerX, y2, { align: 'center' });
-      y2 += 3;
-
-      y2 += 1;
-      trimmedDoc.line(marginMM, y2, widthMM - marginMM, y2);
-      y2 += 3;
-
-      trimmedDoc.setFontSize(fontSizeBase);
-      trimmedDoc.setFont('courier', 'bold');
-      const clLines2 = trimmedDoc.splitTextToSize(`CL: ${clientName}`, usableW);
-      trimmedDoc.text(clLines2, marginMM, y2);
-      y2 += clLines2.length * 3.5;
-
-      const apLines2 = trimmedDoc.splitTextToSize(`AP: ${order.device_model || 'N/A'}`, usableW);
-      trimmedDoc.text(apLines2, marginMM, y2);
-      y2 += apLines2.length * 3.5;
-
-      if (issue) {
-        const defLines2 = trimmedDoc.splitTextToSize(`DEF: ${issue}`, usableW);
-        trimmedDoc.text(defLines2, marginMM, y2);
-        y2 += defLines2.length * 3.5;
-      }
-
-      y2 += 1;
-      trimmedDoc.line(marginMM, y2, widthMM - marginMM, y2);
-      y2 += 3;
-
-      const svgEl2 = contentRef.current?.querySelector('svg');
-      if (svgEl2) {
-        const qrDataUrl = await qrSvgToDataUrl(svgEl2 as SVGSVGElement);
-        const qrSizeMM = size === '58mm' ? 28 : 35;
-        const qrX = centerX - qrSizeMM / 2;
-        trimmedDoc.addImage(qrDataUrl, 'PNG', qrX, y2, qrSizeMM, qrSizeMM);
-        y2 += qrSizeMM + 2;
-      }
-
-      trimmedDoc.setFontSize(fontSizeBase - 1);
-      trimmedDoc.text('CONSULTE STATUS ONLINE', centerX, y2, { align: 'center' });
-
-      trimmedDoc.save(`Etiqueta-${orderNumber}.pdf`);
+      finalDoc.save(`Etiqueta-${orderNumber}.pdf`);
       toast.success('PDF baixado com sucesso!');
     } catch (error) {
       console.error('PDF generation error:', error);
@@ -321,7 +270,7 @@ export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, compa
     } finally {
       setIsGenerating(false);
     }
-  }, [size, order, safeCompanyData, orderNumber, entryDate, clientName, issue, qrValue]);
+  }, [size, drawLabel, orderNumber]);
 
   return (
     <Dialog>
