@@ -17,8 +17,9 @@ import { AutoSaveIndicatorCompact } from '@/components/ui/auto-save-indicator';
 import { DevicePasswordSection } from '@/components/service-orders/DevicePasswordSection';
 import { DeviceChecklist } from '@/components/service-orders/DeviceChecklist';
 import { UnifiedSpinner } from '@/components/ui/UnifiedSpinner';
+import { PhotoEntryManager } from '@/components/photos/PhotoEntryManager';
 
-import { ArrowLeft, Save, Wrench, User, Smartphone, Calendar, Search, X, DollarSign, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Save, Wrench, User, Smartphone, Calendar, Search, X, DollarSign, CheckCircle, Clock, Camera } from 'lucide-react';
 import { useServiceOrderEdit } from '@/hooks/useServiceOrderEdit';
 import type { Enums } from '@/integrations/supabase/types';
 
@@ -374,6 +375,22 @@ export const ServiceOrderFormPage = () => {
             onChange={(data) => updateFormData('devicePassword', data)}
             disabled={isSubmitting}
           />
+
+          {/* Fotos de Entrada */}
+          <Card className="border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Camera className="h-5 w-5" />
+                Fotos de Entrada
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PhotoEntryManager
+                onPhotosComplete={(photos) => updateFormData('photos', photos)}
+                minPhotos={1} // Configurável
+              />
+            </CardContent>
+          </Card>
 
           {/* Service Information */}
           <Card className="border-border/50">

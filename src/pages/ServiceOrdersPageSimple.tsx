@@ -23,6 +23,7 @@ import { EnhancedTimeline } from '@/components/service-orders/EnhancedTimeline';
 import { useDeviceDetection } from '@/hooks/useDeviceDetection';
 import { saveServiceOrderPDF, ServiceOrderData } from '@/utils/serviceOrderPdfUtils';
 import { useServiceOrdersRealTime } from '@/hooks/useServiceOrdersRealTime';
+import { PrintLabelDialog } from '@/components/printing/PrintLabelDialog';
 type ServiceOrder = Tables<'service_orders'>;
 export const ServiceOrdersPageSimple = () => {
   const navigate = useNavigate();
@@ -41,8 +42,11 @@ export const ServiceOrdersPageSimple = () => {
   // Carregar dados da empresa para garantir que o cache esteja disponível para PDFs
   const {
     isLoading: _companyLoading,
-    error: _companyError
+    error: _companyError,
+    getCompanyDataForPDF
   } = useCompanyDataLoader();
+
+  const companyDataForLabel = getCompanyDataForPDF();
 
   // Real-time updates para a lista de ordens de serviço
   const _realTimeStatus = useServiceOrdersRealTime({
@@ -665,6 +669,14 @@ export const ServiceOrdersPageSimple = () => {
                             <ExternalLink className="h-4 w-4 mr-2" />
                             Abrir
                           </Button>
+
+                          <PrintLabelDialog 
+                            order={order} 
+                            companyData={{
+                              shop_name: companyDataForLabel.shop_name,
+                              phone: companyDataForLabel.contact_phone
+                            }}
+                          />
 
                           <Button variant="outline" size="sm" onClick={() => setExpandedCard(isExpanded ? null : order.id)} className="rounded-xl">
                             {isExpanded ? <>

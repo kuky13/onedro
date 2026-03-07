@@ -62,6 +62,8 @@ interface ServiceOrderFormData {
   deviceChecklist: DeviceChecklistData | null;
   // Observações
   notes: string;
+  // Fotos de entrada (novas)
+  photos: File[];
   created_at?: string;
   updated_at?: string;
 }
@@ -117,7 +119,8 @@ const initialFormData: ServiceOrderFormData = {
   // Checklist de funcionamento do aparelho
   deviceChecklist: null,
   // Observações
-  notes: ''
+  notes: '',
+  photos: []
 };
 
 const initialNewClientData: NewClientData = {
@@ -486,6 +489,8 @@ export const useServiceOrderEdit = (serviceOrderId?: string) => {
         notes: formData.notes.trim() || null
       };
 
+      let targetId: string | null = null;
+
       if (isEditMode && formData.id) {
         // Atualizar ordem existente
         const { error } = await supabase
@@ -500,8 +505,8 @@ export const useServiceOrderEdit = (serviceOrderId?: string) => {
           return null;
         }
 
+        targetId = formData.id;
         showSuccess({ title: 'Ordem de serviço atualizada com sucesso' });
-        return formData.id; // Retornar o ID da ordem atualizada
       } else {
         // Criar nova ordem
         const { data, error } = await supabase
@@ -516,9 +521,41 @@ export const useServiceOrderEdit = (serviceOrderId?: string) => {
           return null;
         }
 
+        targetId = data?.id || null;
         showSuccess({ title: 'Ordem de serviço criada com sucesso' });
-        return data?.id || null; // Retornar o ID da nova ordem
       }
+
+      // Upload de fotos (se houver novas fotos)
+      if (targetId && formData.photos && formData.photos.length > 0) {
+        try {
+          await Promise.all(formData.photos.map(async (file) => {
+            const fileExt = file.name.split('.').pop() || 'jpg';
+            const fileName = `${targetId}/${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+            
+            const { error: uploadError } = await supabase.storage
+              .from('service-order-photos')
+              .upload(fileName, file, { upsert: false });
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+              .from('service-order-photos')
+              .getPublicUrl(fileName);
+
+            await supabase.from('service_order_photos').insert({
+              service_order_id: targetId,
+              photo_url: publicUrl,
+              photo_type: 'other',
+              created_by: user.id
+            });
+          }));
+        } catch (photoError) {
+          console.error('Erro ao enviar fotos:', photoError);
+          showError({ title: 'Aviso: Erro ao salvar algumas fotos' });
+        }
+      }
+
+      return targetId;
     } catch (error) {
       console.error('Erro ao submeter formulário:', error);
       showError({ title: 'Erro ao salvar ordem de serviço' });

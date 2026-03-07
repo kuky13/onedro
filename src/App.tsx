@@ -96,6 +96,7 @@ const StorePublicPage = lazyWithRetry(() => import("./pages/store/public/StorePu
 const StoreShop = lazyWithRetry(() => import("./pages/store/StoreShop"));
 const StoreSettings = lazyWithRetry(() => import("./pages/store/StoreSettings"));
 const IAPage = lazyWithRetry(() => import("./pages/IAPage"));
+const OrderStatusPage = lazyWithRetry(() => import("./pages/public/OrderStatusPage").then(m => ({ default: m.OrderStatusPage })));
 
 // Wrapper component para capturar o parâmetro id da URL e passar como serviceOrderId
 const ServiceOrderEditWrapper = () => {
@@ -402,6 +403,9 @@ const AppContent = () => {
 
         {/* Sistema de Lojas Virtuais */}
         <Route path="/loja/:slug" element={<StorePublicPage />} />
+        
+        {/* Rota pública de Status da OS (QR Code) */}
+        <Route path="/status/:id" element={<OrderStatusPage />} />
 
         <Route path="/store" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>

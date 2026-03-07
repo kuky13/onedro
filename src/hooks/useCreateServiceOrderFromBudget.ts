@@ -26,6 +26,7 @@ interface CreateServiceOrderFromBudgetData {
   customization?: {
     priority?: 'low' | 'medium' | 'high';
     additional_notes?: string;
+    photos?: File[];
   };
 }
 
@@ -109,6 +110,49 @@ export const useCreateServiceOrderFromBudget = (userId: string | undefined) => {
       }
       if (!createdOrder) {
         throw new Error('Falha ao criar ordem de serviço');
+      }
+
+      // 3.5. Upload das fotos de entrada (se houver)
+      if (customization?.photos && customization.photos.length > 0) {
+        try {
+          console.log(`[CreateOS] Iniciando upload de ${customization.photos.length} fotos...`);
+          
+          await Promise.all(customization.photos.map(async (file) => {
+            const fileExt = file.name.split('.').pop() || 'jpg';
+            const fileName = `${createdOrder.id}/${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+            
+            // Upload para o bucket
+            const { error: uploadError } = await supabase.storage
+              .from('service-order-photos')
+              .upload(fileName, file, {
+                upsert: false
+              });
+
+            if (uploadError) {
+              console.error('Erro no upload:', uploadError);
+              throw uploadError;
+            }
+
+            // Obter URL pública
+            const { data: { publicUrl } } = supabase.storage
+              .from('service-order-photos')
+              .getPublicUrl(fileName);
+
+            // Inserir registro na tabela
+            await supabase.from('service_order_photos').insert({
+              service_order_id: createdOrder.id,
+              photo_url: publicUrl,
+              photo_type: 'other', // Default, já que o PhotoEntryManager não passa o tipo ainda na lista final
+              created_by: userId
+            });
+          }));
+          
+          console.log('[CreateOS] Fotos enviadas com sucesso');
+        } catch (photoError) {
+          console.error('Erro ao fazer upload das fotos:', photoError);
+          // Não falhar a criação da OS por causa das fotos, mas avisar
+          toast.error('OS criada, mas houve erro ao salvar algumas fotos.');
+        }
       }
 
       // 4. Atualizar notas para incluir o código da OS (sequential_number formatado)

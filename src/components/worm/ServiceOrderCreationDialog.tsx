@@ -19,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
+import {
   FileText, 
   Wrench, 
   AlertTriangle, 
@@ -30,6 +30,7 @@ import {
   Smartphone
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
+import { PhotoEntryManager } from '@/components/photos/PhotoEntryManager';
 
 interface Budget {
   id: string;
@@ -51,6 +52,7 @@ interface ServiceOrderCreationDialogProps {
   onConfirm: (customization: {
     priority: 'low' | 'medium' | 'high';
     additional_notes: string;
+    photos: File[];
   }) => void;
   isCreating?: boolean;
 }
@@ -64,13 +66,13 @@ export const ServiceOrderCreationDialog = ({
 }: ServiceOrderCreationDialogProps) => {
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [additionalNotes, setAdditionalNotes] = useState('');
-
-
+  const [photos, setPhotos] = useState<File[]>([]);
 
   const handleConfirm = () => {
     onConfirm({
       priority,
-      additional_notes: additionalNotes
+      additional_notes: additionalNotes,
+      photos
     });
   };
 
@@ -191,6 +193,14 @@ export const ServiceOrderCreationDialog = ({
           <div className="space-y-4">
             <h4 className="text-sm font-medium">Configurações da Ordem de Serviço</h4>
             
+            {/* Fotos de Entrada */}
+            <div className="space-y-2 border rounded-md p-4 bg-background">
+              <PhotoEntryManager 
+                onPhotosComplete={setPhotos} 
+                minPhotos={1} // Configurável, 1 para teste rápido, mas idealmente 3
+              />
+            </div>
+
             {/* Prioridade */}
             <div className="space-y-2">
               <Label htmlFor="priority">Prioridade</Label>

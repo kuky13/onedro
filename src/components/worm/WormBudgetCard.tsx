@@ -123,7 +123,7 @@ export const WormBudgetCard = ({
     navigate('/garantia', { state: { warrantyPrefill: { serviceOrderId: createdOrderId } } });
   };
 
-  const handleConfirmCreateServiceOrder = (customization: { priority: 'low' | 'medium' | 'high'; additional_notes: string }) => {
+  const handleConfirmCreateServiceOrder = (customization: { priority: 'low' | 'medium' | 'high'; additional_notes: string; photos?: File[] }) => {
     createServiceOrderFromBudget({ budget, customization });
   };
 
