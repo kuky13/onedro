@@ -243,110 +243,110 @@ const AppContent = () => {
         <Route path="/sign" element={<SignPage />} />
         <Route path="/dashboard" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>
-            <DashboardLite />
+            <AppShell><DashboardLite /></AppShell>
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
         <Route path="/p" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>
-            <PeliculasCompatibilityPage />
+            <AppShell><PeliculasCompatibilityPage /></AppShell>
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
         <Route path="/p/edit" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>
-            <PeliculasEditPage />
+            <AppShell><PeliculasEditPage /></AppShell>
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
         {/* Redirect /painel to /dashboard */}
         <Route path="/painel" element={<Navigate to="/dashboard" replace />} />
         <Route path="/service-orders" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>
-            <ServiceOrdersPageSimple />
+            <AppShell><ServiceOrdersPageSimple /></AppShell>
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
         <Route path="/service-orders/new" element={<UnifiedProtectionGuard>
-          <ServiceOrderFormPage />
+          <AppShell><ServiceOrderFormPage /></AppShell>
         </UnifiedProtectionGuard>} />
         <Route path="/service-orders/:id/edit" element={<UnifiedProtectionGuard>
-          <ServiceOrderEditWrapper />
+          <AppShell><ServiceOrderEditWrapper /></AppShell>
         </UnifiedProtectionGuard>} />
 
         <Route path="/service-orders/settings" element={<UnifiedProtectionGuard>
           <Navigate to="/settings" replace />
         </UnifiedProtectionGuard>} />
         <Route path="/service-orders/trash" element={<UnifiedProtectionGuard>
-          <ServiceOrderTrash />
+          <AppShell><ServiceOrderTrash /></AppShell>
         </UnifiedProtectionGuard>} />
         <Route path="/central-de-ajuda" element={<UnifiedProtectionGuard>
-          <HelpCenterPage />
+          <AppShell><HelpCenterPage /></AppShell>
         </UnifiedProtectionGuard>} />
         <Route path="/settings" element={<UnifiedProtectionGuard>
-          <ServiceOrdersSettingsHub />
+          <AppShell><ServiceOrdersSettingsHub /></AppShell>
         </UnifiedProtectionGuard>} />
         <Route path="/security" element={<AdminGuard>
-          <Security />
+          <AppShell><Security /></AppShell>
         </AdminGuard>} />
         <Route path="/msg" element={<UnifiedProtectionGuard>
-          <NotificationsPage />
+          <AppShell><NotificationsPage /></AppShell>
         </UnifiedProtectionGuard>} />
 
         <Route path="/apps" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>
-            <AppsPage />
+            <AppShell><AppsPage /></AppShell>
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
 
         {/* Rota administrativa para gerenciar atualizações */}
         <Route path="/update" element={<AdminGuard>
-          <UpdateManagementPage />
+          <AppShell><UpdateManagementPage /></AppShell>
         </AdminGuard>} />
 
         {/* Gestão administrativa de usuários */}
         <Route path="/admins/usuarios" element={<MaintenanceGuard>
           <AdminGuard>
-            <AdminUsersPage />
+            <AppShell><AdminUsersPage /></AppShell>
           </AdminGuard>
         </MaintenanceGuard>} />
 
         {/* Rota do Super Administrador */}
         <Route path="/supadmin/*" element={<MaintenanceGuard>
           <AdminGuard>
-            <SuperAdminPage />
+            <AppShell><SuperAdminPage /></AppShell>
           </AdminGuard>
         </MaintenanceGuard>} />
 
         {/* Seção exclusiva para orçamentos */}
         <Route path="/worm" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>
-            <WormPage />
+            <AppShell><WormPage /></AppShell>
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
 
         <Route path="/worm/edit/:id" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>
-            <WormAIBudgetEditPage />
+            <AppShell><WormAIBudgetEditPage /></AppShell>
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
 
         <Route path="/worm/config" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>
-            <WormConfigPage />
+            <AppShell><WormConfigPage /></AppShell>
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
         <Route path="/worm/config/whatsapp" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>
-            <WormWhatsAppConfigPage />
+            <AppShell><WormWhatsAppConfigPage /></AppShell>
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
         <Route path="/worm/config/pdf" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>
-            <WormPdfConfigPage />
+            <AppShell><WormPdfConfigPage /></AppShell>
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
 
         {/* Gestão de Garantias */}
         <Route path="/garantia" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>
-            <WarrantyPage />
+            <AppShell><WarrantyPage /></AppShell>
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
 
@@ -354,13 +354,13 @@ const AppContent = () => {
         {/* Sistema operacional baseado em navegador */}
         <Route path="/sistema/*" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>
-            <Sistema />
+            <AppShell><Sistema /></AppShell>
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
 
         <Route path="/worm/lixeira" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>
-            <WormTrashPage />
+            <AppShell><WormTrashPage /></AppShell>
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
 
