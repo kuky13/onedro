@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePdfTemplates, useDeletePdfTemplate, useUpdatePdfTemplate, useEnsureDefaultPdfTemplate } from '@/hooks/worm/usePdfTemplates';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Plus, Star, Edit, Copy, Trash2 } from 'lucide-react';
+import { FileText, Star, Edit, Trash2 } from 'lucide-react';
 import { HamsterLoader } from '@/components/ui/hamster-loader';
 import { PdfTemplateEditor } from './PdfTemplateEditor';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -27,10 +27,6 @@ export const WormPdfConfig = () => {
     }
   }, [user?.id, templates.length, isLoading]);
 
-  const handleNewTemplate = () => {
-    setEditingTemplate(null);
-    setIsEditorOpen(true);
-  };
 
   const handleEditTemplate = (template: any) => {
     setEditingTemplate(template);
@@ -151,18 +147,36 @@ export const WormPdfConfig = () => {
                                         </div>
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="bg-muted/50 rounded-lg p-4 font-mono text-sm whitespace-pre-wrap max-h-40 overflow-hidden text-ellipsis">
+                                        <div
+                                            className="bg-muted/50 rounded-lg p-4 font-mono text-sm whitespace-pre-wrap max-h-40 overflow-hidden text-ellipsis cursor-pointer hover:bg-muted/80 transition-colors group relative"
+                                            onClick={() => !isGlobal && handleEditTemplate(template)}
+                                            title={isGlobal ? 'Templates do sistema não podem ser editados' : 'Clique para editar'}
+                                        >
+                                            {!isGlobal && (
+                                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-md flex items-center gap-1">
+                                                        <Edit className="h-3 w-3" />
+                                                        Editar
+                                                    </span>
+                                                </div>
+                                            )}
                                             {template.service_section_template.substring(0, 200)}
                                             {template.service_section_template.length > 200 && '...'}
                                         </div>
-                                        {!template.is_default &&
-                  <div className="mt-4">
+                                        <div className="mt-4 flex gap-2">
+                                            {!isGlobal && (
+                                                <Button variant="outline" size="sm" onClick={() => handleEditTemplate(template)}>
+                                                    <Edit className="h-4 w-4 mr-2" />
+                                                    Editar Template
+                                                </Button>
+                                            )}
+                                            {!template.is_default && !isGlobal && (
                                                 <Button variant="outline" size="sm" onClick={() => handleSetDefault(template.id)}>
                                                     <Star className="h-4 w-4 mr-2" />
                                                     Definir como Padrão
                                                 </Button>
-                                            </div>
-                  }
+                                            )}
+                                        </div>
                                     </CardContent>
                                 </Card>);
 
