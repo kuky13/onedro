@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Camera, Upload, X, Check, AlertCircle } from 'lucide-react';
+import { Camera, X, Check, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -20,7 +20,7 @@ interface PhotoItem {
 }
 
 export const PhotoEntryManager: React.FC<PhotoEntryManagerProps> = ({
-  orderId,
+  orderId: _orderId,
   onPhotosComplete,
   minPhotos = 3,
 }) => {

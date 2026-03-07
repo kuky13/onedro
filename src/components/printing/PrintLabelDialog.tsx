@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Printer, Loader2 } from 'lucide-react';
+import { Printer } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ThermalLabelProps {
@@ -124,8 +124,7 @@ interface PrintLabelDialogProps {
 
 export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, companyData }) => {
   const [size, setSize] = useState<'58mm' | '80mm'>('80mm');
-  // Use state instead of useRef to ensure react-to-print gets the element after it mounts in the Dialog
-  const [contentRef, setContentRef] = useState<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Fallback company data if not provided
   const safeCompanyData = companyData || {
@@ -134,7 +133,7 @@ export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, compa
   };
 
   const handlePrint = useReactToPrint({
-    content: () => contentRef,
+    contentRef,
     documentTitle: `Etiqueta-${order.sequential_number || order.id}`,
     onAfterPrint: () => {
       toast.success('Impressão enviada!');
@@ -201,7 +200,7 @@ export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, compa
           <div className="border rounded-md p-4 bg-gray-50 flex justify-center overflow-auto max-h-[400px]">
             {/* The actual label component to be printed */}
             <ThermalLabel
-              ref={setContentRef}
+              ref={contentRef}
               order={order}
               companyData={safeCompanyData}
               size={size}
@@ -210,7 +209,7 @@ export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, compa
         </div>
 
         <DialogFooter>
-          <Button onClick={handlePrint} disabled={!contentRef} className="w-full sm:w-auto">
+          <Button onClick={() => handlePrint()} className="w-full sm:w-auto">
             <Printer className="mr-2 h-4 w-4" /> Imprimir
           </Button>
         </DialogFooter>

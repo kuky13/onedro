@@ -139,10 +139,10 @@ export const useCreateServiceOrderFromBudget = (userId: string | undefined) => {
               .getPublicUrl(fileName);
 
             // Inserir registro na tabela
-            await supabase.from('service_order_photos').insert({
+            await (supabase as any).from('service_order_photos').insert({
               service_order_id: createdOrder.id,
               photo_url: publicUrl,
-              photo_type: 'other', // Default, já que o PhotoEntryManager não passa o tipo ainda na lista final
+              photo_type: 'other',
               created_by: userId
             });
           }));
