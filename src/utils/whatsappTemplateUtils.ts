@@ -50,11 +50,11 @@ export function generateWhatsAppMessageFromTemplate(
 ): string {
   const formatSmart = (v: number): string => {
     if (v === null || v === undefined || isNaN(v as any)) return formatCurrencyFromReais(0)
-    return v >= 10000 ? formatCurrency(v) : formatCurrencyFromReais(v)
+    return formatCurrency(v)
   }
-  const formatSmartWithRef = (v: number, ref: number): string => {
+  const formatSmartWithRef = (v: number, _ref: number): string => {
     if (v === null || v === undefined || isNaN(v as any)) return formatCurrencyFromReais(0)
-    return ref >= 10000 ? formatCurrency(v) : formatCurrencyFromReais(v)
+    return formatCurrency(v)
   }
 
   const resolveInstallmentsCount = (budget: any, part?: any): number => {
