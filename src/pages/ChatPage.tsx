@@ -71,7 +71,7 @@ const QUICK_SUGGESTIONS = [
 export default function ChatPage() {
   const { profile } = useAuth();
   const { shopProfile } = useShopProfile();
-  const { isOpen, toggleMenu, closeMenu, menuData, handleLogout } = useMobileMenuContext();
+  const { isOpen, toggleMenu } = useMobileMenuContext();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
