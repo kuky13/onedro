@@ -228,7 +228,7 @@ export async function generatePdfFromTemplate(
 
         // Company name (first non-empty line, but strip the emoji logo placeholder)
         if (textLines.length > 0) {
-          const nameLine = textLines[0].replace('🖼️', '').trim();
+          const nameLine = (textLines[0] ?? '').replace('🖼️', '').trim();
           doc.setTextColor(...DARK);
           doc.setFontSize(14);
           doc.setFont('helvetica', 'bold');
@@ -240,7 +240,7 @@ export async function generatePdfFromTemplate(
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(...MID);
         for (let i = 1; i < textLines.length; i++) {
-          doc.text(textLines[i], textX, y + 13 + (i - 1) * 4);
+          doc.text(textLines[i] ?? '', textX, y + 13 + (i - 1) * 4);
         }
 
         y = 35;
