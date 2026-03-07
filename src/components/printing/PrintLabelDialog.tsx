@@ -13,6 +13,9 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, Printer } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import { useDefaultOsPdfTemplate } from '@/hooks/useOsPdfTemplates';
+import { generateThermalLabelFromTemplate } from '@/utils/osPdfTemplateRenderer';
 
 interface ThermalLabelProps {
   order: {
@@ -126,6 +129,8 @@ interface PrintLabelDialogProps {
 }
 
 export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, companyData }) => {
+  const { profile } = useAuth();
+  const { data: thermalTemplate } = useDefaultOsPdfTemplate(profile?.id, 'thermal_label');
   const [size, setSize] = useState<'58mm' | '80mm'>('80mm');
   const [isGenerating, setIsGenerating] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
