@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useOsPdfTemplates, useDeleteOsPdfTemplate, useUpdateOsPdfTemplate, OsPdfTemplate, OsTemplateType } from '@/hooks/useOsPdfTemplates';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { FileText, Plus, Star, Edit, Copy, Trash2, ChevronLeft, Printer } from 'lucide-react';
 import { HamsterLoader } from '@/components/ui/hamster-loader';
 import { OsPdfTemplateEditor } from '@/components/service-orders/OsPdfTemplateEditor';
