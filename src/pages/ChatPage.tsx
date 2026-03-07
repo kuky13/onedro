@@ -20,7 +20,6 @@ import { searchWormBudgets, formatBudgetResultsForAI } from '@/services/wormChat
 import { useShopProfile } from '@/hooks/useShopProfile';
 import { MarkdownRenderer } from '@/components/chat/MarkdownRenderer';
 import { MobileHamburgerButton } from '@/components/mobile/MobileHamburgerButton';
-import { MobileHamburgerMenu } from '@/components/mobile/MobileHamburgerMenu';
 import { useMobileMenuContext } from '@/components/mobile/MobileMenuProvider';
 import { searchHelpArticles, formatHelpSuggestions, isHelpRelatedQuery } from '@/services/helpCenterIntegration';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -685,16 +684,6 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      <MobileHamburgerMenu
-        isOpen={isOpen}
-        onClose={closeMenu}
-        onTabChange={(tab) => {
-          if (tab === 'dashboard') navigate('/dashboard');
-          closeMenu();
-        }}
-        menuData={menuData}
-        onLogout={handleLogout} />
       
     </div>);
 

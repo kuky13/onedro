@@ -78,7 +78,7 @@ const DrippyPage = lazyWithRetry(() => import("./pages/DrippyPage").then(m => ({
 const ChatPage = lazyWithRetry(() => import("./pages/ChatPage"));
 const ChatwootWidget = lazyWithRetry(() => import("@/components/ChatwootWidget").then(m => ({ default: m.ChatwootWidget })));
 const AppShell = lazyWithRetry(() => import("@/components/layout/AppShell").then(m => ({ default: m.AppShell })));
-const MobileMenuProvider = lazyWithRetry(() => import("@/components/mobile/MobileMenuProvider").then(m => ({ default: m.MobileMenuProvider })));
+
 const KukySolutions = lazyWithRetry(() => import("./pages/KukySolutions"));
 const AdminGuard = lazyWithRetry(() => import("./components/AdminGuard").then(m => ({ default: m.AdminGuard })));
 const UpdateManagementPage = lazyWithRetry(() => import("./pages/UpdateManagementPage"));
