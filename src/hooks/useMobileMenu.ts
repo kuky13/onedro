@@ -74,11 +74,11 @@ export const useMobileMenu = () => {
             description: 'Central de mensagens'
           },
           {
-            id: 'usuarios',
-            label: 'Usuários',
-            icon: 'Users',
-            href: '/dashboard',
-            description: 'Gerenciar usuários'
+            id: 'planos',
+            label: 'Planos',
+            icon: 'CreditCard',
+            href: '/plans',
+            description: 'Ver planos de assinatura'
           },
           {
             id: 'configuracoes',
