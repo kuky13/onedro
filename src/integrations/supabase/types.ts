@@ -1925,6 +1925,39 @@ export type Database = {
         }
         Relationships: []
       }
+      os_pdf_templates: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean
+          template_content: string
+          template_name: string
+          template_type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          template_content: string
+          template_name: string
+          template_type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          template_content?: string
+          template_name?: string
+          template_type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
