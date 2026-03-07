@@ -117,12 +117,12 @@ function parseTemplate(template: string, placeholderMap: Record<string, string>)
     const match = line.trim().match(/^\[(CABECALHO|BADGE_OS|STATUS|GARANTIA|ASSINATURAS|SECAO:\s*(.+?))\]$/);
     if (match) {
       flush();
-      const tag = match[1];
+      const tag = match[1] ?? '';
       if (tag.startsWith('SECAO:')) {
-        const sectionTitle = match[2] || tag.replace('SECAO:', '').trim();
+        const sectionTitle = match[2] ?? tag.replace('SECAO:', '').trim();
         currentBlock = { type: 'section', title: sectionTitle, lines: [] };
       } else {
-        currentBlock = { type: typeMap[tag] || 'raw', lines: [] };
+        currentBlock = { type: typeMap[tag] ?? 'raw', lines: [] };
       }
     } else {
       const replaced = replacePlaceholders(line, placeholderMap);
@@ -265,7 +265,7 @@ export async function generatePdfFromTemplate(
           doc.setTextColor(...WHITE);
           doc.setFontSize(10);
           doc.setFont('helvetica', 'bold');
-          const numPart = badgeText.split('-')[0]?.trim() || badgeText;
+          const numPart = (badgeText.split('-')[0] ?? '').trim() || badgeText;
           doc.text(numPart, badgeX + badgeW / 2, 18, { align: 'center' });
 
           // Date under badge
@@ -317,7 +317,7 @@ export async function generatePdfFromTemplate(
 
       case 'section': {
         y = ensureSpace(doc, y, 30, margin);
-        y = drawSectionTitle(doc, block.title || '', margin, y, contentWidth);
+        y = drawSectionTitle(doc, block.title ?? '', margin, y, contentWidth);
 
         const nonEmpty = block.lines.filter(l => l.trim());
 
