@@ -13,6 +13,9 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, Printer } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import { useDefaultOsPdfTemplate } from '@/hooks/useOsPdfTemplates';
+import { generateThermalLabelFromTemplate } from '@/utils/osPdfTemplateRenderer';
 
 interface ThermalLabelProps {
   order: {
@@ -126,6 +129,8 @@ interface PrintLabelDialogProps {
 }
 
 export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, companyData }) => {
+  const { profile } = useAuth();
+  const { data: thermalTemplate } = useDefaultOsPdfTemplate(profile?.id, 'thermal_label');
   const [size, setSize] = useState<'58mm' | '80mm'>('80mm');
   const [isGenerating, setIsGenerating] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -159,7 +164,6 @@ export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, compa
     const drawDashedLine = (yPos: number) => {
       doc.setDrawColor(0);
       doc.setLineWidth(0.3);
-      // Draw individual dashes for clean rendering
       const dashLen = 1.5;
       const gapLen = 1;
       let x = marginMM;
@@ -171,13 +175,66 @@ export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, compa
       }
     };
 
-    // Shop name
+    // If user has a custom thermal template, use structured rendering
+    if (thermalTemplate?.template_content) {
+      const parsed = generateThermalLabelFromTemplate(
+        thermalTemplate.template_content,
+        {
+          id: order.id,
+          sequential_number: order.sequential_number,
+          client_name: clientName,
+          device_model: order.device_model,
+          reported_issue: issue || '',
+          status: order.status || 'opened',
+          entry_date: order.entry_date,
+          created_at: order.created_at,
+        } as any,
+        {
+          shop_name: safeCompanyData.shop_name,
+          phone: safeCompanyData.phone,
+        } as any,
+      );
+
+      for (const line of parsed.lines) {
+        if (line.isDivider) {
+          y += 1;
+          drawDashedLine(y);
+          y += 3;
+          continue;
+        }
+        if (line.isQr) {
+          const svgEl = contentRef.current?.querySelector('svg');
+          if (svgEl) {
+            const qrDataUrl = await qrSvgToDataUrl(svgEl as SVGSVGElement);
+            const qrSizeMM = size === '58mm' ? 28 : 35;
+            const qrX = centerX - qrSizeMM / 2;
+            doc.addImage(qrDataUrl, 'PNG', qrX, y, qrSizeMM, qrSizeMM);
+            y += qrSizeMM + 2;
+          }
+          continue;
+        }
+
+        const fontSize = line.style === 'xl' ? fontSizeXL : line.style === 'bold' ? fontSizeLarge : fontSizeBase;
+        const fontWeight = (line.style === 'xl' || line.style === 'bold') ? 'bold' : 'normal';
+        doc.setFont('courier', fontWeight);
+        doc.setFontSize(fontSize);
+
+        const align = line.align || 'center';
+        const xPos = align === 'left' ? marginMM : centerX;
+        const wrapped = doc.splitTextToSize(line.text, usableW);
+        doc.text(wrapped, xPos, y, { align: align as any });
+        y += wrapped.length * (line.style === 'xl' ? 5 : lineHeight);
+      }
+
+      return y;
+    }
+
+    // ── Fallback: original hardcoded layout ──
     doc.setFont('courier', 'bold');
     doc.setFontSize(fontSizeLarge);
     doc.text(safeCompanyData.shop_name.toUpperCase(), centerX, y, { align: 'center' });
     y += 4;
 
-    // Phone
     if (safeCompanyData.phone) {
       doc.setFontSize(fontSizeBase);
       doc.setFont('courier', 'normal');
@@ -185,29 +242,20 @@ export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, compa
       y += 3;
     }
 
-    // Dashed line
-    y += 1;
-    drawDashedLine(y);
-    y += 3;
+    y += 1; drawDashedLine(y); y += 3;
 
-    // Order number (big)
     doc.setFont('courier', 'bold');
     doc.setFontSize(fontSizeXL);
     doc.text(orderNumber, centerX, y, { align: 'center' });
     y += 5;
 
-    // Date
     doc.setFont('courier', 'normal');
     doc.setFontSize(fontSizeBase);
     doc.text(entryDate, centerX, y, { align: 'center' });
     y += 3;
 
-    // Dashed line
-    y += 1;
-    drawDashedLine(y);
-    y += 3;
+    y += 1; drawDashedLine(y); y += 3;
 
-    // Client, Device, Issue - left aligned
     doc.setFont('courier', 'bold');
     doc.setFontSize(fontSizeBase);
 
@@ -225,12 +273,8 @@ export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, compa
       y += defLines.length * lineHeight;
     }
 
-    // Dashed line
-    y += 1;
-    drawDashedLine(y);
-    y += 3;
+    y += 1; drawDashedLine(y); y += 3;
 
-    // QR Code
     const svgEl = contentRef.current?.querySelector('svg');
     if (svgEl) {
       const qrDataUrl = await qrSvgToDataUrl(svgEl as SVGSVGElement);
@@ -240,14 +284,13 @@ export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, compa
       y += qrSizeMM + 2;
     }
 
-    // Footer
     doc.setFont('courier', 'bold');
     doc.setFontSize(fontSizeBase - 1);
     doc.text('CONSULTE STATUS ONLINE', centerX, y, { align: 'center' });
     y += 3;
 
     return y;
-  }, [size, safeCompanyData, orderNumber, entryDate, clientName, issue, order]);
+  }, [size, safeCompanyData, orderNumber, entryDate, clientName, issue, order, thermalTemplate]);
 
   const handleDownloadPDF = useCallback(async () => {
     setIsGenerating(true);

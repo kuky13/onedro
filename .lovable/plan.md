@@ -1,121 +1,134 @@
 
 
-# Plano: Integrar templates customizáveis na geração real de PDFs
+# Expansao da Documentacao do Projeto OneDrip
 
-## Situação atual
-- A página `/service-orders/pdf` já existe com editor de templates e placeholders
-- Os templates são salvos no banco (`os_pdf_templates`)
-- **Porém**: o gerador de PDF (`serviceOrderPdfUtils.ts`) e o de etiquetas (`PrintLabelDialog.tsx`) são 100% hardcoded — ignoram completamente os templates salvos
-
-O objetivo é fazer os templates salvos **realmente controlarem** o que aparece nos PDFs gerados.
+## Objetivo
+Criar documentacao tecnica completa e detalhada para que qualquer desenvolvedor que entre no projeto consiga entender rapidamente como tudo funciona. Vamos expandir os 5 arquivos existentes e criar 7 novos arquivos `.md`.
 
 ---
 
-## Abordagem: Template estruturado por seções
+## Arquivos Existentes - Melhorias
 
-Texto puro não é suficiente para controlar um PDF visual com logo, cores, colunas e QR codes. A solução é usar um **formato de seções** no template, onde cada bloco do PDF é uma seção configurável:
+### `0-ai-project-context.md` - Atualizar
+- Adicionar secao sobre o sistema de Diagnostico de Dispositivos (`/testar/:token`)
+- Documentar o modulo de Peliculas (`/p`)
+- Mencionar o sistema de Gamificacao (HamsterPage/CookiePage)
+- Atualizar a lista de Guards com `MobileMenuProvider`
 
-```text
-[CABECALHO]
-{logo} {nome_empresa}
-{telefone} • {email} • {cnpj}
-{endereco}
+### `1-visao-geral.md` - Expandir
+- Adicionar modulo de Garantias (`/garantia`)
+- Documentar Central de Ajuda (`/central-de-ajuda`)
+- Adicionar secao sobre Notificacoes Push e sistema de Updates
+- Mencionar Apps Page e Sistema (mini-OS no browser)
 
-[BADGE_OS]
-OS #{num_os} - {data_entrada}
+### `2-frontend-estrutura.md` - Detalhar
+- Documentar o sistema de `lazyWithRetry` com telemetria de chunks
+- Explicar `ChunkLoadRecoveryBanner` e `useChunkLoadTelemetry`
+- Detalhar o `SessionPersistence` e `secureStorage`
+- Documentar o `MobileMenuProvider` e navegacao mobile
 
-[STATUS]
-Status: {status} | Prioridade: {prioridade} | Pagamento: {status_pagamento}
+### `3-backend-supabase.md` - Expandir
+- Listar todas as 40+ Edge Functions com descricao curta
+- Documentar o fluxo de `rate-limiter` e `security-api`
+- Explicar o sistema de notificacoes push (`send-push-notification`)
 
-[SECAO: DADOS DO CLIENTE]
-Nome: {nome_cliente}
-Telefone: {telefone_cliente}
-Endereço: {endereco_cliente}
-
-[SECAO: DADOS DO EQUIPAMENTO]
-Equipamento: {modelo_dispositivo}
-Tipo: {tipo_dispositivo}
-IMEI/Serial: {imei_serial}
-
-[SECAO: PROBLEMA RELATADO]
-{defeito}
-
-[SECAO: VALORES]
-Mão de Obra: {custo_mao_obra}
-Peças: {custo_pecas}
-TOTAL: {valor_total}
-
-[SECAO: DATAS]
-Entrada: {data_entrada}
-Previsão: {data_previsao}
-Saída: {data_saida}
-Entrega: {data_entrega}
-
-[SECAO: OBSERVAÇÕES]
-{observacoes}
-Técnico: {obs_tecnico}
-Cliente: {obs_cliente}
-
-[GARANTIA]
-Garantia: {garantia_meses} meses
-{termos_cancelamento}
-{lembretes_garantia}
-
-[ASSINATURAS]
-```
-
-O usuário pode **remover seções**, **reordenar**, **editar textos** livremente. O renderizador interpreta cada `[SECAO: ...]` como um bloco visual com a barra de acento lateral.
+### `4-integracoes-externas.md` - Atualizar
+- Adicionar secao sobre Evolution API e multi-broker completo
+- Documentar o sistema de download de video via VPS proxy
 
 ---
 
-## Implementação (4 etapas)
+## Novos Arquivos
 
-### 1. Template padrão pré-preenchido
-- Ao criar novo template de OS, o editor já vem preenchido com o template padrão completo (todas as seções acima)
-- Ao criar novo template de etiqueta, vem com o layout padrão da etiqueta
-- Inserir templates padrão globais via SQL migration
+### `5-typescript-tipos.md` - Tipos e Interfaces
+Documentar todas as interfaces criticas do sistema:
+- `ServiceOrderData` (OS com campos de senha, checklist, etc.)
+- `Budget` (tipo canonico via Supabase Tables)
+- `User`, `UserProfile`, `DebugInfo`
+- `CompanyInfo`, `CompanyData`, `CompanyFormData`
+- `TestSession`, `TestResult`, `TestDetails`, `TestConfig`
+- `DevicePasswordType` e seus valores
+- `CheckoutParams`, `PixPaymentData`
+- `BudgetData`, `BudgetPartData` (para PDFs)
+- `AuthContextType` e `UserRole`
+- Tabela visual com cada tipo e onde e usado
 
-### 2. Atualizar o editor (`OsPdfTemplateEditor`)
-- Adicionar novos placeholders: `{logo}`, `{custo_mao_obra}`, `{custo_pecas}`, `{prioridade}`, `{obs_tecnico}`, `{obs_cliente}`, `{endereco_cliente}`, `{tipo_dispositivo}`
-- Adicionar botões para inserir blocos `[SECAO: nome]`, `[CABECALHO]`, `[ASSINATURAS]`, `[GARANTIA]`
-- Melhorar preview: renderizar seções com estilo visual (barras coloridas, backgrounds) simulando o PDF real
+### `6-hooks-referencia.md` - Guia de Hooks
+Catalogar os 60+ hooks com categorias:
+- **Autenticacao**: `useAuth`, `useTokenRotation`, `useSecurity`
+- **Licenciamento**: `useLicense`, `useLicenseVerification`, `useLicenseCache`, `useTrialLicense`
+- **Dispositivo**: `useDeviceDetection`, `useIOSDetection`, `useMobileDetection`, `useBatteryDetection`
+- **Ordens de Servico**: `useSecureServiceOrders`, `useServiceOrderEdit`, `useServiceOrderRealTime`, `useServiceOrderShare`
+- **Orcamentos (Worm)**: `useBudgetData`, `useBudgetDeletion`, `useBudgetServiceOrder`, `useCreateServiceOrderFromBudget`
+- **PWA/Offline**: `usePWA`, `useOfflineDetection`, `useSwipeGesture`
+- **UI/UX**: `useResponsive`, `useMobileMenu`, `usePopupState`, `useDebounce`
+- **Store**: `useShopProfile`, `useImportBudgetToStore`
+- **Config**: `useAppConfig`, `useCompanyBranding`, `useDrippySettings`, `useCookiePreferences`
+- Exemplos de uso para os mais importantes
 
-### 3. Renderizador de template no `serviceOrderPdfUtils.ts`
-- Criar função `generatePdfFromTemplate(template: string, orderData, companyData)`:
-  - Parsear o template em blocos por `[TAG]` ou `[SECAO: nome]`
-  - Para cada bloco, substituir placeholders pelos dados reais
-  - Renderizar no jsPDF usando os mesmos helpers visuais existentes (drawSectionTitle, drawField, etc.)
-  - `{logo}` → carrega e insere imagem da empresa
-  - Linhas em branco após substituição (campo vazio) são omitidas automaticamente
-- Atualizar `generateServiceOrderPDF` para: buscar template padrão do usuário → se existir, usar `generatePdfFromTemplate`; senão, usar layout hardcoded atual (fallback)
+### `7-rotas-e-guards.md` - Mapa de Rotas
+Tabela completa com todas as rotas do `App.tsx`:
+- Rota, Componente, Guard aplicado, Lazy/Estatico
+- Fluxo visual de redirecionamentos (auth -> licenca -> dashboard)
+- Explicacao de cada Guard: `UnifiedProtectionGuard`, `AdminGuard`, `MaintenanceGuard`
+- Como adicionar uma nova rota (passo a passo)
 
-### 4. Integrar na chamada de geração
-- `ServiceOrdersPageSimple.tsx` → `handleGeneratePDF`: buscar o template padrão do usuário (via `useDefaultOsPdfTemplate`) e passar para `saveServiceOrderPDF`
-- `PrintLabelDialog.tsx` → `handleDownloadPDF`: buscar template de etiqueta e renderizar com placeholders substituídos
-- A assinatura de `saveServiceOrderPDF` passa a aceitar `templateContent?: string` opcional
+### `8-edge-functions.md` - Backend Serverless
+Documentacao detalhada de cada Edge Function:
+- **Pagamentos**: `create-mercadopago-checkout`, `check-mercadopago-payment`, `mercadopago-webhook`, `cancel-mercadopago-payment`, `create-mercadopago-subscription`
+- **WhatsApp**: `whatsapp-proxy`, `whatsapp-webhook`, `whatsapp-qr-connect`, `whatsapp-ai-reply`, `whatsapp-instance-manage`, `waha-proxy`
+- **IA**: `chat-ai`, `triage-ai`, `analyze-budgets`
+- **Seguranca**: `security-api`, `rate-limiter`, `real-time-monitoring`, `audit-system`
+- **Usuarios**: `manage-user-profile`, `admin-reset-password`, `admin-update-user-email`, `validate-license`
+- **Comunicacao**: `send-license-email`, `send-payment-receipt-email`, `send-push-notification`, `notification-system`
+- Fluxo de request/response de cada grupo
+
+### `9-seguranca.md` - Arquitetura de Seguranca
+- Sistema `secureStorage` com criptografia AES-GCM e PBKDF2
+- `SecurityLogger` e auditoria de acessos
+- RLS (Row Level Security) - regras e padroes
+- `botDetection`, `secureCSP`, `secureNavigation`
+- Rate limiting nas Edge Functions
+- Token rotation (`useTokenRotation`)
+- Fluxo de validacao de licencas
+
+### `10-pdf-e-utils.md` - Utilitarios e Geracao de PDFs
+- Como funciona o `pdfUtils.ts` (jsPDF client-side)
+- `serviceOrderPdfUtils.ts` para recibos de OS
+- `currency.ts` - formatacao BRL
+- `whatsappUtils.ts` e `whatsappTemplateUtils.ts`
+- `authCleanup.ts` - limpeza de sessao
+- `pwaDetection.ts` e `pwaReset.ts`
+- `debugLogger.ts` e `asciiConsole.ts`
+
+### `11-guia-contribuicao.md` - Guia para Novos Devs
+- Como rodar o projeto localmente
+- Convencoes de codigo (React Query > useEffect, Zustand para global state)
+- Como criar uma nova pagina (registrar rota, escolher Guard, lazy vs estatico)
+- Como criar um novo hook
+- Como adicionar uma Edge Function
+- Checklist de PR/review
+- Erros comuns e como evitar (RLS, chunks, offline)
 
 ---
 
-## Detalhes técnicos
+## Detalhes Tecnicos
 
-**Parser de seções:**
-```typescript
-// "[SECAO: DADOS DO CLIENTE]\nNome: {nome_cliente}\n..." 
-// → { type: 'section', title: 'DADOS DO CLIENTE', lines: ['Nome: João', ...] }
-// "[CABECALHO]" → { type: 'header' }
-// "[ASSINATURAS]" → { type: 'signatures' }
-```
+### Arquivos a criar:
+1. `.documentação/docs/5-typescript-tipos.md`
+2. `.documentação/docs/6-hooks-referencia.md`
+3. `.documentação/docs/7-rotas-e-guards.md`
+4. `.documentação/docs/8-edge-functions.md`
+5. `.documentação/docs/9-seguranca.md`
+6. `.documentação/docs/10-pdf-e-utils.md`
+7. `.documentação/docs/11-guia-contribuicao.md`
 
-**Blocos especiais** (renderização própria):
-- `[CABECALHO]` → logo + nome empresa + contato (layout visual do header)
-- `[BADGE_OS]` → pill/badge teal com número da OS
-- `[STATUS]` → pills coloridas (status, prioridade, pagamento)
-- `[GARANTIA]` → segunda página com termos
-- `[ASSINATURAS]` → linhas de assinatura técnico/cliente
+### Arquivos a editar:
+1. `.documentação/docs/0-ai-project-context.md`
+2. `.documentação/docs/1-visao-geral.md`
+3. `.documentação/docs/2-frontend-estrutura.md`
+4. `.documentação/docs/3-backend-supabase.md`
+5. `.documentação/docs/4-integracoes-externas.md`
 
-**Blocos genéricos** `[SECAO: titulo]`:
-- Renderiza barra lateral de acento + título
-- Cada linha vira um campo key:value (se tem `:`) ou texto livre
-
-**Fallback**: se o template não tiver `[CABECALHO]`, usa layout padrão. Se não tiver `[GARANTIA]`, não gera segunda página.
+Total: **12 arquivos** (7 novos + 5 atualizados)
 
