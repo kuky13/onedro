@@ -24,7 +24,6 @@ import { useDeviceDetection } from '@/hooks/useDeviceDetection';
 import { saveServiceOrderPDF, ServiceOrderData } from '@/utils/serviceOrderPdfUtils';
 import { useServiceOrdersRealTime } from '@/hooks/useServiceOrdersRealTime';
 import { PrintLabelDialog } from '@/components/printing/PrintLabelDialog';
-// useDefaultOsPdfTemplate removed - OS PDF uses hardcoded layout
 type ServiceOrder = Tables<'service_orders'>;
 export const ServiceOrdersPageSimple = () => {
   const navigate = useNavigate();
@@ -48,7 +47,6 @@ export const ServiceOrdersPageSimple = () => {
   } = useCompanyDataLoader();
 
   const companyDataForLabel = getCompanyDataForPDF();
-  
 
   // Real-time updates para a lista de ordens de serviço
   const _realTimeStatus = useServiceOrdersRealTime({
@@ -492,10 +490,6 @@ export const ServiceOrdersPageSimple = () => {
                   <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
                     <Settings className="h-4 w-4 mr-2" />
                     Configurações
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/service-orders/pdf')} className="cursor-pointer">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Configurar PDFs
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/service-orders/trash')} className="cursor-pointer">
                     <Trash2 className="h-4 w-4 mr-2" />

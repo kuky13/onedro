@@ -57,7 +57,6 @@ const WormConfigPage = lazyWithRetry(() => import("./pages/WormConfigPage"));
 const WormPdfConfigPage = lazyWithRetry(() => import("./pages/WormPdfConfigPage"));
 const WormWhatsAppConfigPage = lazyWithRetry(() => import("./pages/WormWhatsAppConfigPage"));
 const DeviceTestPage = lazyWithRetry(() => import("./pages/DeviceTestPage"));
-const ServiceOrderPdfConfigPage = lazyWithRetry(() => import("./pages/ServiceOrderPdfConfigPage"));
 const WormTrashPage = lazyWithRetry(() => import("./pages/WormTrashPage").then(m => ({ default: m.WormTrashPage })));
 const WormAIBudgetEditPage = lazyWithRetry(() => import("./pages/WormAIBudgetEditPage"));
 const Sistema = lazyWithRetry(() => import("./pages/Sistema"));
@@ -277,9 +276,6 @@ const AppContent = () => {
         </UnifiedProtectionGuard>} />
         <Route path="/service-orders/trash" element={<UnifiedProtectionGuard>
           <AppShell><ServiceOrderTrash /></AppShell>
-        </UnifiedProtectionGuard>} />
-        <Route path="/service-orders/pdf" element={<UnifiedProtectionGuard>
-          <AppShell><ServiceOrderPdfConfigPage /></AppShell>
         </UnifiedProtectionGuard>} />
         <Route path="/central-de-ajuda" element={<UnifiedProtectionGuard>
           <AppShell><HelpCenterPage /></AppShell>

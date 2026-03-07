@@ -732,16 +732,9 @@ export const generateServiceOrderPDF = async (serviceOrderData: ServiceOrderData
 };
 
 // Função auxiliar para salvar PDF da ordem de serviço
-// Se templateContent for fornecido, usa o renderizador de template customizável
-export const saveServiceOrderPDF = async (serviceOrderData: ServiceOrderData, templateContent?: string): Promise<void> => {
+export const saveServiceOrderPDF = async (serviceOrderData: ServiceOrderData): Promise<void> => {
   try {
-    if (templateContent) {
-      const { generatePdfFromTemplate } = await import('./osPdfTemplateRenderer');
-      const companyData = await validateCompanyData();
-      await generatePdfFromTemplate(templateContent, serviceOrderData, companyData);
-    } else {
-      await generateServiceOrderPDF(serviceOrderData);
-    }
+    await generateServiceOrderPDF(serviceOrderData);
   } catch (error) {
     console.error('Erro ao salvar PDF:', error);
     throw error;
