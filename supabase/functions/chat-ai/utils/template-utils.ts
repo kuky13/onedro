@@ -77,8 +77,7 @@ function formatCurrencyFromReais(reais: number): string {
  */
 function formatSmart(value: number): string {
   if (value === null || value === undefined || isNaN(value)) return "R$ 0,00";
-  // Se >= 10000, assume que está em centavos e converte para reais
-  return value >= 10000 ? formatCurrency(value) : formatCurrencyFromReais(value);
+  return formatCurrency(value); // Sempre centavos do BD
 }
 
 /**
