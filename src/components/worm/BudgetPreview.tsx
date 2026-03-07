@@ -26,8 +26,8 @@ export const BudgetPreview: React.FC<BudgetPreviewProps> = ({
       parts,
       template,
       companyName,
-      companyPhone,
-      companyAddress
+      companyPhone: companyPhone ?? '',
+      companyAddress: companyAddress ?? ''
     });
   }, [budget, parts, template, companyName, companyPhone, companyAddress]);
 
