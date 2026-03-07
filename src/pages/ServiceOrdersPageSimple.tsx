@@ -491,6 +491,10 @@ export const ServiceOrdersPageSimple = () => {
                     <Settings className="h-4 w-4 mr-2" />
                     Configurações
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/service-orders/pdf')} className="cursor-pointer">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Configurar PDFs
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/service-orders/trash')} className="cursor-pointer">
                     <Trash2 className="h-4 w-4 mr-2" />
                     Lixeira
