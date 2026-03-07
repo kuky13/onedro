@@ -139,8 +139,8 @@ export const generateBudgetPdf = ({
     parts,
     template,
     companyName,
-    companyPhone,
-    companyAddress
+    companyPhone: companyPhone ?? '',
+    companyAddress: companyAddress ?? ''
   });
 
   // Cálculo de Altura Dinâmica
