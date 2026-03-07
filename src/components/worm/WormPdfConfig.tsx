@@ -27,10 +27,6 @@ export const WormPdfConfig = () => {
     }
   }, [user?.id, templates.length, isLoading]);
 
-  const handleNewTemplate = () => {
-    setEditingTemplate(null);
-    setIsEditorOpen(true);
-  };
 
   const handleEditTemplate = (template: any) => {
     setEditingTemplate(template);
