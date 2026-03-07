@@ -123,9 +123,10 @@ function qrSvgToDataUrl(svgElement: SVGSVGElement): Promise<string> {
 interface PrintLabelDialogProps {
   order: any;
   companyData?: any;
+  triggerClassName?: string;
 }
 
-export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, companyData }) => {
+export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, companyData, triggerClassName }) => {
   const [size, setSize] = useState<'58mm' | '80mm'>('80mm');
   const [isGenerating, setIsGenerating] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -186,9 +187,9 @@ export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, compa
     }
 
     // Dashed line
-    y += 1;
-    drawDashedLine(y);
     y += 3;
+    drawDashedLine(y);
+    y += 7;
 
     // Order number (big)
     doc.setFont('courier', 'bold');
@@ -203,9 +204,9 @@ export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, compa
     y += 3;
 
     // Dashed line
-    y += 1;
-    drawDashedLine(y);
     y += 3;
+    drawDashedLine(y);
+    y += 5;
 
     // Client, Device, Issue - left aligned
     doc.setFont('courier', 'bold');
@@ -226,9 +227,9 @@ export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, compa
     }
 
     // Dashed line
-    y += 1;
-    drawDashedLine(y);
     y += 3;
+    drawDashedLine(y);
+    y += 5;
 
     // QR Code
     const svgEl = contentRef.current?.querySelector('svg');
@@ -275,7 +276,7 @@ export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, compa
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button variant="outline" size="sm" className={`gap-2 ${triggerClassName || ''}`}>
           <Printer className="h-4 w-4" />
           Etiqueta
         </Button>

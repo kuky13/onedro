@@ -11,21 +11,14 @@ interface PdfGeneratorOptions {
   companyAddress?: string;
 }
 
-export const generateBudgetPdf = ({
+export const processBudgetTemplate = ({
   budget,
   parts,
   template,
-  paperWidth,
   companyName,
   companyPhone,
   companyAddress
-}: PdfGeneratorOptions) => {
-  // Configuração do documento
-  const width = paperWidth === '58mm' ? 58 : 80;
-  
-  // 1. Pré-processar conteúdo para calcular altura necessária
-  // Vamos processar o texto PRIMEIRO e depois criar o PDF com a altura correta
-  
+}: Omit<PdfGeneratorOptions, 'paperWidth'>) => {
   let content = template;
 
   // Processar Loop de Qualidades/Peças
@@ -69,20 +62,20 @@ export const generateBudgetPdf = ({
         });
       } else {
         // Fallback
-         let itemText = loopTemplate;
-         const replacements: Record<string, string> = {
-            '{qualidade_nome}': budget.part_quality || budget.part_type || 'Padrão',
-            '{peca_garantia_meses}': (budget.warranty_months || 0).toString(),
-            '{peca_preco_vista}': formatCurrency(budget.cash_price || budget.total_price || 0),
-            '{peca_preco_parcelado}': formatCurrency(budget.installment_price || budget.total_price || 0),
-            '{peca_parcelas}': (budget.installments || 1).toString(),
-            '{peca_valor_parcela}': budget.installment_price && budget.installments ? formatCurrency(budget.installment_price) : formatCurrency(budget.total_price || 0),
-            '{peca_quantidade}': '1'
-          };
-           Object.entries(replacements).forEach(([key, value]) => {
-            itemText = itemText.split(key).join(value);
-          });
-          loopContent += itemText;
+        let itemText = loopTemplate;
+        const replacements: Record<string, string> = {
+          '{qualidade_nome}': budget.part_quality || budget.part_type || 'Padrão',
+          '{peca_garantia_meses}': (budget.warranty_months || 0).toString(),
+          '{peca_preco_vista}': formatCurrency(budget.cash_price || budget.total_price || 0),
+          '{peca_preco_parcelado}': formatCurrency(budget.installment_price || budget.total_price || 0),
+          '{peca_parcelas}': (budget.installments || 1).toString(),
+          '{peca_valor_parcela}': budget.installment_price && budget.installments ? formatCurrency(budget.installment_price) : formatCurrency(budget.total_price || 0),
+          '{peca_quantidade}': '1'
+        };
+          Object.entries(replacements).forEach(([key, value]) => {
+          itemText = itemText.split(key).join(value);
+        });
+        loopContent += itemText;
       }
       
       content = beforeLoop + loopContent + afterLoop;
@@ -125,7 +118,33 @@ export const generateBudgetPdf = ({
     content = content.split(key).join(value);
   });
 
+  return content;
+};
+
+export const generateBudgetPdf = ({
+  budget,
+  parts,
+  template,
+  paperWidth,
+  companyName,
+  companyPhone,
+  companyAddress
+}: PdfGeneratorOptions) => {
+  // Configuração do documento
+  const width = paperWidth === '58mm' ? 58 : 80;
+  
+  // 1. Pré-processar conteúdo
+  const content = processBudgetTemplate({
+    budget,
+    parts,
+    template,
+    companyName,
+    companyPhone,
+    companyAddress
+  });
+
   // Cálculo de Altura Dinâmica
+
   // Criamos um doc temporário apenas para calcular as linhas
   const tempDoc = new jsPDF({ unit: "mm", format: [width, 1000] });
   tempDoc.setFont("courier", "normal");

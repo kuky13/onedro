@@ -36,6 +36,26 @@ import { toast } from 'sonner';
 import { generateBudgetPdf } from '@/utils/wormPdfGenerator';
 import { supabase } from '@/integrations/supabase/client';
 import { usePdfTemplates } from '@/hooks/worm/usePdfTemplates';
+import { useCompanyDataLoader } from '@/hooks/useCompanyDataLoader';
+import { BudgetPreview } from './BudgetPreview';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+const DEFAULT_SERVICE_TEMPLATE = `
+{nome_empresa} 
+{endereco}
+{num_or} 
+{telefone_contato} 
+Aparelho:{modelo_dispositivo} 
+Serviço: {nome_reparo} 
+
+{qualidades_inicio}{qualidade_nome} – {peca_garantia_meses} meses de garantia 
+À vista {peca_preco_vista} ou {peca_preco_parcelado} no cartão em até {peca_parcelas}x de {peca_valor_parcela} no cartão 
+
+{qualidades_fim} 
+Observações: {observacoes} 
+
+Valido até {data_validade}
+`;
 
 interface Budget {
   id: string;
@@ -96,6 +116,7 @@ export const WormBudgetCard = ({
     useBudgetServiceOrder(budget.id);
   const { data: parts = [] } = useBudgetParts(budget.id);
   const { data: pdfTemplates = [] } = usePdfTemplates(profile?.id);
+  const { getCompanyDataForPDF } = useCompanyDataLoader();
 
   useEffect(() => {
     if (isSuccess && createdOrderData && !hasCreatedOrder) {
@@ -168,22 +189,7 @@ export const WormBudgetCard = ({
 
       // Encontrar template
       const defaultTemplate = pdfTemplates?.find((t: any) => t.is_default) || pdfTemplates?.[0];
-      const templateContent = defaultTemplate?.service_section_template || `
-{nome_empresa} 
-{endereco}
-{num_or} 
-{telefone_contato} 
-Aparelho:{modelo_dispositivo} 
-Serviço: {nome_reparo} 
-
-{qualidades_inicio}{qualidade_nome} – {peca_garantia_meses} meses de garantia 
-À vista {peca_preco_vista} ou {peca_preco_parcelado} no cartão em até {peca_parcelas}x de {peca_valor_parcela} no cartão 
-
-{qualidades_fim} 
-Observações: {observacoes} 
-
-Valido até {data_validade}
-`;
+      const templateContent = defaultTemplate?.service_section_template || DEFAULT_SERVICE_TEMPLATE;
 
       generateBudgetPdf({
         budget,
@@ -522,37 +528,62 @@ Valido até {data_validade}
       <ImportToStoreDialog open={isImportToStoreOpen} onOpenChange={setIsImportToStoreOpen} budget={budget} parts={parts} />
 
       <Dialog open={isPdfDialogOpen} onOpenChange={setIsPdfDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Imprimir Orçamento</DialogTitle>
             <DialogDescription>
-              Escolha o tamanho do papel para gerar o PDF térmico.
+              Visualize e escolha o tamanho do papel para gerar o PDF térmico.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <Button
-              variant="outline"
-              className="h-32 flex flex-col gap-3 hover:bg-muted/50 hover:border-primary/50 transition-all"
-              onClick={() => { handleGeneratePdf('58mm'); setIsPdfDialogOpen(false); }}
-            >
-              <Printer className="h-8 w-8 text-primary" />
-              <div className="space-y-1">
-                <div className="font-semibold">58mm</div>
-                <div className="text-xs text-muted-foreground">Pequeno</div>
+          
+          <Tabs defaultValue="80mm" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="80mm">80mm (Padrão)</TabsTrigger>
+              <TabsTrigger value="58mm">58mm (Pequeno)</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="80mm" className="mt-4 space-y-4">
+              <div className="border rounded-md p-4 bg-gray-100 dark:bg-gray-800 overflow-auto max-h-[400px] flex justify-center">
+                <BudgetPreview 
+                  budget={budget}
+                  parts={parts}
+                  template={pdfTemplates?.find((t: any) => t.is_default)?.service_section_template || DEFAULT_SERVICE_TEMPLATE}
+                  paperWidth="80mm"
+                  companyName={getCompanyDataForPDF().shop_name}
+                  companyPhone={getCompanyDataForPDF().contact_phone}
+                  companyAddress={getCompanyDataForPDF().address}
+                />
               </div>
-            </Button>
-            <Button
-              variant="outline"
-              className="h-32 flex flex-col gap-3 hover:bg-muted/50 hover:border-primary/50 transition-all"
-              onClick={() => { handleGeneratePdf('80mm'); setIsPdfDialogOpen(false); }}
-            >
-              <Printer className="h-10 w-10 text-primary" />
-              <div className="space-y-1">
-                <div className="font-semibold">80mm</div>
-                <div className="text-xs text-muted-foreground">Padrão</div>
+              <Button 
+                className="w-full" 
+                onClick={() => { handleGeneratePdf('80mm'); setIsPdfDialogOpen(false); }}
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                Imprimir 80mm
+              </Button>
+            </TabsContent>
+            
+            <TabsContent value="58mm" className="mt-4 space-y-4">
+              <div className="border rounded-md p-4 bg-gray-100 dark:bg-gray-800 overflow-auto max-h-[400px] flex justify-center">
+                <BudgetPreview 
+                  budget={budget}
+                  parts={parts}
+                  template={pdfTemplates?.find((t: any) => t.is_default)?.service_section_template || DEFAULT_SERVICE_TEMPLATE}
+                  paperWidth="58mm"
+                  companyName={getCompanyDataForPDF().shop_name}
+                  companyPhone={getCompanyDataForPDF().contact_phone}
+                  companyAddress={getCompanyDataForPDF().address}
+                />
               </div>
-            </Button>
-          </div>
+              <Button 
+                className="w-full" 
+                onClick={() => { handleGeneratePdf('58mm'); setIsPdfDialogOpen(false); }}
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                Imprimir 58mm
+              </Button>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
     </>

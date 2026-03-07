@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useDefaultPdfTemplate } from '@/hooks/worm/usePdfTemplates';
 import { useAuth } from '@/hooks/useAuth';
+import { PrintLabelDialog } from '@/components/printing/PrintLabelDialog';
 
 interface WormBudgetActionsProps {
   budget: any;
@@ -19,6 +20,15 @@ export const WormBudgetActions = ({ budget, onClose }: WormBudgetActionsProps) =
   const { getCompanyDataForPDF, hasMinimalData, refreshData } = useCompanyDataLoader();
   const { user } = useAuth();
   const { data: defaultPdfTemplate } = useDefaultPdfTemplate(user?.id);
+
+  const labelOrder = {
+    id: budget.id,
+    sequential_number: budget.sequential_number,
+    client_name: budget.client_name,
+    device_model: budget.device_model,
+    issue: (budget.notes || budget.issue || '').substring(0, 50),
+    entry_date: budget.created_at || new Date().toISOString(),
+  };
 
   const handleGeneratePDF = async () => {
     if (isGeneratingPDF) return;
@@ -281,6 +291,12 @@ export const WormBudgetActions = ({ budget, onClose }: WormBudgetActionsProps) =
             )}
             Compartilhar PDF
           </Button>
+
+          <PrintLabelDialog 
+            order={labelOrder}
+            companyData={getCompanyDataForPDF()}
+            triggerClassName="w-full justify-start"
+          />
         </div>
 
         <div className="pt-4 border-t">
