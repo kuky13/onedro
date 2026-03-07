@@ -1,126 +1,134 @@
 
 
-# Plano: Página de Configuração de PDFs para Ordens de Serviço (`/service-orders/pdf`)
+# Expansao da Documentacao do Projeto OneDrip
 
 ## Objetivo
-Criar uma página dedicada em `/service-orders/pdf` onde o usuário pode personalizar **dois tipos de PDF** usando templates com chaves `{placeholder}`:
-1. **PDF da Ordem de Serviço (A4)** — o recibo completo gerado por `serviceOrderPdfUtils.ts`
-2. **Etiqueta Térmica (58mm/80mm)** — a etiqueta gerada por `PrintLabelDialog.tsx`
-
-Inclui preview ao vivo do resultado final com dados de exemplo.
+Criar documentacao tecnica completa e detalhada para que qualquer desenvolvedor que entre no projeto consiga entender rapidamente como tudo funciona. Vamos expandir os 5 arquivos existentes e criar 7 novos arquivos `.md`.
 
 ---
 
-## Arquitetura
+## Arquivos Existentes - Melhorias
 
-O projeto já possui um sistema idêntico para o módulo Worm (orçamentos):
-- `pdf_templates` table no Supabase
-- `usePdfTemplates` hook (CRUD)
-- `PdfTemplateEditor` com placeholders clicáveis e preview
+### `0-ai-project-context.md` - Atualizar
+- Adicionar secao sobre o sistema de Diagnostico de Dispositivos (`/testar/:token`)
+- Documentar o modulo de Peliculas (`/p`)
+- Mencionar o sistema de Gamificacao (HamsterPage/CookiePage)
+- Atualizar a lista de Guards com `MobileMenuProvider`
 
-A nova página seguirá o mesmo padrão, mas com **dois editores separados por abas** (OS PDF + Etiqueta Térmica), cada um com suas próprias chaves e preview visual.
+### `1-visao-geral.md` - Expandir
+- Adicionar modulo de Garantias (`/garantia`)
+- Documentar Central de Ajuda (`/central-de-ajuda`)
+- Adicionar secao sobre Notificacoes Push e sistema de Updates
+- Mencionar Apps Page e Sistema (mini-OS no browser)
 
-```text
-/service-orders/pdf
-┌─────────────────────────────────────────┐
-│  ← Voltar    Configuração de PDFs       │
-├─────────────────────────────────────────┤
-│  [Tab: PDF da OS]  [Tab: Etiqueta]      │
-├─────────────────────────────────────────┤
-│  Lista de templates do tipo selecionado │
-│  [+ Novo Template]                      │
-│                                         │
-│  ┌─ Template Card ───────────────────┐  │
-│  │ Nome: "Recibo Padrão"  ★ Padrão  │  │
-│  │ Preview truncado do conteúdo...   │  │
-│  │ [Editar] [Excluir]               │  │
-│  └───────────────────────────────────┘  │
-└─────────────────────────────────────────┘
+### `2-frontend-estrutura.md` - Detalhar
+- Documentar o sistema de `lazyWithRetry` com telemetria de chunks
+- Explicar `ChunkLoadRecoveryBanner` e `useChunkLoadTelemetry`
+- Detalhar o `SessionPersistence` e `secureStorage`
+- Documentar o `MobileMenuProvider` e navegacao mobile
 
-Editor (Sheet lateral):
-┌──────────────────┬──────────────────────┐
-│ Nome do Template │                      │
-│ [Chaves clicáveis]                      │
-│                  │                      │
-│  Textarea com    │  Preview ao vivo     │
-│  template texto  │  (simula PDF real    │
-│  usando {chaves} │   com dados exemplo) │
-│                  │                      │
-└──────────────────┴──────────────────────┘
-```
+### `3-backend-supabase.md` - Expandir
+- Listar todas as 40+ Edge Functions com descricao curta
+- Documentar o fluxo de `rate-limiter` e `security-api`
+- Explicar o sistema de notificacoes push (`send-push-notification`)
+
+### `4-integracoes-externas.md` - Atualizar
+- Adicionar secao sobre Evolution API e multi-broker completo
+- Documentar o sistema de download de video via VPS proxy
 
 ---
 
-## Implementação (5 etapas)
+## Novos Arquivos
 
-### 1. Nova tabela `os_pdf_templates` no Supabase
-- Campos: `id`, `user_id`, `template_name`, `template_type` (`os_receipt` | `thermal_label`), `template_content`, `is_default`, `created_at`, `updated_at`
-- RLS: usuário vê só seus templates + templates globais (`user_id IS NULL`)
-- Trigger: ao setar `is_default = true`, desmarcar os demais do mesmo tipo/usuário
+### `5-typescript-tipos.md` - Tipos e Interfaces
+Documentar todas as interfaces criticas do sistema:
+- `ServiceOrderData` (OS com campos de senha, checklist, etc.)
+- `Budget` (tipo canonico via Supabase Tables)
+- `User`, `UserProfile`, `DebugInfo`
+- `CompanyInfo`, `CompanyData`, `CompanyFormData`
+- `TestSession`, `TestResult`, `TestDetails`, `TestConfig`
+- `DevicePasswordType` e seus valores
+- `CheckoutParams`, `PixPaymentData`
+- `BudgetData`, `BudgetPartData` (para PDFs)
+- `AuthContextType` e `UserRole`
+- Tabela visual com cada tipo e onde e usado
 
-### 2. Hook `useOsPdfTemplates`
-- CRUD completo seguindo o padrão de `usePdfTemplates.ts`
-- Filtro por `template_type`
-- `useDefaultOsPdfTemplate(userId, type)` para buscar o template ativo
+### `6-hooks-referencia.md` - Guia de Hooks
+Catalogar os 60+ hooks com categorias:
+- **Autenticacao**: `useAuth`, `useTokenRotation`, `useSecurity`
+- **Licenciamento**: `useLicense`, `useLicenseVerification`, `useLicenseCache`, `useTrialLicense`
+- **Dispositivo**: `useDeviceDetection`, `useIOSDetection`, `useMobileDetection`, `useBatteryDetection`
+- **Ordens de Servico**: `useSecureServiceOrders`, `useServiceOrderEdit`, `useServiceOrderRealTime`, `useServiceOrderShare`
+- **Orcamentos (Worm)**: `useBudgetData`, `useBudgetDeletion`, `useBudgetServiceOrder`, `useCreateServiceOrderFromBudget`
+- **PWA/Offline**: `usePWA`, `useOfflineDetection`, `useSwipeGesture`
+- **UI/UX**: `useResponsive`, `useMobileMenu`, `usePopupState`, `useDebounce`
+- **Store**: `useShopProfile`, `useImportBudgetToStore`
+- **Config**: `useAppConfig`, `useCompanyBranding`, `useDrippySettings`, `useCookiePreferences`
+- Exemplos de uso para os mais importantes
 
-### 3. Componente `OsPdfTemplateEditor`
-Dois modos baseados no `template_type`:
+### `7-rotas-e-guards.md` - Mapa de Rotas
+Tabela completa com todas as rotas do `App.tsx`:
+- Rota, Componente, Guard aplicado, Lazy/Estatico
+- Fluxo visual de redirecionamentos (auth -> licenca -> dashboard)
+- Explicacao de cada Guard: `UnifiedProtectionGuard`, `AdminGuard`, `MaintenanceGuard`
+- Como adicionar uma nova rota (passo a passo)
 
-**Modo OS Receipt** — Chaves disponíveis:
-- Empresa: `{nome_empresa}`, `{telefone}`, `{email}`, `{endereco}`, `{cnpj}`
-- OS: `{num_os}`, `{status}`, `{prioridade}`, `{data_entrada}`, `{data_saida}`, `{data_previsao}`, `{data_entrega}`
-- Cliente: `{nome_cliente}`, `{telefone_cliente}`, `{endereco_cliente}`
-- Equipamento: `{modelo_dispositivo}`, `{tipo_dispositivo}`, `{imei_serial}`
-- Serviço: `{problema_relatado}`, `{observacoes}`, `{obs_tecnico}`, `{obs_cliente}`
-- Valores: `{valor_total}`, `{custo_mao_obra}`, `{custo_pecas}`, `{status_pagamento}`
-- Garantia: `{garantia_meses}`, `{termos_cancelamento}`, `{lembretes_garantia}`
+### `8-edge-functions.md` - Backend Serverless
+Documentacao detalhada de cada Edge Function:
+- **Pagamentos**: `create-mercadopago-checkout`, `check-mercadopago-payment`, `mercadopago-webhook`, `cancel-mercadopago-payment`, `create-mercadopago-subscription`
+- **WhatsApp**: `whatsapp-proxy`, `whatsapp-webhook`, `whatsapp-qr-connect`, `whatsapp-ai-reply`, `whatsapp-instance-manage`, `waha-proxy`
+- **IA**: `chat-ai`, `triage-ai`, `analyze-budgets`
+- **Seguranca**: `security-api`, `rate-limiter`, `real-time-monitoring`, `audit-system`
+- **Usuarios**: `manage-user-profile`, `admin-reset-password`, `admin-update-user-email`, `validate-license`
+- **Comunicacao**: `send-license-email`, `send-payment-receipt-email`, `send-push-notification`, `notification-system`
+- Fluxo de request/response de cada grupo
 
-**Modo Etiqueta Térmica** — Chaves disponíveis:
-- `{nome_empresa}`, `{telefone}`, `{num_os}`, `{data_entrada}`
-- `{nome_cliente}`, `{modelo_dispositivo}`, `{defeito}`
-- `{qr_code}` (renderizado automaticamente)
+### `9-seguranca.md` - Arquitetura de Seguranca
+- Sistema `secureStorage` com criptografia AES-GCM e PBKDF2
+- `SecurityLogger` e auditoria de acessos
+- RLS (Row Level Security) - regras e padroes
+- `botDetection`, `secureCSP`, `secureNavigation`
+- Rate limiting nas Edge Functions
+- Token rotation (`useTokenRotation`)
+- Fluxo de validacao de licencas
 
-Preview ao vivo com dados fictícios (igual ao `PdfTemplateEditor` atual).
+### `10-pdf-e-utils.md` - Utilitarios e Geracao de PDFs
+- Como funciona o `pdfUtils.ts` (jsPDF client-side)
+- `serviceOrderPdfUtils.ts` para recibos de OS
+- `currency.ts` - formatacao BRL
+- `whatsappUtils.ts` e `whatsappTemplateUtils.ts`
+- `authCleanup.ts` - limpeza de sessao
+- `pwaDetection.ts` e `pwaReset.ts`
+- `debugLogger.ts` e `asciiConsole.ts`
 
-### 4. Página `ServiceOrderPdfConfigPage`
-- Rota: `/service-orders/pdf`
-- Tabs com Radix UI para alternar entre OS Receipt e Etiqueta Térmica
-- Lista de templates, botão criar, sheet lateral com editor
-- Seguir layout visual da `WormPdfConfig`
-
-### 5. Integrar templates nos geradores existentes
-- `serviceOrderPdfUtils.ts`: aceitar `template_content` opcional; se presente, substituir chaves e renderizar no PDF ao invés do layout hardcoded
-- `PrintLabelDialog.tsx`: carregar template padrão de etiqueta do banco; se existir, usar o conteúdo customizado para montar o `drawLabel`
-- Adicionar rota no `App.tsx` dentro do guard `UnifiedProtectionGuard`
-- Adicionar link de acesso na página de OS (botão "Configurar PDFs")
+### `11-guia-contribuicao.md` - Guia para Novos Devs
+- Como rodar o projeto localmente
+- Convencoes de codigo (React Query > useEffect, Zustand para global state)
+- Como criar uma nova pagina (registrar rota, escolher Guard, lazy vs estatico)
+- Como criar um novo hook
+- Como adicionar uma Edge Function
+- Checklist de PR/review
+- Erros comuns e como evitar (RLS, chunks, offline)
 
 ---
 
-## Chaves suportadas (resumo)
+## Detalhes Tecnicos
 
-| Chave | Tipo | Descrição |
-|-------|------|-----------|
-| `{nome_empresa}` | Ambos | Nome da loja |
-| `{telefone}` | Ambos | Telefone da empresa |
-| `{cnpj}` | OS | CNPJ |
-| `{endereco}` | OS | Endereço da empresa |
-| `{num_os}` | Ambos | Número da OS formatado |
-| `{nome_cliente}` | Ambos | Nome do cliente |
-| `{modelo_dispositivo}` | Ambos | Modelo do aparelho |
-| `{defeito}` | Ambos | Problema relatado |
-| `{valor_total}` | OS | Valor total do serviço |
-| `{status}` | OS | Status traduzido |
-| `{data_entrada}` | Ambos | Data de entrada |
-| `{garantia_meses}` | OS | Meses de garantia |
-| `{qr_code}` | Etiqueta | QR Code automático |
+### Arquivos a criar:
+1. `.documentação/docs/5-typescript-tipos.md`
+2. `.documentação/docs/6-hooks-referencia.md`
+3. `.documentação/docs/7-rotas-e-guards.md`
+4. `.documentação/docs/8-edge-functions.md`
+5. `.documentação/docs/9-seguranca.md`
+6. `.documentação/docs/10-pdf-e-utils.md`
+7. `.documentação/docs/11-guia-contribuicao.md`
 
----
+### Arquivos a editar:
+1. `.documentação/docs/0-ai-project-context.md`
+2. `.documentação/docs/1-visao-geral.md`
+3. `.documentação/docs/2-frontend-estrutura.md`
+4. `.documentação/docs/3-backend-supabase.md`
+5. `.documentação/docs/4-integracoes-externas.md`
 
-## Detalhes técnicos
-
-- A tabela `os_pdf_templates` é separada da `pdf_templates` (Worm) para evitar conflitos de escopo
-- O preview da etiqueta térmica simula visualmente as dimensões 58mm/80mm com CSS `aspect-ratio` e fonte monospace
-- O preview do PDF A4 simula o layout com seções coloridas (accent bars, pills) iguais ao PDF real
-- Templates padrão (globais) serão inseridos via migration SQL para ambos os tipos
-- O campo `template_type` permite expansão futura (ex: nota fiscal, recibo simplificado)
+Total: **12 arquivos** (7 novos + 5 atualizados)
 
