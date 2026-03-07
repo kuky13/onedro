@@ -38,8 +38,6 @@ const WarrantyPageContent = () => {
     navigate(location.pathname, { replace: true, state: null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefill]);
-  const {
-    isOpen,
   const { isOpen, toggleMenu } = useMobileMenuContext();
   const filters = useMemo(() => ({
     search: search || undefined,
