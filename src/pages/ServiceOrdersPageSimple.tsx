@@ -48,6 +48,7 @@ export const ServiceOrdersPageSimple = () => {
   } = useCompanyDataLoader();
 
   const companyDataForLabel = getCompanyDataForPDF();
+  const { data: defaultOsTemplate } = useDefaultOsPdfTemplate(profile?.id, 'os_receipt');
 
   // Real-time updates para a lista de ordens de serviço
   const _realTimeStatus = useServiceOrdersRealTime({
@@ -251,7 +252,7 @@ export const ServiceOrdersPageSimple = () => {
         created_at: order.created_at ?? '',
         updated_at: order.updated_at ?? ''
       };
-      await saveServiceOrderPDF(serviceOrderData);
+      await saveServiceOrderPDF(serviceOrderData, defaultOsTemplate?.template_content);
       toast.success('PDF gerado com sucesso!');
     } catch (error) {
       toast.error('Erro ao gerar PDF da ordem de serviço');
