@@ -77,8 +77,7 @@ function formatCurrencyFromReais(reais: number): string {
  */
 function formatSmart(value: number): string {
   if (value === null || value === undefined || isNaN(value)) return "R$ 0,00";
-  // Se >= 10000, assume que está em centavos e converte para reais
-  return value >= 10000 ? formatCurrency(value) : formatCurrencyFromReais(value);
+  return formatCurrency(value); // Sempre centavos do BD
 }
 
 /**
@@ -212,22 +211,20 @@ export function generateWhatsAppMessageFromTemplate(
         const partWarranty = part.warranty_months || 0;
         const partInstallments = part.installments || installments || 0;
 
-        // Converter valores corretamente (detectar se está em centavos)
-        const cashInReais = partPrice >= 10000 ? partPrice / 100 : partPrice;
-        const installmentInReais = partInstallmentPrice >= 10000 
-          ? partInstallmentPrice / 100 
-          : (partInstallmentPrice || cashInReais);
+        // Valores sempre em centavos do BD - converter para reais
+        const cashInReais = partPrice / 100;
+        const installmentInReais = (partInstallmentPrice || partPrice) / 100;
         
-        // Calcular valor da parcela
-        const monthlyValue = partInstallments > 0 
-          ? installmentInReais / partInstallments 
+        // Calcular total no cartão (valor por parcela * num parcelas)
+        const totalInstallmentInReais = partInstallments > 0 
+          ? installmentInReais * partInstallments 
           : installmentInReais;
 
         const partReplacements: Record<string, string> = {
           "{qualidade_nome}": partName,
           "{peca_nome}": partName,
           "{peca_preco_vista}": formatCurrencyFromReais(cashInReais),
-          "{peca_preco_parcelado}": formatCurrencyFromReais(installmentInReais),
+          "{peca_preco_parcelado}": formatCurrencyFromReais(totalInstallmentInReais),
           "{peca_garantia}": partWarranty > 0 ? `${partWarranty} meses` : "",
           "{peca_garantia_meses}": partWarranty.toString(),
         };
@@ -258,8 +255,8 @@ export function generateWhatsAppMessageFromTemplate(
     "{modelo_dispositivo}": deviceModel,
     "{defeito}": deviceIssue,
     "{nome_reparo}": serviceName,
-    "{preco_vista}": formatSmart(cashPrice),
-    "{preco_parcelado}": formatSmart(installmentPrice),
+    "{preco_vista}": formatCurrency(cashPrice),
+    "{preco_parcelado}": formatCurrency(installmentPrice * installments),
     "{garantia}": maxWarranty > 0 ? `${maxWarranty} meses` : "",
     "{garantia_meses}": maxWarranty.toString(),
     "{observacoes}": notes,
