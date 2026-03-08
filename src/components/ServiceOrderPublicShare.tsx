@@ -783,7 +783,7 @@ export function ServiceOrderPublicShare() {
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
                 {finalCompanyInfo.logo_url && (
-                  <img src={finalCompanyInfo.logo_url} alt={finalCompanyInfo.name} className="w-12 h-12 object-contain rounded-xl border border-border/50 bg-white p-1" />
+                  <img src={finalCompanyInfo.logo_url} alt={finalCompanyInfo.name} className="w-12 h-12 object-contain rounded-xl bg-transparent" />
                 )}
                 <div>
                   <p className="font-semibold text-foreground">{finalCompanyInfo.name}</p>
