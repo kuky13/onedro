@@ -150,7 +150,11 @@ export function ServiceOrderPublicShare() {
   } | null>(null);
 
   const realtimeOptions: Parameters<typeof useServiceOrderRealTime>[0] = token ? {
-    ...(tokenIsFormattedId ? { formattedId: token } : { shareToken: token }),
+    ...(directId
+      ? { serviceOrderId: directId }
+      : tokenIsFormattedId
+        ? { formattedId: token }
+        : { shareToken: token }),
     enablePolling: true,
     pollingInterval: 30000,
     enableNotifications: true
