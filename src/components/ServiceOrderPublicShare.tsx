@@ -397,7 +397,7 @@ export function ServiceOrderPublicShare() {
       {finalCompanyInfo && <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
           <div className="max-w-4xl mx-auto px-4 py-4">
             <div className="flex items-center gap-4">
-              {finalCompanyInfo.logo_url && <img src={finalCompanyInfo.logo_url} alt={finalCompanyInfo.name} className="w-14 h-14 object-contain rounded-xl border border-border/50 bg-white p-1" />}
+              {finalCompanyInfo.logo_url && <img src={finalCompanyInfo.logo_url} alt={finalCompanyInfo.name} className="w-14 h-14 object-contain rounded-xl bg-transparent" />}
               <div className="flex-1 min-w-0">
                 {finalCompanyInfo.name && <h1 className="text-lg font-bold truncate" style={{
               color: themeColor
