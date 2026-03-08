@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Volume2, VolumeX, Power, Check, X, Smartphone, Home, LucideIcon, Zap } from "lucide-react";
+import { Volume2, VolumeX, Power, Check, X, Home, LucideIcon, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
