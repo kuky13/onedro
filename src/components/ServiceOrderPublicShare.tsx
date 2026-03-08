@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { AlertCircle, CheckCircle, Phone, Building2, Package, Wrench, Truck, Archive, Calendar, ExternalLink, MapPin, FileCheck, Package2, Smartphone, Hash, Image, Clock, CreditCard, X, ChevronLeft, ChevronRight, Shield } from 'lucide-react';
+import { AlertCircle, CheckCircle, Phone, Building2, Package, Wrench, Truck, Archive, Calendar, ExternalLink, MapPin, FileCheck, Package2, Smartphone, Hash, Image, Clock, CreditCard, X, ChevronLeft, ChevronRight, Shield, Mail, Globe, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
