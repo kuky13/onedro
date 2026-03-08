@@ -54,6 +54,7 @@ interface UseServiceOrderRealTimeOptions {
 export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions) {
   const {
     shareToken,
+    formattedId,
     serviceOrderId,
     enablePolling = true,
     pollingInterval = 30000, // 30 seconds
