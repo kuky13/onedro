@@ -110,6 +110,3 @@ verify_jwt = false
 
 [functions.analyze-budgets]
 verify_jwt = false
-
-[functions.worm-ai-search]
-verify_jwt = false
