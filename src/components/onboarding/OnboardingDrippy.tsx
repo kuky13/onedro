@@ -1,5 +1,5 @@
-import { Sparkles, MessageSquare, Search } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Sparkles, MessageSquare, Search } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface Props {
   onNext: () => void;
@@ -8,9 +8,9 @@ interface Props {
 
 export const OnboardingDrippy = ({ onNext, onSkip }: Props) => {
   const features = [
-    { icon: Search, title: 'Barra de pesquisa', desc: 'Pergunte qualquer coisa direto no Dashboard' },
-    { icon: MessageSquare, title: 'WhatsApp CRM', desc: 'Drippy responde seus clientes automaticamente' },
-    { icon: Sparkles, title: 'Suporte 24/7', desc: 'Disponível a qualquer hora para te ajudar' },
+    { icon: Search, title: "Barra de pesquisa", desc: "Pergunte qualquer coisa direto no Dashboard" },
+    { icon: MessageSquare, title: "Orçamentos", desc: "Drippy pesquisa sobre orçamentos e OS para você" },
+    { icon: Sparkles, title: "Suporte 24/7", desc: "Disponível a qualquer hora para te ajudar" },
   ];
 
   return (
@@ -29,9 +29,7 @@ export const OnboardingDrippy = ({ onNext, onSkip }: Props) => {
       </div>
 
       <div className="space-y-3">
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-          Conheça a Drippy 🤖
-        </h2>
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Conheça a Drippy</h2>
         <p className="text-muted-foreground text-base max-w-md mx-auto">
           Sua assistente de IA integrada. Ela te ajuda com orçamentos, atendimento ao cliente e muito mais.
         </p>
