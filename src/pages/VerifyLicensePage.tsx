@@ -159,9 +159,6 @@ export default function VerifyLicensePage() {
             >
               <ArrowLeft className="h-4 w-4 text-muted-foreground" />
             </button>
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Shield className="h-5 w-5 text-primary" />
-            </div>
           </div>
           <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
             Verificação de Licença
