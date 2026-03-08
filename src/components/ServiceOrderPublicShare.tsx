@@ -244,8 +244,17 @@ export function ServiceOrderPublicShare() {
     try {
       let serviceOrderData: any[] | null = null;
 
-      if (tokenIsFormattedId) {
-        // Use formatted_id lookup (permanent link)
+      if (directId) {
+        // Direct UUID lookup (new links with ?id= param) - unambiguous
+        const { data, error: soError } = await supabase
+          .from('service_orders')
+          .select('*, clients(name, phone)')
+          .eq('id', directId)
+          .single();
+        if (soError) throw new Error(soError.message);
+        serviceOrderData = data ? [data] : [];
+      } else if (tokenIsFormattedId) {
+        // Legacy formatted_id lookup (may be ambiguous across owners)
         const { data, error: soError } = await supabase.rpc('get_service_order_by_formatted_id' as any, {
           p_formatted_id: token
         });
