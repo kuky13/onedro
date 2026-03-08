@@ -1,5 +1,5 @@
-import { Headphones, HelpCircle, MessageCircle, Mail } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Headphones, HelpCircle, MessageCircle, Mail } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface Props {
   onNext: () => void;
@@ -8,10 +8,10 @@ interface Props {
 
 export const OnboardingSupport = ({ onNext, onSkip }: Props) => {
   const channels = [
-    { icon: HelpCircle, title: 'Central de Ajuda', desc: 'Tutoriais e guias completos em /central-de-ajuda' },
-    { icon: MessageCircle, title: 'Suporte via WhatsApp', desc: 'Fale com nosso time diretamente pelo WhatsApp' },
-    { icon: Headphones, title: 'Página de Suporte', desc: 'Abra um chamado ou veja FAQs em /suporte' },
-    { icon: Mail, title: 'E-mail', desc: 'Entre em contato por e-mail quando precisar' },
+    { icon: HelpCircle, title: "Central de Ajuda", desc: "Tutoriais e guias completos em /central-de-ajuda" },
+    { icon: MessageCircle, title: "Suporte via WhatsApp", desc: "Fale com nosso time diretamente pelo WhatsApp" },
+    { icon: Headphones, title: "Página de Suporte", desc: "Abra um chamado ou veja FAQs em /suporte" },
+    { icon: Mail, title: "E-mail", desc: "Entre em contato por e-mail quando precisar" },
   ];
 
   return (
@@ -28,9 +28,7 @@ export const OnboardingSupport = ({ onNext, onSkip }: Props) => {
       </div>
 
       <div className="space-y-3">
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-          Suporte & Central de Ajuda 💬
-        </h2>
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Suporte & Central de Ajuda</h2>
         <p className="text-muted-foreground text-base max-w-md mx-auto">
           Você nunca está sozinho. Temos vários canais prontos para te ajudar a qualquer momento.
         </p>
