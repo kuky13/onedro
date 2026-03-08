@@ -316,7 +316,7 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
       try {
         // Refetch service order data
         await queryClient.invalidateQueries({
-          queryKey: ['service-order-realtime', shareToken || serviceOrderId]
+          queryKey: ['service-order-realtime', queryIdentifier]
         });
 
         // Check for new events
