@@ -98,6 +98,7 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
         if (error) throw error;
         return data?.[0] || null;
       } else if (serviceOrderId) {
+        // Try direct table query first
         const { data, error } = await supabase
           .from('service_orders')
           .select(`
@@ -118,12 +119,13 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
           `)
           .eq('id', serviceOrderId)
           .eq('customer_visible', true)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
+        if (!data) return null;
 
         const seq = (data as any)?.sequential_number as number | null | undefined;
-        const formatted_id = seq != null ? `OS: ${String(seq).padStart(4, '0')}` : data.id.slice(-8);
+        const formatted_id = seq != null ? `OS: ${String(seq).padStart(4, '0')}` : (data as any).id.slice(-8);
 
         return { ...(data as any), formatted_id } as ServiceOrderRealTimeData;
       }
