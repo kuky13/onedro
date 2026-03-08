@@ -60,16 +60,17 @@ export const DashboardLiteQuickAccessEnhanced = ({
         <h3 className="text-lg font-semibold text-foreground">Acesso Rápido</h3>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {availableActions.map((action, i) => {
+          {availableActions.map((action, index) => {
             const Icon = action.icon;
             const isLoadingDownload = action.id === 'download-app' && isInstalling;
+            const delayValue = index * 0.04;
 
             return (
               <motion.button
                 key={action.id}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: Number(i) * 0.04 }}
+                transition={{ duration: 0.3, delay: delayValue }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => handleActionClick(action)}
