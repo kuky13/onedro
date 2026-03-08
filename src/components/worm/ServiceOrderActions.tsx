@@ -13,7 +13,7 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useServiceOrderShare } from '@/hooks/useServiceOrderShare';
+import { useServiceOrderShare, buildFormattedShareUrl } from '@/hooks/useServiceOrderShare';
 
 interface ServiceOrderActionsProps {
   createdOrderId: string;
