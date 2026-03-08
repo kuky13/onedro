@@ -585,36 +585,40 @@ export const useServiceOrderValidation = (currentValues: Record<string, unknown>
   const validation = useFormValidation(currentValues, validationRules);
   
   // Função customizada para validar se o formulário está válido
-  const isFormValid = () => {
-    // Campos obrigatórios
+  const isFormValid = (detailed?: boolean): any => {
     const requiredFields = ['clientId', 'deviceModel', 'reportedIssue', 'totalPrice'];
+    const missingFields: string[] = [];
+    const errorFields: string[] = [];
     
     for (const field of requiredFields) {
       const fieldValue = currentValues[field];
       if (!fieldValue || (typeof fieldValue === 'string' && fieldValue.trim() === '')) {
-        return false;
+        missingFields.push(field);
+        continue;
       }
-      
-      // Verificar se há erros de validação
       const error = validation.getFieldError(field as any);
       if (error) {
-        return false;
+        errorFields.push(field);
       }
     }
     
-    // Verificar se há erros em campos opcionais que foram preenchidos
     const optionalFields = ['laborCost', 'partsCost', 'installments', 'installmentValue', 'warrantyMonths', 'paymentDate'];
     for (const field of optionalFields) {
       const fieldValue = currentValues[field];
       if (fieldValue && typeof fieldValue === 'string' && fieldValue.trim() !== '') {
         const error = validation.getFieldError(field as any);
         if (error) {
-          return false;
+          errorFields.push(field);
         }
       }
     }
     
-    return true;
+    const valid = missingFields.length === 0 && errorFields.length === 0;
+    
+    if (detailed) {
+      return { valid, missingFields, errorFields };
+    }
+    return valid;
   };
   
   return {
