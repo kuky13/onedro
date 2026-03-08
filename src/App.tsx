@@ -242,6 +242,9 @@ const AppContent = () => {
           <ResetEmailPage />
         </UnifiedProtectionGuard>} />
         <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/onboarding" element={<UnifiedProtectionGuard>
+          <OnboardingPage />
+        </UnifiedProtectionGuard>} />
         <Route path="/sign" element={<SignPage />} />
         <Route path="/dashboard" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>
