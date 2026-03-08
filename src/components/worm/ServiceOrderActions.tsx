@@ -18,6 +18,7 @@ import { useServiceOrderShare, buildFormattedShareUrl } from '@/hooks/useService
 interface ServiceOrderActionsProps {
   createdOrderId: string;
   formattedId?: string | null;
+  sequentialNumber?: number | null;
   compact?: boolean;
 }
 
