@@ -196,9 +196,6 @@ const AppContent = () => {
         <Routes>
         {/* Rotas do sistema de status Houston */}
         <Route path="/houston" element={<HoustonPage />} />
-        <Route path="/problem" element={<AdminGuard>
-          <ProblemPage />
-        </AdminGuard>} />
         <Route path="/hamster" element={<HamsterPage />} />
 
         <Route
