@@ -42,7 +42,7 @@ const ResetPasswordPage = lazyWithRetry(() => import("./pages/ResetPasswordPage"
 const ResetEmailPage = lazyWithRetry(() => import("./pages/ResetEmailPage").then(m => ({ default: m.ResetEmailPage })));
 const VerifyPage = lazyWithRetry(() => import("./pages/VerifyPage").then(m => ({ default: m.VerifyPage })));
 const HoustonPage = lazyWithRetry(() => import("./pages/HoustonPage").then(m => ({ default: m.HoustonPage })));
-const ProblemPage = lazyWithRetry(() => import("./pages/ProblemPage").then(m => ({ default: m.ProblemPage })));
+
 const HamsterPage = lazyWithRetry(() => import("./pages/HamsterPage"));
 const ServiceOrdersPageSimple = lazyWithRetry(() => import("./pages/ServiceOrdersPageSimple"));
 const ServiceOrderFormPage = lazyWithRetry(() => import("./pages/ServiceOrderFormPage").then(m => ({ default: m.ServiceOrderFormPage })));
@@ -81,14 +81,13 @@ const AppShell = lazyWithRetry(() => import("@/components/layout/AppShell").then
 
 const KukySolutions = lazyWithRetry(() => import("./pages/KukySolutions"));
 const AdminGuard = lazyWithRetry(() => import("./components/AdminGuard").then(m => ({ default: m.AdminGuard })));
-const UpdateManagementPage = lazyWithRetry(() => import("./pages/UpdateManagementPage"));
 const UpdateDetailsPage = lazyWithRetry(() => import("./pages/UpdateDetailsPage"));
 const SuperAdminPage = lazyWithRetry(() => import("./pages/SuperAdminPage").then(m => ({ default: m.SuperAdminPage })));
 const AdminUsersPage = lazyWithRetry(() => import("./pages/AdminUsersPage").then(m => ({ default: m.AdminUsersPage })));
 const PeliculasCompatibilityPage = lazyWithRetry(() => import("./pages/PeliculasCompatibilityPage"));
 const PeliculasEditPage = lazyWithRetry(() => import("./pages/PeliculasEditPage"));
 const AppsPage = lazyWithRetry(() => import("./pages/AppsPage"));
-const DownloadVideoPage = lazyWithRetry(() => import("./components/super-admin/DownloadVideoPage").then(m => ({ default: m.DownloadVideoPage })));
+
 const StoreLayout = lazyWithRetry(() => import("./pages/store/StoreLayout"));
 const StoreCreatePage = lazyWithRetry(() => import("./pages/store/StoreCreatePage"));
 const StoreBudgets = lazyWithRetry(() => import("./pages/store/StoreBudgets"));
@@ -136,8 +135,7 @@ const AppContent = () => {
   // Ocultar em rotas de loja pública (/loja/*) e testes de dispositivo (/testar/*)
   const isStorePublicPage = location.pathname.startsWith('/loja/');
   const isDeviceTestPage = location.pathname.startsWith('/testar/');
-  const isDownloadsPage = location.pathname === '/downloads';
-  const showInfoNote = !legalPages.includes(location.pathname) && !isStorePublicPage && !isDeviceTestPage && !isDownloadsPage;
+  const showInfoNote = !legalPages.includes(location.pathname) && !isStorePublicPage && !isDeviceTestPage;
   const [noteDismissed, setNoteDismissed] = useState(false);
   const [temporarilyHidden, setTemporarilyHidden] = useState(false);
   useEffect(() => {
@@ -197,9 +195,6 @@ const AppContent = () => {
         <Routes>
         {/* Rotas do sistema de status Houston */}
         <Route path="/houston" element={<HoustonPage />} />
-        <Route path="/problem" element={<AdminGuard>
-          <ProblemPage />
-        </AdminGuard>} />
         <Route path="/hamster" element={<HamsterPage />} />
 
         <Route
@@ -232,8 +227,6 @@ const AppContent = () => {
         {/* Rota pública para compartilhamento de OS */}
         <Route path="/share/service-order/:shareToken" element={<ServiceOrderSharePage />} />
 
-        {/* Rota pública para download de vídeos */}
-        <Route path="/downloads" element={<DownloadVideoPage />} />
 
         {/* Rota pública para testes de dispositivos via QR Code */}
         <Route path="/testar/:shareToken" element={<DeviceTestPage />} />
@@ -297,10 +290,6 @@ const AppContent = () => {
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
 
-        {/* Rota administrativa para gerenciar atualizações */}
-        <Route path="/update" element={<AdminGuard>
-          <AppShell><UpdateManagementPage /></AppShell>
-        </AdminGuard>} />
 
         {/* Gestão administrativa de usuários */}
         <Route path="/admins/usuarios" element={<MaintenanceGuard>

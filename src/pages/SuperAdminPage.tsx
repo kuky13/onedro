@@ -11,51 +11,60 @@ import { SmsManagement } from '@/components/super-admin/SmsManagement';
 import { LicenseManagement } from '@/components/super-admin/LicenseManagement';
 import { WhatsAppManagement } from '@/components/super-admin/WhatsAppManagement';
 import { VpsMonitorPage } from '@/components/super-admin/VpsMonitorPage';
-import { DownloadVideoPage } from '@/components/super-admin/DownloadVideoPage';
+import { lazyWithRetry } from '@/utils/lazyWithRetry';
+import { Suspense } from 'react';
+
+const ProblemPage = lazyWithRetry(() => import("./ProblemPage").then(m => ({ default: m.ProblemPage })));
+const UpdateManagementPage = lazyWithRetry(() => import("./UpdateManagementPage"));
 
 export function SuperAdminPage() {
   return (
     <SuperAdminLayout>
-      <Routes>
-        {/* Dashboard principal */}
-        <Route index element={<Dashboard />} />
+      <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+        <Routes>
+          {/* Dashboard principal */}
+          <Route index element={<Dashboard />} />
 
-        {/* Gerenciamento de usuários */}
-        <Route path="users" element={<UserManagement />} />
+          {/* Gerenciamento de usuários */}
+          <Route path="users" element={<UserManagement />} />
 
-        {/* Gerenciamento da Drippy IA */}
-        <Route path="drippy" element={<DrippyManagement />} />
+          {/* Gerenciamento da Drippy IA */}
+          <Route path="drippy" element={<DrippyManagement />} />
 
-        {/* Gerenciamento de películas compatíveis */}
-        <Route path="p" element={<PeliculasManagement />} />
+          {/* Gerenciamento de películas compatíveis */}
+          <Route path="p" element={<PeliculasManagement />} />
 
-        {/* Hub de Aplicativos */}
-        <Route path="apps" element={<AppsHub />} />
+          {/* Hub de Aplicativos */}
+          <Route path="apps" element={<AppsHub />} />
 
-        {/* Gerenciamento de Planos */}
-        <Route path="plans" element={<PlansManagement />} />
+          {/* Gerenciamento de Planos */}
+          <Route path="plans" element={<PlansManagement />} />
 
-        {/* Gerenciamento de Licenças */}
-        <Route path="licenca" element={<LicenseManagement />} />
+          {/* Gerenciamento de Licenças */}
+          <Route path="licenca" element={<LicenseManagement />} />
 
-        {/* Gerenciamento de Cupons */}
-        <Route path="coupons" element={<CouponsManagement />} />
+          {/* Gerenciamento de Cupons */}
+          <Route path="coupons" element={<CouponsManagement />} />
 
-        {/* Gestão de SMS & Mensagens */}
-        <Route path="sms" element={<SmsManagement />} />
+          {/* Gestão de SMS & Mensagens */}
+          <Route path="sms" element={<SmsManagement />} />
 
-        {/* Configuração de orçamentos via WhatsApp (Evolution) */}
-        <Route path="whatsapp" element={<WhatsAppManagement />} />
+          {/* Configuração de orçamentos via WhatsApp (Evolution) */}
+          <Route path="whatsapp" element={<WhatsAppManagement />} />
 
-        {/* Monitoramento da VPS/API externa */}
-        <Route path="vps" element={<VpsMonitorPage />} />
+          {/* Monitoramento da VPS/API externa */}
+          <Route path="vps" element={<VpsMonitorPage />} />
 
-        {/* Download de Vídeos */}
-        <Route path="dw" element={<DownloadVideoPage />} />
+          {/* Diagnóstico de problemas */}
+          <Route path="problem" element={<ProblemPage />} />
 
-        {/* Redirecionar rotas não encontradas para o dashboard */}
-        <Route path="*" element={<Navigate to="/supadmin" replace />} />
-      </Routes>
+          {/* Gerenciamento de atualizações */}
+          <Route path="update" element={<UpdateManagementPage />} />
+
+          {/* Redirecionar rotas não encontradas para o dashboard */}
+          <Route path="*" element={<Navigate to="/supadmin" replace />} />
+        </Routes>
+      </Suspense>
     </SuperAdminLayout>
   );
 }

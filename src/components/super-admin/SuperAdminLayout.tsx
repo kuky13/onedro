@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { LayoutDashboard, Users, LogOut, Menu, X, Shield, Home, Film, Brain, Grid3X3, CreditCard, Ticket, MessageSquare, Key, Package, Bug, Server, Download } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, Menu, X, Shield, Home, Film, Brain, Grid3X3, CreditCard, Ticket, MessageSquare, Key, Package, Bug, Server } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -16,12 +16,12 @@ const navigationItems = [{
   description: 'Visão geral do sistema'
 }, {
   name: 'Atualizações',
-  href: '/update',
+  href: '/supadmin/update',
   icon: Package,
   description: 'Gerenciar updates'
 }, {
   name: 'Problem',
-  href: '/problem',
+  href: '/supadmin/problem',
   icon: Bug,
   description: 'Diagnóstico (admin)'
 }, {
@@ -74,11 +74,6 @@ const navigationItems = [{
   href: '/supadmin/vps',
   icon: Server,
   description: 'Status da API'
-}, {
-  name: 'Download Vídeos',
-  href: '/supadmin/dw',
-  icon: Download,
-  description: 'Baixar vídeos'
 }];
 
 export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
