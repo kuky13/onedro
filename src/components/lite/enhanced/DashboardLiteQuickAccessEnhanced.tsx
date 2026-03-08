@@ -46,7 +46,8 @@ export const DashboardLiteQuickAccessEnhanced = ({
       warranties: '/garantia', reparos: '/reparos', store: '/store',
       peliculas: '/p', settings: '/settings', more: '/apps',
     };
-    if (routes[action.id]) navigate(routes[action.id]);
+    const route = routes[action.id];
+    if (route) navigate(route);
     else onTabChange(action.tab);
   };
 
