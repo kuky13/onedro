@@ -491,7 +491,7 @@ export function ServiceOrderPublicShare() {
                         {new Intl.NumberFormat('pt-BR', {
                       style: 'currency',
                       currency: 'BRL'
-                    }).format(serviceOrder.total_price)}
+                    }).format(serviceOrder.total_price / 100)}
                       </span>}
                   </div>
                 </div>
