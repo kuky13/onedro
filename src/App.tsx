@@ -87,7 +87,7 @@ const AdminUsersPage = lazyWithRetry(() => import("./pages/AdminUsersPage").then
 const PeliculasCompatibilityPage = lazyWithRetry(() => import("./pages/PeliculasCompatibilityPage"));
 const PeliculasEditPage = lazyWithRetry(() => import("./pages/PeliculasEditPage"));
 const AppsPage = lazyWithRetry(() => import("./pages/AppsPage"));
-const DownloadVideoPage = lazyWithRetry(() => import("./components/super-admin/DownloadVideoPage").then(m => ({ default: m.DownloadVideoPage })));
+
 const StoreLayout = lazyWithRetry(() => import("./pages/store/StoreLayout"));
 const StoreCreatePage = lazyWithRetry(() => import("./pages/store/StoreCreatePage"));
 const StoreBudgets = lazyWithRetry(() => import("./pages/store/StoreBudgets"));
