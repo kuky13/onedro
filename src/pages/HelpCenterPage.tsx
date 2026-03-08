@@ -780,15 +780,8 @@ const HelpCenterPage = () => {
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       {/* Header */}
       <div className="text-center mb-12">
-        <div className="flex items-center justify-between mb-4">
-          <div></div>
-          <div className="flex items-center justify-center gap-3">
-            <h1 className="text-4xl font-bold text-foreground text-center">Central de Ajuda</h1>
-          </div>
-          
-
-
-          
+        <div className="mb-4">
+          <h1 className="text-4xl font-bold text-foreground text-center">Central de Ajuda</h1>
         </div>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
           Encontre respostas, tutoriais e guias completos para aproveitar ao máximo
