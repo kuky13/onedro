@@ -43,7 +43,7 @@ export const DashboardLiteQuickAccessEnhanced = ({
     if (action.id === 'download-app') { setShowPWAModal(true); return; }
     const routes: Record<string, string> = {
       'new-budget': '/worm', budgets: '/worm', 'service-orders': '/service-orders',
-      warranties: '/garantia', reparos: '/reparos', store: '/store',
+      warranties: '/garantia', 'teste-rapido': '/teste-rapido', reparos: '/reparos', store: '/store',
       peliculas: '/p', settings: '/settings', more: '/apps',
     };
     const route = routes[action.id];
