@@ -238,7 +238,7 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
             console.log('Service order updated:', payload);
             // Invalidate and refetch service order data
             queryClient.invalidateQueries({
-              queryKey: ['service-order-realtime', shareToken || serviceOrderId]
+              queryKey: ['service-order-realtime', queryIdentifier]
             });
             
             setStatus(prev => ({
