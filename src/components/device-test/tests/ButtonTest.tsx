@@ -24,7 +24,6 @@ export function ButtonTest({ onPass, onFail }: ButtonTestProps) {
     { id: "volumeDown", label: "Volume -", icon: VolumeX, works: null, autoDetected: false, detectionCount: 0 },
     { id: "power", label: "Botão Lateral / Power", icon: Power, works: null, autoDetected: false, detectionCount: 0 },
     { id: "home", label: "Botão Home (se houver)", icon: Home, works: null, autoDetected: false, detectionCount: 0 },
-    { id: "assistant", label: "Botão Assistente/Bixby (se houver)", icon: Smartphone, works: null, autoDetected: false, detectionCount: 0 },
   ]);
 
   const [isListening] = useState(true);
@@ -63,18 +62,18 @@ export function ButtonTest({ onPass, onFail }: ButtonTestProps) {
     if (buttonId) {
       event.preventDefault();
       setLastDetected(buttonId);
-      
-      setButtons(prev =>
-        prev.map(btn =>
+
+      setButtons((prev) =>
+        prev.map((btn) =>
           btn.id === buttonId
-            ? { 
-                ...btn, 
-                works: true, 
-                autoDetected: true, 
-                detectionCount: btn.detectionCount + 1 
+            ? {
+                ...btn,
+                works: true,
+                autoDetected: true,
+                detectionCount: btn.detectionCount + 1,
               }
-            : btn
-        )
+            : btn,
+        ),
       );
 
       // Clear highlight after a moment
@@ -86,12 +85,10 @@ export function ButtonTest({ onPass, onFail }: ButtonTestProps) {
   const handleVisibilityChange = useCallback(() => {
     if (document.visibilityState === "visible") {
       // Screen just turned on - could indicate power button was pressed
-      setButtons(prev =>
-        prev.map(btn =>
-          btn.id === "power" && !btn.autoDetected
-            ? { ...btn, detectionCount: btn.detectionCount + 1 }
-            : btn
-        )
+      setButtons((prev) =>
+        prev.map((btn) =>
+          btn.id === "power" && !btn.autoDetected ? { ...btn, detectionCount: btn.detectionCount + 1 } : btn,
+        ),
       );
     }
   }, []);
@@ -102,7 +99,7 @@ export function ButtonTest({ onPass, onFail }: ButtonTestProps) {
     // Listen for keyboard events (volume keys)
     document.addEventListener("keydown", handleKeyEvent);
     document.addEventListener("keyup", handleKeyEvent);
-    
+
     // Listen for visibility changes (power button)
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
@@ -113,22 +110,20 @@ export function ButtonTest({ onPass, onFail }: ButtonTestProps) {
     };
   }, [isListening, handleKeyEvent, handleVisibilityChange]);
 
-  const testedCount = buttons.filter(b => b.works !== null).length;
-  const workingCount = buttons.filter(b => b.works === true).length;
-  const autoDetectedCount = buttons.filter(b => b.autoDetected).length;
-  const requiredButtonsTested = buttons.slice(0, 3).every(b => b.works !== null);
+  const testedCount = buttons.filter((b) => b.works !== null).length;
+  const workingCount = buttons.filter((b) => b.works === true).length;
+  const autoDetectedCount = buttons.filter((b) => b.autoDetected).length;
+  const requiredButtonsTested = buttons.slice(0, 3).every((b) => b.works !== null);
 
   const handleButtonToggle = (id: string, works: boolean) => {
-    setButtons(prev =>
-      prev.map(btn =>
-        btn.id === id ? { ...btn, works: btn.works === works ? null : works } : btn
-      )
+    setButtons((prev) =>
+      prev.map((btn) => (btn.id === id ? { ...btn, works: btn.works === works ? null : works } : btn)),
     );
   };
 
   const handleSubmit = (allWorking: boolean) => {
     const buttonsResults: Record<string, { works: boolean | null; autoDetected: boolean; detectionCount: number }> = {};
-    buttons.forEach(btn => {
+    buttons.forEach((btn) => {
       buttonsResults[btn.id] = {
         works: btn.works,
         autoDetected: btn.autoDetected,
@@ -158,18 +153,14 @@ export function ButtonTest({ onPass, onFail }: ButtonTestProps) {
         {/* Instructions */}
         <div className="text-center mb-3">
           <h3 className="text-lg font-bold mb-1">Teste de Botões Físicos</h3>
-          <p className="text-muted-foreground text-xs">
-            Pressione cada botão e marque se funcionou
-          </p>
+          <p className="text-muted-foreground text-xs">Pressione cada botão e marque se funcionou</p>
         </div>
 
         {/* Auto-detection indicator */}
         {isListening && (
           <div className="bg-primary/10 rounded-lg p-2 mb-3 flex items-center justify-center gap-2">
             <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-            <span className="text-xs text-primary font-medium">
-              Detecção automática ativa
-            </span>
+            <span className="text-xs text-primary font-medium">Detecção automática ativa</span>
           </div>
         )}
 
@@ -177,9 +168,7 @@ export function ButtonTest({ onPass, onFail }: ButtonTestProps) {
         {autoDetectedCount > 0 && (
           <div className="bg-green-500/10 rounded-lg p-2 mb-3 flex items-center justify-center gap-2">
             <Zap className="w-3 h-3 text-green-500" />
-            <span className="text-xs text-green-600 font-medium">
-              {autoDetectedCount} detectado(s) automaticamente
-            </span>
+            <span className="text-xs text-green-600 font-medium">{autoDetectedCount} detectado(s) automaticamente</span>
           </div>
         )}
 
@@ -189,7 +178,7 @@ export function ButtonTest({ onPass, onFail }: ButtonTestProps) {
             const IconComponent = btn.icon;
             const isOptional = btn.id === "home" || btn.id === "assistant";
             const isHighlighted = lastDetected === btn.id;
-            
+
             return (
               <div
                 key={btn.id}
@@ -197,17 +186,22 @@ export function ButtonTest({ onPass, onFail }: ButtonTestProps) {
                   "bg-muted/50 rounded-lg p-3 transition-all",
                   btn.works === true && "ring-2 ring-primary/50 bg-primary/10",
                   btn.works === false && "ring-2 ring-destructive/50 bg-destructive/10",
-                  isHighlighted && "ring-2 ring-green-500 bg-green-500/20 scale-[1.01]"
+                  isHighlighted && "ring-2 ring-green-500 bg-green-500/20 scale-[1.01]",
                 )}
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <div className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center transition-all shrink-0",
-                    btn.works === true ? "bg-primary text-primary-foreground" :
-                    btn.works === false ? "bg-destructive text-destructive-foreground" :
-                    isHighlighted ? "bg-green-500 text-white" :
-                    "bg-muted-foreground/20 text-muted-foreground"
-                  )}>
+                  <div
+                    className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center transition-all shrink-0",
+                      btn.works === true
+                        ? "bg-primary text-primary-foreground"
+                        : btn.works === false
+                          ? "bg-destructive text-destructive-foreground"
+                          : isHighlighted
+                            ? "bg-green-500 text-white"
+                            : "bg-muted-foreground/20 text-muted-foreground",
+                    )}
+                  >
                     <IconComponent className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -218,21 +212,16 @@ export function ButtonTest({ onPass, onFail }: ButtonTestProps) {
                           Auto
                         </span>
                       )}
-                      {isOptional && (
-                        <span className="text-[9px] text-muted-foreground shrink-0">(opcional)</span>
-                      )}
+                      {isOptional && <span className="text-[9px] text-muted-foreground shrink-0">(opcional)</span>}
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex gap-2">
                   <Button
                     variant={btn.works === true ? "default" : "outline"}
                     size="sm"
-                    className={cn(
-                      "flex-1 gap-1 h-8 text-xs",
-                      btn.works === true && "bg-primary"
-                    )}
+                    className={cn("flex-1 gap-1 h-8 text-xs", btn.works === true && "bg-primary")}
                     onClick={() => handleButtonToggle(btn.id, true)}
                   >
                     <Check className="w-3 h-3" />
@@ -286,11 +275,7 @@ export function ButtonTest({ onPass, onFail }: ButtonTestProps) {
             <X className="w-4 h-4" />
             Problemas
           </Button>
-          <Button
-            className="flex-1 h-11 gap-2"
-            onClick={() => handleSubmit(true)}
-            disabled={!requiredButtonsTested}
-          >
+          <Button className="flex-1 h-11 gap-2" onClick={() => handleSubmit(true)} disabled={!requiredButtonsTested}>
             <Check className="w-4 h-4" />
             Tudo OK
           </Button>
