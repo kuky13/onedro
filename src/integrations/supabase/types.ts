@@ -6309,6 +6309,15 @@ export type Database = {
           whatsapp_phone: string
         }[]
       }
+      get_company_info_by_formatted_id: {
+        Args: { p_formatted_id: string }
+        Returns: {
+          address: string
+          logo_url: string
+          name: string
+          whatsapp_phone: string
+        }[]
+      }
       get_company_info_by_share_token: {
         Args: { p_share_token: string }
         Returns: {
@@ -6569,6 +6578,45 @@ export type Database = {
           license_related_failures: number
           recent_activity_count: number
           total_access_attempts: number
+        }[]
+      }
+      get_service_order_by_formatted_id: {
+        Args: { p_formatted_id: string }
+        Returns: {
+          actual_completion: string
+          client_email: string
+          client_name: string
+          client_phone: string
+          created_at: string
+          customer_notes: string
+          customer_visible: boolean
+          delivery_date: string
+          device_checklist: Json
+          device_model: string
+          device_password_metadata: Json
+          device_password_type: string
+          device_password_value: string
+          device_type: string
+          entry_date: string
+          estimated_completion: string
+          exit_date: string
+          formatted_id: string
+          id: string
+          imei_serial: string
+          is_paid: boolean
+          labor_cost: number
+          last_customer_update: string
+          notes: string
+          parts_cost: number
+          payment_status: string
+          priority: string
+          reported_issue: string
+          sequential_number: number
+          status: string
+          technician_notes: string
+          total_price: number
+          updated_at: string
+          warranty_months: number
         }[]
       }
       get_service_order_by_id: {
