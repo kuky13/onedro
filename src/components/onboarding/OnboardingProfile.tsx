@@ -1,19 +1,16 @@
-import { User } from 'lucide-react';
+import { User, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 
 interface Props {
-  onNext: (data: { name: string; username: string }) => void;
+  onNext: (data: { name: string }) => void;
   onSkip: () => void;
   defaultName?: string;
-  defaultUsername?: string;
 }
 
-export const OnboardingProfile = ({ onNext, onSkip, defaultName = '', defaultUsername = '' }: Props) => {
+export const OnboardingProfile = ({ onNext, onSkip, defaultName = '' }: Props) => {
   const [name, setName] = useState(defaultName);
-  const [username, setUsername] = useState(defaultUsername);
 
   return (
     <motion.div
@@ -41,26 +38,22 @@ export const OnboardingProfile = ({ onNext, onSkip, defaultName = '', defaultUse
             onChange={e => setName(e.target.value)}
           />
         </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Username</label>
-          <Input
-            placeholder="@seuusuario"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-          />
-        </div>
       </div>
 
-      <div className="flex gap-3">
-        <Button variant="outline" className="flex-1 rounded-xl" onClick={onSkip}>
-          Pular
-        </Button>
+      <div className="flex flex-col gap-3 pt-2">
         <button
-          onClick={() => onNext({ name, username })}
-          className="btn-premium flex-1 h-11 rounded-xl font-semibold"
+          onClick={() => onNext({ name })}
+          className="btn-premium w-full h-12 rounded-xl text-base font-semibold inline-flex items-center justify-center gap-2"
           disabled={!name.trim()}
         >
           Continuar
+          <ArrowRight className="h-5 w-5" />
+        </button>
+        <button
+          onClick={onSkip}
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Pular etapa →
         </button>
       </div>
     </motion.div>

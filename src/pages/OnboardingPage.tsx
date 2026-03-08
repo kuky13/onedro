@@ -43,12 +43,12 @@ export const OnboardingPage = () => {
   const next = () => setStep(s => Math.min(s + 1, TOTAL_STEPS));
 
   // Step handlers
-  const handleProfile = async (data: { name: string; username: string }) => {
+  const handleProfile = async (data: { name: string }) => {
     if (!user) return;
     try {
       await supabase
         .from('user_profiles')
-        .update({ name: data.name, username: data.username })
+        .update({ name: data.name })
         .eq('id', user.id);
       setCompletedSteps(p => [...p, 'Perfil pessoal']);
     } catch { /* silent */ }

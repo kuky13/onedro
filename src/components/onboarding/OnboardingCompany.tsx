@@ -1,8 +1,7 @@
-import { Building2 } from 'lucide-react';
+import { Building2, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 
 export interface CompanyData {
   name: string;
@@ -71,16 +70,20 @@ export const OnboardingCompany = ({ onNext, onSkip }: Props) => {
         </div>
       </div>
 
-      <div className="flex gap-3">
-        <Button variant="outline" className="flex-1 rounded-xl" onClick={onSkip}>
-          Pular
-        </Button>
+      <div className="flex flex-col gap-3 pt-2">
         <button
           onClick={() => onNext(form)}
-          className="btn-premium flex-1 h-11 rounded-xl font-semibold"
+          className="btn-premium w-full h-12 rounded-xl text-base font-semibold inline-flex items-center justify-center gap-2"
           disabled={!form.name.trim()}
         >
           Continuar
+          <ArrowRight className="h-5 w-5" />
+        </button>
+        <button
+          onClick={onSkip}
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Pular etapa →
         </button>
       </div>
     </motion.div>
