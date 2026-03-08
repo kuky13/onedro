@@ -145,12 +145,26 @@ export const WormBudgetList = ({
   const handleSearch = (term: string) => {
     setSearchTerm(term);
     setActiveSearchTerm(term);
+    setAiResults([]);
   };
   const handleClearSearch = () => {
     setSearchTerm('');
     setActiveSearchTerm('');
     setAiResults([]);
   };
+  const handleAiResults = useCallback((matchedIds: string[], _message: string) => {
+    if (matchedIds.length === 0) {
+      setAiResults([]);
+      return;
+    }
+    // Filter from loaded budgets by matched IDs
+    const matched = budgetsList.filter(b => matchedIds.includes(b.id));
+    // Sort by the order AI returned them
+    const idOrder = new Map(matchedIds.map((id, i) => [id, i]));
+    matched.sort((a, b) => (idOrder.get(a.id) ?? 999) - (idOrder.get(b.id) ?? 999));
+    setAiResults(matched);
+    setActiveSearchTerm(''); // Clear text search when AI results are active
+  }, [budgetsList]);
   const handleBudgetCreated = useCallback(() => {
     setIsNewBudgetOpen(false);
     setNewBudgetInitialData(null);
@@ -222,7 +236,7 @@ export const WormBudgetList = ({
     <section className="bg-muted/20 border border-border/30 rounded-2xl p-3 sm:p-4">
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
         <div className="relative flex-1 flex gap-2">
-          <WormBudgetSearch searchTerm={searchTerm} onSearch={handleSearch} onClearSearch={handleClearSearch} />
+          <WormBudgetSearch searchTerm={searchTerm} onSearch={handleSearch} onClearSearch={handleClearSearch} onAiResults={handleAiResults} />
           <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing} className="shrink-0 rounded-xl" title="Atualizar lista">
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </Button>
