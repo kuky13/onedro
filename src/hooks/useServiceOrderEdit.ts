@@ -465,10 +465,10 @@ export const useServiceOrderEdit = (serviceOrderId?: string) => {
         totalPrice: 'Valor total',
       };
       const missing = validationResult.missingFields
-        .map(f => missingLabels[f] || f)
+        .map((f: string) => missingLabels[f] || f)
         .join(', ');
       const errorFields = validationResult.errorFields
-        .map(f => missingLabels[f] || f)
+        .map((f: string) => missingLabels[f] || f)
         .join(', ');
       
       let msg = '';
