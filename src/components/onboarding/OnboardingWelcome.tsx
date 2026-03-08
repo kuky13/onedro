@@ -1,4 +1,4 @@
-import { Rocket, Settings, Store, Wrench, Building2 } from 'lucide-react';
+import { Rocket, Settings, Store, Wrench, Building2, Bot, Headphones } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface Props {
