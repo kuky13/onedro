@@ -1,4 +1,4 @@
-import { Bot, Sparkles, MessageSquare, Search } from 'lucide-react';
+import { Sparkles, MessageSquare, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface Props {
