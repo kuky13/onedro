@@ -1,4 +1,4 @@
-import { Bot, Sparkles, MessageSquare, Search } from 'lucide-react';
+import { Sparkles, MessageSquare, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface Props {
@@ -21,9 +21,11 @@ export const OnboardingDrippy = ({ onNext, onSkip }: Props) => {
       className="text-center space-y-8"
     >
       <div className="flex justify-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-          <Bot className="h-10 w-10 text-primary" />
-        </div>
+        <img
+          src="/lovable-uploads/e12ec9f1-06ab-4f49-8d81-78a481c5b4c0.png"
+          alt="Drippy - Assistente IA"
+          className="h-20 w-20 rounded-full border-2 border-primary/30 object-cover"
+        />
       </div>
 
       <div className="space-y-3">
