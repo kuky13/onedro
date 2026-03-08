@@ -381,8 +381,6 @@ export function ServiceOrderPublicShare() {
     }
   };
   const themeColor = '#fec832';
-  const showLogo = true;
-  const showCompanyName = true;
   const customMessage: string | null = null;
   const finalCompanyInfo = companyInfo;
   if (loading) {
