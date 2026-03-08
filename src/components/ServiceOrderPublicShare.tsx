@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { AlertCircle, CheckCircle, Phone, Building2, Package, Wrench, Truck, Archive, Calendar, ExternalLink, MapPin, FileCheck, Package2, Smartphone, Hash, Image, Clock, CreditCard, X, ChevronLeft, ChevronRight, Shield } from 'lucide-react';
+import { AlertCircle, CheckCircle, Phone, Building2, Package, Wrench, Truck, Archive, Calendar, ExternalLink, MapPin, FileCheck, Package2, Smartphone, Hash, Image, Clock, CreditCard, X, ChevronLeft, ChevronRight, Shield, Mail, Globe, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -313,7 +313,7 @@ export function ServiceOrderPublicShare() {
         // Direct lookup using owner_id from the fetched order
         const { data, error: companyError } = await supabase
           .from('company_info')
-          .select('id, name, logo_url, address, whatsapp_phone')
+          .select('id, name, logo_url, address, whatsapp_phone, email, cnpj, website, description, business_hours')
           .eq('owner_id', ownerId);
         if (!companyError) companyData = data as any[];
       } else if (tokenIsFormattedId) {
@@ -337,9 +337,11 @@ export function ServiceOrderPublicShare() {
             logo_url: data.logo_url,
             address: data.address,
             whatsapp_phone: data.whatsapp_phone,
-            description: null,
-            email: null,
-            website: null
+            description: data.description || null,
+            email: data.email || null,
+            website: data.website || null,
+            cnpj: data.cnpj || null,
+            business_hours: data.business_hours || null
           });
         }
       }
@@ -379,8 +381,6 @@ export function ServiceOrderPublicShare() {
     }
   };
   const themeColor = '#fec832';
-  const showLogo = true;
-  const showCompanyName = true;
   const customMessage: string | null = null;
   const finalCompanyInfo = companyInfo;
   if (loading) {
@@ -412,19 +412,37 @@ export function ServiceOrderPublicShare() {
   const paymentInfo = getPaymentStatusInfo(serviceOrder.is_paid);
   return <div className="min-h-screen bg-background">
       {/* Company Header */}
-      {(showLogo || showCompanyName) && finalCompanyInfo && <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
+      {finalCompanyInfo && <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
           <div className="max-w-4xl mx-auto px-4 py-4">
             <div className="flex items-center gap-4">
-              {showLogo && finalCompanyInfo.logo_url && <img src={finalCompanyInfo.logo_url} alt={finalCompanyInfo.name} className="w-12 h-12 object-contain rounded-xl" />}
-              <div className="flex-1">
-                {showCompanyName && finalCompanyInfo.name && <h1 className="text-lg font-bold" style={{
+              {finalCompanyInfo.logo_url && <img src={finalCompanyInfo.logo_url} alt={finalCompanyInfo.name} className="w-14 h-14 object-contain rounded-xl border border-border/50 bg-white p-1" />}
+              <div className="flex-1 min-w-0">
+                {finalCompanyInfo.name && <h1 className="text-lg font-bold truncate" style={{
               color: themeColor
             }}>
                     {finalCompanyInfo.name}
                   </h1>}
-                <p className="text-sm text-muted-foreground">
-                  {customMessage || 'Acompanhe o status do seu reparo'}
-                </p>
+                {finalCompanyInfo.description ? (
+                  <p className="text-sm text-muted-foreground truncate">{finalCompanyInfo.description}</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {customMessage || 'Acompanhe o status do seu reparo'}
+                  </p>
+                )}
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+                  {finalCompanyInfo.whatsapp_phone && (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Phone className="w-3 h-3" />
+                      {finalCompanyInfo.whatsapp_phone}
+                    </span>
+                  )}
+                  {finalCompanyInfo.email && (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Mail className="w-3 h-3" />
+                      {finalCompanyInfo.email}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -781,9 +799,19 @@ export function ServiceOrderPublicShare() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <p className="text-xs text-muted-foreground">Empresa</p>
-                <p className="font-semibold text-foreground">{finalCompanyInfo.name}</p>
+              <div className="flex items-center gap-3">
+                {finalCompanyInfo.logo_url && (
+                  <img src={finalCompanyInfo.logo_url} alt={finalCompanyInfo.name} className="w-12 h-12 object-contain rounded-xl border border-border/50 bg-white p-1" />
+                )}
+                <div>
+                  <p className="font-semibold text-foreground">{finalCompanyInfo.name}</p>
+                  {finalCompanyInfo.cnpj && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <FileText className="w-3 h-3" />
+                      CNPJ: {finalCompanyInfo.cnpj}
+                    </p>
+                  )}
+                </div>
               </div>
               
               {finalCompanyInfo.whatsapp_phone && <>
@@ -799,6 +827,19 @@ export function ServiceOrderPublicShare() {
                     </Button>
                   </div>
                 </>}
+
+              {finalCompanyInfo.email && <>
+                  <Separator />
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                      <Mail className="w-3 h-3" />
+                      E-mail
+                    </p>
+                    <a href={`mailto:${finalCompanyInfo.email}`} className="text-sm text-primary hover:underline">
+                      {finalCompanyInfo.email}
+                    </a>
+                  </div>
+                </>}
               
               {finalCompanyInfo.address && <>
                   <Separator />
@@ -808,6 +849,31 @@ export function ServiceOrderPublicShare() {
                       Endereço
                     </p>
                     <p className="text-sm text-foreground">{finalCompanyInfo.address}</p>
+                  </div>
+                </>}
+
+              {finalCompanyInfo.website && <>
+                  <Separator />
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                      <Globe className="w-3 h-3" />
+                      Website
+                    </p>
+                    <a href={finalCompanyInfo.website.startsWith('http') ? finalCompanyInfo.website : `https://${finalCompanyInfo.website}`} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
+                      {finalCompanyInfo.website}
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </>}
+
+              {finalCompanyInfo.business_hours && <>
+                  <Separator />
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      Horário de Funcionamento
+                    </p>
+                    <p className="text-sm text-foreground">{finalCompanyInfo.business_hours}</p>
                   </div>
                 </>}
             </CardContent>
