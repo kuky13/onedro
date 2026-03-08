@@ -1,33 +1,33 @@
-import { ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdminLicenseManagerEnhanced } from '@/components/admin/AdminLicenseManagerEnhanced';
 
 export function Dashboard() {
-  return <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">Gerenciamento do sistema.</p>
+  return (
+    <div className="space-y-6">
+      {/* Premium Header */}
+      <div className="space-y-2">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+          <LayoutDashboard className="h-6 w-6 text-primary" />
         </div>
+        <h1 className="text-xl lg:text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
+        <p className="text-sm lg:text-base text-muted-foreground">Gerenciamento geral do sistema.</p>
       </div>
 
-      {/* Cards de Métricas Rápidas (Placeholder - podem ser conectados a dados reais depois) */}
-      
-
-      {/* Gerenciador de Licenças Unificado */}
-      <div className="grid gap-4 md:grid-cols-1">
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-primary" />
-              Painel de Controle de Licenças
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AdminLicenseManagerEnhanced />
-          </CardContent>
-        </Card>
-      </div>
-
-    </div>;
+      {/* Gerenciador de Licenças */}
+      <Card className="rounded-2xl border-border/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+            </div>
+            Painel de Controle de Licenças
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AdminLicenseManagerEnhanced />
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
