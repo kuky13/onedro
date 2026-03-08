@@ -291,10 +291,6 @@ const AppContent = () => {
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
 
-        {/* Rota administrativa para gerenciar atualizações */}
-        <Route path="/update" element={<AdminGuard>
-          <AppShell><UpdateManagementPage /></AppShell>
-        </AdminGuard>} />
 
         {/* Gestão administrativa de usuários */}
         <Route path="/admins/usuarios" element={<MaintenanceGuard>
