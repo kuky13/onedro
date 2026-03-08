@@ -76,10 +76,20 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Query for service order data
+  const queryIdentifier = formattedId || shareToken || serviceOrderId;
+
   const serviceOrderQuery = useQuery({
-    queryKey: ['service-order-realtime', shareToken || serviceOrderId],
+    queryKey: ['service-order-realtime', queryIdentifier],
     queryFn: async (): Promise<ServiceOrderRealTimeData | null> => {
-      if (shareToken) {
+      if (formattedId) {
+        const { data, error } = await supabase
+          .rpc('get_service_order_by_formatted_id' as any, {
+            p_formatted_id: formattedId
+          });
+
+        if (error) throw error;
+        return (data as any)?.[0] || null;
+      } else if (shareToken) {
         const { data, error } = await supabase
           .rpc('get_service_order_by_share_token', {
             p_share_token: shareToken
@@ -119,8 +129,8 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
       }
       return null;
     },
-    enabled: !!(shareToken || serviceOrderId),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !!(formattedId || shareToken || serviceOrderId),
+    staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true
   });
