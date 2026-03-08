@@ -29,7 +29,19 @@ export const WormPdfConfig = () => {
 
 
   const handleEditTemplate = (template: any) => {
-    setEditingTemplate(template);
+    const isGlobal = !template.user_id;
+    if (isGlobal) {
+      // For global templates, open editor in "create copy" mode
+      setEditingTemplate({
+        ...template,
+        id: undefined, // Remove id so editor treats it as new
+        user_id: user?.id,
+        template_name: template.template_name + ' (Meu)',
+        is_default: true,
+      });
+    } else {
+      setEditingTemplate(template);
+    }
     setIsEditorOpen(true);
   };
 
@@ -149,27 +161,23 @@ export const WormPdfConfig = () => {
                                     <CardContent>
                                         <div
                                             className="bg-muted/50 rounded-lg p-4 font-mono text-sm whitespace-pre-wrap max-h-40 overflow-hidden text-ellipsis cursor-pointer hover:bg-muted/80 transition-colors group relative"
-                                            onClick={() => !isGlobal && handleEditTemplate(template)}
-                                            title={isGlobal ? 'Templates do sistema não podem ser editados' : 'Clique para editar'}
+                                            onClick={() => handleEditTemplate(template)}
+                                            title={isGlobal ? 'Clique para personalizar este template' : 'Clique para editar'}
                                         >
-                                            {!isGlobal && (
-                                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-md flex items-center gap-1">
-                                                        <Edit className="h-3 w-3" />
-                                                        Editar
-                                                    </span>
-                                                </div>
-                                            )}
+                                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-md flex items-center gap-1">
+                                                    <Edit className="h-3 w-3" />
+                                                    {isGlobal ? 'Personalizar' : 'Editar'}
+                                                </span>
+                                            </div>
                                             {template.service_section_template.substring(0, 200)}
                                             {template.service_section_template.length > 200 && '...'}
                                         </div>
                                         <div className="mt-4 flex gap-2">
-                                            {!isGlobal && (
-                                                <Button variant="outline" size="sm" onClick={() => handleEditTemplate(template)}>
-                                                    <Edit className="h-4 w-4 mr-2" />
-                                                    Editar Template
-                                                </Button>
-                                            )}
+                                            <Button variant="outline" size="sm" onClick={() => handleEditTemplate(template)}>
+                                                <Edit className="h-4 w-4 mr-2" />
+                                                {isGlobal ? 'Personalizar Template' : 'Editar Template'}
+                                            </Button>
                                             {!template.is_default && !isGlobal && (
                                                 <Button variant="outline" size="sm" onClick={() => handleSetDefault(template.id)}>
                                                     <Star className="h-4 w-4 mr-2" />
