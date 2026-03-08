@@ -69,7 +69,7 @@ export const DashboardLiteQuickAccessEnhanced = ({
                 key={action.id}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: i * 0.04 }}
+                transition={{ duration: 0.3, delay: Number(i) * 0.04 }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => handleActionClick(action)}
