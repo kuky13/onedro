@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { HeartCrack, AlertTriangle, Key, Calendar, Clock, Shield, Copy, Eye, EyeOff, LifeBuoy, Search } from 'lucide-react';
+import { HeartCrack, AlertTriangle, Key, Calendar, Clock, Shield, Copy, Eye, EyeOff, LifeBuoy, Search, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLicense } from '@/hooks/useLicense';
 import { useToast } from '@/hooks/useToast';
@@ -92,14 +92,24 @@ export const DashboardLiteLicenseStatus = () => {
             <p className="text-xs text-muted-foreground mt-0.5">{status.description}</p>
           </div>
         </div>
-        <button
-          onClick={() => navigate('/central-de-ajuda')}
-          className="flex-shrink-0 h-9 px-3 rounded-xl border border-border/60 bg-background/70 flex items-center gap-2 hover:bg-muted/50 transition-colors"
-          title="Central de ajuda"
-        >
-          <LifeBuoy className="h-4 w-4 text-muted-foreground" />
-          <span className="text-xs font-medium text-muted-foreground">Ajuda</span>
-        </button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => navigate('/suporte')}
+            className="h-9 px-3 rounded-xl border border-border/60 bg-background/70 flex items-center gap-2 hover:bg-muted/50 transition-colors"
+            title="Suporte"
+          >
+            <MessageCircle className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs font-medium text-muted-foreground">Suporte</span>
+          </button>
+          <button
+            onClick={() => navigate('/central-de-ajuda')}
+            className="h-9 px-3 rounded-xl border border-border/60 bg-background/70 flex items-center gap-2 hover:bg-muted/50 transition-colors"
+            title="Central de ajuda"
+          >
+            <LifeBuoy className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs font-medium text-muted-foreground">Ajuda</span>
+          </button>
+        </div>
       </div>
 
       {/* License details */}
