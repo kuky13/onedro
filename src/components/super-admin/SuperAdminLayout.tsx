@@ -16,70 +16,15 @@ const navigationItems = [{
   description: 'Visão geral do sistema'
 }, {
   name: 'Atualizações',
-  href: '/update',
+  href: '/supadmin/update',
   icon: Package,
   description: 'Gerenciar updates'
 }, {
   name: 'Problem',
-  href: '/problem',
+  href: '/supadmin/problem',
   icon: Bug,
   description: 'Diagnóstico (admin)'
 }, {
-  name: 'Usuários',
-  href: '/supadmin/users',
-  icon: Users,
-  description: 'Gerenciar usuários'
-}, {
-  name: 'Planos',
-  href: '/supadmin/plans',
-  icon: CreditCard,
-  description: 'Planos e preços'
-}, {
-  name: 'Licenças',
-  href: '/supadmin/licenca',
-  icon: Key,
-  description: 'Licenças dos usuários'
-}, {
-  name: 'Cupons',
-  href: '/supadmin/coupons',
-  icon: Ticket,
-  description: 'Cupons de desconto'
-}, {
-  name: 'Drippy IA',
-  href: '/supadmin/drippy',
-  icon: Brain,
-  description: 'Inteligência artificial'
-}, {
-  name: 'Películas',
-  href: '/supadmin/p',
-  icon: Film,
-  description: 'Películas compatíveis'
-}, {
-  name: 'Apps',
-  href: '/supadmin/apps',
-  icon: Grid3X3,
-  description: 'Hub de aplicativos'
-}, {
-  name: 'SMS & Mensagens',
-  href: '/supadmin/sms',
-  icon: MessageSquare,
-  description: 'Mensagens globais'
-}, {
-  name: 'WhatsApp',
-  href: '/supadmin/whatsapp',
-  icon: MessageSquare,
-  description: 'Orçamentos via WhatsApp'
-}, {
-  name: 'VPS',
-  href: '/supadmin/vps',
-  icon: Server,
-  description: 'Status da API'
-}, {
-  name: 'Download Vídeos',
-  href: '/supadmin/dw',
-  icon: Download,
-  description: 'Baixar vídeos'
-}];
 
 export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
