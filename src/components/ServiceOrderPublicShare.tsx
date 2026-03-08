@@ -301,7 +301,13 @@ export function ServiceOrderPublicShare() {
       // Fetch company info
       let companyData: any[] | null = null;
       const ownerId = serviceOrderData?.[0]?.owner_id;
-      if (directId && ownerId) {
+      if (directId && tokenIsFormattedId) {
+        // Use SECURITY DEFINER RPC for company info too
+        const { data, error: companyError } = await supabase.rpc('get_company_info_by_formatted_id' as any, {
+          p_formatted_id: token
+        });
+        if (!companyError) companyData = data as any[];
+      } else if (directId && ownerId) {
         // Direct lookup using owner_id from the fetched order
         const { data, error: companyError } = await supabase
           .from('company_info')
