@@ -65,7 +65,7 @@ const HelpCenterPage = () => {
       try {
         const feedbacks: Feedback[] = JSON.parse(savedFeedback);
         const counts: Record<string, number> = {};
-        feedbacks.forEach(f => {
+        feedbacks.forEach((f) => {
           if (f.type === 'helpful') {
             counts[f.contentId] = (counts[f.contentId] || 0) + 1;
           }
@@ -78,7 +78,7 @@ const HelpCenterPage = () => {
   }, []);
 
   const toggleSection = (sectionId: string) => {
-    setOpenSections(prev => prev.includes(sectionId) ? prev.filter(id => id !== sectionId) : [...prev, sectionId]);
+    setOpenSections((prev) => prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]);
   };
 
   // Salvar histórico de buscas
@@ -110,7 +110,7 @@ const HelpCenterPage = () => {
     localStorage.setItem('help_feedback', JSON.stringify(feedbacks.slice(-50)));
 
     if (type === 'helpful') {
-      setHelpfulCounts(prev => ({
+      setHelpfulCounts((prev) => ({
         ...prev,
         [contentId]: (prev[contentId] || 0) + 1
       }));
@@ -131,26 +131,26 @@ const HelpCenterPage = () => {
     if (!searchTerm || searchTerm.length < 2) return [];
 
     const allTerms = [
-      ...helpSectionsRef.current.flatMap(s => [s.title, s.description]),
-      ...faqItemsRef.current.flatMap(f => [f.question, f.answer])
-    ];
+    ...helpSectionsRef.current.flatMap((s) => [s.title, s.description]),
+    ...faqItemsRef.current.flatMap((f) => [f.question, f.answer])];
 
-    return [...new Set(allTerms
-      .filter(term => term.toLowerCase().includes(searchTerm.toLowerCase()))
-      .slice(0, 5))];
+
+    return [...new Set(allTerms.
+    filter((term) => term.toLowerCase().includes(searchTerm.toLowerCase())).
+    slice(0, 5))];
   }, [searchTerm]);
 
   // Atalhos rápidos
   const quickAccessItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', color: 'text-indigo-500' },
-    { icon: Wrench, label: 'Reparos', path: '/reparos', color: 'text-orange-600' },
-    { icon: Calculator, label: 'Criar Orçamento', path: '/worm', color: 'text-blue-500' },
-    { icon: ClipboardList, label: 'Ordens de Serviço', path: '/service-orders', color: 'text-green-500' },
-    { icon: MessageCircle, label: 'Falar com Drippy', path: '/chat', color: 'text-purple-500' },
-    { icon: Trash2, label: 'Lixeira', path: '/trash', color: 'text-red-500' },
-    { icon: ShieldCheck, label: 'Garantias', path: '/garantia', color: 'text-emerald-500' },
-    { icon: Smartphone, label: 'Películas', path: '/p', color: 'text-teal-500' },
-  ];
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', color: 'text-indigo-500' },
+  { icon: Wrench, label: 'Reparos', path: '/reparos', color: 'text-orange-600' },
+  { icon: Calculator, label: 'Criar Orçamento', path: '/worm', color: 'text-blue-500' },
+  { icon: ClipboardList, label: 'Ordens de Serviço', path: '/service-orders', color: 'text-green-500' },
+  { icon: MessageCircle, label: 'Falar com Drippy', path: '/chat', color: 'text-purple-500' },
+  { icon: Trash2, label: 'Lixeira', path: '/trash', color: 'text-red-500' },
+  { icon: ShieldCheck, label: 'Garantias', path: '/garantia', color: 'text-emerald-500' },
+  { icon: Smartphone, label: 'Películas', path: '/p', color: 'text-teal-500' }];
+
 
   // Definir helpSections e faqItems primeiro
   const helpSections: HelpSection[] = [{
@@ -439,8 +439,8 @@ const HelpCenterPage = () => {
     title: 'Planos e Assinaturas',
     icon: <Crown className="h-5 w-5" />,
     description: 'Entenda como funcionam os planos, pagamentos e ativação de licença',
-    content: (
-      <div className="space-y-6">
+    content:
+    <div className="space-y-6">
         <div className="bg-card p-4 rounded-lg border border-border">
           <h4 className="font-semibold text-foreground mb-2">🛒 Onde ver os planos disponíveis</h4>
           <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
@@ -468,14 +468,14 @@ const HelpCenterPage = () => {
           </ul>
         </div>
       </div>
-    ),
+
   }, {
     id: 'store',
     title: 'Minha Loja Online',
     icon: <Home className="h-5 w-5" />,
     description: 'Configure sua loja virtual para receber orçamentos e vender serviços/produtos online',
-    content: (
-      <div className="space-y-6">
+    content:
+    <div className="space-y-6">
         <div className="bg-card p-4 rounded-lg border border-border">
           <h4 className="font-semibold text-foreground mb-2">🚀 Criando sua loja</h4>
           <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
@@ -519,14 +519,14 @@ const HelpCenterPage = () => {
           </ul>
         </div>
       </div>
-    ),
+
   }, {
     id: 'dashboard',
     title: 'Dashboard (Visão Geral)',
     icon: <LayoutDashboard className="h-5 w-5" />,
     description: 'Acompanhe as métricas e indicadores de vendas e serviços da sua loja',
-    content: (
-      <div className="space-y-6">
+    content:
+    <div className="space-y-6">
         <div className="bg-card p-4 rounded-lg border border-border">
           <h4 className="font-semibold text-foreground mb-2">📊 Métricas Principais</h4>
           <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
@@ -542,14 +542,14 @@ const HelpCenterPage = () => {
           </p>
         </div>
       </div>
-    )
+
   }, {
     id: 'reparos',
     title: 'Central de Reparos',
     icon: <Wrench className="h-5 w-5" />,
     description: 'Gestão de bancada, técnicos e serviços em andamento',
-    content: (
-      <div className="space-y-6">
+    content:
+    <div className="space-y-6">
         <div className="bg-card p-4 rounded-lg border border-border">
           <h4 className="font-semibold text-foreground mb-2">👨‍🔧 Gestão de Técnicos</h4>
           <p className="text-sm text-muted-foreground mb-2">
@@ -565,14 +565,14 @@ const HelpCenterPage = () => {
           </ul>
         </div>
       </div>
-    )
+
   }, {
     id: 'garantia',
     title: 'Controle de Garantias',
     icon: <ShieldCheck className="h-5 w-5" />,
     description: 'Consulte garantias, registre devoluções e emita laudos',
-    content: (
-      <div className="space-y-6">
+    content:
+    <div className="space-y-6">
         <div className="bg-card p-4 rounded-lg border border-border">
           <h4 className="font-semibold text-foreground mb-2">🔍 Verificação Rápida</h4>
           <p className="text-sm text-muted-foreground">
@@ -580,14 +580,14 @@ const HelpCenterPage = () => {
           </p>
         </div>
       </div>
-    )
+
   }, {
     id: 'apps',
     title: 'Hub de Aplicativos',
     icon: <Grid className="h-5 w-5" />,
     description: 'Ative ou gerencie integrações no sistema',
-    content: (
-      <div className="space-y-6">
+    content:
+    <div className="space-y-6">
         <div className="bg-card p-4 rounded-lg border border-border">
           <h4 className="font-semibold text-foreground mb-2">🧩 Módulos Extra</h4>
           <p className="text-sm text-muted-foreground">
@@ -595,14 +595,14 @@ const HelpCenterPage = () => {
           </p>
         </div>
       </div>
-    )
+
   }, {
     id: 'peliculas',
     title: 'Consulta de Películas',
     icon: <Smartphone className="h-5 w-5" />,
     description: 'Consulte compatibilidade de películas entre diferentes modelos',
-    content: (
-      <div className="space-y-6">
+    content:
+    <div className="space-y-6">
         <div className="bg-card p-4 rounded-lg border border-border">
           <h4 className="font-semibold text-foreground mb-2">📱 Compatibilidade</h4>
           <p className="text-sm text-muted-foreground">
@@ -610,14 +610,14 @@ const HelpCenterPage = () => {
           </p>
         </div>
       </div>
-    )
+
   }, {
     id: 'notificacoes',
     title: 'Central de Notificações',
     icon: <Bell className="h-5 w-5" />,
     description: 'Fique por dentro das atualizações e alertas do sistema',
-    content: (
-      <div className="space-y-6">
+    content:
+    <div className="space-y-6">
         <div className="bg-card p-4 rounded-lg border border-border">
           <h4 className="font-semibold text-foreground mb-2">🔔 Alertas e Avisos</h4>
           <p className="text-sm text-muted-foreground">
@@ -625,7 +625,7 @@ const HelpCenterPage = () => {
           </p>
         </div>
       </div>
-    )
+
   }];
   const faqItems: FAQItem[] = [{
     question: "Como posso recuperar um orçamento excluído?",
@@ -754,7 +754,7 @@ const HelpCenterPage = () => {
     icon: <Bell className="h-4 w-4" />
   }];
   const filteredSections = useMemo(() => {
-    return helpSections.filter(section => {
+    return helpSections.filter((section) => {
       const matchesSearch = section.title.toLowerCase().includes(searchTerm.toLowerCase()) || section.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || section.id === selectedCategory;
       return matchesSearch && matchesCategory;
@@ -762,7 +762,7 @@ const HelpCenterPage = () => {
   }, [searchTerm, selectedCategory, helpSections]);
 
   const filteredFAQ = useMemo(() => {
-    return faqItems.filter(item => {
+    return faqItems.filter((item) => {
       const matchesSearch = item.question.toLowerCase().includes(searchTerm.toLowerCase()) || item.answer.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
       return matchesSearch && matchesCategory;
@@ -788,10 +788,10 @@ const HelpCenterPage = () => {
             </div>
             <h1 className="text-4xl font-bold text-foreground">Central de Ajuda</h1>
           </div>
-          <Button variant="outline" className="flex items-center gap-2" onClick={() => navigate('/dashboard')}>
-            <Home className="h-4 w-4" />
-            Menu
-          </Button>
+          
+
+
+          
         </div>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
           Encontre respostas, tutoriais e guias completos para aproveitar ao máximo
@@ -809,46 +809,46 @@ const HelpCenterPage = () => {
               placeholder="Busque por palavras-chave, perguntas ou funcionalidades..."
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10 pr-4 py-6 text-lg"
-            />
-            {searchSuggestions.length > 0 && (
-              <div className="absolute z-10 w-full mt-2 bg-card border rounded-lg shadow-lg">
-                {searchSuggestions.map((suggestion, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleSearch(suggestion)}
-                    className="w-full text-left px-4 py-2 hover:bg-muted transition-colors flex items-center gap-2"
-                  >
+              className="pl-10 pr-4 py-6 text-lg" />
+            
+            {searchSuggestions.length > 0 &&
+            <div className="absolute z-10 w-full mt-2 bg-card border rounded-lg shadow-lg">
+                {searchSuggestions.map((suggestion, idx) =>
+              <button
+                key={idx}
+                onClick={() => handleSearch(suggestion)}
+                className="w-full text-left px-4 py-2 hover:bg-muted transition-colors flex items-center gap-2">
+                
                     <Search className="h-4 w-4 text-muted-foreground" />
                     <span>{suggestion}</span>
                   </button>
-                ))}
+              )}
               </div>
-            )}
+            }
           </div>
 
           {/* Histórico de Buscas */}
-          {searchHistory.length > 0 && searchTerm === '' && (
-            <div className="mt-4">
+          {searchHistory.length > 0 && searchTerm === '' &&
+          <div className="mt-4">
               <div className="flex items-center gap-2 mb-2">
                 <History className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">Buscas recentes:</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {searchHistory.slice(0, 5).map((item) => (
-                  <Button
-                    key={item.id}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleSearch(item.query)}
-                    className="text-xs"
-                  >
+                {searchHistory.slice(0, 5).map((item) =>
+              <Button
+                key={item.id}
+                variant="outline"
+                size="sm"
+                onClick={() => handleSearch(item.query)}
+                className="text-xs">
+                
                     {item.query}
                   </Button>
-                ))}
+              )}
               </div>
             </div>
-          )}
+          }
         </CardContent>
       </Card>
 
@@ -869,12 +869,12 @@ const HelpCenterPage = () => {
                   key={idx}
                   variant="outline"
                   className="h-auto p-4 flex flex-col items-center gap-2 hover:bg-primary/5"
-                  onClick={() => navigate(item.path)}
-                >
+                  onClick={() => navigate(item.path)}>
+                  
                   <Icon className={`h-6 w-6 ${item.color}`} />
                   <span className="text-xs text-center">{item.label}</span>
-                </Button>
-              );
+                </Button>);
+
             })}
           </div>
         </CardContent>
@@ -892,24 +892,24 @@ const HelpCenterPage = () => {
         <TabsContent value="search" className="mt-6">
           {/* Filtros de Categoria */}
           <div className="flex flex-wrap gap-2 mb-6">
-            {categories.map((cat) => (
-              <Button
-                key={cat.id}
-                variant={selectedCategory === cat.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory(cat.id)}
-                className="flex items-center gap-2"
-              >
+            {categories.map((cat) =>
+            <Button
+              key={cat.id}
+              variant={selectedCategory === cat.id ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedCategory(cat.id)}
+              className="flex items-center gap-2">
+              
                 {cat.icon}
                 {cat.label}
               </Button>
-            ))}
+            )}
           </div>
 
           {/* Help Sections */}
           <div className="space-y-6 mb-12">
-            {filteredSections.length === 0 && filteredFAQ.length === 0 ? (
-              <Card>
+            {filteredSections.length === 0 && filteredFAQ.length === 0 ?
+            <Card>
                 <CardContent className="p-8 text-center">
                   <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground">
@@ -919,10 +919,10 @@ const HelpCenterPage = () => {
                     Tente usar termos diferentes ou navegue pelas categorias acima
                   </p>
                 </CardContent>
-              </Card>
-            ) : (
-              <>
-                {filteredSections.map(section => <Card key={section.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              </Card> :
+
+            <>
+                {filteredSections.map((section) => <Card key={section.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                   <Collapsible open={openSections.includes(section.id)} onOpenChange={() => toggleSection(section.id)}>
                     <CollapsibleTrigger asChild>
                       <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
@@ -950,77 +950,77 @@ const HelpCenterPage = () => {
                         {/* Feedback */}
                         <div className="mt-6 flex items-center gap-4 pt-4 border-t">
                           <span className="text-sm text-muted-foreground">Esta informação foi útil?</span>
-                          {(helpfulCounts[section.id] ?? 0) > 0 && (
-                            <Badge variant="secondary" className="flex items-center gap-1">
+                          {(helpfulCounts[section.id] ?? 0) > 0 &&
+                        <Badge variant="secondary" className="flex items-center gap-1">
                               <ThumbsUp className="h-3 w-3" />
                               {helpfulCounts[section.id]}
                             </Badge>
-                          )}
+                        }
                           <div className="flex gap-2">
                             <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => saveFeedback(section.id, 'helpful')}
-                              className="flex items-center gap-1"
-                            >
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => saveFeedback(section.id, 'helpful')}
+                            className="flex items-center gap-1">
+                            
                               <ThumbsUp className="h-4 w-4" />
                               Sim
                             </Button>
                             <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setShowFeedbackForm(section.id)}
-                              className="flex items-center gap-1"
-                            >
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowFeedbackForm(section.id)}
+                            className="flex items-center gap-1">
+                            
                               <ThumbsDown className="h-4 w-4" />
                               Não
                             </Button>
                           </div>
                         </div>
 
-                        {showFeedbackForm === section.id && (
-                          <div className="mt-4 p-4 bg-muted rounded-lg">
+                        {showFeedbackForm === section.id &&
+                      <div className="mt-4 p-4 bg-muted rounded-lg">
                             <Label htmlFor="feedback">Como podemos melhorar?</Label>
                             <Textarea
-                              id="feedback"
-                              value={feedbackComment}
-                              onChange={(e) => setFeedbackComment(e.target.value)}
-                              placeholder="Sua opinião nos ajuda muito..."
-                              className="mt-2"
-                            />
+                          id="feedback"
+                          value={feedbackComment}
+                          onChange={(e) => setFeedbackComment(e.target.value)}
+                          placeholder="Sua opinião nos ajuda muito..."
+                          className="mt-2" />
+                        
                             <div className="flex gap-2 mt-2">
                               <Button
-                                size="sm"
-                                onClick={() => saveFeedback(section.id, 'not-helpful', feedbackComment)}
-                              >
+                            size="sm"
+                            onClick={() => saveFeedback(section.id, 'not-helpful', feedbackComment)}>
+                            
                                 Enviar
                               </Button>
                               <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setShowFeedbackForm(null);
-                                  setFeedbackComment('');
-                                }}
-                              >
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setShowFeedbackForm(null);
+                              setFeedbackComment('');
+                            }}>
+                            
                                 Cancelar
                               </Button>
                             </div>
                           </div>
-                        )}
+                      }
                       </CardContent>
                     </CollapsibleContent>
                   </Collapsible>
                 </Card>)}
               </>
-            )}
+            }
           </div>
         </TabsContent>
 
         <TabsContent value="guides" className="mt-6">
           <div className="space-y-6">
-            {helpSections.map((section) => (
-              <Card key={section.id}>
+            {helpSections.map((section) =>
+            <Card key={section.id}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     {section.icon}
@@ -1031,14 +1031,14 @@ const HelpCenterPage = () => {
                   {section.content}
                 </CardContent>
               </Card>
-            ))}
+            )}
           </div>
         </TabsContent>
 
         <TabsContent value="faq" className="mt-6">
           <div className="space-y-4">
-            {filteredFAQ.map((item, index) => (
-              <Card key={index} className="hover:shadow-md transition-shadow">
+            {filteredFAQ.map((item, index) =>
+            <Card key={index} className="hover:shadow-md transition-shadow">
                 <CardHeader>
                   <CardTitle className="text-lg">{item.question}</CardTitle>
                 </CardHeader>
@@ -1047,24 +1047,24 @@ const HelpCenterPage = () => {
                   <div className="flex items-center gap-4 mt-4 pt-4 border-t">
                     <div className="flex gap-2 ml-auto">
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => saveFeedback(`faq-${index}`, 'helpful')}
-                      >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => saveFeedback(`faq-${index}`, 'helpful')}>
+                      
                         <ThumbsUp className="h-4 w-4" />
                       </Button>
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => saveFeedback(`faq-${index}`, 'not-helpful')}
-                      >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => saveFeedback(`faq-${index}`, 'not-helpful')}>
+                      
                         <ThumbsDown className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            )}
           </div>
         </TabsContent>
 
