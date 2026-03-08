@@ -15,15 +15,15 @@ const AppShellContent = ({ children }: AppShellProps) => {
   return (
     <div className="min-h-screen bg-background">
       {/* Floating hamburger button - only on mobile, fixed position */}
-      {isMobile && (
-        <div className="fixed top-3 left-3 z-40">
-          <MobileHamburgerButton
-            isOpen={isOpen}
-            onClick={toggleMenu}
-            className="bg-background/80 backdrop-blur-lg border border-border/50 shadow-lg"
-          />
+      {isMobile &&
+      <div className="fixed top-3 left-3 z-40">
+          
+
+
+
+        
         </div>
-      )}
+      }
 
       {/* Page content */}
       {children}
@@ -34,16 +34,16 @@ const AppShellContent = ({ children }: AppShellProps) => {
         onClose={closeMenu}
         onTabChange={() => closeMenu()}
         menuData={menuData}
-        onLogout={handleLogout}
-      />
-    </div>
-  );
+        onLogout={handleLogout} />
+      
+    </div>);
+
 };
 
 export const AppShell = ({ children }: AppShellProps) => {
   return (
     <MobileMenuProvider>
       <AppShellContent>{children}</AppShellContent>
-    </MobileMenuProvider>
-  );
+    </MobileMenuProvider>);
+
 };
