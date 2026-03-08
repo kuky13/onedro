@@ -24,9 +24,11 @@ export const OnboardingWelcome = ({ onNext, onSkipAll }: Props) => {
       className="text-center space-y-8"
     >
       <div className="flex justify-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-          <Rocket className="h-10 w-10 text-primary" />
-        </div>
+        <img
+          src="/lovable-uploads/logoo.png"
+          alt="Logo"
+          className="h-20 w-20 rounded-full object-contain"
+        />
       </div>
 
       <div className="space-y-3">
