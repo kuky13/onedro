@@ -1,31 +1,31 @@
-import { Card, CardContent } from '@/components/ui/card';
+import { Lightbulb } from 'lucide-react';
+
+const tips = [
+  'Use a busca para encontrar orçamentos rapidamente',
+  'Personalize dados da empresa em Configurações',
+  'Compartilhe orçamentos com um clique no WhatsApp',
+];
 
 export const DashboardLiteHelpSupport = () => {
   return (
-    <div className="space-y-4">
-      {/* Dicas Rápidas */}
-      <Card className="border-dashed border-muted-foreground/20">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
-            <h4 className="text-sm font-medium text-foreground">Dicas Rápidas</h4>
+    <div className="rounded-2xl border border-border/50 bg-card p-4 space-y-3">
+      <div className="flex items-center gap-2.5">
+        <div className="w-8 h-8 rounded-xl bg-accent/50 flex items-center justify-center">
+          <Lightbulb className="h-4 w-4 text-accent-foreground" />
+        </div>
+        <h4 className="text-sm font-semibold text-foreground">Dicas Rápidas</h4>
+      </div>
+
+      <div className="space-y-2">
+        {tips.map((tip, i) => (
+          <div
+            key={i}
+            className="rounded-xl bg-muted/20 px-3 py-2.5 text-xs text-muted-foreground leading-relaxed"
+          >
+            {tip}
           </div>
-          <div className="space-y-2 text-xs text-muted-foreground">
-            <div className="flex items-start gap-2">
-              <div className="w-1 h-1 rounded-full bg-primary mt-1.5 flex-shrink-0"></div>
-              <span>Use a busca para encontrar orçamentos rapidamente</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-1 h-1 rounded-full bg-primary mt-1.5 flex-shrink-0"></div>
-              <span>Personalize dados da empresa em Configurações</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-1 h-1 rounded-full bg-primary mt-1.5 flex-shrink-0"></div>
-              <span>Compartilhe orçamentos com um clique no WhatsApp</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        ))}
+      </div>
     </div>
   );
 };

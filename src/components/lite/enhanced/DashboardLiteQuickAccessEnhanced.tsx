@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { PlusCircle, List, Settings, Shield, Users, Wrench, MoreHorizontal, Hammer, Store } from 'lucide-react';
+import { List, Settings, Shield, Users, Wrench, MoreHorizontal, Hammer, Store } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { GlassCard, RippleButton } from '@/components/ui/animations/micro-interactions';
-import { StaggerContainer } from '@/components/ui/animations/page-transitions';
 import { PWAInstallModalSimple } from '@/components/ui/PWAInstallModalSimple';
 import { usePWASimple } from '@/hooks/usePWASimple';
 
@@ -15,192 +13,92 @@ interface DashboardLiteQuickAccessEnhancedProps {
 interface QuickAccessAction {
   id: string;
   label: string;
-  icon: typeof PlusCircle;
+  icon: typeof List;
   tab: string;
   permission: string | null;
-  gradient: string;
-  iconColor: string;
+  colorClass: string;
+  bgClass: string;
 }
 
-const quickAccessActions: QuickAccessAction[] = [{
-  id: 'budgets',
-  label: 'Orçamentos',
-  icon: List,
-  tab: 'budgets',
-  permission: 'view_own_budgets',
-  gradient: 'from-blue-500 to-cyan-500',
-  iconColor: 'text-blue-600'
-}, {
-  id: 'service-orders',
-  label: 'Ordens de Serviço',
-  icon: Wrench,
-  tab: 'service-orders',
-  permission: null,
-  gradient: 'from-amber-500 to-yellow-500',
-  iconColor: 'text-amber-600'
-}, {
-  id: 'warranties',
-  label: 'Garantias',
-  icon: Shield,
-  tab: 'warranties',
-  permission: null,
-  gradient: 'from-teal-500 to-cyan-500',
-  iconColor: 'text-teal-600'
-}, {
-  id: 'clients',
-  label: 'Clientes',
-  icon: Users,
-  tab: 'clients',
-  permission: null,
-  gradient: 'from-purple-500 to-indigo-500',
-  iconColor: 'text-purple-600'
-}, {
-  id: 'reparos',
-  label: 'Gestão de Reparos',
-  icon: Hammer,
-  tab: 'reparos',
-  permission: null,
-  gradient: 'from-orange-500 to-red-500',
-  iconColor: 'text-orange-600'
-}, {
-  id: 'store',
-  label: 'Minha Loja',
-  icon: Store,
-  tab: 'store',
-  permission: null,
-  gradient: 'from-violet-500 to-purple-500',
-  iconColor: 'text-violet-600'
-}, {
-  id: 'settings',
-  label: 'Configurações',
-  icon: Settings,
-  tab: 'settings',
-  permission: null,
-  gradient: 'from-gray-500 to-slate-500',
-  iconColor: 'text-gray-600'
-}, {
-  id: 'more',
-  label: 'Ver Mais',
-  icon: MoreHorizontal,
-  tab: 'more',
-  permission: null,
-  gradient: 'from-zinc-500 to-neutral-500',
-  iconColor: 'text-zinc-600'
-}];
+const quickAccessActions: QuickAccessAction[] = [
+  { id: 'budgets', label: 'Orçamentos', icon: List, tab: 'budgets', permission: 'view_own_budgets', colorClass: 'text-blue-500', bgClass: 'bg-blue-500/10' },
+  { id: 'service-orders', label: 'Ordens de Serviço', icon: Wrench, tab: 'service-orders', permission: null, colorClass: 'text-amber-500', bgClass: 'bg-amber-500/10' },
+  { id: 'warranties', label: 'Garantias', icon: Shield, tab: 'warranties', permission: null, colorClass: 'text-teal-500', bgClass: 'bg-teal-500/10' },
+  { id: 'clients', label: 'Clientes', icon: Users, tab: 'clients', permission: null, colorClass: 'text-purple-500', bgClass: 'bg-purple-500/10' },
+  { id: 'reparos', label: 'Gestão de Reparos', icon: Hammer, tab: 'reparos', permission: null, colorClass: 'text-orange-500', bgClass: 'bg-orange-500/10' },
+  { id: 'store', label: 'Minha Loja', icon: Store, tab: 'store', permission: null, colorClass: 'text-violet-500', bgClass: 'bg-violet-500/10' },
+  { id: 'settings', label: 'Configurações', icon: Settings, tab: 'settings', permission: null, colorClass: 'text-muted-foreground', bgClass: 'bg-muted/30' },
+  { id: 'more', label: 'Ver Mais', icon: MoreHorizontal, tab: 'more', permission: null, colorClass: 'text-muted-foreground', bgClass: 'bg-muted/30' },
+];
 
 export const DashboardLiteQuickAccessEnhanced = ({
   onTabChange,
-  hasPermission
+  hasPermission,
 }: DashboardLiteQuickAccessEnhancedProps) => {
   const navigate = useNavigate();
   const [showPWAModal, setShowPWAModal] = useState(false);
   const { isInstalling } = usePWASimple();
-  
-  const handleActionClick = async (action: QuickAccessAction) => {
-    // Handle PWA install modal
-    if (action.id === 'download-app') {
-      setShowPWAModal(true);
-      return;
-    }
-    
-    // Redirecionar para /worm para 'Novo Orçamento' e 'Ver Orçamentos'
-    if (action.id === 'new-budget' || action.id === 'budgets') {
-      navigate('/worm');
-    } else if (action.id === 'service-orders') {
-      navigate('/service-orders');
-    } else if (action.id === 'warranties') {
-      navigate('/garantia');
-    } else if (action.id === 'reparos') {
-      navigate('/reparos');
-    } else if (action.id === 'store') {
-      navigate('/store');
-    } else if (action.id === 'peliculas') {
-      navigate('/p');
-    } else if (action.id === 'settings') {
-      navigate('/settings');
-    } else if (action.id === 'more') {
-      navigate('/apps');
-    } else {
-      onTabChange(action.tab);
-    }
+
+  const handleActionClick = (action: QuickAccessAction) => {
+    if (action.id === 'download-app') { setShowPWAModal(true); return; }
+    const routes: Record<string, string> = {
+      'new-budget': '/worm', budgets: '/worm', 'service-orders': '/service-orders',
+      warranties: '/garantia', reparos: '/reparos', store: '/store',
+      peliculas: '/p', settings: '/settings', more: '/apps',
+    };
+    const route = routes[action.id];
+    if (route) navigate(route);
+    else onTabChange(action.tab);
   };
 
-  const availableActions = quickAccessActions.filter(action => 
-    !action.permission || hasPermission(action.permission)
+  const availableActions = quickAccessActions.filter(
+    (a) => !a.permission || hasPermission(a.permission)
   );
 
   return (
     <>
-      <GlassCard className="p-6 mb-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-foreground">
-              Acesso Rápido
-            </h3>
-          </div>
-          
-          <StaggerContainer className="grid grid-cols-2 gap-4">
-            {availableActions.map((action) => {
-              const Icon = action.icon;
-              const isDownloadApp = action.id === 'download-app';
-              const isLoadingDownload = isDownloadApp && isInstalling;
-              
-              return (
-                <motion.div
-                  key={action.id}
-                  whileHover={{ scale: isLoadingDownload ? 1 : 1.02 }}
-                  whileTap={{ scale: isLoadingDownload ? 1 : 0.98 }}
-                >
-                  <RippleButton
-                    onClick={() => handleActionClick(action)}
-                    disabled={isLoadingDownload}
-                    className={`w-full h-24 bg-gradient-to-br from-background/50 to-background/20 border border-border/50 rounded-2xl hover:border-border/80 transition-all duration-300 relative overflow-hidden group ${isLoadingDownload ? 'opacity-70 cursor-not-allowed' : ''}`}
-                    variant="ghost"
-                  >
-                    {/* Background gradient effect */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
-                    
-                    <div className="flex flex-col items-center justify-center space-y-3 relative z-10">
-                      <div className="w-10 h-10 bg-muted/30 rounded-2xl flex items-center justify-center group-hover:bg-muted/50 transition-colors">
-                        {isLoadingDownload ? (
-                          <motion.div
-                            className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full"
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                          />
-                        ) : (
-                          <Icon className={`h-5 w-5 ${action.iconColor} group-hover:scale-110 transition-transform duration-200`} />
-                        )}
-                      </div>
-                      
-                      <span className="text-sm font-medium text-center leading-tight text-foreground group-hover:text-foreground/90">
-                        {isLoadingDownload ? 'Instalando...' : action.label}
-                      </span>
-                    </div>
-                    
-                    {/* Subtle shine effect */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
-                      initial={{ x: '-100%' }}
-                      whileHover={{ x: '100%' }}
-                      transition={{ duration: 0.6 }}
-                    />
-                  </RippleButton>
-                </motion.div>
-              );
-            })}
-          </StaggerContainer>
-        </motion.div>
-      </GlassCard>
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-foreground">Acesso Rápido</h3>
 
-      <PWAInstallModalSimple 
-        open={showPWAModal} 
-        onOpenChange={setShowPWAModal} 
-      />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {availableActions.map((action, index) => {
+            const Icon = action.icon;
+            const isLoadingDownload = action.id === 'download-app' && isInstalling;
+            const delayValue = index * 0.04;
+
+            return (
+              <motion.button
+                key={action.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: delayValue }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => handleActionClick(action)}
+                disabled={isLoadingDownload}
+                className="flex flex-col items-center justify-center gap-3 h-28 rounded-2xl border border-border/50 bg-card hover:border-primary/30 hover:shadow-md transition-all duration-200 group"
+              >
+                <div className={`w-11 h-11 rounded-xl ${action.bgClass} flex items-center justify-center group-hover:scale-105 transition-transform`}>
+                  {isLoadingDownload ? (
+                    <motion.div
+                      className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    />
+                  ) : (
+                    <Icon className={`h-5 w-5 ${action.colorClass}`} />
+                  )}
+                </div>
+                <span className="text-xs font-medium text-foreground text-center leading-tight px-1">
+                  {isLoadingDownload ? 'Instalando...' : action.label}
+                </span>
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+
+      <PWAInstallModalSimple open={showPWAModal} onOpenChange={setShowPWAModal} />
     </>
   );
 };

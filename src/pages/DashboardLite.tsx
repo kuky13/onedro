@@ -143,8 +143,8 @@ export const DashboardLite = ({ initialTab }: DashboardLiteProps) => {
   // IMPORTANTE: Este hook deve ser chamado ANTES de qualquer return condicional
   const dashboardContent = useMemo(() => (
     <PageTransition type="fadeScale">
-        <div className={`${isDesktop ? 'desktop-dashboard-layout' : 'p-4 space-y-6'}`}>
-          <div className={`${isDesktop ? 'desktop-dashboard-main' : ''}`}>
+        <div className={`${isDesktop ? 'desktop-dashboard-layout' : 'px-4 pb-6 space-y-6'}`}>
+          <div className={`${isDesktop ? 'desktop-dashboard-main' : 'space-y-6'}`}>
             <DashboardLiteStatsEnhanced profile={profile} />
             <DashboardLiteQuickAccessEnhanced onTabChange={setActiveTab} hasPermission={hasPermission} />
           </div>
