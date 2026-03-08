@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -131,7 +131,9 @@ function isFormattedId(token: string): boolean {
 
 export function ServiceOrderPublicShare() {
   const params = useParams<{ shareToken: string }>();
+  const [searchParams] = useSearchParams();
   const token = params.shareToken;
+  const directId = searchParams.get('id'); // UUID from new links
   const tokenIsFormattedId = token ? isFormattedId(token) : false;
 
   const [serviceOrder, setServiceOrder] = useState<ServiceOrderData | null>(null);
@@ -148,7 +150,11 @@ export function ServiceOrderPublicShare() {
   } | null>(null);
 
   const realtimeOptions: Parameters<typeof useServiceOrderRealTime>[0] = token ? {
-    ...(tokenIsFormattedId ? { formattedId: token } : { shareToken: token }),
+    ...(directId
+      ? { serviceOrderId: directId }
+      : tokenIsFormattedId
+        ? { formattedId: token }
+        : { shareToken: token }),
     enablePolling: true,
     pollingInterval: 30000,
     enableNotifications: true
@@ -238,8 +244,17 @@ export function ServiceOrderPublicShare() {
     try {
       let serviceOrderData: any[] | null = null;
 
-      if (tokenIsFormattedId) {
-        // Use formatted_id lookup (permanent link)
+      if (directId) {
+        // Direct UUID lookup (new links with ?id= param) - unambiguous
+        const { data, error: soError } = await supabase
+          .from('service_orders')
+          .select('*, clients(name, phone)')
+          .eq('id', directId)
+          .single();
+        if (soError) throw new Error(soError.message);
+        serviceOrderData = data ? [data] : [];
+      } else if (tokenIsFormattedId) {
+        // Legacy formatted_id lookup (may be ambiguous across owners)
         const { data, error: soError } = await supabase.rpc('get_service_order_by_formatted_id' as any, {
           p_formatted_id: token
         });
@@ -269,7 +284,15 @@ export function ServiceOrderPublicShare() {
 
       // Fetch company info
       let companyData: any[] | null = null;
-      if (tokenIsFormattedId) {
+      const ownerId = serviceOrderData?.[0]?.owner_id;
+      if (directId && ownerId) {
+        // Direct lookup using owner_id from the fetched order
+        const { data, error: companyError } = await supabase
+          .from('company_info')
+          .select('id, name, logo_url, address, whatsapp_phone')
+          .eq('owner_id', ownerId);
+        if (!companyError) companyData = data as any[];
+      } else if (tokenIsFormattedId) {
         const { data, error: companyError } = await supabase.rpc('get_company_info_by_formatted_id' as any, {
           p_formatted_id: token
         });

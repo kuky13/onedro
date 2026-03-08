@@ -11,10 +11,11 @@ export interface ShareTokenData {
 /**
  * Builds a permanent share URL using the formatted_id (e.g., OS0001)
  */
-export function buildFormattedShareUrl(sequentialNumber: number | null | undefined): string | null {
+export function buildFormattedShareUrl(sequentialNumber: number | null | undefined, orderId?: string): string | null {
   if (sequentialNumber == null) return null;
   const formattedId = `OS${String(sequentialNumber).padStart(4, '0')}`;
-  return `${window.location.origin}/share/service-order/${formattedId}`;
+  const base = `${window.location.origin}/share/service-order/${formattedId}`;
+  return orderId ? `${base}?id=${orderId}` : base;
 }
 
 export interface ServiceOrderShareData {
@@ -58,7 +59,7 @@ export function useServiceOrderShare() {
 
       if (orderData?.sequential_number) {
         const formattedId = `OS${String(orderData.sequential_number).padStart(4, '0')}`;
-        const shareUrl = `${window.location.origin}/share/service-order/${formattedId}`;
+        const shareUrl = `${window.location.origin}/share/service-order/${formattedId}?id=${serviceOrderId}`;
         toast.success('Link permanente gerado com sucesso!');
         return {
           share_token: formattedId,

@@ -33,7 +33,7 @@ export const ServiceOrderActions = ({
 
   const handleViewShare = async () => {
     // Try permanent URL first
-    const permanentUrl = buildFormattedShareUrl(sequentialNumber);
+    const permanentUrl = buildFormattedShareUrl(sequentialNumber, createdOrderId);
     if (permanentUrl) {
       window.open(permanentUrl.replace(window.location.origin, ''), '_blank');
       return;
