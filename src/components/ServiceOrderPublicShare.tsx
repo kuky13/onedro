@@ -248,11 +248,23 @@ export function ServiceOrderPublicShare() {
         // Direct UUID lookup (new links with ?id= param) - unambiguous
         const { data, error: soError } = await supabase
           .from('service_orders')
-          .select('*, clients(name, phone)')
+          .select('*, clients!fk_service_orders_client_id(name, phone)')
           .eq('id', directId)
-          .single();
-        if (soError) throw new Error(soError.message);
-        serviceOrderData = data ? [data] : [];
+          .maybeSingle();
+        if (soError) {
+          // Fallback: if RLS blocks direct access, try the formatted_id RPC
+          if (tokenIsFormattedId) {
+            const { data: rpcData, error: rpcError } = await supabase.rpc('get_service_order_by_formatted_id' as any, {
+              p_formatted_id: token
+            });
+            if (rpcError) throw new Error(rpcError.message);
+            serviceOrderData = rpcData as any[];
+          } else {
+            throw new Error(soError.message);
+          }
+        } else {
+          serviceOrderData = data ? [data] : [];
+        }
       } else if (tokenIsFormattedId) {
         // Legacy formatted_id lookup (may be ambiguous across owners)
         const { data, error: soError } = await supabase.rpc('get_service_order_by_formatted_id' as any, {
