@@ -287,9 +287,6 @@ const AppContent = () => {
         <Route path="/settings" element={<UnifiedProtectionGuard>
           <AppShell><ServiceOrdersSettingsHub /></AppShell>
         </UnifiedProtectionGuard>} />
-        <Route path="/security" element={<AdminGuard>
-          <AppShell><Security /></AppShell>
-        </AdminGuard>} />
         <Route path="/msg" element={<UnifiedProtectionGuard>
           <AppShell><NotificationsPage /></AppShell>
         </UnifiedProtectionGuard>} />

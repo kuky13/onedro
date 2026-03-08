@@ -13,11 +13,6 @@ const navigationItems = [{
   icon: LayoutDashboard,
   description: 'Visão geral do sistema'
 }, {
-  name: 'Segurança',
-  href: '/security',
-  icon: ShieldCheck,
-  description: 'Centro de segurança'
-}, {
   name: 'Atualizações',
   href: '/update',
   icon: Package,
