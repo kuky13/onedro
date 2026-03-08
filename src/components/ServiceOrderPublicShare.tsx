@@ -131,7 +131,9 @@ function isFormattedId(token: string): boolean {
 
 export function ServiceOrderPublicShare() {
   const params = useParams<{ shareToken: string }>();
+  const [searchParams] = useSearchParams();
   const token = params.shareToken;
+  const directId = searchParams.get('id'); // UUID from new links
   const tokenIsFormattedId = token ? isFormattedId(token) : false;
 
   const [serviceOrder, setServiceOrder] = useState<ServiceOrderData | null>(null);
