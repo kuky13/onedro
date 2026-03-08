@@ -783,9 +783,9 @@ const HelpCenterPage = () => {
         <div className="flex items-center justify-between mb-4">
           <div></div>
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-primary/20 rounded-full">
-              <HelpCircle className="h-8 w-8 text-primary" />
-            </div>
+            
+
+            
             <h1 className="text-4xl font-bold text-foreground">Central de Ajuda</h1>
           </div>
           
