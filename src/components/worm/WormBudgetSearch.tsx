@@ -47,9 +47,13 @@ export const WormBudgetSearch = ({
           </button>
         )}
       </div>
-      <Button type="submit" size="sm" className="shrink-0">
+      <Button 
+        type="submit" 
+        size="sm" 
+        className="shrink-0 px-5 gap-2 bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all duration-300"
+      >
         <Search className="h-4 w-4" />
-        Buscar
+        <span className="hidden sm:inline">Buscar</span>
       </Button>
     </form>
   );
