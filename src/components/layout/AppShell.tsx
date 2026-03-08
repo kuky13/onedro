@@ -16,7 +16,7 @@ const AppShellContent = ({ children }: AppShellProps) => {
     <div className="min-h-screen bg-background">
       {/* Floating hamburger button - only on mobile, fixed position */}
       {isMobile && (
-        <div className="fixed top-3 left-3 z-40">
+        <div className="fixed top-3 left-3 z-40 flex items-center justify-center">
           <MobileHamburgerButton
             isOpen={isOpen}
             onClick={toggleMenu}
