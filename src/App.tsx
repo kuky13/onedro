@@ -42,7 +42,7 @@ const ResetPasswordPage = lazyWithRetry(() => import("./pages/ResetPasswordPage"
 const ResetEmailPage = lazyWithRetry(() => import("./pages/ResetEmailPage").then(m => ({ default: m.ResetEmailPage })));
 const VerifyPage = lazyWithRetry(() => import("./pages/VerifyPage").then(m => ({ default: m.VerifyPage })));
 const HoustonPage = lazyWithRetry(() => import("./pages/HoustonPage").then(m => ({ default: m.HoustonPage })));
-const ProblemPage = lazyWithRetry(() => import("./pages/ProblemPage").then(m => ({ default: m.ProblemPage })));
+
 const HamsterPage = lazyWithRetry(() => import("./pages/HamsterPage"));
 const ServiceOrdersPageSimple = lazyWithRetry(() => import("./pages/ServiceOrdersPageSimple"));
 const ServiceOrderFormPage = lazyWithRetry(() => import("./pages/ServiceOrderFormPage").then(m => ({ default: m.ServiceOrderFormPage })));
