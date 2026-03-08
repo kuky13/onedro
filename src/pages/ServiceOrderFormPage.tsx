@@ -1,12 +1,11 @@
 /**
  * Página de Formulário de Ordem de Serviço
- * Sistema OneDrip - Mobile First Design
+ * Sistema OneDrip - Premium Design
  */
 
 import { type FormEvent } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,11 +18,24 @@ import { DeviceChecklist } from '@/components/service-orders/DeviceChecklist';
 import { UnifiedSpinner } from '@/components/ui/UnifiedSpinner';
 import { PhotoEntryManager } from '@/components/photos/PhotoEntryManager';
 
-import { ArrowLeft, Save, Wrench, User, Smartphone, Calendar, Search, X, DollarSign, CheckCircle, Clock, Camera } from 'lucide-react';
+import { ArrowLeft, Save, Wrench, User, Smartphone, Calendar, Search, X, DollarSign, CheckCircle, Clock, Camera, ClipboardList } from 'lucide-react';
 import { useServiceOrderEdit } from '@/hooks/useServiceOrderEdit';
 import type { Enums } from '@/integrations/supabase/types';
 
 type ServiceOrderPriority = Enums<'service_order_priority'>;
+
+// Premium section wrapper component
+const PremiumSection = ({ icon: Icon, title, children, className = '' }: { icon: React.ElementType; title: string; children: React.ReactNode; className?: string }) => (
+  <section className={`bg-muted/20 border border-border/30 rounded-2xl p-4 sm:p-6 ${className}`}>
+    <div className="flex items-center gap-3 mb-5">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+        <Icon className="h-5 w-5 text-primary" />
+      </div>
+      <h2 className="text-lg font-semibold tracking-tight text-foreground">{title}</h2>
+    </div>
+    {children}
+  </section>
+);
 
 export const ServiceOrderFormPage = () => {
   const { user } = useAuth();
@@ -31,29 +43,19 @@ export const ServiceOrderFormPage = () => {
   const { id } = useParams<{ id: string }>();
   const isEditMode = !!id;
   
-  // Use the dedicated hook for service order editing
   const {
-    // Form data and state
     formData,
     isLoading,
     isSubmitting,
-
-    // Auxiliary data
     deviceTypes,
     clients,
     filteredClients,
-
-    // UI state
     clientSearchTerm,
     selectedClientId,
     showNewClientForm,
     isCreatingClient,
     newClientData,
-
-    // Validation
     validation,
-
-    // Functions
     updateFormData,
     handleClientSearch,
     handleSelectClient,
@@ -71,13 +73,6 @@ export const ServiceOrderFormPage = () => {
     clearSavedData: () => {},
   };
 
-  // All data loading and state management is now handled by useServiceOrderEdit hook
-
-  // All helper functions are now provided by useServiceOrderEdit hook
-
-  // Form validation and submission are now handled by useServiceOrderEdit hook
-
-  // Check authentication
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -97,59 +92,63 @@ export const ServiceOrderFormPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
+      {/* Sticky Premium Header */}
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border/50">
+        <div className="max-w-7xl mx-auto px-4 lg:px-8">
+          <div className="flex items-center justify-between py-3 lg:py-4">
             <Button
               variant="ghost"
               size="sm"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Back button clicked', { hasUnsavedChanges: autoSave.hasUnsavedChanges });
-                
                 if (autoSave.hasUnsavedChanges) {
                   const confirmLeave = window.confirm(
                     'Você tem alterações não salvas. Deseja realmente sair?'
                   );
-                  if (!confirmLeave) {
-                    console.log('User cancelled navigation');
-                    return;
-                  }
+                  if (!confirmLeave) return;
                   autoSave.clearSavedData();
                 }
-                
-                console.log('Navigating to /service-orders');
                 navigate('/service-orders');
               }}
-              className="p-2 -ml-2"
+              className="gap-2"
               type="button"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4" />
+              Voltar
             </Button>
-            <div className="flex-1">
-              <h1 className="text-xl font-bold">
-                {isEditMode ? 'Editar Ordem de Serviço' : 'Nova Ordem de Serviço'}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                {isEditMode ? 'Atualize as informações da ordem' : 'Preencha os dados para criar uma nova ordem'}
-              </p>
-            </div>
+
             {!isEditMode && (
-                <AutoSaveIndicatorCompact
-                  isSaving={autoSave.isSaving}
-                  lastSaved={autoSave.lastSaved}
-                  hasUnsavedChanges={autoSave.hasUnsavedChanges}
-                  error={autoSave.error}
-                />
+              <AutoSaveIndicatorCompact
+                isSaving={autoSave.isSaving}
+                lastSaved={autoSave.lastSaved}
+                hasUnsavedChanges={autoSave.hasUnsavedChanges}
+                error={autoSave.error}
+              />
             )}
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Form Content */}
-      <div className="p-4 pb-24">
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 pb-28">
+        {/* Hero Section */}
+        <div className="py-6 lg:py-8">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+              <ClipboardList className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+                {isEditMode ? 'Editar Ordem' : 'Nova Ordem de Serviço'}
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                {isEditMode ? 'Atualize as informações da ordem' : 'Preencha os dados para criar uma nova ordem'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Form Content */}
         <form onSubmit={async (e: FormEvent) => {
           e.preventDefault();
           const orderId = await handleSubmit(e);
@@ -158,20 +157,12 @@ export const ServiceOrderFormPage = () => {
           }
         }} className="space-y-6">
           {/* Client Information */}
-          <Card className="border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Informações do Cliente
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Client Search and Selection */}
+          <PremiumSection icon={User} title="Informações do Cliente">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Cliente *</Label>
                 {clients.length > 0 ? (
                   <div className="space-y-2">
-                    {/* Search Input */}
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                       <Input
@@ -182,9 +173,8 @@ export const ServiceOrderFormPage = () => {
                       />
                     </div>
                     
-                    {/* Client Selection */}
                     <Select value={selectedClientId} onValueChange={handleSelectClient}>
-                      <SelectTrigger className={!formData.clientId ? "border-red-300" : ""}>
+                      <SelectTrigger className={!formData.clientId ? "border-destructive/50" : ""}>
                         <SelectValue placeholder="Selecionar cliente" />
                       </SelectTrigger>
                       <SelectContent>
@@ -202,9 +192,8 @@ export const ServiceOrderFormPage = () => {
                       </SelectContent>
                     </Select>
 
-                    {/* Inline New Client Form */}
                     {showNewClientForm && (
-                      <div className="mt-4 p-4 border border-border/50 rounded-lg bg-muted/30 backdrop-blur-sm">
+                      <div className="mt-4 p-4 border border-border/30 rounded-xl bg-background/50 backdrop-blur-sm">
                         <h4 className="text-lg font-medium mb-4 text-foreground">Criar Novo Cliente</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
@@ -215,7 +204,7 @@ export const ServiceOrderFormPage = () => {
                               value={newClientData.name}
                               onChange={(e) => handleNewClientDataChange('name', e.target.value)}
                               placeholder="Nome completo do cliente"
-                              className="mt-1 bg-background border-border/50 text-foreground placeholder:text-muted-foreground"
+                              className="mt-1"
                             />
                           </div>
                           <div>
@@ -226,7 +215,7 @@ export const ServiceOrderFormPage = () => {
                               value={newClientData.phone}
                               onChange={(e) => handleNewClientDataChange('phone', e.target.value)}
                               placeholder="(11) 99999-9999"
-                              className="mt-1 bg-background border-border/50 text-foreground placeholder:text-muted-foreground"
+                              className="mt-1"
                             />
                           </div>
                           <div>
@@ -237,7 +226,7 @@ export const ServiceOrderFormPage = () => {
                               value={newClientData.email}
                               onChange={(e) => handleNewClientDataChange('email', e.target.value)}
                               placeholder="cliente@email.com"
-                              className="mt-1 bg-background border-border/50 text-foreground placeholder:text-muted-foreground"
+                              className="mt-1"
                             />
                           </div>
                           <div>
@@ -248,7 +237,7 @@ export const ServiceOrderFormPage = () => {
                               value={newClientData.address}
                               onChange={(e) => handleNewClientDataChange('address', e.target.value)}
                               placeholder="Endereço completo"
-                              className="mt-1 bg-background border-border/50 text-foreground placeholder:text-muted-foreground"
+                              className="mt-1"
                             />
                           </div>
                         </div>
@@ -257,7 +246,7 @@ export const ServiceOrderFormPage = () => {
                             type="button"
                             onClick={handleCreateNewClient}
                             disabled={isCreatingClient}
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-soft hover:shadow-medium transition-all duration-300"
+                            className="btn-premium rounded-xl"
                           >
                             {isCreatingClient ? (
                               <>
@@ -276,7 +265,7 @@ export const ServiceOrderFormPage = () => {
                             variant="outline"
                             onClick={handleCancelNewClient}
                             disabled={isCreatingClient}
-                            className="border-border/50 bg-background hover:bg-muted/50 text-foreground"
+                            className="rounded-xl"
                           >
                             <X className="w-4 h-4 mr-2" />
                             Cancelar
@@ -286,7 +275,7 @@ export const ServiceOrderFormPage = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="p-4 bg-muted/50 rounded-lg border border-border/50">
+                  <div className="p-4 bg-muted/30 rounded-xl border border-border/30">
                     <p className="text-sm text-muted-foreground mb-2">
                       Nenhum cliente encontrado. Você precisa criar um cliente primeiro.
                     </p>
@@ -295,33 +284,26 @@ export const ServiceOrderFormPage = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => navigate('/clients/new')}
+                      className="rounded-xl"
                     >
                       Criar Primeiro Cliente
                     </Button>
                   </div>
                 )}
                 {!formData.clientId && clients.length > 0 && (
-                  <p className="text-sm text-red-600">Cliente é obrigatório</p>
+                  <p className="text-sm text-destructive">Cliente é obrigatório</p>
                 )}
               </div>
-
-
-            </CardContent>
-          </Card>
+            </div>
+          </PremiumSection>
 
           {/* Device Information */}
-          <Card className="border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Smartphone className="h-5 w-5" />
-                Informações do Dispositivo
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <PremiumSection icon={Smartphone} title="Informações do Dispositivo">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="deviceType">Tipo de Dispositivo *</Label>
                 <Select value={formData.deviceType} onValueChange={(value) => updateFormData('deviceType', value)}>
-                  <SelectTrigger className={!formData.deviceType ? "border-red-300" : ""}>
+                  <SelectTrigger className={!formData.deviceType ? "border-destructive/50" : ""}>
                     <SelectValue placeholder="Selecione o tipo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -339,7 +321,7 @@ export const ServiceOrderFormPage = () => {
                   </SelectContent>
                 </Select>
                 {!formData.deviceType && (
-                  <p className="text-sm text-red-600">Tipo de dispositivo é obrigatório</p>
+                  <p className="text-sm text-destructive">Tipo de dispositivo é obrigatório</p>
                 )}
               </div>
 
@@ -366,8 +348,8 @@ export const ServiceOrderFormPage = () => {
                 touched={validation.isFieldTouched('imeiSerial')}
                 description="IMEI de 15 dígitos ou número de série"
               />
-            </CardContent>
-          </Card>
+            </div>
+          </PremiumSection>
 
           {/* Device Password Section */}
           <DevicePasswordSection
@@ -377,30 +359,16 @@ export const ServiceOrderFormPage = () => {
           />
 
           {/* Fotos de Entrada */}
-          <Card className="border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Camera className="h-5 w-5" />
-                Fotos de Entrada
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PhotoEntryManager
-                onPhotosComplete={(photos) => updateFormData('photos', photos)}
-                minPhotos={1} // Configurável
-              />
-            </CardContent>
-          </Card>
+          <PremiumSection icon={Camera} title="Fotos de Entrada">
+            <PhotoEntryManager
+              onPhotosComplete={(photos) => updateFormData('photos', photos)}
+              minPhotos={1}
+            />
+          </PremiumSection>
 
           {/* Service Information */}
-          <Card className="border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Wrench className="h-5 w-5" />
-                Informações do Serviço
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <PremiumSection icon={Wrench} title="Informações do Serviço">
+            <div className="space-y-4">
               <ValidatedTextarea
                 label="Descrição do Reparo"
                 value={formData.reportedIssue}
@@ -456,11 +424,8 @@ export const ServiceOrderFormPage = () => {
                   description="Data e hora de saída do dispositivo"
                 />
               </div>
-
-
-
-            </CardContent>
-          </Card>
+            </div>
+          </PremiumSection>
 
           {/* Checklist de Funcionamento do Aparelho */}
           <DeviceChecklist
@@ -471,14 +436,8 @@ export const ServiceOrderFormPage = () => {
           />
 
           {/* Status de Pagamento */}
-          <Card className="border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
-                Status de Pagamento
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <PremiumSection icon={DollarSign} title="Status de Pagamento">
+            <div className="space-y-4">
               <CurrencyInput
                 label="Valor Total"
                 value={formData.totalPrice}
@@ -491,7 +450,7 @@ export const ServiceOrderFormPage = () => {
                 placeholder="R$ 0,00"
               />
 
-              <div className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg">
+              <div className="flex items-center space-x-3 p-3 bg-background/50 rounded-xl border border-border/20">
                 <Switch
                   id="isPaid"
                   checked={formData.isPaid}
@@ -506,20 +465,12 @@ export const ServiceOrderFormPage = () => {
                   {formData.isPaid ? 'Pagamento Realizado' : 'Pagamento Pendente'}
                 </Label>
               </div>
-
-            </CardContent>
-          </Card>
+            </div>
+          </PremiumSection>
 
           {/* Delivery and Warranty */}
-          <Card className="border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Entrega e Garantia
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-
+          <PremiumSection icon={Calendar} title="Entrega e Garantia">
+            <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <ValidatedInput
                   label="Data de Entrega"
@@ -544,28 +495,30 @@ export const ServiceOrderFormPage = () => {
                   description="Período de garantia em meses (máx: 60)"
                 />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </PremiumSection>
 
           {/* Submit Button */}
-          <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border/50 p-4 -mx-4">
-            <Button
-              type="submit"
-              className="w-full h-12 text-base font-medium"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                  {isEditMode ? 'Atualizando...' : 'Criando...'}
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  {isEditMode ? 'Atualizar Ordem' : 'Criar Ordem de Serviço'}
-                </>
-              )}
-            </Button>
+          <div className="sticky bottom-0 z-30 bg-background/95 backdrop-blur border-t border-border/50 p-4 -mx-4 lg:-mx-8">
+            <div className="max-w-7xl mx-auto">
+              <Button
+                type="submit"
+                className="btn-premium w-full h-12 text-base font-semibold rounded-xl"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
+                    {isEditMode ? 'Atualizando...' : 'Criando...'}
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    {isEditMode ? 'Atualizar Ordem' : 'Criar Ordem de Serviço'}
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </form>
       </div>

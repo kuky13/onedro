@@ -1,18 +1,17 @@
 /**
  * Componente de Edição de Ordem de Serviço
- * Estrutura em cards similar ao WormBudgetForm
- * Sistema OneDrip - Mobile First Design
+ * Sistema OneDrip - Premium Design
  */
 
 import React, { useState, useCallback, Suspense, lazy } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ValidatedInput, ValidatedTextarea, PhoneInput, IMEIInput, CurrencyInput } from '@/components/ui/validated-input';
-// Lazy load Select components to improve initial render performance
 const Select = lazy(() => import('@/components/ui/select').then(module => ({ default: module.Select })));
 const SelectContent = lazy(() => import('@/components/ui/select').then(module => ({ default: module.SelectContent })));
 const SelectItem = lazy(() => import('@/components/ui/select').then(module => ({ default: module.SelectItem })));
@@ -20,7 +19,6 @@ const SelectTrigger = lazy(() => import('@/components/ui/select').then(module =>
 const SelectValue = lazy(() => import('@/components/ui/select').then(module => ({ default: module.SelectValue })));
 
 import { Switch } from '@/components/ui/switch';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   ArrowLeft,
   Save,
@@ -33,7 +31,10 @@ import {
   Search,
   X,
   Clock,
-  CheckCircle
+  CheckCircle,
+  ClipboardList,
+  Camera,
+  Shield
 } from 'lucide-react';
 import { useServiceOrderEdit } from '@/hooks/useServiceOrderEdit';
 import { useImageUpload } from '@/hooks/useImageUpload';
@@ -47,12 +48,24 @@ import type { Enums } from '@/integrations/supabase/types';
 
 type ServiceOrderPriority = Enums<'service_order_priority'>;
 
+// Premium section wrapper component
+const PremiumSection = ({ icon: Icon, title, children, className = '' }: { icon: React.ElementType; title: string; children: React.ReactNode; className?: string }) => (
+  <section className={`bg-muted/20 border border-border/30 rounded-2xl p-4 sm:p-6 ${className}`}>
+    <div className="flex items-center gap-3 mb-5">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+        <Icon className="h-5 w-5 text-primary" />
+      </div>
+      <h2 className="text-lg font-semibold tracking-tight text-foreground">{title}</h2>
+    </div>
+    {children}
+  </section>
+);
+
 interface ServiceOrderEditFormProps {
   serviceOrderId?: string;
 }
 
 export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serviceOrderId }) => {
-  // Debug: Log do serviceOrderId recebido
   console.log('🔧 ServiceOrderEditForm - serviceOrderId recebido:', serviceOrderId);
   
   const { user } = useAuth();
@@ -88,47 +101,35 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
     handleSubmit
   } = useServiceOrderEdit(orderId);
 
-  // Hook para gerenciar upload de imagens
   const imageUpload = useImageUpload(orderId);
-
-  // Estado para controlar imagens pendentes
   const [hasPendingImages, setHasPendingImages] = useState(false);
   const [showPendingToast, setShowPendingToast] = useState(false);
 
-  // Handler personalizado que salva a ordem e faz upload das imagens
   const handleSaveAndUpload = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Verificar se há imagens pendentes
     if (hasPendingImages) {
       setShowPendingToast(true);
       return;
     }
     
     try {
-      // 1. Salvar a ordem de serviço
       const savedOrderId = await handleSubmit(e);
       
-      if (!savedOrderId) {
-        return; // Se falhou ao salvar, não continuar
-      }
+      if (!savedOrderId) return;
       
-      // 2. Se houver imagens pendentes, fazer upload
       if (imageUpload.state.files.length > 0) {
         console.log('📸 Fazendo upload de', imageUpload.state.files.length, 'imagens...');
         await imageUpload.uploadImages(savedOrderId);
         toast.success('Ordem salva e imagens enviadas com sucesso!');
       }
       
-      // 3. Navegar de volta para a lista
       navigate('/service-orders');
     } catch (error) {
       console.error('Erro ao salvar ordem e fazer upload:', error);
       toast.error('Erro ao processar ordem de serviço');
     }
-  }, [handleSubmit, imageUpload, navigate]);
-
-
+  }, [handleSubmit, imageUpload, navigate, hasPendingImages]);
 
   if (!user) {
     return (
@@ -146,97 +147,119 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
     return <ServiceOrderEditFormSkeleton />;
   }
 
+  const statusLabels: Record<string, string> = {
+    opened: 'Aberta',
+    in_progress: 'Em Andamento',
+    completed: 'Concluída',
+    delivered: 'Entregue',
+    cancelled: 'Cancelada',
+  };
+
+  const priorityLabels: Record<string, string> = {
+    low: 'Baixa',
+    medium: 'Média',
+    high: 'Alta',
+    urgent: 'Urgente',
+  };
+
+  const priorityColors: Record<string, string> = {
+    low: 'bg-muted text-muted-foreground',
+    medium: 'bg-primary/10 text-primary',
+    high: 'bg-orange-500/10 text-orange-600',
+    urgent: 'bg-destructive/10 text-destructive',
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
+      {/* Sticky Premium Header */}
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border/50">
+        <div className="max-w-7xl mx-auto px-4 lg:px-8">
+          <div className="flex items-center justify-between py-3 lg:py-4">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate('/service-orders')}
-              className="p-2 -ml-2"
+              className="gap-2"
               type="button"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4" />
+              Voltar
             </Button>
-            <div className="flex-1">
-              <h1 className="text-xl font-bold">
-                {isEditMode ? 'Editar Ordem de Serviço' : 'Nova Ordem de Serviço'}
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 pb-28">
+        {/* Hero Section */}
+        <div className="py-6 lg:py-8">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+              <ClipboardList className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+                {isEditMode ? 'Editar Ordem' : 'Nova Ordem de Serviço'}
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground mt-1">
                 {isEditMode ? 'Atualize as informações da ordem' : 'Preencha os dados para criar uma nova ordem'}
               </p>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Form Content */}
-      <div className="p-4 pb-24">
+        {/* Form Content */}
         <form onSubmit={handleSaveAndUpload} className="space-y-6">
-          {/* Service Order Header - Apenas no modo de edição */}
+          {/* Service Order Header - Edit mode only */}
           {isEditMode && formData.formatted_id && (
-            <Card className="border-border/50 bg-gradient-to-r from-primary/5 to-secondary/5">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
+            <section className="bg-gradient-to-br from-primary/5 via-muted/20 to-secondary/5 border border-border/30 rounded-2xl p-4 sm:p-6">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <FileText className="h-5 w-5 text-primary" />
+                </div>
+                <h2 className="text-lg font-semibold tracking-tight text-foreground">
                   Ordem de Serviço #{formData.formatted_id}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                </h2>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Status</Label>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Status</Label>
-                    <p className="font-medium">
-                      {formData.status === 'opened' && 'Aberta'}
-                      {formData.status === 'in_progress' && 'Em Andamento'}
-                      {formData.status === 'completed' && 'Concluída'}
-                      {formData.status === 'delivered' && 'Entregue'}
-                      {formData.status === 'cancelled' && 'Cancelada'}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Prioridade</Label>
-                    <p className="font-medium">
-                      {formData.priority === 'low' && 'Baixa'}
-                      {formData.priority === 'medium' && 'Média'}
-                      {formData.priority === 'high' && 'Alta'}
-                      {formData.priority === 'urgent' && 'Urgente'}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Criada em</Label>
-                    <p className="font-medium">
-                      {formData.created_at ? new Date(formData.created_at).toLocaleDateString('pt-BR') : '-'}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Atualizada em</Label>
-                    <p className="font-medium">
-                      {formData.updated_at ? new Date(formData.updated_at).toLocaleDateString('pt-BR') : '-'}
-                    </p>
+                    <Badge variant="secondary" className="text-xs">
+                      {statusLabels[formData.status] || formData.status}
+                    </Badge>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Prioridade</Label>
+                  <div>
+                    <Badge className={`text-xs ${priorityColors[formData.priority] || ''}`}>
+                      {priorityLabels[formData.priority] || formData.priority}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Criada em</Label>
+                  <p className="font-medium text-sm">
+                    {formData.created_at ? new Date(formData.created_at).toLocaleDateString('pt-BR') : '-'}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Atualizada em</Label>
+                  <p className="font-medium text-sm">
+                    {formData.updated_at ? new Date(formData.updated_at).toLocaleDateString('pt-BR') : '-'}
+                  </p>
+                </div>
+              </div>
+            </section>
           )}
 
-          {/* Client Information Card */}
-          <Card className="border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Dados do Cliente
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          {/* Client Information */}
+          <PremiumSection icon={User} title="Dados do Cliente">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Cliente *</Label>
                 {clients.length > 0 ? (
                   <div className="space-y-2">
-                    {/* Search Input */}
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                       <Input
@@ -247,10 +270,9 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                       />
                     </div>
                     
-                    {/* Client Selection */}
                     <Suspense fallback={<div className="h-10 w-full bg-muted animate-pulse rounded-md" />}>
                     <Select value={selectedClientId} onValueChange={handleSelectClient}>
-                      <SelectTrigger className={!formData.clientId ? "border-red-300" : ""}>
+                      <SelectTrigger className={!formData.clientId ? "border-destructive/50" : ""}>
                         <SelectValue placeholder="Selecionar cliente" />
                       </SelectTrigger>
                       <SelectContent>
@@ -269,9 +291,8 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                     </Select>
                     </Suspense>
 
-                    {/* Inline New Client Form */}
                     {showNewClientForm && (
-                      <div className="mt-4 p-4 border border-border/50 rounded-lg bg-muted/30 backdrop-blur-sm">
+                      <div className="mt-4 p-4 border border-border/30 rounded-xl bg-background/50 backdrop-blur-sm">
                         <h4 className="text-lg font-medium mb-4 text-foreground">Criar Novo Cliente</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
@@ -282,7 +303,7 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                               value={newClientData.name}
                               onChange={(e) => handleNewClientDataChange('name', e.target.value)}
                               placeholder="Nome completo do cliente"
-                              className="mt-1 bg-background border-border/50 text-foreground placeholder:text-muted-foreground"
+                              className="mt-1"
                             />
                           </div>
                           <div>
@@ -293,7 +314,7 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                               value={newClientData.phone}
                               onChange={(value) => handleNewClientDataChange('phone', value)}
                               placeholder="(11) 99999-9999"
-                              className="mt-1 bg-background border-border/50 text-foreground placeholder:text-muted-foreground"
+                              className="mt-1"
                             />
                           </div>
                           <div>
@@ -304,7 +325,7 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                               value={newClientData.email}
                               onChange={(e) => handleNewClientDataChange('email', e.target.value)}
                               placeholder="cliente@email.com"
-                              className="mt-1 bg-background border-border/50 text-foreground placeholder:text-muted-foreground"
+                              className="mt-1"
                             />
                           </div>
                           <div>
@@ -315,7 +336,7 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                               value={newClientData.address}
                               onChange={(e) => handleNewClientDataChange('address', e.target.value)}
                               placeholder="Endereço completo"
-                              className="mt-1 bg-background border-border/50 text-foreground placeholder:text-muted-foreground"
+                              className="mt-1"
                             />
                           </div>
                         </div>
@@ -324,7 +345,7 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                             type="button"
                             onClick={handleCreateNewClient}
                             disabled={isCreatingClient}
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                            className="btn-premium rounded-xl"
                           >
                             {isCreatingClient ? (
                               <>
@@ -343,6 +364,7 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                             variant="outline"
                             onClick={handleCancelNewClient}
                             disabled={isCreatingClient}
+                            className="rounded-xl"
                           >
                             <X className="w-4 h-4 mr-2" />
                             Cancelar
@@ -352,7 +374,7 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                     )}
                   </div>
                 ) : (
-                  <div className="p-4 bg-muted/50 rounded-lg border border-border/50">
+                  <div className="p-4 bg-muted/30 rounded-xl border border-border/30">
                     <p className="text-sm text-muted-foreground mb-2">
                       Nenhum cliente encontrado. Você precisa criar um cliente primeiro.
                     </p>
@@ -361,32 +383,27 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                       variant="outline"
                       size="sm"
                       onClick={() => navigate('/clients/new')}
+                      className="rounded-xl"
                     >
                       Criar Primeiro Cliente
                     </Button>
                   </div>
                 )}
                 {!formData.clientId && clients.length > 0 && (
-                  <p className="text-sm text-red-600">Cliente é obrigatório</p>
+                  <p className="text-sm text-destructive">Cliente é obrigatório</p>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </PremiumSection>
 
-          {/* Device Information Card */}
-          <Card className="border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Smartphone className="h-5 w-5" />
-                Informações do Dispositivo
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          {/* Device Information */}
+          <PremiumSection icon={Smartphone} title="Informações do Dispositivo">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="deviceType">Tipo de Dispositivo *</Label>
                 <Suspense fallback={<div className="h-10 w-full bg-muted animate-pulse rounded-md" />}>
                 <Select value={formData.deviceType} onValueChange={(value) => updateFormData('deviceType', value)}>
-                  <SelectTrigger className={!formData.deviceType ? "border-red-300" : ""}>
+                  <SelectTrigger className={!formData.deviceType ? "border-destructive/50" : ""}>
                     <SelectValue placeholder="Selecione o tipo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -405,7 +422,7 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                 </Select>
                 </Suspense>
                 {!formData.deviceType && (
-                  <p className="text-sm text-red-600">Tipo de dispositivo é obrigatório</p>
+                  <p className="text-sm text-destructive">Tipo de dispositivo é obrigatório</p>
                 )}
               </div>
 
@@ -432,8 +449,8 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                 touched={validation.isFieldTouched('imeiSerial')}
                 description="IMEI de 15 dígitos ou número de série"
               />
-            </CardContent>
-          </Card>
+            </div>
+          </PremiumSection>
 
           {/* Device Password Section */}
           <DevicePasswordSection
@@ -442,15 +459,9 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
             disabled={isSubmitting}
           />
 
-          {/* Service Information Card */}
-          <Card className="border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Wrench className="h-5 w-5" />
-                Informações do Serviço
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          {/* Service Information */}
+          <PremiumSection icon={Wrench} title="Informações do Serviço">
+            <div className="space-y-4">
               <ValidatedTextarea
                 label="Descrição do Reparo"
                 value={formData.reportedIssue}
@@ -492,10 +503,10 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                 description="Informações extras que podem ser úteis"
                 maxLength={500}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </PremiumSection>
 
-          {/* Checklist de Funcionamento do Aparelho */}
+          {/* Checklist */}
           <DeviceChecklist
             value={formData.deviceChecklist}
             onChange={(data) => updateFormData('deviceChecklist', data)}
@@ -503,17 +514,9 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
             {...(formData.id ? { serviceOrderId: formData.id } : {})}
           />
 
-
-
-          {/* Status de Pagamento Card */}
-          <Card className="border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
-                Status de Pagamento
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          {/* Payment Status */}
+          <PremiumSection icon={DollarSign} title="Status de Pagamento">
+            <div className="space-y-4">
               <CurrencyInput
                 label="Valor Total"
                 value={formData.totalPrice}
@@ -522,7 +525,7 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                 placeholder="R$ 0,00"
               />
 
-              <div className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg">
+              <div className="flex items-center space-x-3 p-3 bg-background/50 rounded-xl border border-border/20">
                 <Switch
                   id="isPaid"
                   checked={formData.isPaid}
@@ -546,7 +549,6 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                       type="date"
                       value={formData.paymentDate || ''}
                       onChange={(e) => updateFormData('paymentDate', e.target.value)}
-                      className=""
                     />
                   </div>
                   
@@ -569,7 +571,6 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                         value={formData.installmentValue || ''}
                         onChange={(value) => updateFormData('installmentValue', value)}
                         placeholder="0,00"
-                        className=""
                         fieldContext="total"
                         disabled
                       />
@@ -580,57 +581,42 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                   )}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </PremiumSection>
 
-          {/* Garantia Card */}
-          <Card className="border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Garantia
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
-                  <Label>Período (meses)</Label>
-                  <Input
-                    type="number"
-                    value={formData.warrantyMonths || ''}
-                    onChange={(e) => updateFormData('warrantyMonths', e.target.value ? parseInt(e.target.value) : null)}
-                    placeholder="Ex: 3"
-                    min="0"
-                    max="60"
-                  />
-                </div>
+          {/* Warranty */}
+          <PremiumSection icon={Shield} title="Garantia">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Período (meses)</Label>
+                <Input
+                  type="number"
+                  value={formData.warrantyMonths || ''}
+                  onChange={(e) => updateFormData('warrantyMonths', e.target.value ? parseInt(e.target.value) : null)}
+                  placeholder="Ex: 3"
+                  min="0"
+                  max="60"
+                />
               </div>
               
               {(() => {
                 const months = Number(formData.warrantyMonths) || 0;
                 if (months <= 0) return null;
-
                 return (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-sm text-blue-800">
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-3">
+                    <p className="text-sm text-foreground">
                       <strong>Garantia válida até:</strong>{' '}
                       {new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                 );
               })()}
-            </CardContent>
-          </Card>
+            </div>
+          </PremiumSection>
 
-          {/* Dates Card */}
-          <Card className="border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Datas Importantes
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          {/* Dates */}
+          <PremiumSection icon={Calendar} title="Datas Importantes">
+            <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <ValidatedInput
                   label="Data de Entrada"
@@ -664,51 +650,54 @@ export const ServiceOrderEditForm: React.FC<ServiceOrderEditFormProps> = ({ serv
                 onChange={(value) => updateFormData('deliveryDate', value)}
                 description="Data prevista para entrega"
               />
-            </CardContent>
-          </Card>
+            </div>
+          </PremiumSection>
 
-          {/* Image Upload Section */}
-          <div className="relative">
-            {/* Evita passar undefined (exactOptionalPropertyTypes) e evita upload sem ordem criada */}
-            {orderId ? (
-              <ImageUploadSection
-                serviceOrderId={orderId}
-                disabled={isSubmitting}
-                onPendingFilesChange={setHasPendingImages}
+          {/* Image Upload */}
+          <PremiumSection icon={Camera} title="Imagens">
+            <div className="relative">
+              {orderId ? (
+                <ImageUploadSection
+                  serviceOrderId={orderId}
+                  disabled={isSubmitting}
+                  onPendingFilesChange={setHasPendingImages}
+                />
+              ) : (
+                <div className="rounded-xl border border-border/30 bg-background/50 p-4">
+                  <p className="text-sm text-muted-foreground">
+                    Salve a ordem primeiro para habilitar o envio de imagens.
+                  </p>
+                </div>
+              )}
+              <MiniToastWithArrow
+                show={showPendingToast}
+                message="Envie as imagens primeiro"
+                onClose={() => setShowPendingToast(false)}
               />
-            ) : (
-              <div className="rounded-lg border border-border/50 bg-muted/30 p-4">
-                <p className="text-sm text-muted-foreground">
-                  Salve a ordem primeiro para habilitar o envio de imagens.
-                </p>
-              </div>
-            )}
-            <MiniToastWithArrow
-              show={showPendingToast}
-              message="Envie as imagens primeiro"
-              onClose={() => setShowPendingToast(false)}
-            />
-          </div>
+            </div>
+          </PremiumSection>
 
           {/* Submit Button */}
-          <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border/50 p-4 -mx-4 space-y-3">
-            <Button
-              type="submit"
-              className="w-full h-12 text-base font-medium"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                  {isEditMode ? 'Atualizando...' : 'Criando...'}
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  {isEditMode ? 'Atualizar Ordem' : 'Criar Ordem de Serviço'}
-                </>
-              )}
-            </Button>
+          <div className="sticky bottom-0 z-30 bg-background/95 backdrop-blur border-t border-border/50 p-4 -mx-4 lg:-mx-8">
+            <div className="max-w-7xl mx-auto space-y-3">
+              <Button
+                type="submit"
+                className="btn-premium w-full h-12 text-base font-semibold rounded-xl"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
+                    {isEditMode ? 'Atualizando...' : 'Criando...'}
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    {isEditMode ? 'Atualizar Ordem' : 'Criar Ordem de Serviço'}
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </form>
       </div>
@@ -721,57 +710,42 @@ const ServiceOrderEditFormSkeleton: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header Skeleton */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-9 w-9 rounded-md" />
-            <div className="flex-1">
-              <Skeleton className="h-6 w-48 mb-1" />
-              <Skeleton className="h-4 w-64" />
-            </div>
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border/50">
+        <div className="max-w-7xl mx-auto px-4 lg:px-8">
+          <div className="flex items-center justify-between py-3 lg:py-4">
+            <Skeleton className="h-9 w-20 rounded-xl" />
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Form Content Skeleton */}
-      <div className="p-4 pb-24 space-y-6">
-        {/* Service Order Header Skeleton */}
-        <Card className="border-border/50">
-          <CardHeader>
-            <Skeleton className="h-6 w-40" />
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i}>
-                  <Skeleton className="h-3 w-16 mb-1" />
-                  <Skeleton className="h-5 w-20" />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 pb-28">
+        {/* Hero Skeleton */}
+        <div className="py-6 lg:py-8 flex items-center gap-4">
+          <Skeleton className="h-12 w-12 rounded-2xl" />
+          <div>
+            <Skeleton className="h-9 w-64 mb-2" />
+            <Skeleton className="h-5 w-48" />
+          </div>
+        </div>
 
         {/* Cards Skeleton */}
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Card key={i} className="border-border/50">
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {Array.from({ length: 3 }).map((_, j) => (
-                <div key={j} className="space-y-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-10 w-full" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        ))}
-
-        {/* Submit Button Skeleton */}
-        <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border/50 p-4 -mx-4">
-          <Skeleton className="w-full h-12" />
+        <div className="space-y-6">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="bg-muted/20 border border-border/30 rounded-2xl p-4 sm:p-6">
+              <div className="flex items-center gap-3 mb-5">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <Skeleton className="h-6 w-40" />
+              </div>
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, j) => (
+                  <div key={j} className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-10 w-full rounded-xl" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
