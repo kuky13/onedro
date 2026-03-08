@@ -342,6 +342,13 @@ const AppContent = () => {
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
 
+        {/* Teste Rápido */}
+        <Route path="/teste-rapido" element={<MaintenanceGuard>
+          <UnifiedProtectionGuard>
+            <AppShell><TesteRapidoPage /></AppShell>
+          </UnifiedProtectionGuard>
+        </MaintenanceGuard>} />
+
 
         {/* Sistema operacional baseado em navegador */}
         <Route path="/sistema/*" element={<MaintenanceGuard>

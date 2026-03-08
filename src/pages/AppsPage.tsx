@@ -49,6 +49,14 @@ const quickAccessActions: QuickAccessAction[] = [{
   gradient: 'from-teal-500 to-cyan-500',
   iconColor: 'text-teal-600'
 }, {
+  id: 'teste-rapido',
+  label: 'Teste Rápido',
+  icon: Smartphone,
+  path: '/teste-rapido',
+  permission: null,
+  gradient: 'from-cyan-500 to-teal-500',
+  iconColor: 'text-cyan-600'
+}, {
   id: 'clients',
   label: 'Clientes',
   icon: Users,
