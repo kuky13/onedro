@@ -41,7 +41,6 @@ export const OnboardingPage = () => {
   }, [markComplete, navigate]);
 
   const next = () => setStep(s => Math.min(s + 1, TOTAL_STEPS));
-  const back = () => setStep(s => Math.max(s - 1, 1));
 
   // Step handlers
   const handleProfile = async (data: { name: string; username: string }) => {
