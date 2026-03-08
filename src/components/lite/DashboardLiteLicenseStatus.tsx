@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { HeartCrack, AlertTriangle, Key, Calendar, Clock, Shield, Copy, Eye, EyeOff, LifeBuoy, Search } from 'lucide-react';
+import { HeartCrack, AlertTriangle, Key, Calendar, Clock, Shield, Copy, Eye, EyeOff, LifeBuoy, Search, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLicense } from '@/hooks/useLicense';
 import { useToast } from '@/hooks/useToast';
