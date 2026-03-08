@@ -81,7 +81,17 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
   const serviceOrderQuery = useQuery({
     queryKey: ['service-order-realtime', queryIdentifier],
     queryFn: async (): Promise<ServiceOrderRealTimeData | null> => {
-      if (formattedId) {
+      if (formattedId && serviceOrderId) {
+        // Public access: use SECURITY DEFINER RPC + filter by UUID
+        const { data, error } = await supabase
+          .rpc('get_service_order_by_formatted_id' as any, {
+            p_formatted_id: formattedId
+          });
+        if (error) throw error;
+        const allResults = (data as any[]) || [];
+        const matched = allResults.find((so: any) => so.id === serviceOrderId);
+        return matched || allResults[0] || null;
+      } else if (formattedId) {
         const { data, error } = await supabase
           .rpc('get_service_order_by_formatted_id' as any, {
             p_formatted_id: formattedId
@@ -98,7 +108,7 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
         if (error) throw error;
         return data?.[0] || null;
       } else if (serviceOrderId) {
-        // Try direct table query first
+        // Authenticated access: direct table query
         const { data, error } = await supabase
           .from('service_orders')
           .select(`
