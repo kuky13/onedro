@@ -6,13 +6,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { OnboardingProgress } from '@/components/onboarding/OnboardingProgress';
 import { OnboardingWelcome } from '@/components/onboarding/OnboardingWelcome';
+import { OnboardingDrippy } from '@/components/onboarding/OnboardingDrippy';
+import { OnboardingSupport } from '@/components/onboarding/OnboardingSupport';
 import { OnboardingProfile } from '@/components/onboarding/OnboardingProfile';
 import { OnboardingCompany, type CompanyData } from '@/components/onboarding/OnboardingCompany';
 import { OnboardingTechnician, type TechnicianData } from '@/components/onboarding/OnboardingTechnician';
 import { OnboardingStore, type StoreData } from '@/components/onboarding/OnboardingStore';
 import { OnboardingComplete } from '@/components/onboarding/OnboardingComplete';
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 8;
 
 export const OnboardingPage = () => {
   const { user } = useAuth();
