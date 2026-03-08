@@ -25,16 +25,23 @@ interface ServiceOrderActionsProps {
 export const ServiceOrderActions = ({
   createdOrderId,
   formattedId,
+  sequentialNumber,
   compact = false
 }: ServiceOrderActionsProps) => {
   const navigate = useNavigate();
   const { generateShareToken, isGenerating } = useServiceOrderShare();
 
   const handleViewShare = async () => {
+    // Try permanent URL first
+    const permanentUrl = buildFormattedShareUrl(sequentialNumber);
+    if (permanentUrl) {
+      window.open(permanentUrl.replace(window.location.origin, ''), '_blank');
+      return;
+    }
+    // Fallback to token-based
     const shareData = await generateShareToken(createdOrderId);
     if (shareData) {
-      const token = shareData.share_url.split('/').pop();
-      window.open(`/share/service-order/${token}`, '_blank');
+      window.open(shareData.share_url.replace(window.location.origin, ''), '_blank');
     }
   };
 

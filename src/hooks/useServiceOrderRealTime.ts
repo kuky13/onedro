@@ -415,13 +415,13 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
   const refresh = useCallback(async () => {
     await Promise.all([
       queryClient.invalidateQueries({
-        queryKey: ['service-order-realtime', shareToken || serviceOrderId]
+        queryKey: ['service-order-realtime', queryIdentifier]
       }),
       queryClient.invalidateQueries({
-        queryKey: ['service-order-events-realtime', shareToken || serviceOrderId]
+        queryKey: ['service-order-events-realtime', queryIdentifier]
       })
     ]);
-  }, [queryClient, shareToken, serviceOrderId]);
+  }, [queryClient, queryIdentifier]);
 
   // Log customer view
   useEffect(() => {

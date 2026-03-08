@@ -236,15 +236,26 @@ export function ServiceOrderPublicShare() {
     setTestSession(null);
 
     try {
-      const {
-        data: serviceOrderData,
-        error: serviceOrderError
-      } = await supabase.rpc('get_service_order_by_share_token', {
-        p_share_token: token
-      });
-      if (serviceOrderError) throw new Error(serviceOrderError.message);
+      let serviceOrderData: any[] | null = null;
+
+      if (tokenIsFormattedId) {
+        // Use formatted_id lookup (permanent link)
+        const { data, error: soError } = await supabase.rpc('get_service_order_by_formatted_id' as any, {
+          p_formatted_id: token
+        });
+        if (soError) throw new Error(soError.message);
+        serviceOrderData = data as any[];
+      } else {
+        // Legacy token lookup
+        const { data, error: soError } = await supabase.rpc('get_service_order_by_share_token', {
+          p_share_token: token
+        });
+        if (soError) throw new Error(soError.message);
+        serviceOrderData = data as any[];
+      }
+
       if (!serviceOrderData || serviceOrderData.length === 0) {
-        throw new Error('Token de compartilhamento inválido ou expirado');
+        throw new Error('Ordem de serviço não encontrada');
       }
       if (serviceOrderData[0]) {
         const data = serviceOrderData[0] as any;
@@ -255,13 +266,22 @@ export function ServiceOrderPublicShare() {
           device_password_type: (data.device_password_type || null) as any
         } as ServiceOrderData);
       }
-      const {
-        data: companyData,
-        error: companyError
-      } = await supabase.rpc('get_company_info_by_share_token', {
-        p_share_token: token
-      });
-      if (!companyError && companyData && companyData.length > 0) {
+
+      // Fetch company info
+      let companyData: any[] | null = null;
+      if (tokenIsFormattedId) {
+        const { data, error: companyError } = await supabase.rpc('get_company_info_by_formatted_id' as any, {
+          p_formatted_id: token
+        });
+        if (!companyError) companyData = data as any[];
+      } else {
+        const { data, error: companyError } = await supabase.rpc('get_company_info_by_share_token', {
+          p_share_token: token
+        });
+        if (!companyError) companyData = data as any[];
+      }
+
+      if (companyData && companyData.length > 0) {
         const data = companyData[0] as any;
         if (data) {
           setCompanyInfo({

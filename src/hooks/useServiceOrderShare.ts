@@ -8,6 +8,15 @@ export interface ShareTokenData {
   expires_at: string;
 }
 
+/**
+ * Builds a permanent share URL using the formatted_id (e.g., OS0001)
+ */
+export function buildFormattedShareUrl(sequentialNumber: number | null | undefined): string | null {
+  if (sequentialNumber == null) return null;
+  const formattedId = `OS${String(sequentialNumber).padStart(4, '0')}`;
+  return `${window.location.origin}/share/service-order/${formattedId}`;
+}
+
 export interface ServiceOrderShareData {
   id: string;
   formatted_id: string;
@@ -40,9 +49,26 @@ export function useServiceOrderShare() {
     try {
       setIsGenerating(true);
       
-      // Obter URL base dinâmica baseada no ambiente
+      // Try to get sequential_number for permanent URL
+      const { data: orderData } = await supabase
+        .from('service_orders')
+        .select('sequential_number')
+        .eq('id', serviceOrderId)
+        .single();
+
+      if (orderData?.sequential_number) {
+        const formattedId = `OS${String(orderData.sequential_number).padStart(4, '0')}`;
+        const shareUrl = `${window.location.origin}/share/service-order/${formattedId}`;
+        toast.success('Link permanente gerado com sucesso!');
+        return {
+          share_token: formattedId,
+          share_url: shareUrl,
+          expires_at: '' // Permanent - no expiration
+        };
+      }
+
+      // Fallback: use old token-based system
       const baseUrl = window.location.origin;
-      
       const { data, error } = await supabase
         .rpc('generate_service_order_share_token', {
           p_service_order_id: serviceOrderId,
@@ -62,7 +88,6 @@ export function useServiceOrderShare() {
 
       const shareData = data[0] as ShareTokenData;
       toast.success('Link de compartilhamento gerado com sucesso!');
-      
       return shareData;
     } catch (error) {
       console.error('Erro ao gerar token:', error);
