@@ -414,19 +414,37 @@ export function ServiceOrderPublicShare() {
   const paymentInfo = getPaymentStatusInfo(serviceOrder.is_paid);
   return <div className="min-h-screen bg-background">
       {/* Company Header */}
-      {(showLogo || showCompanyName) && finalCompanyInfo && <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
+      {finalCompanyInfo && <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
           <div className="max-w-4xl mx-auto px-4 py-4">
             <div className="flex items-center gap-4">
-              {showLogo && finalCompanyInfo.logo_url && <img src={finalCompanyInfo.logo_url} alt={finalCompanyInfo.name} className="w-12 h-12 object-contain rounded-xl" />}
-              <div className="flex-1">
-                {showCompanyName && finalCompanyInfo.name && <h1 className="text-lg font-bold" style={{
+              {finalCompanyInfo.logo_url && <img src={finalCompanyInfo.logo_url} alt={finalCompanyInfo.name} className="w-14 h-14 object-contain rounded-xl border border-border/50 bg-white p-1" />}
+              <div className="flex-1 min-w-0">
+                {finalCompanyInfo.name && <h1 className="text-lg font-bold truncate" style={{
               color: themeColor
             }}>
                     {finalCompanyInfo.name}
                   </h1>}
-                <p className="text-sm text-muted-foreground">
-                  {customMessage || 'Acompanhe o status do seu reparo'}
-                </p>
+                {finalCompanyInfo.description ? (
+                  <p className="text-sm text-muted-foreground truncate">{finalCompanyInfo.description}</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {customMessage || 'Acompanhe o status do seu reparo'}
+                  </p>
+                )}
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+                  {finalCompanyInfo.whatsapp_phone && (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Phone className="w-3 h-3" />
+                      {finalCompanyInfo.whatsapp_phone}
+                    </span>
+                  )}
+                  {finalCompanyInfo.email && (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Mail className="w-3 h-3" />
+                      {finalCompanyInfo.email}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
