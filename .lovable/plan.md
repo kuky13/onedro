@@ -1,134 +1,81 @@
 
 
-# Expansao da Documentacao do Projeto OneDrip
+## Problema Identificado
 
-## Objetivo
-Criar documentacao tecnica completa e detalhada para que qualquer desenvolvedor que entre no projeto consiga entender rapidamente como tudo funciona. Vamos expandir os 5 arquivos existentes e criar 7 novos arquivos `.md`.
+O `sequential_number` **nao e unico globalmente** -- ele e unico por loja/owner. Existem **5 ordens de servico** com `sequential_number = 4` de donos diferentes:
 
----
+```text
+owner (email)                          | total_price | id
+oliveira@onedrip.email                 | 30000.00    | 34285cf0...
+joabesilva15333@gmail.com              | 190.00      | 23d86962...  <-- retornado pelo RPC
+gabrielborges...@gmail.com             | 30.00       | d54c0c7e...
+oliveira2@onedrip.email                | 765.00      | d2c7d186...  <-- o correto
+(outro)                                | 250.00      | 1c7f0b34...
+```
 
-## Arquivos Existentes - Melhorias
-
-### `0-ai-project-context.md` - Atualizar
-- Adicionar secao sobre o sistema de Diagnostico de Dispositivos (`/testar/:token`)
-- Documentar o modulo de Peliculas (`/p`)
-- Mencionar o sistema de Gamificacao (HamsterPage/CookiePage)
-- Atualizar a lista de Guards com `MobileMenuProvider`
-
-### `1-visao-geral.md` - Expandir
-- Adicionar modulo de Garantias (`/garantia`)
-- Documentar Central de Ajuda (`/central-de-ajuda`)
-- Adicionar secao sobre Notificacoes Push e sistema de Updates
-- Mencionar Apps Page e Sistema (mini-OS no browser)
-
-### `2-frontend-estrutura.md` - Detalhar
-- Documentar o sistema de `lazyWithRetry` com telemetria de chunks
-- Explicar `ChunkLoadRecoveryBanner` e `useChunkLoadTelemetry`
-- Detalhar o `SessionPersistence` e `secureStorage`
-- Documentar o `MobileMenuProvider` e navegacao mobile
-
-### `3-backend-supabase.md` - Expandir
-- Listar todas as 40+ Edge Functions com descricao curta
-- Documentar o fluxo de `rate-limiter` e `security-api`
-- Explicar o sistema de notificacoes push (`send-push-notification`)
-
-### `4-integracoes-externas.md` - Atualizar
-- Adicionar secao sobre Evolution API e multi-broker completo
-- Documentar o sistema de download de video via VPS proxy
+A RPC `get_service_order_by_formatted_id` filtra apenas por `WHERE sequential_number = v_seq_number` sem contexto de owner, retornando a OS errada.
 
 ---
 
-## Novos Arquivos
+## Solucao: Incluir owner_id no link via query param
 
-### `5-typescript-tipos.md` - Tipos e Interfaces
-Documentar todas as interfaces criticas do sistema:
-- `ServiceOrderData` (OS com campos de senha, checklist, etc.)
-- `Budget` (tipo canonico via Supabase Tables)
-- `User`, `UserProfile`, `DebugInfo`
-- `CompanyInfo`, `CompanyData`, `CompanyFormData`
-- `TestSession`, `TestResult`, `TestDetails`, `TestConfig`
-- `DevicePasswordType` e seus valores
-- `CheckoutParams`, `PixPaymentData`
-- `BudgetData`, `BudgetPartData` (para PDFs)
-- `AuthContextType` e `UserRole`
-- Tabela visual com cada tipo e onde e usado
+A abordagem mais simples e backward-compatible:
 
-### `6-hooks-referencia.md` - Guia de Hooks
-Catalogar os 60+ hooks com categorias:
-- **Autenticacao**: `useAuth`, `useTokenRotation`, `useSecurity`
-- **Licenciamento**: `useLicense`, `useLicenseVerification`, `useLicenseCache`, `useTrialLicense`
-- **Dispositivo**: `useDeviceDetection`, `useIOSDetection`, `useMobileDetection`, `useBatteryDetection`
-- **Ordens de Servico**: `useSecureServiceOrders`, `useServiceOrderEdit`, `useServiceOrderRealTime`, `useServiceOrderShare`
-- **Orcamentos (Worm)**: `useBudgetData`, `useBudgetDeletion`, `useBudgetServiceOrder`, `useCreateServiceOrderFromBudget`
-- **PWA/Offline**: `usePWA`, `useOfflineDetection`, `useSwipeGesture`
-- **UI/UX**: `useResponsive`, `useMobileMenu`, `usePopupState`, `useDebounce`
-- **Store**: `useShopProfile`, `useImportBudgetToStore`
-- **Config**: `useAppConfig`, `useCompanyBranding`, `useDrippySettings`, `useCookiePreferences`
-- Exemplos de uso para os mais importantes
+### 1. Alterar a geracao do QR Code/link (PrintLabelDialog.tsx)
 
-### `7-rotas-e-guards.md` - Mapa de Rotas
-Tabela completa com todas as rotas do `App.tsx`:
-- Rota, Componente, Guard aplicado, Lazy/Estatico
-- Fluxo visual de redirecionamentos (auth -> licenca -> dashboard)
-- Explicacao de cada Guard: `UnifiedProtectionGuard`, `AdminGuard`, `MaintenanceGuard`
-- Como adicionar uma nova rota (passo a passo)
+Incluir um parametro `oid` (owner_id curto, primeiros 8 chars) na URL:
 
-### `8-edge-functions.md` - Backend Serverless
-Documentacao detalhada de cada Edge Function:
-- **Pagamentos**: `create-mercadopago-checkout`, `check-mercadopago-payment`, `mercadopago-webhook`, `cancel-mercadopago-payment`, `create-mercadopago-subscription`
-- **WhatsApp**: `whatsapp-proxy`, `whatsapp-webhook`, `whatsapp-qr-connect`, `whatsapp-ai-reply`, `whatsapp-instance-manage`, `waha-proxy`
-- **IA**: `chat-ai`, `triage-ai`, `analyze-budgets`
-- **Seguranca**: `security-api`, `rate-limiter`, `real-time-monitoring`, `audit-system`
-- **Usuarios**: `manage-user-profile`, `admin-reset-password`, `admin-update-user-email`, `validate-license`
-- **Comunicacao**: `send-license-email`, `send-payment-receipt-email`, `send-push-notification`, `notification-system`
-- Fluxo de request/response de cada grupo
+```
+/share/service-order/OS0004?oid=49e47da5
+```
 
-### `9-seguranca.md` - Arquitetura de Seguranca
-- Sistema `secureStorage` com criptografia AES-GCM e PBKDF2
-- `SecurityLogger` e auditoria de acessos
-- RLS (Row Level Security) - regras e padroes
-- `botDetection`, `secureCSP`, `secureNavigation`
-- Rate limiting nas Edge Functions
-- Token rotation (`useTokenRotation`)
-- Fluxo de validacao de licencas
+O `order` ja tem acesso ao `owner_id` ou podemos usar o usuario logado.
 
-### `10-pdf-e-utils.md` - Utilitarios e Geracao de PDFs
-- Como funciona o `pdfUtils.ts` (jsPDF client-side)
-- `serviceOrderPdfUtils.ts` para recibos de OS
-- `currency.ts` - formatacao BRL
-- `whatsappUtils.ts` e `whatsappTemplateUtils.ts`
-- `authCleanup.ts` - limpeza de sessao
-- `pwaDetection.ts` e `pwaReset.ts`
-- `debugLogger.ts` e `asciiConsole.ts`
+### 2. Atualizar a RPC `get_service_order_by_formatted_id`
 
-### `11-guia-contribuicao.md` - Guia para Novos Devs
-- Como rodar o projeto localmente
-- Convencoes de codigo (React Query > useEffect, Zustand para global state)
-- Como criar uma nova pagina (registrar rota, escolher Guard, lazy vs estatico)
-- Como criar um novo hook
-- Como adicionar uma Edge Function
-- Checklist de PR/review
-- Erros comuns e como evitar (RLS, chunks, offline)
+Adicionar parametro opcional `p_owner_id uuid DEFAULT NULL` e filtrar:
+
+```sql
+WHERE so.sequential_number = v_seq_number
+  AND (p_owner_id IS NULL OR so.owner_id = p_owner_id)
+```
+
+Se `p_owner_id` for NULL (links antigos), retorna como antes. Se presente, filtra corretamente.
+
+### 3. Atualizar ServiceOrderPublicShare.tsx
+
+- Extrair `oid` da query string da URL
+- Buscar o `owner_id` completo fazendo match pelo prefixo (nova RPC simples ou incluir logica no RPC existente)
+- Passar para a RPC
+
+### 4. Atualizar a RPC `get_company_info_by_formatted_id`
+
+Mesma logica: aceitar `p_owner_id` opcional para filtrar corretamente.
+
+### 5. Atualizar useServiceOrderRealTime.ts
+
+Passar o owner_id tambem no polling/realtime para manter consistencia.
 
 ---
 
-## Detalhes Tecnicos
+## Alternativa mais simples (recomendada)
 
-### Arquivos a criar:
-1. `.documentação/docs/5-typescript-tipos.md`
-2. `.documentação/docs/6-hooks-referencia.md`
-3. `.documentação/docs/7-rotas-e-guards.md`
-4. `.documentação/docs/8-edge-functions.md`
-5. `.documentação/docs/9-seguranca.md`
-6. `.documentação/docs/10-pdf-e-utils.md`
-7. `.documentação/docs/11-guia-contribuicao.md`
+Em vez de owner_id parcial (que exige match por prefixo), usar o **UUID completo** do service order como fallback no link:
 
-### Arquivos a editar:
-1. `.documentação/docs/0-ai-project-context.md`
-2. `.documentação/docs/1-visao-geral.md`
-3. `.documentação/docs/2-frontend-estrutura.md`
-4. `.documentação/docs/3-backend-supabase.md`
-5. `.documentação/docs/4-integracoes-externas.md`
+```
+/share/service-order/OS0004?id=d2c7d186-57c2-4923-b312-8f2d9912d9f7
+```
 
-Total: **12 arquivos** (7 novos + 5 atualizados)
+O frontend, ao detectar o param `id`, busca diretamente por UUID (query simples, sem ambiguidade). Se nao tiver `id`, usa o RPC atual como fallback.
+
+Isso e:
+- 100% backward-compatible (links antigos continuam funcionando, mesmo que ambiguos)
+- Links novos sao sempre precisos
+- Minima mudanca no codigo
+
+### Arquivos a alterar:
+1. **`src/components/printing/PrintLabelDialog.tsx`** -- adicionar `?id={order.id}` na URL do QR
+2. **`src/components/ServiceOrderPublicShare.tsx`** -- ler `id` da query string; se presente, buscar por UUID diretamente em vez de usar a RPC por formatted_id
+3. **`src/hooks/useServiceOrderRealTime.ts`** -- mesmo ajuste para o polling
+4. **Migration SQL** -- atualizar RPC para aceitar `p_owner_id` opcional (para quem nao tem `?id=`)
 
