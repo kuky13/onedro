@@ -456,8 +456,26 @@ export const useServiceOrderEdit = (serviceOrderId?: string) => {
     }
 
     // Validar formulário
-    if (!validation.isFormValid()) {
-      showError({ title: 'Por favor, corrija os erros no formulário' });
+    const validationResult = validation.isFormValid(true);
+    if (!validationResult.valid) {
+      const missingLabels: Record<string, string> = {
+        clientId: 'Cliente',
+        deviceModel: 'Modelo do dispositivo',
+        reportedIssue: 'Defeito relatado',
+        totalPrice: 'Valor total',
+      };
+      const missing = validationResult.missingFields
+        .map((f: string) => missingLabels[f] || f)
+        .join(', ');
+      const errorFields = validationResult.errorFields
+        .map((f: string) => missingLabels[f] || f)
+        .join(', ');
+      
+      let msg = '';
+      if (missing) msg += `Campos obrigatórios: ${missing}`;
+      if (errorFields) msg += `${msg ? '. ' : ''}Campos com erro: ${errorFields}`;
+      
+      showError({ title: msg || 'Por favor, corrija os erros no formulário' });
       return null;
     }
 
