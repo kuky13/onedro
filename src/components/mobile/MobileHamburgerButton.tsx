@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface MobileHamburgerButtonProps {
@@ -12,43 +13,47 @@ export const MobileHamburgerButton = ({
   className 
 }: MobileHamburgerButtonProps) => {
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={onClick}
       className={cn(
-        "h-12 w-12 relative flex items-center justify-center rounded-xl",
-        "touch-manipulation select-none",
-        "transition-all duration-200 ease-out",
-        "bg-primary/10 hover:bg-primary/20 active:scale-90",
-        "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none",
-        isOpen && "bg-primary/20",
+        "h-11 w-11 relative flex",
+        "touch-manipulation select-none ios-tap-highlight-none ios-touch-callout-none",
+        "transition-all duration-100 ease-out",
+        "hover:bg-accent/50 active:scale-95",
+        "focus-visible:ring-2 focus-visible:ring-primary/20",
         className
       )}
       aria-label={isOpen ? "Fechar menu" : "Abrir menu"}
       aria-expanded={isOpen}
     >
-      <div className="relative w-5 h-4 flex flex-col justify-between items-center">
+      {/* Hamburger Icon with Animation */}
+      <div className="relative w-5 h-5 flex flex-col justify-center items-center">
         <span 
           className={cn(
-            "block h-[2.5px] bg-primary rounded-full",
-            "transition-all duration-200 ease-out origin-center",
-            isOpen ? "w-5 rotate-45 translate-y-[7px]" : "w-5"
+            "block w-5 h-0.5 bg-current rounded-full",
+            "transition-all duration-150 ease-out",
+            "transform origin-center",
+            isOpen ? "rotate-45 translate-y-0.5" : "translate-y-[-2px]"
           )}
         />
         <span 
           className={cn(
-            "block w-3.5 h-[2.5px] bg-primary rounded-full",
-            "transition-all duration-200 ease-out",
+            "block w-5 h-0.5 bg-current rounded-full mt-1",
+            "transition-all duration-150 ease-out",
             isOpen ? "opacity-0 scale-x-0" : "opacity-100 scale-x-100"
           )}
         />
         <span 
           className={cn(
-            "block h-[2.5px] bg-primary rounded-full",
-            "transition-all duration-200 ease-out origin-center",
-            isOpen ? "w-5 -rotate-45 -translate-y-[7px]" : "w-4"
+            "block w-5 h-0.5 bg-current rounded-full mt-1",
+            "transition-all duration-150 ease-out",
+            "transform origin-center",
+            isOpen ? "-rotate-45 translate-y-[-2px]" : "translate-y-0"
           )}
         />
       </div>
-    </button>
+    </Button>
   );
 };
