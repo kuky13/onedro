@@ -244,26 +244,30 @@ export function ServiceOrderPublicShare() {
     try {
       let serviceOrderData: any[] | null = null;
 
-      if (directId) {
-        // Direct UUID lookup (new links with ?id= param) - unambiguous
+      if (directId && tokenIsFormattedId) {
+        // New permanent links: use SECURITY DEFINER RPC (bypasses RLS) + filter by UUID
+        const { data: rpcData, error: rpcError } = await supabase.rpc('get_service_order_by_formatted_id' as any, {
+          p_formatted_id: token
+        });
+        if (rpcError) throw new Error(rpcError.message);
+        const allResults = rpcData as any[] || [];
+        // Filter by UUID to resolve ambiguity across shops
+        const matched = allResults.filter((so: any) => so.id === directId);
+        serviceOrderData = matched.length > 0 ? matched : allResults.length > 0 ? [allResults[0]] : [];
+      } else if (directId) {
+        // Direct UUID only (no formatted ID) - try table first, fallback to RPC
         const { data, error: soError } = await supabase
           .from('service_orders')
           .select('*, clients!fk_service_orders_client_id(name, phone)')
           .eq('id', directId)
           .maybeSingle();
-        if (soError) {
-          // Fallback: if RLS blocks direct access, try the formatted_id RPC
-          if (tokenIsFormattedId) {
-            const { data: rpcData, error: rpcError } = await supabase.rpc('get_service_order_by_formatted_id' as any, {
-              p_formatted_id: token
-            });
-            if (rpcError) throw new Error(rpcError.message);
-            serviceOrderData = rpcData as any[];
-          } else {
-            throw new Error(soError.message);
-          }
+        if (soError || !data) {
+          // RLS likely blocked access - try get_public_os_status as fallback
+          const { data: rpcData, error: rpcError } = await (supabase as any).rpc('get_public_os_status', { p_order_id: directId });
+          if (rpcError) throw new Error(rpcError.message);
+          serviceOrderData = rpcData as any[] || [];
         } else {
-          serviceOrderData = data ? [data] : [];
+          serviceOrderData = [data];
         }
       } else if (tokenIsFormattedId) {
         // Legacy formatted_id lookup (may be ambiguous across owners)
