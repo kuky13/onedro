@@ -135,8 +135,7 @@ const AppContent = () => {
   // Ocultar em rotas de loja pública (/loja/*) e testes de dispositivo (/testar/*)
   const isStorePublicPage = location.pathname.startsWith('/loja/');
   const isDeviceTestPage = location.pathname.startsWith('/testar/');
-  const isDownloadsPage = location.pathname === '/downloads';
-  const showInfoNote = !legalPages.includes(location.pathname) && !isStorePublicPage && !isDeviceTestPage && !isDownloadsPage;
+  const showInfoNote = !legalPages.includes(location.pathname) && !isStorePublicPage && !isDeviceTestPage;
   const [noteDismissed, setNoteDismissed] = useState(false);
   const [temporarilyHidden, setTemporarilyHidden] = useState(false);
   useEffect(() => {
