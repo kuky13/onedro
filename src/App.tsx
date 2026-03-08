@@ -81,7 +81,6 @@ const AppShell = lazyWithRetry(() => import("@/components/layout/AppShell").then
 
 const KukySolutions = lazyWithRetry(() => import("./pages/KukySolutions"));
 const AdminGuard = lazyWithRetry(() => import("./components/AdminGuard").then(m => ({ default: m.AdminGuard })));
-const UpdateManagementPage = lazyWithRetry(() => import("./pages/UpdateManagementPage"));
 const UpdateDetailsPage = lazyWithRetry(() => import("./pages/UpdateDetailsPage"));
 const SuperAdminPage = lazyWithRetry(() => import("./pages/SuperAdminPage").then(m => ({ default: m.SuperAdminPage })));
 const AdminUsersPage = lazyWithRetry(() => import("./pages/AdminUsersPage").then(m => ({ default: m.AdminUsersPage })));
