@@ -313,7 +313,7 @@ export function ServiceOrderPublicShare() {
         // Direct lookup using owner_id from the fetched order
         const { data, error: companyError } = await supabase
           .from('company_info')
-          .select('id, name, logo_url, address, whatsapp_phone')
+          .select('id, name, logo_url, address, whatsapp_phone, email, cnpj, website, description, business_hours')
           .eq('owner_id', ownerId);
         if (!companyError) companyData = data as any[];
       } else if (tokenIsFormattedId) {
