@@ -6,13 +6,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { OnboardingProgress } from '@/components/onboarding/OnboardingProgress';
 import { OnboardingWelcome } from '@/components/onboarding/OnboardingWelcome';
+import { OnboardingDrippy } from '@/components/onboarding/OnboardingDrippy';
+import { OnboardingSupport } from '@/components/onboarding/OnboardingSupport';
 import { OnboardingProfile } from '@/components/onboarding/OnboardingProfile';
 import { OnboardingCompany, type CompanyData } from '@/components/onboarding/OnboardingCompany';
 import { OnboardingTechnician, type TechnicianData } from '@/components/onboarding/OnboardingTechnician';
 import { OnboardingStore, type StoreData } from '@/components/onboarding/OnboardingStore';
 import { OnboardingComplete } from '@/components/onboarding/OnboardingComplete';
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 8;
 
 export const OnboardingPage = () => {
   const { user } = useAuth();
@@ -130,11 +132,13 @@ export const OnboardingPage = () => {
 
         <AnimatePresence mode="wait">
           {step === 1 && <OnboardingWelcome key="welcome" onNext={next} onSkipAll={skipAll} />}
-          {step === 2 && <OnboardingProfile key="profile" onNext={handleProfile} onSkip={next} />}
-          {step === 3 && <OnboardingCompany key="company" onNext={handleCompany} onSkip={next} />}
-          {step === 4 && <OnboardingTechnician key="tech" onNext={handleTechnician} onSkip={next} />}
-          {step === 5 && <OnboardingStore key="store" onNext={handleStore} onSkip={next} />}
-          {step === 6 && <OnboardingComplete key="done" onFinish={finish} completedSteps={completedSteps} />}
+          {step === 2 && <OnboardingDrippy key="drippy" onNext={next} onSkip={next} />}
+          {step === 3 && <OnboardingSupport key="support" onNext={next} onSkip={next} />}
+          {step === 4 && <OnboardingProfile key="profile" onNext={handleProfile} onSkip={next} />}
+          {step === 5 && <OnboardingCompany key="company" onNext={handleCompany} onSkip={next} />}
+          {step === 6 && <OnboardingTechnician key="tech" onNext={handleTechnician} onSkip={next} />}
+          {step === 7 && <OnboardingStore key="store" onNext={handleStore} onSkip={next} />}
+          {step === 8 && <OnboardingComplete key="done" onFinish={finish} completedSteps={completedSteps} />}
         </AnimatePresence>
       </div>
     </div>
