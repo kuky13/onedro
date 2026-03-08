@@ -385,16 +385,24 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
     }));
   }, [enablePolling, pollingInterval, serviceOrderQuery.data?.id, queryIdentifier, queryClient, lastEventId, events, handleNewEvent]);
 
+  // Determine if this is a public (RPC-based) access where websocket won't work
+  const isPublicAccess = !!formattedId;
+
   // Initialize real-time connection
   useEffect(() => {
     if (serviceOrderQuery.data?.id) {
-      setupRealTimeSubscription();
-      
-      // Set up retry mechanism for failed connections
-      if (status.errorCount > 0 && status.errorCount < 3) {
-        retryTimeoutRef.current = setTimeout(() => {
-          setupRealTimeSubscription();
-        }, Math.pow(2, status.errorCount) * 1000); // Exponential backoff
+      if (isPublicAccess) {
+        // Skip websocket for public access (RLS blocks it), go straight to polling
+        setupPolling();
+      } else {
+        setupRealTimeSubscription();
+        
+        // Set up retry mechanism for failed connections
+        if (status.errorCount > 0 && status.errorCount < 3) {
+          retryTimeoutRef.current = setTimeout(() => {
+            setupRealTimeSubscription();
+          }, Math.pow(2, status.errorCount) * 1000);
+        }
       }
     }
 
@@ -406,7 +414,7 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
         clearTimeout(retryTimeoutRef.current);
       }
     };
-  }, [serviceOrderQuery.data?.id, setupRealTimeSubscription, status.errorCount]);
+  }, [serviceOrderQuery.data?.id, isPublicAccess, setupRealTimeSubscription, setupPolling, status.errorCount]);
 
   // Cleanup on unmount
   useEffect(() => {

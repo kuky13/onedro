@@ -150,13 +150,15 @@ export function ServiceOrderPublicShare() {
   } | null>(null);
 
   const realtimeOptions: Parameters<typeof useServiceOrderRealTime>[0] = token ? {
-    ...(directId
-      ? { serviceOrderId: directId }
-      : tokenIsFormattedId
-        ? { formattedId: token }
-        : { shareToken: token }),
+    ...(directId && tokenIsFormattedId
+      ? { formattedId: token, serviceOrderId: directId }
+      : directId
+        ? { serviceOrderId: directId }
+        : tokenIsFormattedId
+          ? { formattedId: token }
+          : { shareToken: token }),
     enablePolling: true,
-    pollingInterval: 30000,
+    pollingInterval: 15000, // 15s for near real-time via polling
     enableNotifications: true
   } : {
     shareToken: '',
