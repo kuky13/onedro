@@ -147,9 +147,8 @@ export function ServiceOrderPublicShare() {
     status: string;
   } | null>(null);
 
-  const { serviceOrder: realtimeServiceOrder } = useServiceOrderRealTime(token ? {
-    shareToken: tokenIsFormattedId ? undefined : token,
-    formattedId: tokenIsFormattedId ? token : undefined,
+  const realtimeOptions: Parameters<typeof useServiceOrderRealTime>[0] = token ? {
+    ...(tokenIsFormattedId ? { formattedId: token } : { shareToken: token }),
     enablePolling: true,
     pollingInterval: 30000,
     enableNotifications: true
@@ -158,7 +157,8 @@ export function ServiceOrderPublicShare() {
     enablePolling: false,
     pollingInterval: 0,
     enableNotifications: false
-  });
+  };
+  const { serviceOrder: realtimeServiceOrder } = useServiceOrderRealTime(realtimeOptions);
 
   useDynamicMetaTags();
 
