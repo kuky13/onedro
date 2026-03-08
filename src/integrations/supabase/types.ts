@@ -6607,6 +6607,7 @@ export type Database = {
           labor_cost: number
           last_customer_update: string
           notes: string
+          owner_id: string
           parts_cost: number
           payment_status: string
           priority: string
