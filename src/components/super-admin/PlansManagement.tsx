@@ -57,7 +57,7 @@ export function PlansManagement() {
   const updatePlan = async (plan: SubscriptionPlan) => {
     setSaving(plan.id);
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('subscription_plans')
         .update({
           name: plan.name,
