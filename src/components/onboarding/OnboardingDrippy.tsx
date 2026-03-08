@@ -1,4 +1,4 @@
-import { Sparkles, MessageSquare, Search } from "lucide-react";
+import { Sparkles, MessageSquare, Search, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface Props {
@@ -53,8 +53,12 @@ export const OnboardingDrippy = ({ onNext, onSkip }: Props) => {
       </div>
 
       <div className="flex flex-col gap-3 pt-2">
-        <button onClick={onNext} className="btn-premium w-full h-12 rounded-xl text-base font-semibold">
+        <button
+          onClick={onNext}
+          className="btn-premium w-full h-12 rounded-xl text-base font-semibold inline-flex items-center justify-center gap-2"
+        >
           Continuar
+          <ChevronRight className="h-5 w-5" />
         </button>
         <button onClick={onSkip} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
           Pular →
