@@ -337,9 +337,11 @@ export function ServiceOrderPublicShare() {
             logo_url: data.logo_url,
             address: data.address,
             whatsapp_phone: data.whatsapp_phone,
-            description: null,
-            email: null,
-            website: null
+            description: data.description || null,
+            email: data.email || null,
+            website: data.website || null,
+            cnpj: data.cnpj || null,
+            business_hours: data.business_hours || null
           });
         }
       }
