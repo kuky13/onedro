@@ -1,54 +1,134 @@
 
 
-## Onboarding Flow para Novos Usuários
+# Expansao da Documentacao do Projeto OneDrip
 
-### Conceito
-Criar um fluxo de triagem multi-etapas (`/onboarding`) que aparece após o primeiro login quando o usuário ainda não completou a configuração inicial. Cada etapa tem um botão "Pular" e segue o design premium (gradientes, `rounded-2xl`, ícones em círculos coloridos, `backdrop-blur`).
+## Objetivo
+Criar documentacao tecnica completa e detalhada para que qualquer desenvolvedor que entre no projeto consiga entender rapidamente como tudo funciona. Vamos expandir os 5 arquivos existentes e criar 7 novos arquivos `.md`.
 
-### Alteração no Banco de Dados
-Adicionar coluna `onboarding_completed` (boolean, default `false`) na tabela `user_profiles`. Quando o fluxo termina (ou é totalmente pulado), marca como `true`.
+---
 
-```sql
-ALTER TABLE user_profiles ADD COLUMN onboarding_completed boolean NOT NULL DEFAULT false;
-```
+## Arquivos Existentes - Melhorias
 
-### Etapas do Onboarding
+### `0-ai-project-context.md` - Atualizar
+- Adicionar secao sobre o sistema de Diagnostico de Dispositivos (`/testar/:token`)
+- Documentar o modulo de Peliculas (`/p`)
+- Mencionar o sistema de Gamificacao (HamsterPage/CookiePage)
+- Atualizar a lista de Guards com `MobileMenuProvider`
 
-1. **Boas-vindas** — Tela de boas-vindas com breve explicação do que será configurado
-2. **Perfil Pessoal** — Nome, username (campos de `user_profiles`)
-3. **Marca da Empresa** — Nome, logo, CNPJ, telefone, email, endereço, WhatsApp (salva em `company_info`)
-4. **Criar Técnico** — Formulário simplificado para cadastrar o primeiro técnico (nome, comissão) em `repair_technicians`
-5. **Criar Loja** — Pergunta se quer criar uma loja; se sim, formulário inline (nome, slug, telefone) em `stores`; se não, pula
-6. **Conclusão** — Resumo do que foi configurado + botão "Ir para o Dashboard"
+### `1-visao-geral.md` - Expandir
+- Adicionar modulo de Garantias (`/garantia`)
+- Documentar Central de Ajuda (`/central-de-ajuda`)
+- Adicionar secao sobre Notificacoes Push e sistema de Updates
+- Mencionar Apps Page e Sistema (mini-OS no browser)
 
-Cada etapa terá:
-- Barra de progresso no topo (step X de 6)
-- Botão "Pular" (outline) + Botão "Continuar" (btn-premium)
-- Design premium: `bg-muted/20 border-border/30 rounded-2xl`, ícones em `bg-primary/10 rounded-full`
+### `2-frontend-estrutura.md` - Detalhar
+- Documentar o sistema de `lazyWithRetry` com telemetria de chunks
+- Explicar `ChunkLoadRecoveryBanner` e `useChunkLoadTelemetry`
+- Detalhar o `SessionPersistence` e `secureStorage`
+- Documentar o `MobileMenuProvider` e navegacao mobile
 
-### Redirecionamento
-- **`RootRedirect.tsx`**: Se `user` está logado e `onboarding_completed === false`, redireciona para `/onboarding` em vez de `/dashboard`
-- Buscar `onboarding_completed` da tabela `user_profiles` via query
+### `3-backend-supabase.md` - Expandir
+- Listar todas as 40+ Edge Functions com descricao curta
+- Documentar o fluxo de `rate-limiter` e `security-api`
+- Explicar o sistema de notificacoes push (`send-push-notification`)
 
-### Arquivos a Criar
-- `src/pages/OnboardingPage.tsx` — Página principal com state machine de etapas
-- `src/components/onboarding/OnboardingWelcome.tsx` — Etapa 1
-- `src/components/onboarding/OnboardingProfile.tsx` — Etapa 2
-- `src/components/onboarding/OnboardingCompany.tsx` — Etapa 3
-- `src/components/onboarding/OnboardingTechnician.tsx` — Etapa 4
-- `src/components/onboarding/OnboardingStore.tsx` — Etapa 5
-- `src/components/onboarding/OnboardingComplete.tsx` — Etapa 6
-- `src/components/onboarding/OnboardingProgress.tsx` — Barra de progresso reutilizável
+### `4-integracoes-externas.md` - Atualizar
+- Adicionar secao sobre Evolution API e multi-broker completo
+- Documentar o sistema de download de video via VPS proxy
 
-### Arquivos a Modificar
-- `src/App.tsx` — Adicionar rota `/onboarding` (protegida com `UnifiedProtectionGuard`)
-- `src/components/RootRedirect.tsx` — Checar `onboarding_completed` e redirecionar para `/onboarding` se `false`
+---
 
-### Design Premium (padrão das outras páginas)
-- Layout: `max-w-2xl mx-auto px-4` (centralizado, não muito largo)
-- Header: título da etapa com ícone em circle colorido
-- Cards: `bg-muted/20 border border-border/30 rounded-2xl p-6`
-- Barra de progresso: `bg-primary/20` track + `bg-primary` fill com animação
-- Botões: "Pular" (`variant="outline" rounded-xl`) | "Continuar" (`btn-premium rounded-xl`)
-- Transições entre etapas com `framer-motion` (fade + slide)
+## Novos Arquivos
+
+### `5-typescript-tipos.md` - Tipos e Interfaces
+Documentar todas as interfaces criticas do sistema:
+- `ServiceOrderData` (OS com campos de senha, checklist, etc.)
+- `Budget` (tipo canonico via Supabase Tables)
+- `User`, `UserProfile`, `DebugInfo`
+- `CompanyInfo`, `CompanyData`, `CompanyFormData`
+- `TestSession`, `TestResult`, `TestDetails`, `TestConfig`
+- `DevicePasswordType` e seus valores
+- `CheckoutParams`, `PixPaymentData`
+- `BudgetData`, `BudgetPartData` (para PDFs)
+- `AuthContextType` e `UserRole`
+- Tabela visual com cada tipo e onde e usado
+
+### `6-hooks-referencia.md` - Guia de Hooks
+Catalogar os 60+ hooks com categorias:
+- **Autenticacao**: `useAuth`, `useTokenRotation`, `useSecurity`
+- **Licenciamento**: `useLicense`, `useLicenseVerification`, `useLicenseCache`, `useTrialLicense`
+- **Dispositivo**: `useDeviceDetection`, `useIOSDetection`, `useMobileDetection`, `useBatteryDetection`
+- **Ordens de Servico**: `useSecureServiceOrders`, `useServiceOrderEdit`, `useServiceOrderRealTime`, `useServiceOrderShare`
+- **Orcamentos (Worm)**: `useBudgetData`, `useBudgetDeletion`, `useBudgetServiceOrder`, `useCreateServiceOrderFromBudget`
+- **PWA/Offline**: `usePWA`, `useOfflineDetection`, `useSwipeGesture`
+- **UI/UX**: `useResponsive`, `useMobileMenu`, `usePopupState`, `useDebounce`
+- **Store**: `useShopProfile`, `useImportBudgetToStore`
+- **Config**: `useAppConfig`, `useCompanyBranding`, `useDrippySettings`, `useCookiePreferences`
+- Exemplos de uso para os mais importantes
+
+### `7-rotas-e-guards.md` - Mapa de Rotas
+Tabela completa com todas as rotas do `App.tsx`:
+- Rota, Componente, Guard aplicado, Lazy/Estatico
+- Fluxo visual de redirecionamentos (auth -> licenca -> dashboard)
+- Explicacao de cada Guard: `UnifiedProtectionGuard`, `AdminGuard`, `MaintenanceGuard`
+- Como adicionar uma nova rota (passo a passo)
+
+### `8-edge-functions.md` - Backend Serverless
+Documentacao detalhada de cada Edge Function:
+- **Pagamentos**: `create-mercadopago-checkout`, `check-mercadopago-payment`, `mercadopago-webhook`, `cancel-mercadopago-payment`, `create-mercadopago-subscription`
+- **WhatsApp**: `whatsapp-proxy`, `whatsapp-webhook`, `whatsapp-qr-connect`, `whatsapp-ai-reply`, `whatsapp-instance-manage`, `waha-proxy`
+- **IA**: `chat-ai`, `triage-ai`, `analyze-budgets`
+- **Seguranca**: `security-api`, `rate-limiter`, `real-time-monitoring`, `audit-system`
+- **Usuarios**: `manage-user-profile`, `admin-reset-password`, `admin-update-user-email`, `validate-license`
+- **Comunicacao**: `send-license-email`, `send-payment-receipt-email`, `send-push-notification`, `notification-system`
+- Fluxo de request/response de cada grupo
+
+### `9-seguranca.md` - Arquitetura de Seguranca
+- Sistema `secureStorage` com criptografia AES-GCM e PBKDF2
+- `SecurityLogger` e auditoria de acessos
+- RLS (Row Level Security) - regras e padroes
+- `botDetection`, `secureCSP`, `secureNavigation`
+- Rate limiting nas Edge Functions
+- Token rotation (`useTokenRotation`)
+- Fluxo de validacao de licencas
+
+### `10-pdf-e-utils.md` - Utilitarios e Geracao de PDFs
+- Como funciona o `pdfUtils.ts` (jsPDF client-side)
+- `serviceOrderPdfUtils.ts` para recibos de OS
+- `currency.ts` - formatacao BRL
+- `whatsappUtils.ts` e `whatsappTemplateUtils.ts`
+- `authCleanup.ts` - limpeza de sessao
+- `pwaDetection.ts` e `pwaReset.ts`
+- `debugLogger.ts` e `asciiConsole.ts`
+
+### `11-guia-contribuicao.md` - Guia para Novos Devs
+- Como rodar o projeto localmente
+- Convencoes de codigo (React Query > useEffect, Zustand para global state)
+- Como criar uma nova pagina (registrar rota, escolher Guard, lazy vs estatico)
+- Como criar um novo hook
+- Como adicionar uma Edge Function
+- Checklist de PR/review
+- Erros comuns e como evitar (RLS, chunks, offline)
+
+---
+
+## Detalhes Tecnicos
+
+### Arquivos a criar:
+1. `.documentação/docs/5-typescript-tipos.md`
+2. `.documentação/docs/6-hooks-referencia.md`
+3. `.documentação/docs/7-rotas-e-guards.md`
+4. `.documentação/docs/8-edge-functions.md`
+5. `.documentação/docs/9-seguranca.md`
+6. `.documentação/docs/10-pdf-e-utils.md`
+7. `.documentação/docs/11-guia-contribuicao.md`
+
+### Arquivos a editar:
+1. `.documentação/docs/0-ai-project-context.md`
+2. `.documentação/docs/1-visao-geral.md`
+3. `.documentação/docs/2-frontend-estrutura.md`
+4. `.documentação/docs/3-backend-supabase.md`
+5. `.documentação/docs/4-integracoes-externas.md`
+
+Total: **12 arquivos** (7 novos + 5 atualizados)
 

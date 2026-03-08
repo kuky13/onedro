@@ -4498,6 +4498,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          onboarding_completed: boolean
           role: string | null
           updated_at: string
           updated_by: string | null
@@ -4511,6 +4512,7 @@ export type Database = {
           created_at?: string
           id: string
           name: string
+          onboarding_completed?: boolean
           role?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -4524,6 +4526,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          onboarding_completed?: boolean
           role?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -6337,6 +6340,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          onboarding_completed: boolean
           role: string | null
           updated_at: string
           updated_by: string | null
