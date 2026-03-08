@@ -94,10 +94,11 @@ export const DashboardLiteLicenseStatus = () => {
         </div>
         <button
           onClick={() => navigate('/central-de-ajuda')}
-          className="flex-shrink-0 w-9 h-9 rounded-xl border border-border/60 bg-background/70 flex items-center justify-center hover:bg-muted/50 transition-colors"
+          className="flex-shrink-0 h-9 px-3 rounded-xl border border-border/60 bg-background/70 flex items-center gap-2 hover:bg-muted/50 transition-colors"
           title="Central de ajuda"
         >
           <LifeBuoy className="h-4 w-4 text-muted-foreground" />
+          <span className="text-xs font-medium text-muted-foreground">Ajuda</span>
         </button>
       </div>
 
