@@ -9,7 +9,6 @@ interface PdfGeneratorOptions {
   companyName: string;
   companyPhone?: string;
   companyAddress?: string;
-  paperWidth?: '58mm' | '80mm';
 }
 
 export const processBudgetTemplate = ({
