@@ -11,11 +11,15 @@ interface AppShellProps {
 const AppShellContent = ({ children }: AppShellProps) => {
   const { isOpen, toggleMenu, closeMenu, menuData, handleLogout } = useMobileMenuContext();
   const isMobile = useIsMobile();
+  const pathname = window.location.pathname;
+
+  // Don't show floating hamburger on /dashboard — AdaptiveLayout has its own header
+  const showFloatingHamburger = isMobile && pathname !== '/dashboard';
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Floating hamburger button - only on mobile, fixed position */}
-      {isMobile && (
+      {/* Floating hamburger button - only on mobile, not on dashboard */}
+      {showFloatingHamburger && (
         <div className="fixed top-3 left-3 z-40 flex items-center justify-center">
           <MobileHamburgerButton
             isOpen={isOpen}
