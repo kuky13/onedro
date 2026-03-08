@@ -1,5 +1,5 @@
-import { CheckCircle2, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { CheckCircle2, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface Props {
   onFinish: () => void;
@@ -21,9 +21,7 @@ export const OnboardingComplete = ({ onFinish, completedSteps }: Props) => {
       </div>
 
       <div className="space-y-3">
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-          Tudo pronto! 🚀
-        </h1>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Tudo pronto!</h1>
         <p className="text-muted-foreground text-base max-w-md mx-auto">
           Sua conta está configurada. Você pode alterar qualquer coisa depois em Configurações.
         </p>
@@ -33,7 +31,7 @@ export const OnboardingComplete = ({ onFinish, completedSteps }: Props) => {
         <div className="bg-muted/20 border border-border/30 rounded-2xl p-5 max-w-sm mx-auto">
           <p className="text-sm font-medium text-foreground mb-3">O que foi configurado:</p>
           <ul className="space-y-2">
-            {completedSteps.map(step => (
+            {completedSteps.map((step) => (
               <li key={step} className="flex items-center gap-2 text-sm text-muted-foreground">
                 <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
                 {step}
