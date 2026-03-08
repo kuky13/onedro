@@ -371,7 +371,7 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
       ...prev,
       connectionType: 'polling'
     }));
-  }, [enablePolling, pollingInterval, serviceOrderQuery.data?.id, shareToken, serviceOrderId, queryClient, lastEventId, events, handleNewEvent]);
+  }, [enablePolling, pollingInterval, serviceOrderQuery.data?.id, queryIdentifier, queryClient, lastEventId, events, handleNewEvent]);
 
   // Initialize real-time connection
   useEffect(() => {
