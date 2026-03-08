@@ -304,7 +304,7 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
       // Fall back to polling
       setupPolling();
     }
-  }, [serviceOrderQuery.data?.id, shareToken, serviceOrderId, queryClient, handleNewEvent]);
+  }, [serviceOrderQuery.data?.id, queryIdentifier, queryClient, handleNewEvent]);
 
   // Setup polling fallback
   const setupPolling = useCallback(() => {
