@@ -124,9 +124,15 @@ function getPaymentStatusInfo(isPaid: boolean) {
     };
   }
 }
+// Detect if token is a formatted_id (e.g., OS0001) or a legacy share token
+function isFormattedId(token: string): boolean {
+  return /^OS\d+$/i.test(token);
+}
+
 export function ServiceOrderPublicShare() {
   const params = useParams<{ shareToken: string }>();
   const token = params.shareToken;
+  const tokenIsFormattedId = token ? isFormattedId(token) : false;
 
   const [serviceOrder, setServiceOrder] = useState<ServiceOrderData | null>(null);
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
@@ -142,7 +148,8 @@ export function ServiceOrderPublicShare() {
   } | null>(null);
 
   const { serviceOrder: realtimeServiceOrder } = useServiceOrderRealTime(token ? {
-    shareToken: token,
+    shareToken: tokenIsFormattedId ? undefined : token,
+    formattedId: tokenIsFormattedId ? token : undefined,
     enablePolling: true,
     pollingInterval: 30000,
     enableNotifications: true
