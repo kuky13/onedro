@@ -82,31 +82,31 @@ export const DashboardLiteLicenseStatus = () => {
   return (
     <div className={`rounded-2xl border ${status.accentClass} bg-card p-4 space-y-4`}>
       {/* Header */}
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded-xl ${status.iconBg} flex items-center justify-center flex-shrink-0`}>
             {status.icon}
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-foreground leading-tight">{status.title}</h3>
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold text-foreground">{status.title}</h3>
             <p className="text-xs text-muted-foreground mt-0.5">{status.description}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => navigate('/suporte')}
-            className="h-9 px-3 rounded-xl border border-border/60 bg-background/70 flex items-center gap-2 hover:bg-muted/50 transition-colors"
+            className="h-8 px-3 rounded-xl border border-border/60 bg-background/70 flex items-center gap-1.5 hover:bg-muted/50 transition-colors"
             title="Suporte"
           >
-            <MessageCircle className="h-4 w-4 text-muted-foreground" />
+            <MessageCircle className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="text-xs font-medium text-muted-foreground">Suporte</span>
           </button>
           <button
             onClick={() => navigate('/central-de-ajuda')}
-            className="h-9 px-3 rounded-xl border border-border/60 bg-background/70 flex items-center gap-2 hover:bg-muted/50 transition-colors"
+            className="h-8 px-3 rounded-xl border border-border/60 bg-background/70 flex items-center gap-1.5 hover:bg-muted/50 transition-colors"
             title="Central de ajuda"
           >
-            <LifeBuoy className="h-4 w-4 text-muted-foreground" />
+            <LifeBuoy className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="text-xs font-medium text-muted-foreground">Ajuda</span>
           </button>
         </div>
