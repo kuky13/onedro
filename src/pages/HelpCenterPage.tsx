@@ -782,11 +782,8 @@ const HelpCenterPage = () => {
       <div className="text-center mb-12">
         <div className="flex items-center justify-between mb-4">
           <div></div>
-          <div className="flex items-center gap-3">
-            
-
-            
-            <h1 className="text-4xl font-bold text-foreground">Central de Ajuda</h1>
+          <div className="flex items-center justify-center gap-3">
+            <h1 className="text-4xl font-bold text-foreground text-center">Central de Ajuda</h1>
           </div>
           
 
