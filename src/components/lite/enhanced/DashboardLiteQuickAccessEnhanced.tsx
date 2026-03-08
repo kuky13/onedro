@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { List, Settings, Shield, Users, Wrench, MoreHorizontal, Hammer, Store } from 'lucide-react';
+import { List, Settings, Users, Wrench, MoreHorizontal, Hammer, Store, Smartphone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { PWAInstallModalSimple } from '@/components/ui/PWAInstallModalSimple';
