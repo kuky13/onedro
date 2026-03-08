@@ -23,7 +23,7 @@ interface QuickAccessAction {
 const quickAccessActions: QuickAccessAction[] = [
   { id: 'budgets', label: 'Orçamentos', icon: List, tab: 'budgets', permission: 'view_own_budgets', colorClass: 'text-blue-500', bgClass: 'bg-blue-500/10' },
   { id: 'service-orders', label: 'Ordens de Serviço', icon: Wrench, tab: 'service-orders', permission: null, colorClass: 'text-amber-500', bgClass: 'bg-amber-500/10' },
-  { id: 'warranties', label: 'Garantias', icon: Shield, tab: 'warranties', permission: null, colorClass: 'text-teal-500', bgClass: 'bg-teal-500/10' },
+  { id: 'teste-rapido', label: 'Teste Rápido', icon: Smartphone, tab: 'teste-rapido', permission: null, colorClass: 'text-teal-500', bgClass: 'bg-teal-500/10' },
   { id: 'clients', label: 'Clientes', icon: Users, tab: 'clients', permission: null, colorClass: 'text-purple-500', bgClass: 'bg-purple-500/10' },
   { id: 'reparos', label: 'Gestão de Reparos', icon: Hammer, tab: 'reparos', permission: null, colorClass: 'text-orange-500', bgClass: 'bg-orange-500/10' },
   { id: 'store', label: 'Minha Loja', icon: Store, tab: 'store', permission: null, colorClass: 'text-violet-500', bgClass: 'bg-violet-500/10' },
