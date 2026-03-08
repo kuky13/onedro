@@ -6516,6 +6516,21 @@ export type Database = {
               warranty_months: number
             }[]
           }
+      get_public_company_info: {
+        Args: { p_owner_id: string }
+        Returns: {
+          address: string
+          business_hours: string
+          cnpj: string
+          description: string
+          email: string
+          id: string
+          logo_url: string
+          name: string
+          website: string
+          whatsapp_phone: string
+        }[]
+      }
       get_public_os_status: {
         Args: { p_order_id: string }
         Returns: {
