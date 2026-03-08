@@ -501,16 +501,15 @@ export function WhatsAppManagement() {
     });
   };
   return <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-            <MessageSquare className="h-8 w-8 text-primary" />
-            WhatsApp & Notificações
-          </h1>
-          <p className="text-muted-foreground">
-            Gerencie integrações, orçamentos e notificações automáticas via WAHA.
-          </p>
+      {/* Premium Header */}
+      <div className="space-y-2">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+          <MessageSquare className="h-6 w-6 text-primary" />
         </div>
+        <h1 className="text-xl lg:text-3xl font-bold tracking-tight">WhatsApp & Notificações</h1>
+        <p className="text-sm lg:text-base text-muted-foreground">
+          Gerencie integrações, orçamentos e notificações automáticas via WAHA.
+        </p>
       </div>
 
       <Tabs defaultValue="config" className="w-full">

@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Loader2, Save, DollarSign, Calendar, Sparkles } from 'lucide-react';
+import { Loader2, Save, DollarSign, Calendar, Sparkles, CreditCard } from 'lucide-react';
 
 interface SubscriptionPlan {
   id: string;
@@ -70,15 +70,8 @@ export function PlansManagement() {
         .eq('id', plan.id)
         .select();
 
-      if (error) {
-        console.error('Erro detalhado:', error);
-        throw error;
-      }
-      
-      console.log('Plano atualizado:', data);
+      if (error) throw error;
       toast.success('Plano atualizado com sucesso!');
-      
-      // Recarregar os dados para garantir sincronização
       await fetchPlans();
     } catch (error: unknown) {
       console.error('Erro ao atualizar plano:', error);
@@ -128,30 +121,37 @@ export function PlansManagement() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Gerenciamento de Planos</h1>
-        <p className="text-muted-foreground">Configure os preços e recursos dos planos de assinatura</p>
+      <div className="space-y-2">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+          <CreditCard className="h-6 w-6 text-primary" />
+        </div>
+        <h1 className="text-xl lg:text-3xl font-bold tracking-tight">Gerenciamento de Planos</h1>
+        <p className="text-sm lg:text-base text-muted-foreground">
+          Configure os preços e recursos dos planos de assinatura.
+        </p>
       </div>
 
       {plans.length === 0 ? (
-        <Card>
+        <Card className="rounded-2xl border-border/50">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-muted-foreground">Nenhum plano encontrado</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
           {plans.map(plan => (
-            <Card key={plan.id} className={!plan.active ? 'opacity-60' : ''}>
+            <Card key={plan.id} className={`rounded-2xl border-border/50 transition-colors hover:border-primary/20 ${!plan.active ? 'opacity-60' : ''}`}>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    {plan.plan_type === 'monthly' ? (
-                      <Calendar className="h-5 w-5 text-blue-500" />
-                    ) : (
-                      <Sparkles className="h-5 w-5 text-yellow-500" />
-                    )}
-                    <CardTitle>{plan.name}</CardTitle>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                      {plan.plan_type === 'monthly' ? (
+                        <Calendar className="h-4 w-4 text-primary" />
+                      ) : (
+                        <Sparkles className="h-4 w-4 text-primary" />
+                      )}
+                    </div>
+                    <CardTitle className="text-base">{plan.name}</CardTitle>
                   </div>
                   <Switch
                     checked={plan.active}
@@ -164,50 +164,56 @@ export function PlansManagement() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Nome do Plano</Label>
+                  <Label className="text-xs">Nome do Plano</Label>
                   <Input
                     value={plan.name}
                     onChange={(e) => handlePlanChange(plan.id, 'name', e.target.value)}
+                    className="rounded-xl"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Descrição</Label>
+                  <Label className="text-xs">Descrição</Label>
                   <Textarea
                     value={plan.description || ''}
                     onChange={(e) => handlePlanChange(plan.id, 'description', e.target.value)}
                     rows={2}
+                    className="rounded-xl"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-1">
-                    <DollarSign className="h-4 w-4" />
-                    Preço (R$)
-                  </Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={plan.price}
-                    onChange={(e) => handlePlanChange(plan.id, 'price', parseFloat(e.target.value) || 0)}
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-1 text-xs">
+                      <DollarSign className="h-3 w-3" />
+                      Preço (R$)
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={plan.price}
+                      onChange={(e) => handlePlanChange(plan.id, 'price', parseFloat(e.target.value) || 0)}
+                      className="rounded-xl"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-1 text-xs">
+                      <Calendar className="h-3 w-3" />
+                      Dias
+                    </Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={plan.days}
+                      onChange={(e) => handlePlanChange(plan.id, 'days', parseInt(e.target.value) || 0)}
+                      className="rounded-xl"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    Duração da licença (dias)
-                  </Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    value={plan.days}
-                    onChange={(e) => handlePlanChange(plan.id, 'days', parseInt(e.target.value) || 0)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Recursos Inclusos</Label>
+                  <Label className="text-xs">Recursos Inclusos</Label>
                   <div className="space-y-2">
                     {plan.features.map((feature, index) => (
                       <div key={index} className="flex gap-2">
@@ -215,12 +221,13 @@ export function PlansManagement() {
                           value={feature}
                           onChange={(e) => handleFeatureChange(plan.id, index, e.target.value)}
                           placeholder="Ex: Acesso completo"
+                          className="rounded-xl"
                         />
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => removeFeature(plan.id, index)}
-                          className="shrink-0 text-destructive"
+                          className="shrink-0 text-destructive h-9 w-9"
                         >
                           ×
                         </Button>
@@ -230,7 +237,7 @@ export function PlansManagement() {
                       variant="outline"
                       size="sm"
                       onClick={() => addFeature(plan.id)}
-                      className="w-full"
+                      className="w-full rounded-xl"
                     >
                       + Adicionar Recurso
                     </Button>
@@ -238,7 +245,7 @@ export function PlansManagement() {
                 </div>
 
                 <Button
-                  className="w-full"
+                  className="w-full rounded-xl"
                   onClick={() => updatePlan(plan)}
                   disabled={saving === plan.id}
                 >
