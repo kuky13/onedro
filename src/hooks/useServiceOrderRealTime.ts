@@ -44,6 +44,7 @@ export interface RealTimeStatus {
 
 interface UseServiceOrderRealTimeOptions {
   shareToken?: string;
+  formattedId?: string;
   serviceOrderId?: string;
   enablePolling?: boolean;
   pollingInterval?: number;
@@ -53,6 +54,7 @@ interface UseServiceOrderRealTimeOptions {
 export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions) {
   const {
     shareToken,
+    formattedId,
     serviceOrderId,
     enablePolling = true,
     pollingInterval = 30000, // 30 seconds
@@ -74,10 +76,20 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Query for service order data
+  const queryIdentifier = formattedId || shareToken || serviceOrderId;
+
   const serviceOrderQuery = useQuery({
-    queryKey: ['service-order-realtime', shareToken || serviceOrderId],
+    queryKey: ['service-order-realtime', queryIdentifier],
     queryFn: async (): Promise<ServiceOrderRealTimeData | null> => {
-      if (shareToken) {
+      if (formattedId) {
+        const { data, error } = await supabase
+          .rpc('get_service_order_by_formatted_id' as any, {
+            p_formatted_id: formattedId
+          });
+
+        if (error) throw error;
+        return (data as any)?.[0] || null;
+      } else if (shareToken) {
         const { data, error } = await supabase
           .rpc('get_service_order_by_share_token', {
             p_share_token: shareToken
@@ -117,8 +129,8 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
       }
       return null;
     },
-    enabled: !!(shareToken || serviceOrderId),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !!(formattedId || shareToken || serviceOrderId),
+    staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true
   });
@@ -226,7 +238,7 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
             console.log('Service order updated:', payload);
             // Invalidate and refetch service order data
             queryClient.invalidateQueries({
-              queryKey: ['service-order-realtime', shareToken || serviceOrderId]
+              queryKey: ['service-order-realtime', queryIdentifier]
             });
             
             setStatus(prev => ({
@@ -292,7 +304,7 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
       // Fall back to polling
       setupPolling();
     }
-  }, [serviceOrderQuery.data?.id, shareToken, serviceOrderId, queryClient, handleNewEvent]);
+  }, [serviceOrderQuery.data?.id, queryIdentifier, queryClient, handleNewEvent]);
 
   // Setup polling fallback
   const setupPolling = useCallback(() => {
@@ -304,7 +316,7 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
       try {
         // Refetch service order data
         await queryClient.invalidateQueries({
-          queryKey: ['service-order-realtime', shareToken || serviceOrderId]
+          queryKey: ['service-order-realtime', queryIdentifier]
         });
 
         // Check for new events
@@ -359,7 +371,7 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
       ...prev,
       connectionType: 'polling'
     }));
-  }, [enablePolling, pollingInterval, serviceOrderQuery.data?.id, shareToken, serviceOrderId, queryClient, lastEventId, events, handleNewEvent]);
+  }, [enablePolling, pollingInterval, serviceOrderQuery.data?.id, queryIdentifier, queryClient, lastEventId, events, handleNewEvent]);
 
   // Initialize real-time connection
   useEffect(() => {
@@ -403,13 +415,13 @@ export function useServiceOrderRealTime(options: UseServiceOrderRealTimeOptions)
   const refresh = useCallback(async () => {
     await Promise.all([
       queryClient.invalidateQueries({
-        queryKey: ['service-order-realtime', shareToken || serviceOrderId]
+        queryKey: ['service-order-realtime', queryIdentifier]
       }),
       queryClient.invalidateQueries({
-        queryKey: ['service-order-events-realtime', shareToken || serviceOrderId]
+        queryKey: ['service-order-events-realtime', queryIdentifier]
       })
     ]);
-  }, [queryClient, shareToken, serviceOrderId]);
+  }, [queryClient, queryIdentifier]);
 
   // Log customer view
   useEffect(() => {

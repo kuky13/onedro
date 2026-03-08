@@ -112,9 +112,13 @@ export const useBudgetServiceOrder = (budgetId: string) => {
     return createdOrderCount > 0;
   };
 
-  // Função para obter URL de compartilhamento
-  const getShareUrl = () => {
+  // Função para obter URL de compartilhamento usando formatted_id quando possível
+  const getShareUrl = (sequentialNumber?: number | null) => {
     if (!createdOrderId) return null;
+    if (sequentialNumber) {
+      const fmtId = `OS${String(sequentialNumber).padStart(4, '0')}`;
+      return `${window.location.origin}/share/service-order/${fmtId}`;
+    }
     return `${window.location.origin}/share/service-order/${createdOrderId}`;
   };
 
