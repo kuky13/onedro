@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { LayoutDashboard, Users, LogOut, Menu, X, Shield, Home, Film, Brain, Grid3X3, CreditCard, Ticket, MessageSquare, Key, Package, Bug, Server, Download } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, Menu, X, Shield, Home, Film, Brain, Grid3X3, CreditCard, Ticket, MessageSquare, Key, Package, Bug, Server } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
