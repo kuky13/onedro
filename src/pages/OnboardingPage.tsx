@@ -133,11 +133,13 @@ export const OnboardingPage = () => {
 
         <AnimatePresence mode="wait">
           {step === 1 && <OnboardingWelcome key="welcome" onNext={next} onSkipAll={skipAll} />}
-          {step === 2 && <OnboardingProfile key="profile" onNext={handleProfile} onSkip={next} />}
-          {step === 3 && <OnboardingCompany key="company" onNext={handleCompany} onSkip={next} />}
-          {step === 4 && <OnboardingTechnician key="tech" onNext={handleTechnician} onSkip={next} />}
-          {step === 5 && <OnboardingStore key="store" onNext={handleStore} onSkip={next} />}
-          {step === 6 && <OnboardingComplete key="done" onFinish={finish} completedSteps={completedSteps} />}
+          {step === 2 && <OnboardingDrippy key="drippy" onNext={next} onSkip={next} />}
+          {step === 3 && <OnboardingSupport key="support" onNext={next} onSkip={next} />}
+          {step === 4 && <OnboardingProfile key="profile" onNext={handleProfile} onSkip={next} />}
+          {step === 5 && <OnboardingCompany key="company" onNext={handleCompany} onSkip={next} />}
+          {step === 6 && <OnboardingTechnician key="tech" onNext={handleTechnician} onSkip={next} />}
+          {step === 7 && <OnboardingStore key="store" onNext={handleStore} onSkip={next} />}
+          {step === 8 && <OnboardingComplete key="done" onFinish={finish} completedSteps={completedSteps} />}
         </AnimatePresence>
       </div>
     </div>

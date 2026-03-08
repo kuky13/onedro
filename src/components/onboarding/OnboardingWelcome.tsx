@@ -8,6 +8,8 @@ interface Props {
 
 export const OnboardingWelcome = ({ onNext, onSkipAll }: Props) => {
   const features = [
+    { icon: Bot, label: 'Conheça a Drippy' },
+    { icon: Headphones, label: 'Suporte & Ajuda' },
     { icon: Settings, label: 'Perfil pessoal' },
     { icon: Building2, label: 'Marca da empresa' },
     { icon: Wrench, label: 'Primeiro técnico' },
