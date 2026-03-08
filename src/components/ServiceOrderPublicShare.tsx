@@ -801,9 +801,19 @@ export function ServiceOrderPublicShare() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <p className="text-xs text-muted-foreground">Empresa</p>
-                <p className="font-semibold text-foreground">{finalCompanyInfo.name}</p>
+              <div className="flex items-center gap-3">
+                {finalCompanyInfo.logo_url && (
+                  <img src={finalCompanyInfo.logo_url} alt={finalCompanyInfo.name} className="w-12 h-12 object-contain rounded-xl border border-border/50 bg-white p-1" />
+                )}
+                <div>
+                  <p className="font-semibold text-foreground">{finalCompanyInfo.name}</p>
+                  {finalCompanyInfo.cnpj && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <FileText className="w-3 h-3" />
+                      CNPJ: {finalCompanyInfo.cnpj}
+                    </p>
+                  )}
+                </div>
               </div>
               
               {finalCompanyInfo.whatsapp_phone && <>
@@ -819,6 +829,19 @@ export function ServiceOrderPublicShare() {
                     </Button>
                   </div>
                 </>}
+
+              {finalCompanyInfo.email && <>
+                  <Separator />
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                      <Mail className="w-3 h-3" />
+                      E-mail
+                    </p>
+                    <a href={`mailto:${finalCompanyInfo.email}`} className="text-sm text-primary hover:underline">
+                      {finalCompanyInfo.email}
+                    </a>
+                  </div>
+                </>}
               
               {finalCompanyInfo.address && <>
                   <Separator />
@@ -828,6 +851,31 @@ export function ServiceOrderPublicShare() {
                       Endereço
                     </p>
                     <p className="text-sm text-foreground">{finalCompanyInfo.address}</p>
+                  </div>
+                </>}
+
+              {finalCompanyInfo.website && <>
+                  <Separator />
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                      <Globe className="w-3 h-3" />
+                      Website
+                    </p>
+                    <a href={finalCompanyInfo.website.startsWith('http') ? finalCompanyInfo.website : `https://${finalCompanyInfo.website}`} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
+                      {finalCompanyInfo.website}
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </>}
+
+              {finalCompanyInfo.business_hours && <>
+                  <Separator />
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      Horário de Funcionamento
+                    </p>
+                    <p className="text-sm text-foreground">{finalCompanyInfo.business_hours}</p>
                   </div>
                 </>}
             </CardContent>
