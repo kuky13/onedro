@@ -9,6 +9,7 @@ interface PdfGeneratorOptions {
   companyName: string;
   companyPhone?: string;
   companyAddress?: string;
+  paperWidth?: '58mm' | '80mm';
 }
 
 export const processBudgetTemplate = ({
@@ -17,9 +18,21 @@ export const processBudgetTemplate = ({
   template,
   companyName,
   companyPhone,
-  companyAddress
-}: Omit<PdfGeneratorOptions, 'paperWidth'>) => {
+  companyAddress,
+  paperWidth
+}: Omit<PdfGeneratorOptions, 'paperWidth'> & { paperWidth?: '58mm' | '80mm' }) => {
   let content = template;
+
+  // Ajuste de separadores baseado na largura do papel
+  const separatorWidth = paperWidth === '58mm' ? 32 : 48; // Aproximado para Courier 10
+  const dynamicSeparator = '-'.repeat(separatorWidth);
+
+  // Substituir linhas que parecem separadores (ex: "------" ou "----------------") por separador dinâmico
+  // Regex para encontrar linhas contendo apenas hifens (pelo menos 3)
+  content = content.replace(/^(-{3,})$/gm, dynamicSeparator);
+  
+  // Também substituir o placeholder explícito {linha_tracejada} se existir
+  content = content.replace(/{linha_tracejada}/g, dynamicSeparator);
 
   // Processar Loop de Qualidades/Peças
   if (content.includes('{qualidades_inicio}') && content.includes('{qualidades_fim}')) {
@@ -121,6 +134,132 @@ export const processBudgetTemplate = ({
   return content;
 };
 
+interface GroupPdfGeneratorOptions {
+  budgets: any[];
+  template: string;
+  paperWidth: '58mm' | '80mm';
+  companyName: string;
+  companyPhone?: string;
+  companyAddress?: string;
+}
+
+export const generateGroupBudgetPdf = ({
+  budgets,
+  template,
+  paperWidth,
+  companyName,
+  companyPhone,
+  companyAddress
+}: GroupPdfGeneratorOptions) => {
+  try {
+    console.log('Starting Group PDF Generation (Single Document Mode)', { 
+      budgetsCount: budgets.length, 
+      templateLength: template?.length,
+      paperWidth 
+    });
+
+    if (!template) {
+      console.error('Template is empty or undefined');
+      alert('Erro: Template de PDF vazio. Tente recarregar a página.');
+      return;
+    }
+
+    const width = paperWidth === '58mm' ? 58 : 80;
+    
+    // Configurações de fonte e margem
+    const fontSize = 10;
+    const lineHeight = 3.5; // mm
+    const margin = 2;
+    const maxWidth = width - (margin * 2);
+    const startY = margin + 2;
+
+    // Usamos o primeiro orçamento como base para informações globais (Cliente, Aparelho, etc)
+    const mainBudget = budgets[0];
+
+    // Simulamos "peças" usando a lista de orçamentos
+    // Cada orçamento se torna uma "opção/qualidade" no loop do template
+    const simulatedParts = budgets.map(b => ({
+      part_type: b.part_quality || b.part_type || 'Opção',
+      name: b.part_quality || b.part_type || 'Opção',
+      warranty_months: b.warranty_months,
+      cash_price: b.cash_price,
+      installment_price: b.installment_price,
+      installment_count: b.installments,
+      quantity: 1
+    }));
+
+    // Gerar conteúdo único processando o template uma vez com a lista de "peças" (orçamentos)
+    const fullContent = processBudgetTemplate({
+      budget: mainBudget,
+      parts: simulatedParts,
+      template,
+      companyName,
+      companyPhone: companyPhone ?? '',
+      companyAddress: companyAddress ?? '',
+      paperWidth
+    });
+
+    if (!fullContent.trim()) {
+      console.warn('Generated content is empty');
+    }
+
+    // Cálculo de Altura Dinâmica
+    const tempDoc = new jsPDF({ unit: "mm", format: [width, 1000] });
+    tempDoc.setFont("courier", "normal");
+    tempDoc.setFontSize(fontSize);
+    
+    const lines = fullContent.split('\n');
+    let totalHeight = startY;
+
+    lines.forEach(line => {
+      const splitLine = tempDoc.splitTextToSize(line, maxWidth);
+      const lineCount = Array.isArray(splitLine) ? splitLine.length : 1;
+      totalHeight += (lineCount * lineHeight);
+    });
+
+    totalHeight += 5; // Margem extra no final
+    const finalHeight = Math.max(totalHeight, 30);
+
+    console.log('PDF Dimensions calculated', { finalHeight, totalLines: lines.length });
+
+    // Criar PDF final
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: [width, finalHeight] 
+    });
+
+    doc.setFont("courier", "normal");
+    doc.setFontSize(fontSize);
+
+    let y = startY;
+    
+    lines.forEach(line => {
+      const splitLine = doc.splitTextToSize(line, maxWidth);
+      
+      if (Array.isArray(splitLine)) {
+        splitLine.forEach((subLine: string) => {
+          doc.text(subLine, margin, y);
+          y += lineHeight;
+        });
+      } else {
+        doc.text(splitLine, margin, y);
+        y += lineHeight;
+      }
+    });
+
+    // Nome do arquivo
+    const deviceModel = budgets[0]?.device_model || 'aparelho';
+    const filename = `orcamentos_${deviceModel.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`;
+    doc.save(filename);
+    console.log('PDF Saved:', filename);
+
+  } catch (error) {
+    console.error('Error generating Group PDF:', error);
+    alert('Erro ao gerar PDF. Verifique o console para mais detalhes.');
+  }
+};
+
 export const generateBudgetPdf = ({
   budget,
   parts,
@@ -140,33 +279,40 @@ export const generateBudgetPdf = ({
     template,
     companyName,
     companyPhone: companyPhone ?? '',
-    companyAddress: companyAddress ?? ''
+    companyAddress: companyAddress ?? '',
+    paperWidth
   });
 
   // Cálculo de Altura Dinâmica
 
+  // Configurações de fonte e margem
+  const fontSize = 10;
+  const lineHeight = 3.5; // mm - reduzido para melhor compactação
+  const margin = 2;
+  const maxWidth = width - (margin * 2);
+  const startY = margin + 2;
+
   // Criamos um doc temporário apenas para calcular as linhas
   const tempDoc = new jsPDF({ unit: "mm", format: [width, 1000] });
   tempDoc.setFont("courier", "normal");
-  tempDoc.setFontSize(10);
-  
-  const margin = 2; 
-  const maxWidth = width - (margin * 2);
-  const lineHeight = 4; // mm
-  const startY = margin + 5;
+  tempDoc.setFontSize(fontSize);
   
   const lines = content.split('\n');
   let totalHeight = startY;
 
   lines.forEach(line => {
+    // Calcular altura usando o mesmo método que a renderização
     const splitLine = tempDoc.splitTextToSize(line, maxWidth);
-    totalHeight += (splitLine.length * lineHeight);
+    
+    // Garantir que splitLine é tratado corretamente
+    const lineCount = Array.isArray(splitLine) ? splitLine.length : 1;
+    totalHeight += (lineCount * lineHeight);
   });
 
-  totalHeight += 10; // Margem extra no final
+  totalHeight += 5; // Margem extra no final
 
   // Se for muito pequeno, garantir um mínimo
-  const finalHeight = Math.max(totalHeight, 50);
+  const finalHeight = Math.max(totalHeight, 30);
 
   // Agora criar o doc real com a altura correta
   const doc = new jsPDF({
@@ -176,14 +322,24 @@ export const generateBudgetPdf = ({
   });
 
   doc.setFont("courier", "normal");
-  doc.setFontSize(10);
+  doc.setFontSize(fontSize);
 
   let y = startY;
   
   lines.forEach(line => {
+    // splitTextToSize retorna array de strings
     const splitLine = doc.splitTextToSize(line, maxWidth);
-    doc.text(splitLine, margin, y);
-    y += (splitLine.length * lineHeight);
+    
+    // Iterar sobre cada linha quebrada para garantir renderização correta sem justificação forçada
+    if (Array.isArray(splitLine)) {
+      splitLine.forEach((subLine: string) => {
+        doc.text(subLine, margin, y);
+        y += lineHeight;
+      });
+    } else {
+      doc.text(splitLine, margin, y);
+      y += lineHeight;
+    }
   });
 
   // Salvar PDF

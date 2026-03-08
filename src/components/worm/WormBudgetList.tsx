@@ -14,6 +14,9 @@ import { Badge } from '@/components/ui/badge';
 import { isIOS } from '@/utils/whatsappUtils';
 import { useSupabaseRealtime } from '@/hooks/useSupabaseRealtime';
 import { useQueryClient } from '@tanstack/react-query';
+import { PrintGroupDialog } from './PrintGroupDialog';
+import { Printer } from 'lucide-react';
+
 type WormBudget = {
   id: string;
   client_name?: string | null;
@@ -286,7 +289,14 @@ export const WormBudgetList = ({
               </p>
             </div>
 
-            <div className="relative">
+            <div className="relative flex items-center gap-2">
+              <PrintGroupDialog budgets={group.budgets}>
+                <Button variant="outline" size="sm" className="rounded-xl shrink-0 border-primary/20">
+                  <Printer className="h-3.5 w-3.5 mr-1.5" />
+                  Imprimir
+                </Button>
+              </PrintGroupDialog>
+
               <Button variant="outline" size="sm" onClick={() => {
                   if (isIOS()) {
                     setSharingBudgets(group.budgets);

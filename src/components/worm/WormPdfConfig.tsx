@@ -150,11 +150,11 @@ export const WormPdfConfig = () => {
 
                       
 
-                                                {!template.is_default && !isGlobal &&
-                      <Button variant="ghost" size="sm" onClick={() => setDeletingId(template.id)}>
+                                                {!isGlobal &&
+                                                    <Button variant="ghost" size="sm" onClick={() => setDeletingId(template.id)}>
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
-                      }
+                                                }
                                             </div>
                                         </div>
                                     </CardHeader>
@@ -173,7 +173,7 @@ export const WormPdfConfig = () => {
                                             {template.service_section_template.substring(0, 200)}
                                             {template.service_section_template.length > 200 && '...'}
                                         </div>
-                                        <div className="mt-4 flex gap-2">
+                                        <div className="mt-4 flex flex-wrap gap-2">
                                             <Button variant="outline" size="sm" onClick={() => handleEditTemplate(template)}>
                                                 <Edit className="h-4 w-4 mr-2" />
                                                 {isGlobal ? 'Personalizar Template' : 'Editar Template'}
@@ -182,6 +182,12 @@ export const WormPdfConfig = () => {
                                                 <Button variant="outline" size="sm" onClick={() => handleSetDefault(template.id)}>
                                                     <Star className="h-4 w-4 mr-2" />
                                                     Definir como Padrão
+                                                </Button>
+                                            )}
+                                            {!isGlobal && (
+                                                <Button variant="outline" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20" onClick={() => setDeletingId(template.id)}>
+                                                    <Trash2 className="h-4 w-4 mr-2" />
+                                                    Excluir
                                                 </Button>
                                             )}
                                         </div>
@@ -208,7 +214,10 @@ export const WormPdfConfig = () => {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Tem certeza que deseja excluir este template? Esta ação não pode ser desfeita.
+                            {templates.find(t => t.id === deletingId)?.is_default 
+                                ? "Tem certeza que deseja excluir este template PADRÃO? O sistema passará a usar o modelo global do sistema."
+                                : "Tem certeza que deseja excluir este template? Esta ação não pode ser desfeita."
+                            }
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

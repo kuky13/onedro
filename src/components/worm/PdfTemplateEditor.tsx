@@ -8,6 +8,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { toast } from 'sonner';
 import { useCreatePdfTemplate, useUpdatePdfTemplate, PdfTemplate } from '@/hooks/worm/usePdfTemplates';
+import { BudgetPreview } from './BudgetPreview';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface PdfTemplateEditorProps {
     template?: PdfTemplate;
@@ -94,112 +96,96 @@ export const PdfTemplateEditor = ({ template, onSuccess, onCancel }: PdfTemplate
     };
 
     const generatePreview = () => {
-        let preview = serviceTemplate;
-
-        if (preview.includes('{qualidades_inicio}') && preview.includes('{qualidades_fim}')) {
-            const before = preview.split('{qualidades_inicio}')[0];
-            const after = preview.split('{qualidades_fim}')[1] || '';
-            const middle = (preview.split('{qualidades_inicio}')[1] ?? '').split('{qualidades_fim}')[0] ?? '';
-            if (!middle) return preview;
-
-            const exampleParts = [
-                {
-                    qualidade_nome: 'Original',
-                    peca_preco_vista: 'R$ 450,00',
-                    peca_preco_parcelado: 'R$ 490,00',
-                    peca_parcelas: '6',
-                    peca_valor_parcela: 'R$ 81,66',
-                    peca_garantia_meses: '12',
-                    peca_nome: 'Original',
-                    peca_quantidade: '1'
-                },
-                {
-                    qualidade_nome: 'Premium',
-                    peca_preco_vista: 'R$ 280,00',
-                    peca_preco_parcelado: 'R$ 310,00',
-                    peca_parcelas: '3',
-                    peca_valor_parcela: 'R$ 103,33',
-                    peca_garantia_meses: '3',
-                    peca_nome: 'Premium',
-                    peca_quantidade: '1'
-                }
-            ];
-
-            const replaceAllSafe = (str: string, find: string, repl: string) => {
-                return str.split(find).join(repl);
-            };
-
-            let processedParts = '';
-            exampleParts.forEach(part => {
-                let partText = middle ?? '';
-                Object.entries(part).forEach(([key, value]) => {
-                    partText = replaceAllSafe(partText, `{${key}}`, value);
-                });
-                processedParts += partText;
-            });
-
-            preview = `${before}${processedParts}${after}`;
-        }
-
-        const replacements: Record<string, string> = {
-            '{nome_empresa}': 'Minha Loja de Celulares',
-            '{telefone_contato}': '(11) 99999-9999',
-            '{endereco}': 'Rua das Flores, 123 - Centro, SP',
-            '{nome_reparo}': 'Troca de Tela Frontal',
-            '{modelo_dispositivo}': 'iPhone 11',
-            '{tipo_dispositivo}': 'Smartphone',
-            '{serviços}': 'Limpeza Interna\n• Película de Vidro',
-            '{observacoes}': 'Cliente relatou que o aparelho caiu na água.',
-            '{data_validade}': '30/12/2023',
-            '{num_or}': 'OR: 1234',
-            '{data_criacao}': '15/12/2023',
-            '{nome_cliente}': 'João da Silva',
-            '{telefone_cliente}': '(11) 98888-8888',
-            '{status}': 'Pendente',
-            '{preco_vista}': 'R$ 450,00',
-            '{preco_parcelado}': 'R$ 490,00',
-            '{num_parcelas}': '6',
-            '{valor_parcela}': 'R$ 81,66',
+        // Dados de exemplo para o preview
+        const exampleBudget = {
+            id: '12345678',
+            sequential_number: 1234,
+            client_name: 'João da Silva',
+            client_phone: '(11) 98888-8888',
+            device_model: 'iPhone 11',
+            device_type: 'Smartphone',
+            issue: 'Troca de Tela Frontal',
+            notes: 'Cliente relatou que o aparelho caiu na água.',
+            created_at: '2023-12-15T10:00:00Z',
+            valid_until: '2023-12-30T10:00:00Z',
+            workflow_status: 'pending',
+            custom_services: 'Limpeza Interna, Película de Vidro',
+            cash_price: 45000, // em centavos
+            installment_price: 49000, // em centavos
+            installments: 6,
+            warranty_months: 3,
+            part_quality: 'Premium'
         };
 
-        Object.entries(replacements).forEach(([key, value]) => {
-            preview = preview.split(key).join(value);
-        });
+        const exampleParts = [
+            {
+                name: 'Tela Original',
+                part_type: 'Original',
+                price: 45000,
+                cash_price: 45000,
+                installment_price: 8166,
+                installment_count: 6,
+                warranty_months: 12,
+                quantity: 1
+            },
+            {
+                name: 'Tela Premium',
+                part_type: 'Premium',
+                price: 28000,
+                cash_price: 28000,
+                installment_price: 10333,
+                installment_count: 3,
+                warranty_months: 3,
+                quantity: 1
+            }
+        ];
 
-        return preview;
+        const companyInfo = {
+            shop_name: 'Minha Loja de Celulares',
+            contact_phone: '(11) 99999-9999',
+            address: 'Rua das Flores, 123 - Centro, SP'
+        };
+
+        return {
+            budget: exampleBudget,
+            parts: exampleParts,
+            companyInfo
+        };
     };
 
+    const previewData = generatePreview();
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 h-full flex flex-col">
             <SheetHeader>
                 <SheetTitle>
                     {isEditing ? 'Editar Template PDF' : 'Novo Template PDF'}
                 </SheetTitle>
                 <SheetDescription>
-                    Personalize o layout do PDF para impressão térmica (58mm/80mm).
+                    Personalize o layout do PDF para impressão térmica. Visualize em 58mm ou 80mm.
                 </SheetDescription>
             </SheetHeader>
 
-            <div className="space-y-4">
-                <div className="space-y-2">
-                    <Label>Nome do Template</Label>
-                    <Input
-                        value={templateName}
-                        onChange={(e) => setTemplateName(e.target.value)}
-                        placeholder="Ex: Cupom Térmico Padrão"
-                    />
-                </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 overflow-hidden min-h-0">
+                <div className="space-y-4 overflow-y-auto pr-2">
+                    <div className="space-y-2">
+                        <Label>Nome do Template</Label>
+                        <Input
+                            value={templateName}
+                            onChange={(e) => setTemplateName(e.target.value)}
+                            placeholder="Ex: Cupom Térmico Padrão"
+                        />
+                    </div>
 
-                <div className="flex items-center space-x-2">
-                    <Checkbox
-                        id="isDefault"
-                        checked={isDefault}
-                        onCheckedChange={(checked) => setIsDefault(checked as boolean)}
-                    />
-                    <Label htmlFor="isDefault">Definir como padrão</Label>
-                </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            id="isDefault"
+                            checked={isDefault}
+                            onCheckedChange={(checked) => setIsDefault(checked as boolean)}
+                        />
+                        <Label htmlFor="isDefault">Definir como padrão</Label>
+                    </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label>Conteúdo do Template</Label>
                         <div className="bg-muted p-2 rounded-md mb-2 flex flex-wrap gap-2 text-xs">
@@ -229,6 +215,21 @@ export const PdfTemplateEditor = ({ template, onSuccess, onCancel }: PdfTemplate
                                     {p}
                                 </button>
                             ))}
+                            <span className="font-semibold w-full block mb-1 mt-2">Utilitários:</span>
+                            <button
+                                onClick={() => insertPlaceholder('----------------')}
+                                className="px-2 py-1 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 transition-colors dark:bg-gray-800 dark:border-gray-700"
+                                title="Insere uma linha que se adapta à largura do papel"
+                            >
+                                Linha Separadora
+                            </button>
+                            <button
+                                onClick={() => setServiceTemplate('')}
+                                className="px-2 py-1 bg-red-100 border border-red-300 rounded hover:bg-red-200 transition-colors text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400"
+                                title="Limpar todo o conteúdo do editor"
+                            >
+                                Limpar Editor
+                            </button>
                         </div>
                         <Textarea
                             ref={textareaRef}
@@ -238,17 +239,46 @@ export const PdfTemplateEditor = ({ template, onSuccess, onCancel }: PdfTemplate
                             placeholder="Digite o conteúdo..."
                         />
                     </div>
+                </div>
 
-                    <div className="space-y-2">
-                        <Label>Pré-visualização (Simulação)</Label>
-                        <div className="h-[400px] w-full rounded-md border bg-white p-4 overflow-auto whitespace-pre-wrap text-sm font-mono text-black shadow-sm">
-                            {generatePreview()}
-                        </div>
+                <div className="flex flex-col space-y-2 h-full overflow-hidden">
+                    <Label>Pré-visualização (Simulação)</Label>
+                    <div className="flex-1 border rounded-md bg-gray-50 dark:bg-gray-900/50 p-4 overflow-hidden flex flex-col">
+                        <Tabs defaultValue="80mm" className="w-full h-full flex flex-col">
+                            <TabsList className="grid w-full grid-cols-2 mb-4">
+                                <TabsTrigger value="80mm">80mm (Padrão)</TabsTrigger>
+                                <TabsTrigger value="58mm">58mm (Pequeno)</TabsTrigger>
+                            </TabsList>
+                            
+                            <TabsContent value="80mm" className="flex-1 overflow-auto flex justify-center bg-gray-100 dark:bg-gray-800 rounded-md p-4 mt-0">
+                                <BudgetPreview 
+                                    budget={previewData.budget}
+                                    parts={previewData.parts}
+                                    template={serviceTemplate}
+                                    paperWidth="80mm"
+                                    companyName={previewData.companyInfo.shop_name}
+                                    companyPhone={previewData.companyInfo.contact_phone}
+                                    companyAddress={previewData.companyInfo.address}
+                                />
+                            </TabsContent>
+                            
+                            <TabsContent value="58mm" className="flex-1 overflow-auto flex justify-center bg-gray-100 dark:bg-gray-800 rounded-md p-4 mt-0">
+                                <BudgetPreview 
+                                    budget={previewData.budget}
+                                    parts={previewData.parts}
+                                    template={serviceTemplate}
+                                    paperWidth="58mm"
+                                    companyName={previewData.companyInfo.shop_name}
+                                    companyPhone={previewData.companyInfo.contact_phone}
+                                    companyAddress={previewData.companyInfo.address}
+                                />
+                            </TabsContent>
+                        </Tabs>
                     </div>
                 </div>
             </div>
 
-            <SheetFooter className="flex-col sm:flex-row gap-2">
+            <SheetFooter className="flex-col sm:flex-row gap-2 mt-4">
                 <Button variant="outline" onClick={onCancel} disabled={isSaving}>
                     Cancelar
                 </Button>

@@ -27,9 +27,10 @@ export const BudgetPreview: React.FC<BudgetPreviewProps> = ({
       template,
       companyName,
       companyPhone: companyPhone ?? '',
-      companyAddress: companyAddress ?? ''
+      companyAddress: companyAddress ?? '',
+      paperWidth
     });
-  }, [budget, parts, template, companyName, companyPhone, companyAddress]);
+  }, [budget, parts, template, companyName, companyPhone, companyAddress, paperWidth]);
 
   const width = paperWidth === '58mm' ? '280px' : '380px';
   const fontSize = paperWidth === '58mm' ? '12px' : '14px';
