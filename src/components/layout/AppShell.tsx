@@ -14,7 +14,7 @@ const AppShellContent = ({ children }: AppShellProps) => {
   const pathname = window.location.pathname;
 
   // Don't show floating hamburger on /dashboard — AdaptiveLayout has its own header
-  const showFloatingHamburger = isMobile && pathname !== '/dashboard';
+  const showFloatingHamburger = isMobile && pathname !== '/dashboard' && pathname !== '/chat';
 
   return (
     <div className="min-h-screen bg-background">
