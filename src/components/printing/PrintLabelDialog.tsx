@@ -45,7 +45,7 @@ const ThermalLabel = React.forwardRef<HTMLDivElement, ThermalLabelProps>(({ orde
     : new Date().toLocaleDateString('pt-BR');
 
   const qrValue = order.sequential_number
-    ? `${window.location.origin}/share/service-order/OS${String(order.sequential_number).padStart(4, '0')}`
+    ? `${window.location.origin}/share/service-order/OS${String(order.sequential_number).padStart(4, '0')}?id=${order.id}`
     : `${window.location.origin}/share/service-order/${order.id}`;
   const clientName = order.client_name || (order as any).clients?.name || 'Balcão';
   const issue = order.issue || (order as any).reported_issue;

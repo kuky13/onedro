@@ -284,7 +284,15 @@ export function ServiceOrderPublicShare() {
 
       // Fetch company info
       let companyData: any[] | null = null;
-      if (tokenIsFormattedId) {
+      const ownerId = serviceOrderData?.[0]?.owner_id;
+      if (directId && ownerId) {
+        // Direct lookup using owner_id from the fetched order
+        const { data, error: companyError } = await supabase
+          .from('company_info')
+          .select('id, name, logo_url, address, whatsapp_phone')
+          .eq('owner_id', ownerId);
+        if (!companyError) companyData = data as any[];
+      } else if (tokenIsFormattedId) {
         const { data, error: companyError } = await supabase.rpc('get_company_info_by_formatted_id' as any, {
           p_formatted_id: token
         });

@@ -59,7 +59,7 @@ export function useServiceOrderShare() {
 
       if (orderData?.sequential_number) {
         const formattedId = `OS${String(orderData.sequential_number).padStart(4, '0')}`;
-        const shareUrl = `${window.location.origin}/share/service-order/${formattedId}`;
+        const shareUrl = `${window.location.origin}/share/service-order/${formattedId}?id=${serviceOrderId}`;
         toast.success('Link permanente gerado com sucesso!');
         return {
           share_token: formattedId,
