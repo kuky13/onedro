@@ -236,7 +236,7 @@ export const WormBudgetList = ({
     <section className="bg-muted/20 border border-border/30 rounded-2xl p-3 sm:p-4">
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
         <div className="relative flex-1 flex gap-2">
-          <WormBudgetSearch searchTerm={searchTerm} onSearch={handleSearch} onClearSearch={handleClearSearch} />
+          <WormBudgetSearch searchTerm={searchTerm} onSearch={handleSearch} onClearSearch={handleClearSearch} onAiResults={handleAiResults} />
           <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing} className="shrink-0 rounded-xl" title="Atualizar lista">
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </Button>
