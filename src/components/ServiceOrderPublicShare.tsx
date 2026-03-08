@@ -300,30 +300,12 @@ export function ServiceOrderPublicShare() {
         } as ServiceOrderData);
       }
 
-      // Fetch company info
+      // Fetch company info using owner_id from the loaded service order
       let companyData: any[] | null = null;
       const ownerId = serviceOrderData?.[0]?.owner_id;
-      if (directId && tokenIsFormattedId) {
-        // Use SECURITY DEFINER RPC for company info too
-        const { data, error: companyError } = await supabase.rpc('get_company_info_by_formatted_id' as any, {
-          p_formatted_id: token
-        });
-        if (!companyError) companyData = data as any[];
-      } else if (directId && ownerId) {
-        // Direct lookup using owner_id from the fetched order
-        const { data, error: companyError } = await supabase
-          .from('company_info')
-          .select('id, name, logo_url, address, whatsapp_phone, email, cnpj, website, description, business_hours')
-          .eq('owner_id', ownerId);
-        if (!companyError) companyData = data as any[];
-      } else if (tokenIsFormattedId) {
-        const { data, error: companyError } = await supabase.rpc('get_company_info_by_formatted_id' as any, {
-          p_formatted_id: token
-        });
-        if (!companyError) companyData = data as any[];
-      } else {
-        const { data, error: companyError } = await supabase.rpc('get_company_info_by_share_token', {
-          p_share_token: token
+      if (ownerId) {
+        const { data, error: companyError } = await supabase.rpc('get_public_company_info' as any, {
+          p_owner_id: ownerId
         });
         if (!companyError) companyData = data as any[];
       }
