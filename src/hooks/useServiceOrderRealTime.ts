@@ -44,6 +44,7 @@ export interface RealTimeStatus {
 
 interface UseServiceOrderRealTimeOptions {
   shareToken?: string;
+  formattedId?: string;
   serviceOrderId?: string;
   enablePolling?: boolean;
   pollingInterval?: number;
