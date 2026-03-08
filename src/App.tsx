@@ -228,8 +228,6 @@ const AppContent = () => {
         {/* Rota pública para compartilhamento de OS */}
         <Route path="/share/service-order/:shareToken" element={<ServiceOrderSharePage />} />
 
-        {/* Rota pública para download de vídeos */}
-        <Route path="/downloads" element={<DownloadVideoPage />} />
 
         {/* Rota pública para testes de dispositivos via QR Code */}
         <Route path="/testar/:shareToken" element={<DeviceTestPage />} />
