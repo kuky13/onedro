@@ -9,10 +9,10 @@ interface WormBudgetSearchProps {
   onClearSearch: () => void;
 }
 
-export const WormBudgetSearch = ({ 
-  searchTerm, 
-  onSearch, 
-  onClearSearch 
+export const WormBudgetSearch = ({
+  searchTerm,
+  onSearch,
+  onClearSearch
 }: WormBudgetSearchProps) => {
   const [inputValue, setInputValue] = React.useState(searchTerm);
 
@@ -35,26 +35,26 @@ export const WormBudgetSearch = ({
           placeholder="Buscar por cliente, modelo, OR, peça, serviço..."
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          className="pl-10 pr-9 bg-background/50"
-        />
-        {inputValue && (
-          <button
-            type="button"
-            onClick={handleClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-colors"
-          >
+          className="pl-10 pr-9 bg-background/50" />
+        
+        {inputValue &&
+        <button
+          type="button"
+          onClick={handleClear}
+          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-colors">
+          
             <X className="h-3.5 w-3.5" />
           </button>
-        )}
+        }
       </div>
-      <Button 
-        type="submit" 
-        size="sm" 
-        className="shrink-0 px-5 gap-2 bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all duration-300"
-      >
-        <Search className="h-4 w-4" />
-        <span className="hidden sm:inline">Buscar</span>
-      </Button>
-    </form>
-  );
+      
+
+
+
+
+
+
+      
+    </form>);
+
 };
