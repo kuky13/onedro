@@ -72,6 +72,7 @@ const HelpCenterPage = lazyWithRetry(() => import("./pages/HelpCenterPage"));
 
 const SuportePage = lazyWithRetry(() => import("./pages/SuportePage"));
 const WarrantyPage = lazyWithRetry(() => import("./pages/WarrantyPage"));
+const TesteRapidoPage = lazyWithRetry(() => import("./pages/TesteRapidoPage"));
 const ServiceOrdersSettingsHub = lazyWithRetry(() => import("./components/ServiceOrdersSettingsHub").then(m => ({ default: m.ServiceOrdersSettingsHub })));
 const NotificationsPage = lazyWithRetry(() => import("./pages/NotificationsPage"));
 const DrippyPage = lazyWithRetry(() => import("./pages/DrippyPage").then(m => ({ default: m.DrippyPage })));
@@ -338,6 +339,13 @@ const AppContent = () => {
         <Route path="/garantia" element={<MaintenanceGuard>
           <UnifiedProtectionGuard>
             <AppShell><WarrantyPage /></AppShell>
+          </UnifiedProtectionGuard>
+        </MaintenanceGuard>} />
+
+        {/* Teste Rápido */}
+        <Route path="/teste-rapido" element={<MaintenanceGuard>
+          <UnifiedProtectionGuard>
+            <AppShell><TesteRapidoPage /></AppShell>
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
 
