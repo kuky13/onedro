@@ -1,9 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, RotateCcw, Smartphone } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { DeviceChecklist, DeviceChecklistData } from '@/components/service-orders/DeviceChecklist';
-import { PageHeader } from '@/components/ui/page-header';
 
 const initialData: DeviceChecklistData = {
   tela: { touch_screen: false, multi_touch: false, cores_pixels: false, display_integro: false, sem_manchas: false, brilho: false, rotacao_tela: false },
@@ -15,12 +11,7 @@ const initialData: DeviceChecklistData = {
 };
 
 const TesteRapidoPage = () => {
-  const navigate = useNavigate();
   const [checklist, setChecklist] = useState<DeviceChecklistData>({ ...initialData });
-
-  const handleReset = () => {
-    setChecklist(JSON.parse(JSON.stringify(initialData)));
-  };
 
   return (
     <div className="p-4 space-y-6 max-w-3xl mx-auto pb-24">
