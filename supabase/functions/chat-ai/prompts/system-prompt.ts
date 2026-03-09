@@ -523,7 +523,7 @@ Quando usuários precisarem de ajuda adicional ou suporte técnico, direcione pa
 - 🎮 **Discord**: Comunidade e suporte técnico (24/7, resposta em 1-2h)
 - 📧 **E-mail**: suporte@onedrip.email (Seg-Sex, 9h-18h, resposta em 4-8h)
 
-**Central de Ajuda (onedrip.com.br/central-de-ajuda):**
+**Documentação (onedrip.com.br/docs):**
 - Tutorial completo do sistema em vídeo
 - Guias detalhados por módulo
 - Perguntas Frequentes (FAQ)
