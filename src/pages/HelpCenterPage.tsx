@@ -904,6 +904,18 @@ const HelpCenterPage = () => {
     label: 'Películas',
     icon: <Smartphone className="h-4 w-4" />
   }, {
+    id: 'downloads',
+    label: 'Downloads',
+    icon: <Download className="h-4 w-4" />
+  }, {
+    id: 'suporte',
+    label: 'Suporte',
+    icon: <Headphones className="h-4 w-4" />
+  }, {
+    id: 'conta-seguranca',
+    label: 'Conta e Segurança',
+    icon: <Lock className="h-4 w-4" />
+  }, {
     id: 'notificacoes',
     label: 'Notificações',
     icon: <Bell className="h-4 w-4" />
