@@ -48,6 +48,7 @@ class MultiTabCache {
   }
 
   private setupChannelListener() {
+    if (!this.channel) return;
     this.channel.addEventListener('message', (event: MessageEvent<CacheMessage>) => {
       const { type, key, data, timestamp } = event.data;
       
