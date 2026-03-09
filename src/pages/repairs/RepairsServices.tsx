@@ -507,7 +507,7 @@ const RepairsServices = () => {
 
           <div className="flex items-center justify-between">
             <span className="font-semibold text-lg">Lucro Líquido</span>
-            <span className={`font-bold text-xl ${numbers.net >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+            <span className={`font-bold text-xl ${numbers.net >= 0 ? "text-primary" : "text-destructive"}`}>
               R$ {numbers.net.toFixed(2)}
             </span>
           </div>

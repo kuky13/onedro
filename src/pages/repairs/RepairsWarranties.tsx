@@ -482,7 +482,10 @@ const RepairsWarranties = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteConfirmation && handleDelete(deleteConfirmation)} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction
+              onClick={() => deleteConfirmation && handleDelete(deleteConfirmation)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>

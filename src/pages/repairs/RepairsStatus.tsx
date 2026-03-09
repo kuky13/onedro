@@ -394,7 +394,7 @@ const RepairsStatus = () => {
                   <div>
                     <div className="text-xl font-bold tabular-nums">{formatBRL(closing.total_revenue)}</div>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-emerald-500 font-medium tabular-nums">
+                      <span className="text-xs text-primary font-medium tabular-nums">
                         Lucro: {formatBRL(closing.total_net_profit)}
                       </span>
                       <span className="text-[10px] text-muted-foreground">•</span>
