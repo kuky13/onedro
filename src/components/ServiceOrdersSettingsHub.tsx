@@ -362,7 +362,7 @@ export function ServiceOrdersSettingsHub() {
               <TabsContent value="privacidade" className="mt-0">
                 <Card className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none">
                   <CardContent className="pt-6">
-                    <Dat{user && <DataPrivacyTab userId={user.id} />}               </CardContent>
+                    {user && <DataPrivacyTab userId={user.id} />}
                 </Card>
               </TabsContent>
 
