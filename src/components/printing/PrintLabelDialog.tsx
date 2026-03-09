@@ -302,13 +302,15 @@ export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, compa
             </Select>
           </div>
 
-          <div className="border rounded-md p-2 sm:p-4 bg-gray-50 dark:bg-gray-800 flex justify-center overflow-x-auto overflow-y-auto max-h-[50vh] sm:max-h-[400px]">
-            <ThermalLabel
-              ref={contentRef}
-              order={order}
-              companyData={safeCompanyData}
-              size={size}
-            />
+          <div className="border rounded-md p-2 sm:p-4 bg-gray-50 dark:bg-gray-800 flex justify-center overflow-x-auto overflow-y-auto max-h-[60vh] sm:max-h-[500px]">
+            <div style={{ maxWidth: size === '58mm' ? 280 : 380, width: '100%' }}>
+              <ThermalLabel
+                ref={contentRef}
+                order={order}
+                companyData={safeCompanyData}
+                size={size}
+              />
+            </div>
           </div>
         </div>
 
