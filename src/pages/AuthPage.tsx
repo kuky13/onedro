@@ -7,10 +7,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { Eye, EyeOff, ArrowLeft, Shield, Smartphone, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useLicenseVerification } from '@/hooks/useLicenseVerification';
-import { LicenseActivationSection } from '@/components/auth/LicenseActivationSection';
-import { LicenseActivationIOS } from '@/components/auth/LicenseActivationIOS';
-import { useIOSDetection } from '@/hooks/useIOSDetection';
 import { cleanupAuthState, forceReload } from '@/utils/authCleanup';
 
 export const AuthPage = () => {
