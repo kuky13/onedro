@@ -568,28 +568,31 @@ const RepairsServices = () => {
               Etapa {mobileStep + 1} de 6
             </p>
 
-            {/* Stepper clicável (mobile) */}
+            {/* Stepper clicável (mobile) - Premium */}
             <TooltipProvider>
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+              <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1">
                 {mobileSteps.map(step => {
                   const status = stepStatus[step.id];
                   const isActive = mobileStep === step.id;
                   const Icon = status === "ok" ? Check : status === "pending" ? AlertCircle : null;
-                  const iconClass = status === "ok" ? "text-primary" : status === "pending" ? "text-destructive" : "text-muted-foreground";
 
                   return (
                     <Tooltip key={step.id}>
                       <TooltipTrigger asChild>
-                        <Button
+                        <button
                           type="button"
-                          size="sm"
-                          variant={isActive ? "default" : "outline"}
                           onClick={() => selectMobileStep(step.id as MobileStep)}
-                          className="shrink-0 h-9 px-3"
+                          className={`shrink-0 h-9 px-3 rounded-2xl text-xs font-medium flex items-center gap-1.5 transition-all duration-200 border ${
+                            isActive
+                              ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20'
+                              : status === 'ok'
+                                ? 'bg-primary/10 text-primary border-primary/20'
+                                : 'bg-muted/30 text-muted-foreground border-border/30 hover:bg-muted/50'
+                          }`}
                         >
-                          <span className="text-xs">{step.label}</span>
-                          {Icon ? <Icon className={`h-3.5 w-3.5 ${iconClass}`} /> : null}
-                        </Button>
+                          <span>{step.label}</span>
+                          {Icon && !isActive ? <Icon className={`h-3 w-3 ${status === 'ok' ? 'text-primary' : 'text-destructive'}`} /> : null}
+                        </button>
                       </TooltipTrigger>
                       <TooltipContent>
                         {status === "ok" ? "Ok" : status === "pending" ? "Pendente" : "Opcional"}
