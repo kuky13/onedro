@@ -358,7 +358,7 @@ const RepairsWarranties = () => {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">Mostra reparos de todos os meses (incluindo arquivados)</p>
-                <div className="max-h-60 overflow-auto rounded-xl border border-border bg-card">
+                <div className="max-h-60 overflow-auto rounded-2xl border border-border/30 bg-card">
                   {searchingRepairs && <div className="p-4 text-center text-xs text-muted-foreground">Buscando...</div>}
                   {!searchingRepairs && repairResults.map(r => (
                     <button
