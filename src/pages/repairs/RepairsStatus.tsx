@@ -676,7 +676,7 @@ const RepairsStatus = () => {
               )}
 
               {!(selectedServiceDetails.client_name || selectedServiceDetails.client_phone || selectedServiceDetails.service_order_number || selectedServiceDetails.imei_serial || selectedServiceDetails.device_password_type || selectedServiceDetails.device_password_value || selectedServiceDetails.device_checklist) && (
-                <div className="text-center py-8 text-muted-foreground text-sm border-2 border-dashed rounded-xl">
+                <div className="text-center py-8 text-muted-foreground text-sm border-2 border-dashed rounded-2xl">
                   Nenhuma informação adicional registrada.
                 </div>
               )}
