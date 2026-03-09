@@ -120,10 +120,15 @@ const RepairsTechnicians = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Técnicos</h2>
-        <Button size="lg" onClick={() => { resetForm(); setOpen(true); }}>Novo Técnico</Button>
-      </div>
+      <PageHeader
+        title="Técnicos"
+        description="Cadastre, edite e defina a comissão padrão"
+        icon={<Users className="h-4 w-4" />}
+      >
+        <div className="flex justify-end">
+          <Button size="lg" onClick={() => { resetForm(); setOpen(true); }}>Novo Técnico</Button>
+        </div>
+      </PageHeader>
 
       <Card>
         <CardHeader>

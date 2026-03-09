@@ -1293,9 +1293,9 @@ const RepairsDashboard = () => {
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button
-                            variant="outline"
+                            variant="secondary"
                             size="xs"
-                            className="h-6 px-2 text-[10px] text-black bg-[#fec834] border-0 border-none rounded-full shadow-none opacity-100 border-white"
+                            className="h-6 px-2 text-[10px] rounded-full"
                           >
                             Ver detalhes
                           </Button>

@@ -570,18 +570,18 @@ const RepairsStatus = () => {
                             </Button>
                             {!warrantyMap[service.id] ? (
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
-                                className="h-7 px-2 text-[10px] rounded-lg text-yellow-500"
+                                className="h-7 px-2 text-[10px] rounded-lg"
                                 onClick={() => handleOpenWarranty(service)}
                               >
                                 <ShieldAlert className="h-3 w-3 mr-1" /> Abrir garantia
                               </Button>
                             ) : (
                               <Button
-                                variant="ghost"
+                                variant="secondary"
                                 size="sm"
-                                className="h-7 px-2 text-[10px] rounded-lg text-emerald-500"
+                                className="h-7 px-2 text-[10px] rounded-lg"
                                 onClick={() => navigate('/garantia')}
                               >
                                 <ShieldCheck className="h-3 w-3 mr-1" /> Ver garantia

@@ -262,33 +262,53 @@ const RepairsWarranties = () => {
               )}
             </div>
 
-            <div className="flex items-center justify-between pt-1 border-t border-border/20">
-              <span className="text-[10px] text-muted-foreground">{fmtDate(w.created_at)}</span>
-              <div className="flex flex-wrap gap-2">
-                {w.status === 'in_progress' && (
-                  <Button size="sm" variant="outline" className="h-8 rounded-xl text-xs text-green-600 hover:bg-green-50 dark:hover:bg-green-500/10 gap-1.5" 
-                    onClick={() => updateStatus({ id: w.id, status: 'completed' })} disabled={isUpdating}>
-                    <CheckCircle className="w-3.5 h-3.5" /> Concluir
+              <div className="flex items-center justify-between pt-1 border-t border-border/20">
+                <span className="text-[10px] text-muted-foreground">{fmtDate(w.created_at)}</span>
+                <div className="flex flex-wrap gap-2">
+                  {w.status === 'in_progress' && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-8 rounded-xl text-xs gap-1.5"
+                      onClick={() => updateStatus({ id: w.id, status: 'completed' })}
+                      disabled={isUpdating}
+                    >
+                      <CheckCircle className="w-3.5 h-3.5" /> Concluir
+                    </Button>
+                  )}
+                  {w.status === 'completed' && (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      className="h-8 rounded-xl text-xs gap-1.5"
+                      onClick={() => updateStatus({ id: w.id, status: 'delivered' })}
+                      disabled={isUpdating}
+                    >
+                      <Truck className="w-3.5 h-3.5" /> Entregar
+                    </Button>
+                  )}
+                  {w.status === 'delivered' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 rounded-xl text-xs gap-1.5"
+                      onClick={() => updateStatus({ id: w.id, status: 'completed' })}
+                      disabled={isUpdating}
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" /> Reverter
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="h-8 rounded-xl text-xs gap-1.5"
+                    onClick={() => setDeleteConfirmation(w.id)}
+                    disabled={isDeleting || isUpdating}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Excluir
                   </Button>
-                )}
-                {w.status === 'completed' && (
-                  <Button size="sm" variant="outline" className="h-8 rounded-xl text-xs text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 gap-1.5"
-                    onClick={() => updateStatus({ id: w.id, status: 'delivered' })} disabled={isUpdating}>
-                    <Truck className="w-3.5 h-3.5" /> Entregar
-                  </Button>
-                )}
-                {w.status === 'delivered' && (
-                  <Button size="sm" variant="ghost" className="h-8 rounded-xl text-xs text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-500/10 gap-1.5"
-                    onClick={() => updateStatus({ id: w.id, status: 'completed' })} disabled={isUpdating}>
-                    <RotateCcw className="w-3.5 h-3.5" /> Reverter
-                  </Button>
-                )}
-                <Button size="sm" variant="ghost" className="h-8 rounded-xl text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 gap-1.5"
-                  onClick={() => setDeleteConfirmation(w.id)} disabled={isDeleting || isUpdating}>
-                  <Trash2 className="w-3.5 h-3.5" /> Excluir
-                </Button>
+                </div>
               </div>
-            </div>
 
             {/* Checklist de Funcionamento */}
             <Collapsible open={expandedChecklist === w.id} onOpenChange={(open) => setExpandedChecklist(open ? w.id : null)}>
