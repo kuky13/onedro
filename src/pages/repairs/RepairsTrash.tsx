@@ -1,12 +1,11 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/useToast';
-import { Trash2, RotateCcw } from 'lucide-react';
+import { Trash2, RotateCcw, RefreshCw, CheckSquare } from 'lucide-react';
 
 interface RepairTrashItem {
   id: string;
@@ -29,7 +28,6 @@ const RepairsTrash: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Limpa automaticamente itens com mais de 90 dias na lixeira
       const ninetyDaysAgo = new Date();
       ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
@@ -149,117 +147,138 @@ const RepairsTrash: React.FC = () => {
   const anySelected = selectedIds.length > 0;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <PageHeader
         title="Lixeira de reparos"
         description="Reparos apagados ficam aqui por até 90 dias antes de serem removidos definitivamente."
         icon={<Trash2 className="h-4 w-4" />}
-      >
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadTrash}
-            disabled={loading || processing}
-          >
-            Atualizar
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleSelectAll}
-            disabled={loading || !items.length}
-          >
-            {selectedIds.length === items.length && items.length > 0
-              ? 'Desmarcar todos'
-              : 'Selecionar todos'}
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => handleRestore(selectedIds)}
-            disabled={!anySelected || processing}
-          >
-            <RotateCcw className="h-4 w-4 mr-1" />
-            Restaurar selecionados
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => handlePermanentDelete(selectedIds)}
-            disabled={!anySelected || processing}
-          >
-            <Trash2 className="h-4 w-4 mr-1" />
-            Apagar definitivamente
-          </Button>
-        </div>
-      </PageHeader>
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Itens na lixeira</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-sm text-muted-foreground">Carregando lixeira...</div>
-          ) : !items.length ? (
-            <div className="text-sm text-muted-foreground">
-              Nenhum reparo na lixeira.
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {items.map(item => (
-                <div
-                  key={item.id}
-                  className="grid grid-cols-[auto,1fr] items-start gap-3 rounded-lg border p-3"
-                >
-                  <div className="pt-1">
-                    <Checkbox
-                      checked={selectedIds.includes(item.id)}
-                      onCheckedChange={() => toggleSelect(item.id)}
-                    />
+      {/* Action bar */}
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={loadTrash}
+          disabled={loading || processing}
+          className="rounded-xl h-9 gap-1.5"
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+          Atualizar
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleSelectAll}
+          disabled={loading || !items.length}
+          className="rounded-xl h-9 gap-1.5"
+        >
+          <CheckSquare className="h-3.5 w-3.5" />
+          {selectedIds.length === items.length && items.length > 0
+            ? 'Desmarcar todos'
+            : 'Selecionar todos'}
+        </Button>
+        {anySelected && (
+          <>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => handleRestore(selectedIds)}
+              disabled={processing}
+              className="rounded-xl h-9 gap-1.5"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              Restaurar ({selectedIds.length})
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => handlePermanentDelete(selectedIds)}
+              disabled={processing}
+              className="rounded-xl h-9 gap-1.5"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Apagar ({selectedIds.length})
+            </Button>
+          </>
+        )}
+      </div>
+
+      {/* Content */}
+      {loading ? (
+        <div className="text-center py-12 text-muted-foreground text-sm">Carregando lixeira...</div>
+      ) : !items.length ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="rounded-3xl bg-muted/40 p-5 mb-4">
+            <Trash2 className="h-10 w-10 text-muted-foreground/50" />
+          </div>
+          <h3 className="text-base font-semibold">Lixeira vazia</h3>
+          <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+            Nenhum reparo na lixeira.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {items.map(item => (
+            <div
+              key={item.id}
+              className={`rounded-2xl border p-4 transition-all duration-200 ${
+                selectedIds.includes(item.id)
+                  ? 'border-primary/30 bg-primary/5'
+                  : 'border-border/30 bg-muted/5 hover:bg-muted/15'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="pt-0.5">
+                  <Checkbox
+                    checked={selectedIds.includes(item.id)}
+                    onCheckedChange={() => toggleSelect(item.id)}
+                    className="rounded-lg"
+                  />
+                </div>
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-semibold text-sm truncate">{item.device_name}</span>
+                    <span className="text-[10px] text-muted-foreground bg-muted/40 rounded-full px-2 py-0.5">
+                      Apagado em {new Date(item.deleted_at).toLocaleDateString()}
+                    </span>
                   </div>
-                  <div className="space-y-1">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="font-medium">{item.device_name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        Apagado em{' '}
-                        {new Date(item.deleted_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {item.service_description}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground line-clamp-1">
+                    {item.service_description}
+                  </p>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-[10px] text-muted-foreground">
                       Criado em {new Date(item.created_at).toLocaleDateString()}
-                    </div>
-                    <div className="flex flex-wrap gap-2 pt-1">
+                    </span>
+                    <div className="flex gap-1.5">
                       <Button
-                        variant="outline"
-                        size="xs"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleRestore([item.id])}
                         disabled={processing}
+                        className="h-7 px-2.5 text-[10px] rounded-xl gap-1 hover:bg-primary/10 hover:text-primary"
                       >
-                        <RotateCcw className="h-3 w-3 mr-1" />
+                        <RotateCcw className="h-3 w-3" />
                         Restaurar
                       </Button>
                       <Button
-                        variant="outline"
-                        size="xs"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handlePermanentDelete([item.id])}
                         disabled={processing}
+                        className="h-7 px-2.5 text-[10px] rounded-xl gap-1 hover:bg-destructive/10 hover:text-destructive"
                       >
-                        <Trash2 className="h-3 w-3 mr-1" />
-                        Apagar definitivamente
+                        <Trash2 className="h-3 w-3" />
+                        Apagar
                       </Button>
                     </div>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

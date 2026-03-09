@@ -26,12 +26,12 @@ export const RepairsLayout = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header - iOS premium */}
-      <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-2xl border-b border-border/30 px-4 py-3 flex items-center gap-3">
+      {/* Header - Premium glassmorphism */}
+      <header className="sticky top-0 z-30 bg-background/60 backdrop-blur-3xl border-b border-border/20 px-4 py-3 flex items-center gap-3">
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-xl h-10 w-10"
+          className="rounded-2xl h-10 w-10 hover:bg-muted/50"
           onClick={() => {
             if (location.pathname === "/reparos") {
               navigate("/dashboard");
@@ -43,12 +43,17 @@ export const RepairsLayout = () => {
           <ArrowLeft className="h-5 w-5" />
         </Button>
 
-        <h1 className="font-bold text-lg tracking-tight">Gestão de Reparos</h1>
+        <div className="flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Wrench className="h-4 w-4 text-primary" />
+          </div>
+          <h1 className="font-bold text-lg tracking-tight">Reparos</h1>
+        </div>
 
         <div className="hidden md:block ml-auto">
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10">
+              <Button variant="ghost" size="icon" className="rounded-2xl h-10 w-10 hover:bg-muted/50">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
@@ -61,13 +66,15 @@ export const RepairsLayout = () => {
                   <Button
                     key={item.path}
                     variant={isActive(item.path) ? "default" : "ghost"}
-                    className="justify-start gap-2 rounded-xl"
+                    className="justify-start gap-2.5 rounded-2xl h-12"
                     onClick={() => {
                       navigate(item.path);
                       setIsOpen(false);
                     }}
                   >
-                    <item.icon className="h-4 w-4" />
+                    <div className={`h-8 w-8 rounded-xl flex items-center justify-center ${isActive(item.path) ? 'bg-primary-foreground/20' : 'bg-muted/50'}`}>
+                      <item.icon className="h-4 w-4" />
+                    </div>
                     {item.label}
                   </Button>
                 ))}
@@ -82,8 +89,8 @@ export const RepairsLayout = () => {
         <Outlet />
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-4 left-4 right-4 bg-background/80 backdrop-blur-2xl border border-border/30 shadow-lg rounded-2xl p-1.5 z-40 pb-[calc(0.375rem+env(safe-area-inset-bottom))]">
+      {/* Mobile Bottom Navigation - Premium glassmorphism */}
+      <div className="md:hidden fixed bottom-4 left-4 right-4 bg-background/60 backdrop-blur-3xl border border-border/20 shadow-2xl shadow-background/50 rounded-3xl p-1.5 z-40 pb-[calc(0.375rem+env(safe-area-inset-bottom))]">
         <nav className="flex items-center justify-around">
           {menuItems.map((item) => {
             const active = isActive(item.path);
@@ -92,12 +99,12 @@ export const RepairsLayout = () => {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center justify-center w-full py-2.5 rounded-xl transition-all duration-300 relative ${
+                className={`flex flex-col items-center justify-center w-full py-2.5 rounded-2xl transition-all duration-300 relative ${
                   active ? "text-primary" : "text-muted-foreground"
                 }`}
               >
                 {active && (
-                  <div className="absolute inset-0 bg-primary/10 rounded-xl -z-10" />
+                  <div className="absolute inset-0 bg-primary/10 rounded-2xl -z-10" />
                 )}
                 <Icon
                   className={`h-5 w-5 mb-1 transition-transform duration-300 ${active ? "scale-110" : ""}`}
@@ -117,7 +124,7 @@ export const RepairsLayout = () => {
         <button
           type="button"
           onClick={() => navigate("/reparos/servicos")}
-          className="md:hidden fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-6 z-50 h-14 w-14 rounded-2xl bg-primary text-primary-foreground shadow-xl flex items-center justify-center hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="md:hidden fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-6 z-50 h-14 w-14 rounded-2xl bg-primary text-primary-foreground shadow-2xl shadow-primary/30 flex items-center justify-center hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           aria-label="Novo reparo"
         >
           <Plus className="h-6 w-6" />
