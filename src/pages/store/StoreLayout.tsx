@@ -11,6 +11,7 @@ import { UnifiedSpinner } from '@/components/ui/UnifiedSpinner';
 export default function StoreLayout() {
   const { user, loading: authLoading } = useAuth();
   const { currentStore, fetchUserStore, isLoading: storeLoading } = useStoreStore();
+  const { toggleMenu } = useMobileMenuContext();
   const navigate = useNavigate();
   const location = useLocation();
 
