@@ -669,7 +669,7 @@ const RepairsStatus = () => {
               )}
 
               {selectedServiceDetails.device_checklist && (
-                <div className="rounded-xl border border-border/40 bg-muted/30 p-4">
+                <div className="rounded-2xl border border-border/30 bg-muted/20 backdrop-blur-sm p-4">
                   <div className="mb-2 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Checklist</div>
                   <SimpleDeviceChecklist data={selectedServiceDetails.device_checklist} />
                 </div>
