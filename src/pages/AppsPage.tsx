@@ -1,4 +1,4 @@
-import { PlusCircle, List, Settings, Shield, Users, Wrench, Smartphone, Hammer, Store, Download, Brain } from 'lucide-react';
+import { List, Settings, Shield, Users, Wrench, Smartphone, Hammer, Store, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { GlassCard, RippleButton } from '@/components/ui/animations/micro-interactions';

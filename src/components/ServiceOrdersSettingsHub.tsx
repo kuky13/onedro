@@ -7,7 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Settings, Building2, User, Eye, EyeOff,
   ArrowLeft, Save, LogOut, HelpCircle, Lock, Mail, Menu, Home, BookOpen,
-  Headphones, MessageCircle, Shield, CheckCircle2, Zap, Database
+  Headphones, MessageCircle, Shield, CheckCircle2, Zap
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { CompanyBrandingSettings } from '@/components/CompanyBrandingSettings';
@@ -261,7 +261,7 @@ export function ServiceOrdersSettingsHub() {
                 {user && (
                   <AccountDataSettingsLite 
                     userId={user.id} 
-                    userEmail={user.email} 
+                    userEmail={user.email ?? ''} 
                     className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none"
                   />
                 )}
@@ -362,7 +362,7 @@ export function ServiceOrdersSettingsHub() {
               <TabsContent value="privacidade" className="mt-0">
                 <Card className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none">
                   <CardContent className="pt-6">
-                    <DataPrivacyTab />
+                    {user && <DataPrivacyTab userId={user.id} />}
                   </CardContent>
                 </Card>
               </TabsContent>

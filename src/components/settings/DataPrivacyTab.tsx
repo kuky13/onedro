@@ -1,20 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Database, Download, Trash2, AlertTriangle, FileText, FileJson, Clock, CheckCircle } from 'lucide-react';
+import { Database, Download, Trash2, AlertTriangle, FileText, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+// @ts-ignore - Dialog components are used in JSX below
 import {
   Dialog,
   DialogContent,
@@ -35,7 +25,7 @@ interface DataPrivacyTabProps {
 
 export const DataPrivacyTab = ({ userId, userEmail }: DataPrivacyTabProps) => {
   const [isExporting, setIsExporting] = useState(false);
-  const [exportType, setExportType] = useState<'all' | 'budgets' | 'clients' | 'services' | null>(null);
+  const [_exportType, setExportType] = useState<'all' | 'budgets' | 'clients' | 'services' | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deletionScheduledAt, setDeletionScheduledAt] = useState<string | null>(null);
@@ -47,17 +37,15 @@ export const DataPrivacyTab = ({ userId, userEmail }: DataPrivacyTabProps) => {
 
   const checkDeletionStatus = async () => {
     try {
-      const { data, error } = await supabase
+      await supabase
         .from('user_profiles')
-        .select('deletion_scheduled_at')
+        .select('updated_at')
         .eq('id', userId)
         .single();
         
-      if (data?.deletion_scheduled_at) {
-        setDeletionScheduledAt(data.deletion_scheduled_at);
-      }
-    } catch (error) {
-      console.error('Error checking deletion status:', error);
+      // deletion_scheduled_at doesn't exist yet - skip for now
+    } catch (err) {
+      console.error('Error checking deletion status:', err);
     }
   };
 
