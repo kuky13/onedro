@@ -1,5 +1,5 @@
 /**
- * Serviço de integração entre a IA Drippy e a Central de Ajuda
+ * Serviço de integração entre a IA Drippy e a Documentação
  * Permite que a Drippy sugira artigos e tutoriais relevantes baseado nas perguntas do usuário
  */
 
@@ -19,7 +19,7 @@ export interface HelpSuggestion {
   reason: string;
 }
 
-// Base de conhecimento da Central de Ajuda
+// Base de conhecimento da Documentação
 const helpArticles: HelpArticle[] = [
   {
     id: 'budgets',
@@ -27,7 +27,7 @@ const helpArticles: HelpArticle[] = [
     description: 'Aprenda a criar, visualizar e gerenciar orçamentos de forma eficiente',
     category: 'budgets',
     tags: ['orçamento', 'criar', 'editar', 'compartilhar', 'pdf', 'whatsapp'],
-    url: '/central-de-ajuda#budgets'
+    url: '/docs#budgets'
   },
   {
     id: 'service-orders',
@@ -35,7 +35,7 @@ const helpArticles: HelpArticle[] = [
     description: 'Gerencie ordens de serviço, acompanhe status e organize o workflow',
     category: 'service-orders',
     tags: ['ordem', 'serviço', 'status', 'prioridade', 'workflow'],
-    url: '/central-de-ajuda#service-orders'
+    url: '/docs#service-orders'
   },
   {
     id: 'drippy-ia',
@@ -43,7 +43,7 @@ const helpArticles: HelpArticle[] = [
     description: 'Conheça a assistente virtual integrada ao sistema com busca inteligente',
     category: 'drippy-ia',
     tags: ['drippy', 'ia', 'assistente', 'busca', 'inteligente'],
-    url: '/central-de-ajuda#drippy-ia'
+    url: '/docs#drippy-ia'
   },
   {
     id: 'trash',
@@ -51,7 +51,7 @@ const helpArticles: HelpArticle[] = [
     description: 'Recupere itens excluídos e gerencie a lixeira do sistema',
     category: 'trash',
     tags: ['lixeira', 'recuperar', 'excluir', 'restaurar'],
-    url: '/central-de-ajuda#trash'
+    url: '/docs#trash'
   },
   {
     id: 'settings',
@@ -59,7 +59,7 @@ const helpArticles: HelpArticle[] = [
     description: 'Personalize sua experiência e configure preferências da aplicação',
     category: 'settings',
     tags: ['configurações', 'empresa', 'logo', 'personalização'],
-    url: '/central-de-ajuda#settings'
+    url: '/docs#settings'
   },
   {
     id: 'plans',
@@ -67,7 +67,7 @@ const helpArticles: HelpArticle[] = [
     description: 'Entenda como funcionam os planos, pagamentos e ativação de licença',
     category: 'plans',
     tags: ['plano', 'planos', 'assinatura', 'pagamento', 'licença', 'licenca', 'renovação', 'renovacao', 'mensal', 'anual'],
-    url: '/central-de-ajuda#plans'
+    url: '/docs#plans'
   },
   {
     id: 'store',
@@ -75,7 +75,31 @@ const helpArticles: HelpArticle[] = [
     description: 'Configure sua loja virtual para receber orçamentos e vender serviços/produtos',
     category: 'store',
     tags: ['loja', 'store', 'virtual', 'orcamentos online', 'produtos', 'serviços', 'servicos', 'link público', 'link publico'],
-    url: '/central-de-ajuda#store'
+    url: '/docs#store'
+  },
+  {
+    id: 'downloads',
+    title: 'Download de Vídeos',
+    description: 'Use o downloader integrado para baixar vídeos do YouTube e outras plataformas',
+    category: 'downloads',
+    tags: ['download', 'vídeo', 'video', 'youtube', 'baixar', 'mp4', 'mp3'],
+    url: '/docs#downloads'
+  },
+  {
+    id: 'suporte',
+    title: 'Suporte e Atendimento',
+    description: 'Saiba como entrar em contato com a equipe de suporte por WhatsApp, Discord ou Email',
+    category: 'suporte',
+    tags: ['suporte', 'ajuda', 'contato', 'whatsapp', 'discord', 'email', 'chamado'],
+    url: '/docs#suporte'
+  },
+  {
+    id: 'conta-seguranca',
+    title: 'Conta e Segurança',
+    description: 'Gerencie sua conta, altere senha, exporte dados e entenda a LGPD',
+    category: 'conta-seguranca',
+    tags: ['conta', 'senha', 'segurança', 'seguranca', 'lgpd', 'privacidade', 'email', 'verificar', 'exportar', 'dados'],
+    url: '/docs#conta-seguranca'
   }
 ];
 
@@ -115,6 +139,30 @@ const faqItems = [
     answer: "Acesse /store para criar ou gerenciar sua loja. Se ainda não tiver uma, você será direcionado para /store/nova.",
     category: "store",
     tags: ['loja', 'store', 'ativar loja', 'criar loja', 'minha loja']
+  },
+  {
+    question: "Como baixar vídeos pelo sistema?",
+    answer: "Acesse /downloads, cole o link do vídeo (YouTube, Instagram, TikTok, etc.), escolha a qualidade desejada e clique em Baixar.",
+    category: "downloads",
+    tags: ['download', 'vídeo', 'baixar', 'youtube']
+  },
+  {
+    question: "Como abrir um chamado de suporte?",
+    answer: "Acesse /suporte e escolha o canal mais adequado: WhatsApp (resposta imediata), Discord (comunidade) ou E-mail (suporte@onedrip.email).",
+    category: "suporte",
+    tags: ['suporte', 'chamado', 'contato', 'ajuda']
+  },
+  {
+    question: "Como alterar minha senha?",
+    answer: "Acesse Configurações > Conta > Alterar Senha. Você também pode usar a opção 'Esqueci minha senha' na tela de login para receber um link de redefinição por e-mail.",
+    category: "conta-seguranca",
+    tags: ['senha', 'alterar', 'redefinir', 'conta']
+  },
+  {
+    question: "Meus dados estão protegidos pela LGPD?",
+    answer: "Sim! O OneDrip segue a Lei Geral de Proteção de Dados. Você pode solicitar a exportação ou exclusão dos seus dados a qualquer momento em Configurações > Conta.",
+    category: "conta-seguranca",
+    tags: ['lgpd', 'dados', 'privacidade', 'proteção']
   }
 ];
 
@@ -127,24 +175,20 @@ export function searchHelpArticles(query: string, limit: number = 3): HelpSugges
   const queryLower = query.toLowerCase();
   const suggestions: HelpSuggestion[] = [];
 
-  // Buscar em artigos
   for (const article of helpArticles) {
     let relevance = 0;
     const reasons: string[] = [];
 
-    // Verificar título
     if (article.title.toLowerCase().includes(queryLower)) {
       relevance += 10;
       reasons.push('título relevante');
     }
 
-    // Verificar descrição
     if (article.description.toLowerCase().includes(queryLower)) {
       relevance += 5;
       reasons.push('descrição relevante');
     }
 
-    // Verificar tags
     const matchingTags = article.tags.filter(tag => 
       tag.toLowerCase().includes(queryLower) || 
       queryLower.includes(tag.toLowerCase())
@@ -154,22 +198,16 @@ export function searchHelpArticles(query: string, limit: number = 3): HelpSugges
       reasons.push(`tags: ${matchingTags.join(', ')}`);
     }
 
-    // Verificar categoria
     if (article.category.toLowerCase().includes(queryLower)) {
       relevance += 2;
       reasons.push('categoria relevante');
     }
 
     if (relevance > 0) {
-      suggestions.push({
-        article,
-        relevance,
-        reason: reasons.join(', ')
-      });
+      suggestions.push({ article, relevance, reason: reasons.join(', ') });
     }
   }
 
-  // Buscar em FAQs
   for (const faq of faqItems) {
     let relevance = 0;
     const reasons: string[] = [];
@@ -201,7 +239,7 @@ export function searchHelpArticles(query: string, limit: number = 3): HelpSugges
           description: faq.answer,
           category: faq.category,
           tags: faq.tags,
-          url: '/central-de-ajuda#faq'
+          url: '/docs#faq'
         },
         relevance,
         reason: reasons.join(', ')
@@ -209,7 +247,6 @@ export function searchHelpArticles(query: string, limit: number = 3): HelpSugges
     }
   }
 
-  // Ordenar por relevância e retornar top N
   return suggestions
     .sort((a, b) => b.relevance - a.relevance)
     .slice(0, limit);
@@ -219,11 +256,9 @@ export function searchHelpArticles(query: string, limit: number = 3): HelpSugges
  * Gera uma mensagem formatada com sugestões de ajuda
  */
 export function formatHelpSuggestions(suggestions: HelpSuggestion[]): string {
-  if (suggestions.length === 0) {
-    return '';
-  }
+  if (suggestions.length === 0) return '';
 
-  let message = '📚 **Sugestões da Central de Ajuda:**\n\n';
+  let message = '📚 **Sugestões da Documentação:**\n\n';
   
   suggestions.forEach((suggestion, index) => {
     message += `${index + 1}. **${suggestion.article.title}**\n`;
@@ -232,7 +267,6 @@ export function formatHelpSuggestions(suggestions: HelpSuggestion[]): string {
   });
 
   message += '💡 *Esses artigos podem te ajudar com sua dúvida!*';
-
   return message;
 }
 
@@ -246,7 +280,7 @@ export function isHelpRelatedQuery(query: string): boolean {
     'criar', 'editar', 'excluir', 'recuperar', 'configurar', 'configuração',
     'problema', 'erro', 'não funciona', 'não consigo', 'preciso de ajuda',
     'plano', 'planos', 'assinatura', 'pagamento', 'licenca', 'licença',
-    'loja', 'store'
+    'loja', 'store', 'download', 'vídeo', 'suporte', 'senha', 'conta', 'lgpd'
   ];
 
   const queryLower = query.toLowerCase();
@@ -266,6 +300,5 @@ export function extractKeywords(query: string): string[] {
     .toLowerCase()
     .split(/\s+/)
     .filter(word => word.length > 2 && !stopWords.includes(word))
-    .slice(0, 5); // Limitar a 5 palavras-chave
+    .slice(0, 5);
 }
-
