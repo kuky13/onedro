@@ -155,18 +155,13 @@ const RepairsWarranties = () => {
     setDeleteConfirmation(null);
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'in_progress':
-        return <Badge className="bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/30 rounded-xl text-xs">Em andamento</Badge>;
-      case 'completed':
-        return <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/30 rounded-xl text-xs">Concluído</Badge>;
-      case 'delivered':
-        return <Badge className="bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/30 rounded-xl text-xs">Entregue</Badge>;
-      default:
-        return <Badge variant="outline" className="rounded-xl text-xs">{status}</Badge>;
-    }
-  };
+  const getStatusBadge = (status: string) => (
+    <WarrantyStatusBadge
+      status={status}
+      format="short"
+      className="rounded-xl text-xs"
+    />
+  );
 
   const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('pt-BR');
   const fmtMoney = (v: number | null) => v != null ? formatCurrencyFromReais(v) : '—';
