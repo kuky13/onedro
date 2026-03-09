@@ -3,13 +3,15 @@ import { useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useStoreStore } from './useStoreStore';
+import { useMobileMenuContext } from '@/components/mobile/MobileMenuProvider';
 import { Button } from '@/components/ui/button';
-import { Store, FileText, Wrench, Settings, LogOut, ExternalLink, ShoppingBag } from 'lucide-react';
+import { Store, FileText, Wrench, Settings, LogOut, ExternalLink, ShoppingBag, Menu } from 'lucide-react';
 import { UnifiedSpinner } from '@/components/ui/UnifiedSpinner';
 
 export default function StoreLayout() {
   const { user, loading: authLoading } = useAuth();
   const { currentStore, fetchUserStore, isLoading: storeLoading } = useStoreStore();
+  const { toggleMenu } = useMobileMenuContext();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -156,11 +158,11 @@ export default function StoreLayout() {
             );
           })}
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={toggleMenu}
             className="flex flex-col items-center justify-center w-full h-full space-y-1 text-muted-foreground"
           >
-            <LogOut className="h-5 w-5" />
-            <span className="text-[10px] font-medium">Sair</span>
+            <Menu className="h-5 w-5" />
+            <span className="text-[10px] font-medium">Menu</span>
           </button>
         </nav>
       </div>
