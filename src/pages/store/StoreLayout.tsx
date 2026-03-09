@@ -3,8 +3,9 @@ import { useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useStoreStore } from './useStoreStore';
+import { useMobileMenuContext } from '@/components/mobile/MobileMenuProvider';
 import { Button } from '@/components/ui/button';
-import { Store, FileText, Wrench, Settings, LogOut, ExternalLink, ShoppingBag } from 'lucide-react';
+import { Store, FileText, Wrench, Settings, LogOut, ExternalLink, ShoppingBag, Menu } from 'lucide-react';
 import { UnifiedSpinner } from '@/components/ui/UnifiedSpinner';
 
 export default function StoreLayout() {
