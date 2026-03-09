@@ -1206,35 +1206,36 @@ const RepairsDashboard = () => {
         )}
       </div>
 
-      <Card className="relative overflow-visible md:max-w-md">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Buscar técnico rápido</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Nome do técnico..." className="h-9 pl-8" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+      <div className="rounded-2xl border border-border/30 bg-muted/5 p-4 md:max-w-md">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Search className="h-4 w-4 text-primary" />
           </div>
-          <div className="mt-4 space-y-2">
-            {searching && <div className="py-2 text-center text-xs text-muted-foreground">Buscando...</div>}
-            {!searching && foundTechnicians.length === 0 && <div className="py-2 text-center text-xs text-muted-foreground">
-                Nenhum técnico encontrado
-              </div>}
-            {!searching && foundTechnicians.map(tech => <div key={tech.id} className="flex items-center justify-between gap-2 rounded border p-2 text-sm transition-colors hover:bg-muted/50">
-                  <div>
-                    <div className="font-medium">{tech.name}</div>
-                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                      <span className={`inline-block h-1.5 w-1.5 rounded-full ${tech.is_active ? 'bg-primary' : 'bg-destructive'}`} />
-                      {tech.is_active ? 'Ativo' : 'Inativo'}
-                    </div>
+          <span className="text-sm font-semibold">Buscar técnico</span>
+        </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Nome do técnico..." className="h-10 pl-9 rounded-xl bg-muted/30 border-border/30" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+        </div>
+        <div className="mt-3 space-y-2">
+          {searching && <div className="py-2 text-center text-xs text-muted-foreground">Buscando...</div>}
+          {!searching && foundTechnicians.length === 0 && <div className="py-2 text-center text-xs text-muted-foreground">
+              Nenhum técnico encontrado
+            </div>}
+          {!searching && foundTechnicians.map(tech => <div key={tech.id} className="flex items-center justify-between gap-2 rounded-2xl border border-border/30 bg-muted/10 p-3 text-sm transition-colors hover:bg-muted/30 hover:border-primary/20">
+                <div>
+                  <div className="font-medium text-sm">{tech.name}</div>
+                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
+                    <span className={`inline-block h-1.5 w-1.5 rounded-full ${tech.is_active ? 'bg-primary' : 'bg-destructive'}`} />
+                    {tech.is_active ? 'Ativo' : 'Inativo'}
                   </div>
-                  <div className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                    {tech.default_commission_rate}%
-                  </div>
-                </div>)}
-          </div>
-        </CardContent>
-      </Card>
+                </div>
+                <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                  {tech.default_commission_rate}%
+                </span>
+              </div>)}
+        </div>
+      </div>
 
       <Card>
         <CardHeader className="space-y-4">
