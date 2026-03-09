@@ -47,14 +47,6 @@ const warrantyStatusLabel = (status: string) => {
   }
 };
 
-const warrantyStatusColor = (status: string) => {
-  switch (status) {
-    case 'in_progress': return 'bg-yellow-500/15 text-yellow-500 border-yellow-500/30';
-    case 'completed': return 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30';
-    case 'delivered': return 'bg-slate-500/15 text-slate-400 border-slate-500/30';
-    default: return 'bg-muted text-muted-foreground';
-  }
-};
 
 const RepairsStatus = () => {
   const { showError, showSuccess } = useToast();
