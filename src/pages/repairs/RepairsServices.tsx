@@ -444,32 +444,32 @@ const RepairsServices = () => {
         type="button"
         onClick={() => selectMobileStep(5)}
         className={
-          "mt-3 w-full rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-left " +
-          "cursor-pointer transition-colors hover:bg-muted/40 " +
+          "mt-3 w-full rounded-2xl border border-border/30 bg-muted/20 backdrop-blur-sm px-4 py-3 text-left " +
+          "cursor-pointer transition-all hover:bg-muted/30 hover:border-primary/20 " +
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         }
         aria-label="Ir para o resumo do pedido (etapa 6)"
       >
         <div className="grid grid-cols-3 gap-3 text-[11px]">
           <div className="min-w-0">
-            <div className="text-muted-foreground">Cobrado</div>
-            <div className="font-medium text-foreground truncate">
+            <div className="text-muted-foreground font-medium">Cobrado</div>
+            <div className="font-semibold text-foreground truncate">
               R$ {(Number(chargedAmount) || 0).toFixed(2)}
             </div>
           </div>
 
           <div className="min-w-0">
-            <div className="text-muted-foreground">Custo</div>
-            <div className="font-medium text-foreground truncate">
+            <div className="text-muted-foreground font-medium">Custo</div>
+            <div className="font-semibold text-foreground truncate">
               R$ {(Number(costAmount) || 0).toFixed(2)}
             </div>
           </div>
 
           <div className="min-w-0 text-right">
-            <div className="text-muted-foreground">Líquido</div>
+            <div className="text-muted-foreground font-medium">Líquido</div>
             <div
               className={
-                "font-medium truncate " +
+                "font-semibold truncate " +
                 (numbers.net >= 0 ? "text-primary" : "text-destructive")
               }
             >
