@@ -46,7 +46,7 @@ export const DataPrivacyTab = ({ userId, userEmail }: DataPrivacyTabProps) => {
 
   const checkDeletionStatus = async () => {
     try {
-      const { data } = await supabase
+      await supabase
         .from('user_profiles')
         .select('updated_at')
         .eq('id', userId)
