@@ -58,14 +58,15 @@ const GroupBudgetPreview: React.FC<{
     });
   }, [budgets, template, companyName, companyPhone, companyAddress, paperWidth]);
 
-  const width = paperWidth === '58mm' ? '280px' : '380px';
+  const maxWidth = paperWidth === '58mm' ? '280px' : '380px';
   const fontSize = paperWidth === '58mm' ? '12px' : '14px';
 
   return (
     <div 
       className="bg-white text-black font-mono shadow-md border border-gray-200 mx-auto overflow-hidden"
       style={{
-        width,
+        width: '100%',
+        maxWidth,
         padding: '10px',
         fontSize,
         lineHeight: '1.2',
