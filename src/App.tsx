@@ -275,7 +275,7 @@ const AppContent = () => {
         <Route path="/service-orders/trash" element={<UnifiedProtectionGuard>
           <AppShell><ServiceOrderTrash /></AppShell>
         </UnifiedProtectionGuard>} />
-        <Route path="/central-de-ajuda" element={<UnifiedProtectionGuard>
+        <Route path="/docs" element={<UnifiedProtectionGuard>
           <AppShell><HelpCenterPage /></AppShell>
         </UnifiedProtectionGuard>} />
         <Route path="/settings" element={<UnifiedProtectionGuard>

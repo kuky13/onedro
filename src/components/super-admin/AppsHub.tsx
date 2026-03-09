@@ -439,8 +439,8 @@ const appRoutes: AppRoute[] = [
     category: 'Comunicação'
   },
   {
-    path: '/central-de-ajuda',
-    name: 'Central de Ajuda',
+    path: '/docs',
+    name: 'Documentação',
     description: 'Documentação e ajuda',
     icon: HelpCircle,
     category: 'Comunicação',

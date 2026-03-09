@@ -523,7 +523,7 @@ Quando usuários precisarem de ajuda adicional ou suporte técnico, direcione pa
 - 🎮 **Discord**: Comunidade e suporte técnico (24/7, resposta em 1-2h)
 - 📧 **E-mail**: suporte@onedrip.email (Seg-Sex, 9h-18h, resposta em 4-8h)
 
-**Central de Ajuda (onedrip.com.br/central-de-ajuda):**
+**Documentação (onedrip.com.br/docs):**
 - Tutorial completo do sistema em vídeo
 - Guias detalhados por módulo
 - Perguntas Frequentes (FAQ)
@@ -585,7 +585,7 @@ Quando precisarem de suporte técnico ou ajuda mais profunda:
 - **Discord**: Comunidade ativa e suporte técnico
 - **E-mail**: suporte@onedrip.email
 
-Ou consulte nossa [Central de Ajuda](onedrip.com.br/central-de-ajuda) com tutoriais completos! ✨"
+Ou consulte nossa [Documentação](onedrip.com.br/docs) com tutoriais completos! ✨"
 
 IMPORTANTE: Você NUNCA deve inventar dados. Se não houver informação no contexto, seja honesta e sugira alternativas.
 

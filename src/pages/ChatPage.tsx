@@ -51,7 +51,7 @@ const buildActions = (text: string, isAdmin: boolean) => {
   if (/(plano|planos|preço|preco|assinatura)/.test(t)) actions.push({ label: 'Abrir Planos', path: '/plans' });
   if (/(licen|ativação|ativacao)/.test(t)) actions.push({ label: 'Abrir Licença', path: '/licenca' });
   if (/(dashboard|painel)/.test(t)) actions.push({ label: 'Abrir Dashboard', path: '/dashboard' });
-  if (/(ajuda|suporte|central)/.test(t)) actions.push({ label: 'Abrir Central de Ajuda', path: '/central-de-ajuda' });
+  if (/(ajuda|suporte|central|docs|documentação|documentacao)/.test(t)) actions.push({ label: 'Abrir Documentação', path: '/docs' });
   if (/(orçamento|orcamento|worm)/.test(t)) actions.push({ label: 'Abrir Orçamentos', path: '/worm' });
   if (/(sistema)/.test(t)) actions.push({ label: 'Abrir Sistema', path: '/sistema' });
   if (/(notifica|mensagem|msg)/.test(t)) actions.push({ label: 'Abrir Mensagens', path: '/msg' });
