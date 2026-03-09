@@ -442,6 +442,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             <button onClick={() => navigate('/cookies')} className="hover:text-primary transition-colors underline-offset-2 hover:underline">
               Cookies
             </button>
+            <span className="text-border">•</span>
+            <button onClick={() => navigate('/docs')} className="hover:text-primary transition-colors underline-offset-2 hover:underline">
+              Documentação
+            </button>
           </div>
         </div>
       </main>
