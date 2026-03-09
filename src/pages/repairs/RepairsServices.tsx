@@ -609,8 +609,8 @@ const RepairsServices = () => {
 
           <CardContent className="grid gap-5 pt-4">
             {mobileStepNotice ? (
-              <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3 text-sm">
-                <Info className="h-4 w-4 mt-0.5 text-primary" />
+              <div className="flex items-start gap-2 rounded-2xl border border-border/30 bg-muted/20 backdrop-blur-sm p-3 text-sm">
+                <Info className="h-4 w-4 mt-0.5 text-primary shrink-0" />
                 <p className="text-muted-foreground text-xs leading-relaxed">{mobileStepNotice}</p>
               </div>
             ) : null}
