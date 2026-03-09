@@ -523,7 +523,7 @@ const RepairsStatus = () => {
                             </div>
                             <div className="text-right">
                               <div className="font-bold tabular-nums">{formatBRL(Number(service.charged_amount))}</div>
-                              <div className="text-emerald-500 font-medium tabular-nums text-[10px]">
+                              <div className="text-primary font-medium tabular-nums text-[10px]">
                                 Lucro: {formatBRL(Number(service.net_profit))}
                               </div>
                             </div>
@@ -541,11 +541,12 @@ const RepairsStatus = () => {
                           {/* Warranty badge */}
                           {warrantyMap[service.id] && (
                             <div className="flex items-center gap-1.5">
-                              <Badge className={`text-[10px] px-2 py-0.5 rounded-full gap-1 border ${warrantyStatusColor(warrantyMap[service.id].status)}`}>
-                                <Shield className="h-3 w-3" />
-                                {warrantyStatusLabel(warrantyMap[service.id].status)}
-                                {warrantyMap[service.id].reopen_count > 0 && ` (${warrantyMap[service.id].reopen_count + 1}ª)`}
-                              </Badge>
+                              <WarrantyStatusBadge
+                                status={warrantyMap[service.id].status}
+                                reopenCount={warrantyMap[service.id].reopen_count}
+                                format="short"
+                                className="text-[10px] px-2 py-0.5 rounded-full"
+                              />
                             </div>
                           )}
 
