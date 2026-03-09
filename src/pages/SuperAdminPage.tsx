@@ -10,12 +10,13 @@ import { CouponsManagement } from '@/components/super-admin/CouponsManagement';
 import { SmsManagement } from '@/components/super-admin/SmsManagement';
 import { LicenseManagement } from '@/components/super-admin/LicenseManagement';
 import { WhatsAppManagement } from '@/components/super-admin/WhatsAppManagement';
-import { VpsMonitorPage } from '@/components/super-admin/VpsMonitorPage';
+
 import { lazyWithRetry } from '@/utils/lazyWithRetry';
 import { Suspense } from 'react';
 
 const ProblemPage = lazyWithRetry(() => import("./ProblemPage").then(m => ({ default: m.ProblemPage })));
 const UpdateManagementPage = lazyWithRetry(() => import("./UpdateManagementPage"));
+const VpsMonitorPage = lazyWithRetry(() => import("@/components/super-admin/VpsMonitorPage").then(m => ({ default: m.VpsMonitorPage })));
 
 export function SuperAdminPage() {
   return (

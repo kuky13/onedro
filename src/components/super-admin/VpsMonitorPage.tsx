@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { apiGet, API_BASE_URL } from '@/services/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { RefreshCcw, Server, Timer, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { VpsRequestFlow } from '@/components/super-admin/VpsRequestFlow';
+const VpsRequestFlow = lazy(() => import('@/components/super-admin/VpsRequestFlow').then(m => ({ default: m.VpsRequestFlow })));
 
 type VpsCheckState =
   | { status: 'idle' }
@@ -98,7 +98,9 @@ export function VpsMonitorPage() {
         </div>
       </div>
 
-      <VpsRequestFlow apiBaseUrl={API_BASE_URL} isUp={state.status === 'up'} />
+      <Suspense fallback={<div className="h-32 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" /></div>}>
+        <VpsRequestFlow apiBaseUrl={API_BASE_URL} isUp={state.status === 'up'} />
+      </Suspense>
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
