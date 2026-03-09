@@ -238,11 +238,18 @@ export default function DownloadsPage() {
           {result.size && (
             <p className="text-xs text-muted-foreground">Tamanho: {formatSize(result.size)}</p>
           )}
-          <Button asChild className="w-full" size="lg">
-            <a href={result.downloadUrl} download={result.filename} target="_blank" rel="noopener noreferrer">
-              <ArrowDown className="h-4 w-4 mr-2" />
-              Baixar arquivo
-            </a>
+          <Button onClick={handleFileDownload} disabled={downloading} className="w-full" size="lg">
+            {downloading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Baixando...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <ArrowDown className="h-4 w-4" />
+                Baixar arquivo
+              </span>
+            )}
           </Button>
         </div>
       )}
