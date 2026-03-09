@@ -158,11 +158,11 @@ export default function StoreLayout() {
             );
           })}
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={toggleMenu}
             className="flex flex-col items-center justify-center w-full h-full space-y-1 text-muted-foreground"
           >
-            <LogOut className="h-5 w-5" />
-            <span className="text-[10px] font-medium">Sair</span>
+            <Menu className="h-5 w-5" />
+            <span className="text-[10px] font-medium">Menu</span>
           </button>
         </nav>
       </div>
