@@ -32,7 +32,7 @@ interface DataPrivacyTabProps {
   userEmail?: string;
 }
 
-export const DataPrivacyTab = ({ userId }: DataPrivacyTabProps) => {
+export const DataPrivacyTab = ({ userId, userEmail }: DataPrivacyTabProps) => {
   const [isExporting, setIsExporting] = useState(false);
   const [_exportType, setExportType] = useState<'all' | 'budgets' | 'clients' | 'services' | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
