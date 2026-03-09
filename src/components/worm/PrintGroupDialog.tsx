@@ -129,8 +129,8 @@ export const PrintGroupDialog: React.FC<PrintGroupDialogProps> = ({ budgets, tri
 
         <Tabs defaultValue="80mm" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="80mm">80mm (Padrão)</TabsTrigger>
-            <TabsTrigger value="58mm">58mm (Pequeno)</TabsTrigger>
+            <TabsTrigger value="80mm" className="text-xs sm:text-sm">80mm (Padrão)</TabsTrigger>
+            <TabsTrigger value="58mm" className="text-xs sm:text-sm">58mm (Pequeno)</TabsTrigger>
           </TabsList>
           
           <TabsContent value="80mm" className="mt-4 space-y-4">
