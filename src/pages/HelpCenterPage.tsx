@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { HelpCircle, Search, FileText, ClipboardList, Crown, Trash2, Settings, ChevronDown, ChevronRight, ExternalLink, BookOpen, Calculator, Shield, Home, MessageCircle, History, ThumbsUp, ThumbsDown, Zap, Video, ArrowRight, AlertCircle, LayoutDashboard, Wrench, ShieldCheck, Smartphone, Bell, Grid, Download, Headphones, Lock } from 'lucide-react';
+import { HelpCircle, Search, FileText, ClipboardList, Crown, Trash2, Settings, ChevronDown, ChevronRight, ExternalLink, BookOpen, Calculator, Shield, Home, MessageCircle, History, ThumbsUp, ThumbsDown, Zap, Video, ArrowRight, AlertCircle, Wrench, ShieldCheck, Smartphone, Download, Headphones, Lock } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/useToast';
 interface HelpSection {
@@ -838,8 +838,7 @@ const HelpCenterPage = () => {
     id: 'conta-seguranca',
     label: 'Conta e Segurança',
     icon: <Lock className="h-4 w-4" />
-}, {
-    id: 'suporte',}];
+}];
   const filteredSections = useMemo(() => {
     return helpSections.filter((section) => {
       const matchesSearch = section.title.toLowerCase().includes(searchTerm.toLowerCase()) || section.description.toLowerCase().includes(searchTerm.toLowerCase());
