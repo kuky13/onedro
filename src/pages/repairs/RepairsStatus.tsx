@@ -644,7 +644,7 @@ const RepairsStatus = () => {
           {selectedServiceDetails && (
             <div className="mt-4 space-y-4">
               {(selectedServiceDetails.client_name || selectedServiceDetails.client_phone || selectedServiceDetails.service_order_number || selectedServiceDetails.imei_serial) && (
-                <div className="rounded-xl border border-border/40 bg-muted/30 p-4 space-y-2">
+                <div className="rounded-2xl border border-border/30 bg-muted/20 backdrop-blur-sm p-4 space-y-2">
                   <div className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Identificação</div>
                   {selectedServiceDetails.client_name && (
                     <div className="text-sm"><span className="font-medium">Cliente: </span>{selectedServiceDetails.client_name}</div>
