@@ -90,24 +90,6 @@ export const AuthPage = () => {
     }
   };
 
-  const handleLicenseActivated = () => {
-    navigate('/dashboard');
-  };
-
-  // Se usuário logado mas sem licença válida
-  if (user && isLicenseValid === false) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="p-4">
-          {isIOS ?
-          <LicenseActivationIOS user={user} onLicenseActivated={handleLicenseActivated} /> :
-
-          <LicenseActivationSection user={user} onLicenseActivated={handleLicenseActivated} />
-          }
-        </div>
-      </div>);
-
-  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
