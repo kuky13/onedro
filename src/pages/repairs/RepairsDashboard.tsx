@@ -1271,15 +1271,11 @@ const RepairsDashboard = () => {
                     <div className="flex items-center gap-2">
                       <div className="font-medium">{s.device_name}</div>
                       {warrantyMap[s.id] && (
-                        <Badge className={`text-[10px] px-1.5 py-0 rounded-full gap-1 ${
-                          warrantyMap[s.id].status === 'in_progress' ? 'bg-yellow-500/10 text-yellow-600 border border-yellow-500/30' :
-                          warrantyMap[s.id].status === 'completed' ? 'bg-green-500/10 text-green-600 border border-green-500/30' :
-                          'bg-slate-500/10 text-slate-600 border border-slate-500/30'
-                        }`}>
-                          <Shield className="h-3 w-3" />
-                          {warrantyMap[s.id].status === 'in_progress' ? 'Garantia ativa' : warrantyMap[s.id].status === 'completed' ? 'Garantia concluída' : 'Garantia entregue'}
-                          {warrantyMap[s.id].reopen_count > 0 && ` (${warrantyMap[s.id].reopen_count + 1}ª)`}
-                        </Badge>
+                        <WarrantyStatusBadge
+                          status={warrantyMap[s.id].status}
+                          reopenCount={warrantyMap[s.id].reopen_count}
+                          className="text-[10px] px-1.5 py-0 rounded-full"
+                        />
                       )}
                     </div>
                     <div className="text-xs text-muted-foreground">{s.service_description}</div>
