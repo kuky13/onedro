@@ -7,7 +7,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Settings, Building2, User, Eye, EyeOff,
   ArrowLeft, Save, LogOut, HelpCircle, Lock, Mail, Menu, Home, BookOpen,
-  Headphones, MessageCircle, Shield, CheckCircle2, Zapt';
+  Headphones, MessageCircle, Shield, CheckCircle2, Zap
+} from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { CompanyBrandingSettings } from '@/components/CompanyBrandingSettings';
 import { ResetAppButton } from './ResetAppButton';
