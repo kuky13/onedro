@@ -781,7 +781,7 @@ const HelpCenterPage = () => {
       {/* Header */}
       <div className="text-center mb-12">
         <div className="mb-4">
-          <h1 className="text-4xl font-bold text-foreground text-center">Central de Ajuda</h1>
+          <h1 className="text-4xl font-bold text-foreground text-center">Documentação</h1>
         </div>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
           Encontre respostas, tutoriais e guias completos para aproveitar ao máximo
