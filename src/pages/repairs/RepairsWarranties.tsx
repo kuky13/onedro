@@ -395,7 +395,7 @@ const RepairsWarranties = () => {
                   </Button>
                 </div>
 
-                <Card className="bg-muted/30 border-border/30">
+                <Card className="bg-muted/20 backdrop-blur-sm border-border/30 rounded-2xl">
                   <CardContent className="p-4 grid grid-cols-2 gap-3">
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
