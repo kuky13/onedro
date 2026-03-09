@@ -21,24 +21,28 @@ interface CacheMessage {
 
 class MultiTabCache {
   private cache = new Map<string, CacheEntry>();
-  private channel: BroadcastChannel;
+  private channel: BroadcastChannel | null = null;
+  private channelReady: Promise<void>;
   private readonly config = ROUTE_CONFIG.cache;
   private listeners = new Set<(key: string, data: any) => void>();
 
   private checkVersion() {
-    // Verificar se há mudança de versão e limpar cache se necessário
     const storedVersion = localStorage.getItem('cache-version');
     if (storedVersion !== this.config.version) {
       this.clear();
       localStorage.setItem('cache-version', this.config.version);
-      console.log('🔄 Cache limpo devido à mudança de versão');
     }
   }
 
   constructor() {
+    // Lazy-load broadcast-channel para reduzir bundle inicial
     const channelName = (this.config as any).channelName ?? 'multitab-cache';
-    this.channel = new BroadcastChannel(channelName);
-    this.setupChannelListener();
+    this.channelReady = import('broadcast-channel').then(({ BroadcastChannel }) => {
+      this.channel = new BroadcastChannel(channelName);
+      this.setupChannelListener();
+    }).catch(() => {
+      // fallback: sem sincronização multi-tab
+    });
     this.startCleanupTimer();
     this.checkVersion();
   }
