@@ -119,7 +119,7 @@ export const PrintGroupDialog: React.FC<PrintGroupDialogProps> = ({ budgets, tri
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100vw-32px)] sm:max-w-md md:max-w-lg lg:max-w-xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Imprimir Grupo de Orçamentos</DialogTitle>
           <DialogDescription>
