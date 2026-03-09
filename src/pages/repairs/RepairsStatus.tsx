@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/ui/page-header';
+import { WarrantyStatusBadge } from '@/components/repairs/WarrantyStatusBadge';
 import { useToast } from '@/hooks/useToast';
 import { Calendar, Archive, Eye, Search, Pencil, Trash2, Download, Shield, ShieldCheck, ShieldAlert, ChevronRight, TrendingUp, TrendingDown, FileSpreadsheet } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';

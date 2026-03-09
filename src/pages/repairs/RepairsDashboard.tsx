@@ -3,10 +3,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/useToast';
-import { Search, Trash2, CalendarCheck, Loader2, Download } from 'lucide-react';
+import { CalendarCheck, Download, LayoutDashboard, Loader2, Search, Shield, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DevicePasswordDisplay } from '@/components/service-orders/DevicePasswordDisplay';
@@ -14,7 +15,7 @@ import { SimpleDeviceChecklist } from '@/components/service-orders/SimpleDeviceC
 import { exportRepairsMonthToXlsx } from '@/utils/repairs/exportRepairsMonthXlsx';
 import { formatCurrencyFromReais } from '@/utils/currency';
 import { Badge } from '@/components/ui/badge';
-import { Shield } from 'lucide-react';
+import { WarrantyStatusBadge } from '@/components/repairs/WarrantyStatusBadge';
 
 type WarrantyInfo = {
   repair_service_id: string;
