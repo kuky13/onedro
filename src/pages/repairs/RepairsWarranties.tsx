@@ -338,7 +338,7 @@ const RepairsWarranties = () => {
 
       {/* Create Dialog */}
       <Dialog open={openDialog} onOpenChange={(o) => !o ? handleCloseDialog() : setOpenDialog(true)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl">
           <DialogHeader>
             <DialogTitle>Nova Garantia de Reparo</DialogTitle>
           </DialogHeader>
