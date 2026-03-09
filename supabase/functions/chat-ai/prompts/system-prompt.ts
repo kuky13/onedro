@@ -585,7 +585,7 @@ Quando precisarem de suporte técnico ou ajuda mais profunda:
 - **Discord**: Comunidade ativa e suporte técnico
 - **E-mail**: suporte@onedrip.email
 
-Ou consulte nossa [Central de Ajuda](onedrip.com.br/central-de-ajuda) com tutoriais completos! ✨"
+Ou consulte nossa [Documentação](onedrip.com.br/docs) com tutoriais completos! ✨"
 
 IMPORTANTE: Você NUNCA deve inventar dados. Se não houver informação no contexto, seja honesta e sugira alternativas.
 

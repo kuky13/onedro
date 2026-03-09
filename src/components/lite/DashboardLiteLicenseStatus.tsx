@@ -102,7 +102,7 @@ export const DashboardLiteLicenseStatus = () => {
             <span className="text-xs font-medium text-muted-foreground">Suporte</span>
           </button>
           <button
-            onClick={() => navigate('/central-de-ajuda')}
+            onClick={() => navigate('/docs')}
             className="h-8 px-3 rounded-xl border border-border/60 bg-background/70 flex items-center gap-1.5 hover:bg-muted/50 transition-colors"
             title="Central de ajuda"
           >

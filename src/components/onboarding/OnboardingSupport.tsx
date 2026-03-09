@@ -8,7 +8,7 @@ interface Props {
 
 export const OnboardingSupport = ({ onNext, onSkip }: Props) => {
   const channels = [
-    { icon: HelpCircle, title: "Central de Ajuda", desc: "Tutoriais e guias completos em /central-de-ajuda" },
+    { icon: HelpCircle, title: "Documentação", desc: "Tutoriais e guias completos em /docs" },
     { icon: MessageCircle, title: "Suporte via WhatsApp", desc: "Fale com nosso time diretamente pelo WhatsApp" },
     { icon: Headphones, title: "Página de Suporte", desc: "Abra um chamado ou veja FAQs em /suporte" },
     { icon: Mail, title: "E-mail", desc: "Entre em contato por e-mail quando precisar" },

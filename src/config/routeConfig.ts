@@ -37,7 +37,7 @@ export const ROUTE_CONFIG = {
     '/cookie',
     '/unauthorized',
     '/share/service-order/*', // rotas de compartilhamento
-    '/central-de-ajuda',
+    '/docs',
     '/downloads', // Download de vídeos (yt-dlp)
     '/k/*' // Rotas públicas das lojas
   ],

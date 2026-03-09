@@ -89,7 +89,7 @@ class RouteMiddleware {
       '/service-orders/new': { requiresAuth: true, requiresEmailVerification: true, requiresLicense: true },
       '/service-orders/settings': { requiresAuth: true, requiresEmailVerification: true, requiresLicense: true },
       '/settings': { requiresAuth: true, requiresEmailVerification: true, requiresLicense: true },
-      '/central-de-ajuda': { requiresAuth: true, requiresEmailVerification: true, requiresLicense: true },
+      '/docs': { requiresAuth: true, requiresEmailVerification: true, requiresLicense: true },
       '/msg': { requiresAuth: true, requiresEmailVerification: true, requiresLicense: true },
       '/whatsapp': { requiresAuth: true, requiresEmailVerification: true, requiresLicense: true },
       '/whats': { requiresAuth: true, requiresEmailVerification: true, requiresLicense: true },
