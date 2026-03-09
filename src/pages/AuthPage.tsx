@@ -36,9 +36,6 @@ export const AuthPage = () => {
   } = useAuth();
   const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
-  const { data: licenseData } = useLicenseVerification(user?.id ?? null);
-  const isLicenseValid = licenseData?.is_valid || false;
-  const isIOS = useIOSDetection();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
