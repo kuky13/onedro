@@ -219,12 +219,14 @@ const RepairsDashboard = () => {
     checkOverdue();
   }, []);
 
-  // Mês selecionado para análise/fechamento
-  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
-    const now = new Date();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    return `${now.getFullYear()}-${month}`; // formato YYYY-MM
-  });
+  // Ano e mês selecionados para análise/fechamento
+  const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
+  const [selectedMonthNum, setSelectedMonthNum] = useState<number>(() => new Date().getMonth() + 1);
+  
+  // Formato YYYY-MM para compatibilidade com o restante do código
+  const selectedMonth = useMemo(() => {
+    return `${selectedYear}-${String(selectedMonthNum).padStart(2, '0')}`;
+  }, [selectedYear, selectedMonthNum]);
 
   // Datas de início/fim do mês selecionado
   const {
@@ -707,17 +709,19 @@ const RepairsDashboard = () => {
       setClosingMonth(false);
     }
   };
-  const monthOptions = useMemo(() => {
-    const now = new Date();
-    const options: { value: string; label: string }[] = [];
-    for (let i = 0; i < 12; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const label = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-      options.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) });
+  const yearOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const years: number[] = [];
+    for (let y = currentYear; y >= currentYear - 5; y--) {
+      years.push(y);
     }
-    return options;
+    return years;
   }, []);
+
+  const monthNames = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
 
   return <div className="space-y-4">
       <PageHeader
@@ -728,14 +732,21 @@ const RepairsDashboard = () => {
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div className="flex flex-wrap items-center gap-2">
             <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {yearOptions.map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+            <select
+              value={selectedMonthNum}
+              onChange={(e) => setSelectedMonthNum(Number(e.target.value))}
               className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring capitalize"
             >
-              {monthOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
+              {monthNames.map((name, i) => (
+                <option key={i + 1} value={i + 1}>{name}</option>
               ))}
             </select>
             <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/60 px-3 py-1 text-xs text-muted-foreground">
