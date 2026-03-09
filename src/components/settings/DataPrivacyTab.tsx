@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// @ts-ignore - Dialog components are used in JSX below
 import {
   Dialog,
   DialogContent,
