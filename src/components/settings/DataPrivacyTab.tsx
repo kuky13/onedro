@@ -32,9 +32,9 @@ interface DataPrivacyTabProps {
   userEmail?: string;
 }
 
-export const DataPrivacyTab = ({ userId, userEmail }: DataPrivacyTabProps) => {
+export const DataPrivacyTab = ({ userId }: DataPrivacyTabProps) => {
   const [isExporting, setIsExporting] = useState(false);
-  const [exportType, setExportType] = useState<'all' | 'budgets' | 'clients' | 'services' | null>(null);
+  const [_exportType, setExportType] = useState<'all' | 'budgets' | 'clients' | 'services' | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deletionScheduledAt, setDeletionScheduledAt] = useState<string | null>(null);
