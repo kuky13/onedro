@@ -219,12 +219,14 @@ const RepairsDashboard = () => {
     checkOverdue();
   }, []);
 
-  // Mês selecionado para análise/fechamento
-  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
-    const now = new Date();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    return `${now.getFullYear()}-${month}`; // formato YYYY-MM
-  });
+  // Ano e mês selecionados para análise/fechamento
+  const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
+  const [selectedMonthNum, setSelectedMonthNum] = useState<number>(() => new Date().getMonth() + 1);
+  
+  // Formato YYYY-MM para compatibilidade com o restante do código
+  const selectedMonth = useMemo(() => {
+    return `${selectedYear}-${String(selectedMonthNum).padStart(2, '0')}`;
+  }, [selectedYear, selectedMonthNum]);
 
   // Datas de início/fim do mês selecionado
   const {
