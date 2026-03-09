@@ -149,7 +149,8 @@ const HelpCenterPage = () => {
   { icon: MessageCircle, label: 'Falar com Drippy', path: '/chat', color: 'text-purple-500' },
   { icon: Trash2, label: 'Lixeira', path: '/trash', color: 'text-red-500' },
   { icon: ShieldCheck, label: 'Garantias', path: '/garantia', color: 'text-emerald-500' },
-  { icon: Smartphone, label: 'Películas', path: '/p', color: 'text-teal-500' }];
+  { icon: Smartphone, label: 'Películas', path: '/p', color: 'text-teal-500' },
+  { icon: Headphones, label: 'Suporte', path: '/suporte', color: 'text-pink-500' }];
 
 
   // Definir helpSections e faqItems primeiro
