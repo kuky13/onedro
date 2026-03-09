@@ -1,134 +1,76 @@
 
 
-# Expansao da Documentacao do Projeto OneDrip
+# Modernizar Design do Modulo /reparos
 
-## Objetivo
-Criar documentacao tecnica completa e detalhada para que qualquer desenvolvedor que entre no projeto consiga entender rapidamente como tudo funciona. Vamos expandir os 5 arquivos existentes e criar 7 novos arquivos `.md`.
+## Diagnostico
 
----
+Analisei todas as 6 paginas do modulo de reparos e o layout principal. O design atual usa componentes basicos (`Card`, `PageHeader`, `Button`) mas falta a linguagem visual premium que as paginas `/landing`, `/dashboard` e `/worm` possuem. Problemas principais:
 
-## Arquivos Existentes - Melhorias
+1. **RepairsLayout** - Header e bottom nav funcionais mas sem glassmorphism refinado
+2. **RepairsDashboard** (1481 linhas) - Summary cards genericos sem icones/cores. Selects nativos sem estilo. Lista de servicos com `border p-3` basico. Mobile actions menu sem polish
+3. **RepairsServices** (1219 linhas) - Wizard mobile funcional mas cards/steps sem visual premium. Summary bar muito simples
+4. **RepairsStatus** (691 linhas) - Ja tem boa base com rounded-2xl e badges, mas dialog interno pode melhorar
+5. **RepairsTechnicians** (190 linhas) - Mais desatualizado: lista basica com `border p-3`, sem icones/badges, botoes grandes sem refinamento
+6. **RepairsWarranties** (498 linhas) - Razoavelmente moderno ja
+7. **RepairsTrash** (265 linhas) - Card generico, lista com grid basico
 
-### `0-ai-project-context.md` - Atualizar
-- Adicionar secao sobre o sistema de Diagnostico de Dispositivos (`/testar/:token`)
-- Documentar o modulo de Peliculas (`/p`)
-- Mencionar o sistema de Gamificacao (HamsterPage/CookiePage)
-- Atualizar a lista de Guards com `MobileMenuProvider`
+## Padroes de referencia (Landing/Dashboard/Worm)
 
-### `1-visao-geral.md` - Expandir
-- Adicionar modulo de Garantias (`/garantia`)
-- Documentar Central de Ajuda (`/central-de-ajuda`)
-- Adicionar secao sobre Notificacoes Push e sistema de Updates
-- Mencionar Apps Page e Sistema (mini-OS no browser)
+- Cards com `bg-primary/10 border-primary/20` para destaque
+- Glassmorphism: `bg-background/80 backdrop-blur-2xl`
+- Rounded corners: `rounded-2xl` consistente
+- Icon containers: `rounded-xl bg-primary/10 p-2`
+- Pill badges com `rounded-full` e cores semanticas
+- Hover states com `hover:border-primary/30 transition-all`
+- Empty states com icone grande + texto centrado
+- Sections com `bg-muted/30` para separacao visual
 
-### `2-frontend-estrutura.md` - Detalhar
-- Documentar o sistema de `lazyWithRetry` com telemetria de chunks
-- Explicar `ChunkLoadRecoveryBanner` e `useChunkLoadTelemetry`
-- Detalhar o `SessionPersistence` e `secureStorage`
-- Documentar o `MobileMenuProvider` e navegacao mobile
+## Plano de Implementacao
 
-### `3-backend-supabase.md` - Expandir
-- Listar todas as 40+ Edge Functions com descricao curta
-- Documentar o fluxo de `rate-limiter` e `security-api`
-- Explicar o sistema de notificacoes push (`send-push-notification`)
+### 1. RepairsLayout - Refinamentos
+- Melhorar bottom nav com efeito glassmorphism mais forte
+- FAB com sombra premium e animacao suave
+- Header com separacao visual mais sutil
 
-### `4-integracoes-externas.md` - Atualizar
-- Adicionar secao sobre Evolution API e multi-broker completo
-- Documentar o sistema de download de video via VPS proxy
+### 2. RepairsDashboard - Maior refactoring
+- **Summary cards**: Trocar Card generico por pills estilizados com icones coloridos (como na `/reparos/status`), cada um com icone, label uppercase pequeno e valor grande
+- **Year/month selectors**: Substituir `<select>` nativos por componentes `Select` do Radix com estilo `rounded-xl bg-muted/30`
+- **Quick actions mobile**: Transformar em grid de botoes com icones ao inves de lista vertical
+- **Service list items**: Trocar `rounded-lg border p-3` por cards premium com `rounded-2xl bg-muted/5 border-border/30 hover:bg-muted/15`
+- **Technician search card**: Modernizar com search input premium e resultados com avatar-like badges
+- **Layout editor**: Cards de toggle mais visuais com switch ao inves de checkbox nativo
+- **Empty states**: Icone grande centralizado + texto descritivo
 
----
+### 3. RepairsServices - Polish do wizard
+- Stepper mobile: pills com cores semanticas (verde ok, amber pendente) mais visuais
+- Summary inline bar: glassmorphism `bg-muted/20 backdrop-blur-sm border-border/30`
+- Summary card final: gradiente sutil no header
+- Inputs com labels mais hierarquicas
+- Navigation buttons (Proximo/Anterior) mais premium
 
-## Novos Arquivos
+### 4. RepairsTechnicians - Redesign completo
+- Remover Card wrapper generico, usar lista direta com items `rounded-2xl`
+- Cada tecnico como card com: avatar placeholder colorido, nome, badge de comissao `bg-primary/10 text-primary rounded-full`, status pill (Ativo/Inativo)
+- Botoes inline mais compactos e com icones
+- Dialog de criacao/edicao com layout mais espaçado e moderno
 
-### `5-typescript-tipos.md` - Tipos e Interfaces
-Documentar todas as interfaces criticas do sistema:
-- `ServiceOrderData` (OS com campos de senha, checklist, etc.)
-- `Budget` (tipo canonico via Supabase Tables)
-- `User`, `UserProfile`, `DebugInfo`
-- `CompanyInfo`, `CompanyData`, `CompanyFormData`
-- `TestSession`, `TestResult`, `TestDetails`, `TestConfig`
-- `DevicePasswordType` e seus valores
-- `CheckoutParams`, `PixPaymentData`
-- `BudgetData`, `BudgetPartData` (para PDFs)
-- `AuthContextType` e `UserRole`
-- Tabela visual com cada tipo e onde e usado
+### 5. RepairsTrash - Modernizar lista
+- Items com `rounded-2xl bg-muted/5 border-border/30` ao inves de grid com border
+- Checkbox integrado visualmente
+- Botoes de acao como pills menores
+- Empty state premium com icone Trash2 grande + mensagem
 
-### `6-hooks-referencia.md` - Guia de Hooks
-Catalogar os 60+ hooks com categorias:
-- **Autenticacao**: `useAuth`, `useTokenRotation`, `useSecurity`
-- **Licenciamento**: `useLicense`, `useLicenseVerification`, `useLicenseCache`, `useTrialLicense`
-- **Dispositivo**: `useDeviceDetection`, `useIOSDetection`, `useMobileDetection`, `useBatteryDetection`
-- **Ordens de Servico**: `useSecureServiceOrders`, `useServiceOrderEdit`, `useServiceOrderRealTime`, `useServiceOrderShare`
-- **Orcamentos (Worm)**: `useBudgetData`, `useBudgetDeletion`, `useBudgetServiceOrder`, `useCreateServiceOrderFromBudget`
-- **PWA/Offline**: `usePWA`, `useOfflineDetection`, `useSwipeGesture`
-- **UI/UX**: `useResponsive`, `useMobileMenu`, `usePopupState`, `useDebounce`
-- **Store**: `useShopProfile`, `useImportBudgetToStore`
-- **Config**: `useAppConfig`, `useCompanyBranding`, `useDrippySettings`, `useCookiePreferences`
-- Exemplos de uso para os mais importantes
+### 6. RepairsStatus & RepairsWarranties - Ajustes finos
+- Ja estao razoavelmente modernos, apenas pequenos ajustes de consistencia
+- Dialog content: sections com `rounded-xl` ao inves de `rounded-md`
+- Unificar spacing e corner radius
 
-### `7-rotas-e-guards.md` - Mapa de Rotas
-Tabela completa com todas as rotas do `App.tsx`:
-- Rota, Componente, Guard aplicado, Lazy/Estatico
-- Fluxo visual de redirecionamentos (auth -> licenca -> dashboard)
-- Explicacao de cada Guard: `UnifiedProtectionGuard`, `AdminGuard`, `MaintenanceGuard`
-- Como adicionar uma nova rota (passo a passo)
-
-### `8-edge-functions.md` - Backend Serverless
-Documentacao detalhada de cada Edge Function:
-- **Pagamentos**: `create-mercadopago-checkout`, `check-mercadopago-payment`, `mercadopago-webhook`, `cancel-mercadopago-payment`, `create-mercadopago-subscription`
-- **WhatsApp**: `whatsapp-proxy`, `whatsapp-webhook`, `whatsapp-qr-connect`, `whatsapp-ai-reply`, `whatsapp-instance-manage`, `waha-proxy`
-- **IA**: `chat-ai`, `triage-ai`, `analyze-budgets`
-- **Seguranca**: `security-api`, `rate-limiter`, `real-time-monitoring`, `audit-system`
-- **Usuarios**: `manage-user-profile`, `admin-reset-password`, `admin-update-user-email`, `validate-license`
-- **Comunicacao**: `send-license-email`, `send-payment-receipt-email`, `send-push-notification`, `notification-system`
-- Fluxo de request/response de cada grupo
-
-### `9-seguranca.md` - Arquitetura de Seguranca
-- Sistema `secureStorage` com criptografia AES-GCM e PBKDF2
-- `SecurityLogger` e auditoria de acessos
-- RLS (Row Level Security) - regras e padroes
-- `botDetection`, `secureCSP`, `secureNavigation`
-- Rate limiting nas Edge Functions
-- Token rotation (`useTokenRotation`)
-- Fluxo de validacao de licencas
-
-### `10-pdf-e-utils.md` - Utilitarios e Geracao de PDFs
-- Como funciona o `pdfUtils.ts` (jsPDF client-side)
-- `serviceOrderPdfUtils.ts` para recibos de OS
-- `currency.ts` - formatacao BRL
-- `whatsappUtils.ts` e `whatsappTemplateUtils.ts`
-- `authCleanup.ts` - limpeza de sessao
-- `pwaDetection.ts` e `pwaReset.ts`
-- `debugLogger.ts` e `asciiConsole.ts`
-
-### `11-guia-contribuicao.md` - Guia para Novos Devs
-- Como rodar o projeto localmente
-- Convencoes de codigo (React Query > useEffect, Zustand para global state)
-- Como criar uma nova pagina (registrar rota, escolher Guard, lazy vs estatico)
-- Como criar um novo hook
-- Como adicionar uma Edge Function
-- Checklist de PR/review
-- Erros comuns e como evitar (RLS, chunks, offline)
-
----
-
-## Detalhes Tecnicos
-
-### Arquivos a criar:
-1. `.documentação/docs/5-typescript-tipos.md`
-2. `.documentação/docs/6-hooks-referencia.md`
-3. `.documentação/docs/7-rotas-e-guards.md`
-4. `.documentação/docs/8-edge-functions.md`
-5. `.documentação/docs/9-seguranca.md`
-6. `.documentação/docs/10-pdf-e-utils.md`
-7. `.documentação/docs/11-guia-contribuicao.md`
-
-### Arquivos a editar:
-1. `.documentação/docs/0-ai-project-context.md`
-2. `.documentação/docs/1-visao-geral.md`
-3. `.documentação/docs/2-frontend-estrutura.md`
-4. `.documentação/docs/3-backend-supabase.md`
-5. `.documentação/docs/4-integracoes-externas.md`
-
-Total: **12 arquivos** (7 novos + 5 atualizados)
+### Arquivos a modificar
+- `src/pages/repairs/RepairsLayout.tsx`
+- `src/pages/repairs/RepairsDashboard.tsx`
+- `src/pages/repairs/RepairsServices.tsx`
+- `src/pages/repairs/RepairsTechnicians.tsx`
+- `src/pages/repairs/RepairsTrash.tsx`
+- `src/pages/repairs/RepairsStatus.tsx` (ajustes menores)
+- `src/pages/repairs/RepairsWarranties.tsx` (ajustes menores)
 
