@@ -1,4 +1,3 @@
-import { BroadcastChannel } from 'broadcast-channel';
 import { ROUTE_CONFIG } from '@/config/routeConfig';
 
 /**
