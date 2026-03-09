@@ -246,12 +246,13 @@ class SecurityAuditLogger {
   }
 
   /**
-   * Inicia o flush periódico dos eventos
+   * Inicia o flush periódico dos eventos (desabilitado enquanto circuit breaker está aberto)
    */
+  // @ts-ignore -- mantido para reativação futura quando site_events for corrigido
   private startPeriodicFlush(): void {
     this.flushInterval = setInterval(() => {
       this.flushEvents();
-    }, 30000); // Flush a cada 30 segundos
+    }, 30000);
   }
 
   /**
