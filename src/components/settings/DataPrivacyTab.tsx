@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitleomponents/ui/card';
 import { Button } from '@/components/ui/button';
-import { Database, Download, Trash2, AlertTriangle, FileText, FileJson, Clock, CheckCircle } from 'lucide-react';
+import { Database, Download, Trash2, AlertTriangle, FileText, FileJson, ClClockide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
