@@ -3,8 +3,8 @@ import { WifiOff, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 
 export const VpsStatusBanner = () => {
-  const { isVpsOffline, isChecking, recheck } = useApiStatus();
   const [dismissed, setDismissed] = useState(false);
+  const { isVpsOffline, isChecking, recheck } = useApiStatus({ enabled: !dismissed });
 
   if (!isVpsOffline || dismissed || isChecking) return null;
 
@@ -32,3 +32,5 @@ export const VpsStatusBanner = () => {
     </div>
   );
 };
+
+export default VpsStatusBanner;

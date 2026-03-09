@@ -3,7 +3,10 @@ import { API_BASE_URL } from '@/services/api/apiClient';
 
 type VpsStatus = 'online' | 'offline' | 'checking';
 
-export const useApiStatus = (intervalMs = 60_000) => {
+export const useApiStatus = (options?: { intervalMs?: number; enabled?: boolean }) => {
+  const intervalMs = options?.intervalMs ?? 60_000;
+  const enabled = options?.enabled ?? true;
+
   const [status, setStatus] = useState<VpsStatus>('checking');
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
@@ -19,11 +22,7 @@ export const useApiStatus = (intervalMs = 60_000) => {
       });
       clearTimeout(timer);
 
-      if (res.ok) {
-        setStatus('online');
-      } else {
-        setStatus('offline');
-      }
+      setStatus(res.ok ? 'online' : 'offline');
     } catch {
       setStatus('offline');
     }
@@ -31,12 +30,13 @@ export const useApiStatus = (intervalMs = 60_000) => {
   }, []);
 
   useEffect(() => {
+    if (!enabled) return;
     checkHealth();
     timerRef.current = setInterval(checkHealth, intervalMs);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [checkHealth, intervalMs]);
+  }, [checkHealth, intervalMs, enabled]);
 
   return {
     isVpsOnline: status === 'online',

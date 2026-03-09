@@ -99,7 +99,9 @@ export function VpsMonitorPage() {
         </div>
       </div>
 
-      <VpsRequestFlow apiBaseUrl={API_BASE_URL} isUp={state.status === 'up'} />
+      <Suspense fallback={<div className="h-32 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" /></div>}>
+        <VpsRequestFlow apiBaseUrl={API_BASE_URL} isUp={state.status === 'up'} />
+      </Suspense>
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
