@@ -59,7 +59,7 @@ class RouteMiddleware {
       pending?: Promise<LicenseCheckResult>;
     }
   >();
-  private readonly LICENSE_CACHE_TTL_MS = 60_000; // 60s: suficiente para navegação/guards sem perder reatividade
+  private readonly LICENSE_CACHE_TTL_MS = 5 * 60_000; // 5 min: alinhado com cache do guard, realtime cobre mudanças
   // Configurações centralizadas
   private readonly config = ROUTE_CONFIG;
 

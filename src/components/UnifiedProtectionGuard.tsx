@@ -195,21 +195,17 @@ export const UnifiedProtectionGuard = ({
     }
   }, [licenseData, licenseLoading, licenseFingerprint]);
 
-  // Configurar verificação periódica de licença
+  // Configurar verificação periódica de licença (15 min — realtime cobre mudanças imediatas)
   useEffect(() => {
     if (user?.id && !skipMiddleware) {
-      // Verificação inicial
-      performPeriodicLicenseCheck();
+      // SEM verificação inicial — checkRouteProtection já faz isso na montagem
 
-      // Configurar verificação periódica a cada 5 minutos
       periodicCheckRef.current = setInterval(
         () => {
           performPeriodicLicenseCheck();
         },
-        5 * 60 * 1000,
-      ); // 5 minutos
-
-      console.log("🔄 Verificação periódica de licença configurada (5 min)");
+        15 * 60 * 1000,
+      ); // 15 minutos
     }
 
     return () => {

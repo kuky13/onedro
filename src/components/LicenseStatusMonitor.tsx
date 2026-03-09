@@ -138,7 +138,7 @@ export const LicenseStatusMonitor: React.FC<LicenseStatusMonitorProps> = ({
         } catch (error) {
           console.error('❌ Erro na verificação periódica de licença:', error);
         }
-      }, 2 * 60 * 1000); // 2 minutos
+      }, 10 * 60 * 1000); // 10 minutos (realtime é o canal principal)
     };
 
     setupPeriodicCheck();

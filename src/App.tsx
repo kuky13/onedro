@@ -182,7 +182,7 @@ const AppContent = () => {
         border: '1px solid hsl(var(--border))'
       }
     }} />
-    <IOSRedirectHandler />
+    {/* IOSRedirectHandler removido — código morto */}
     <Suspense fallback={null}><ChatwootWidget /></Suspense>
 
     {/* Modal de aceite removido */}

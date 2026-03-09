@@ -75,7 +75,11 @@ class SecurityAuditLogger {
   private constructor() {
     this.sessionId = this.generateSessionId();
     this.initializeClientInfo();
-    this.startPeriodicFlush();
+    // Circuit breaker aberto por padrão — site_events retorna 400 (PGRST102)
+    // Reabilitar quando a tabela for corrigida no Supabase
+    this.isCircuitOpen = true;
+    // NÃO iniciar flush periódico enquanto circuito está aberto
+    // this.startPeriodicFlush();
     
     // Listener para mudanças de autenticação
     supabase.auth.onAuthStateChange((event, session) => {

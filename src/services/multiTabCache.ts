@@ -232,7 +232,7 @@ class MultiTabCache {
   destroy(): void {
     this.cache.clear();
     this.listeners.clear();
-    this.channel.close();
+    this.channel?.close();
   }
 }
 

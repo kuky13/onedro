@@ -22,7 +22,7 @@ interface TokenRotationConfig {
 
 const DEFAULT_CONFIG: TokenRotationConfig = {
   refreshBeforeExpiry: 5, // 5 minutos antes da expiração
-  checkInterval: 1, // Verificar a cada 1 minuto
+  checkInterval: 5, // Verificar a cada 5 minutos (Supabase SDK já faz auto-refresh)
   maxRetries: 3,
 };
 

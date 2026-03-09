@@ -27,7 +27,7 @@ export const useLicenseVerification = (
   options: UseLicenseVerificationOptions = {}
 ) => {
   const {
-    cacheTTL = 5 * 60 * 1000, // 5 minutos padrão
+    cacheTTL = 10 * 60 * 1000, // 10 minutos padrão
     enableWebSocket = false,
     enablePolling = false
   } = options;
