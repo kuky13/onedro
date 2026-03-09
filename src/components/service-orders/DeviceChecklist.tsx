@@ -478,42 +478,42 @@ export const DeviceChecklist: React.FC<DeviceChecklistProps> = ({
 
       {/* Card do Checklist */}
       <Card className="border-border/50">
-        <CardHeader className="pb-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-base">
-                Checklist de Funcionamento
-              </CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">
-                <Zap className="h-3 w-3 inline text-amber-500" /> = Testável via diagnóstico automático
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={markAllItems}
-                disabled={disabled}
-                className="flex items-center gap-1 text-xs">
-                
-                <CheckCircle className="h-3.5 w-3.5" />
-                Tudo OK
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={unmarkAllItems}
-                disabled={disabled}
-                className="flex items-center gap-1 text-xs">
-                
-                <XCircle className="h-3.5 w-3.5" />
-                Limpar
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
         
 
 
