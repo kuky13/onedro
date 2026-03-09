@@ -58,14 +58,15 @@ const GroupBudgetPreview: React.FC<{
     });
   }, [budgets, template, companyName, companyPhone, companyAddress, paperWidth]);
 
-  const width = paperWidth === '58mm' ? '280px' : '380px';
+  const maxWidth = paperWidth === '58mm' ? '280px' : '380px';
   const fontSize = paperWidth === '58mm' ? '12px' : '14px';
 
   return (
     <div 
       className="bg-white text-black font-mono shadow-md border border-gray-200 mx-auto overflow-hidden"
       style={{
-        width,
+        width: '100%',
+        maxWidth,
         padding: '10px',
         fontSize,
         lineHeight: '1.2',
@@ -118,7 +119,7 @@ export const PrintGroupDialog: React.FC<PrintGroupDialogProps> = ({ budgets, tri
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100vw-32px)] sm:max-w-md md:max-w-lg lg:max-w-xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Imprimir Grupo de Orçamentos</DialogTitle>
           <DialogDescription>
@@ -128,12 +129,12 @@ export const PrintGroupDialog: React.FC<PrintGroupDialogProps> = ({ budgets, tri
 
         <Tabs defaultValue="80mm" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="80mm">80mm (Padrão)</TabsTrigger>
-            <TabsTrigger value="58mm">58mm (Pequeno)</TabsTrigger>
+            <TabsTrigger value="80mm" className="text-xs sm:text-sm">80mm (Padrão)</TabsTrigger>
+            <TabsTrigger value="58mm" className="text-xs sm:text-sm">58mm (Pequeno)</TabsTrigger>
           </TabsList>
           
           <TabsContent value="80mm" className="mt-4 space-y-4">
-            <div className="border rounded-md p-4 bg-gray-100 dark:bg-gray-800 overflow-auto max-h-[400px] flex justify-center">
+            <div className="border rounded-md p-2 sm:p-4 bg-gray-100 dark:bg-gray-800 overflow-x-auto overflow-y-auto max-h-[50vh] sm:max-h-[400px] flex justify-center">
               <GroupBudgetPreview 
                 budgets={budgets}
                 template={getTemplate()}
@@ -153,7 +154,7 @@ export const PrintGroupDialog: React.FC<PrintGroupDialogProps> = ({ budgets, tri
           </TabsContent>
           
           <TabsContent value="58mm" className="mt-4 space-y-4">
-            <div className="border rounded-md p-4 bg-gray-100 dark:bg-gray-800 overflow-auto max-h-[400px] flex justify-center">
+            <div className="border rounded-md p-2 sm:p-4 bg-gray-100 dark:bg-gray-800 overflow-x-auto overflow-y-auto max-h-[50vh] sm:max-h-[400px] flex justify-center">
               <GroupBudgetPreview 
                 budgets={budgets}
                 template={getTemplate()}
