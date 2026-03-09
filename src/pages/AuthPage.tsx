@@ -2,15 +2,11 @@ import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { Eye, EyeOff, ArrowLeft, Shield, Smartphone, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useLicenseVerification } from '@/hooks/useLicenseVerification';
-import { LicenseActivationSection } from '@/components/auth/LicenseActivationSection';
-import { LicenseActivationIOS } from '@/components/auth/LicenseActivationIOS';
-import { useIOSDetection } from '@/hooks/useIOSDetection';
 import { cleanupAuthState, forceReload } from '@/utils/authCleanup';
 
 export const AuthPage = () => {
@@ -36,13 +32,8 @@ export const AuthPage = () => {
     signIn,
     requestPasswordReset,
     loading,
-    user
   } = useAuth();
   const { showSuccess, showError } = useToast();
-  const navigate = useNavigate();
-  const { data: licenseData } = useLicenseVerification(user?.id ?? null);
-  const isLicenseValid = licenseData?.is_valid || false;
-  const isIOS = useIOSDetection();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,24 +88,6 @@ export const AuthPage = () => {
     }
   };
 
-  const handleLicenseActivated = () => {
-    navigate('/dashboard');
-  };
-
-  // Se usuário logado mas sem licença válida
-  if (user && isLicenseValid === false) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="p-4">
-          {isIOS ?
-          <LicenseActivationIOS user={user} onLicenseActivated={handleLicenseActivated} /> :
-
-          <LicenseActivationSection user={user} onLicenseActivated={handleLicenseActivated} />
-          }
-        </div>
-      </div>);
-
-  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
