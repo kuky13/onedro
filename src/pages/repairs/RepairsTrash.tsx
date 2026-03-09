@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/useToast';
@@ -149,14 +150,11 @@ const RepairsTrash: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-xl font-semibold">Lixeira de reparos</h2>
-          <p className="text-sm text-muted-foreground">
-            Reparos apagados ficam aqui por até 90 dias antes de serem removidos
-            definitivamente.
-          </p>
-        </div>
+      <PageHeader
+        title="Lixeira de reparos"
+        description="Reparos apagados ficam aqui por até 90 dias antes de serem removidos definitivamente."
+        icon={<Trash2 className="h-4 w-4" />}
+      >
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
@@ -195,7 +193,7 @@ const RepairsTrash: React.FC = () => {
             Apagar definitivamente
           </Button>
         </div>
-      </div>
+      </PageHeader>
 
       <Card>
         <CardHeader>

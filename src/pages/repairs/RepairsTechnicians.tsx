@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeader } from '@/components/ui/page-header';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/useToast';
+import { Users } from 'lucide-react';
 
 type Technician = {
   id: string;
@@ -118,10 +120,15 @@ const RepairsTechnicians = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Técnicos</h2>
-        <Button size="lg" onClick={() => { resetForm(); setOpen(true); }}>Novo Técnico</Button>
-      </div>
+      <PageHeader
+        title="Técnicos"
+        description="Cadastre, edite e defina a comissão padrão"
+        icon={<Users className="h-4 w-4" />}
+      >
+        <div className="flex justify-end">
+          <Button size="lg" onClick={() => { resetForm(); setOpen(true); }}>Novo Técnico</Button>
+        </div>
+      </PageHeader>
 
       <Card>
         <CardHeader>

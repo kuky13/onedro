@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/ui/page-header';
+import { WarrantyStatusBadge } from '@/components/repairs/WarrantyStatusBadge';
 import { useToast } from '@/hooks/useToast';
 import { Calendar, Archive, Eye, Search, Pencil, Trash2, Download, Shield, ShieldCheck, ShieldAlert, ChevronRight, TrendingUp, TrendingDown, FileSpreadsheet } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -45,14 +47,6 @@ const warrantyStatusLabel = (status: string) => {
   }
 };
 
-const warrantyStatusColor = (status: string) => {
-  switch (status) {
-    case 'in_progress': return 'bg-yellow-500/15 text-yellow-500 border-yellow-500/30';
-    case 'completed': return 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30';
-    case 'delivered': return 'bg-slate-500/15 text-slate-400 border-slate-500/30';
-    default: return 'bg-muted text-muted-foreground';
-  }
-};
 
 const RepairsStatus = () => {
   const { showError, showSuccess } = useToast();
@@ -323,13 +317,11 @@ const RepairsStatus = () => {
 
   return (
     <div className="space-y-6 pb-6">
-      {/* Header premium */}
-      <div className="space-y-1">
-        <h2 className="text-2xl font-bold tracking-tight">Status e Fechamentos</h2>
-        <p className="text-sm text-muted-foreground">
-          Histórico de meses fechados e desempenho financeiro
-        </p>
-      </div>
+      <PageHeader
+        title="Status e Fechamentos"
+        description="Histórico de meses fechados e desempenho financeiro"
+        icon={<Archive className="h-4 w-4" />}
+      />
 
       {/* Stats pills */}
       {closings.length > 0 && (
@@ -338,9 +330,9 @@ const RepairsStatus = () => {
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Total faturado</span>
             <div className="text-xs sm:text-base font-bold tabular-nums break-all leading-tight">{formatBRL(totalRevenue)}</div>
           </div>
-          <div className="rounded-2xl bg-emerald-500/10 backdrop-blur-sm border border-emerald-500/20 p-3 space-y-1 min-w-0 overflow-hidden">
-            <span className="text-[10px] uppercase tracking-wider text-emerald-500 font-semibold">Lucro total</span>
-            <div className="text-xs sm:text-base font-bold tabular-nums text-emerald-500 break-all leading-tight">{formatBRL(totalProfit)}</div>
+          <div className="rounded-2xl bg-primary/10 backdrop-blur-sm border border-primary/20 p-3 space-y-1 min-w-0 overflow-hidden">
+            <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">Lucro total</span>
+            <div className="text-xs sm:text-base font-bold tabular-nums text-primary break-all leading-tight">{formatBRL(totalProfit)}</div>
           </div>
           <div className="rounded-2xl bg-muted/40 backdrop-blur-sm border border-border/40 p-3 space-y-1 min-w-0 overflow-hidden">
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Serviços</span>
@@ -402,7 +394,7 @@ const RepairsStatus = () => {
                   <div>
                     <div className="text-xl font-bold tabular-nums">{formatBRL(closing.total_revenue)}</div>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-emerald-500 font-medium tabular-nums">
+                      <span className="text-xs text-primary font-medium tabular-nums">
                         Lucro: {formatBRL(closing.total_net_profit)}
                       </span>
                       <span className="text-[10px] text-muted-foreground">•</span>
@@ -432,33 +424,33 @@ const RepairsStatus = () => {
           {selectedClosing && (
             <div className="space-y-4 py-2">
               {/* Summary cards */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-2xl bg-muted/40 border border-border/40 p-4 space-y-1">
-                  <span className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Faturamento</span>
-                  <div className="text-xl font-bold tabular-nums">{formatBRL(selectedClosing.total_revenue)}</div>
-                </div>
-                <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-4 space-y-1">
-                  <span className="text-[10px] text-emerald-500 uppercase font-semibold tracking-wider">Lucro Líquido</span>
-                  <div className="text-xl font-bold text-emerald-500 tabular-nums">{formatBRL(selectedClosing.total_net_profit)}</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-2xl bg-red-500/10 border border-red-500/20 p-3 space-y-1">
-                  <span className="text-[10px] text-red-400 font-semibold">Comissões</span>
-                  <div className="text-sm font-bold text-red-400 tabular-nums">{formatBRL(selectedClosing.total_commissions)}</div>
-                </div>
-                <div className="rounded-2xl bg-orange-500/10 border border-orange-500/20 p-3 space-y-1">
-                  <span className="text-[10px] text-orange-400 font-semibold">Custo Peças</span>
-                  <div className="text-sm font-bold text-orange-400 tabular-nums">
-                    {formatBRL(selectedClosing.total_revenue - selectedClosing.total_net_profit - selectedClosing.total_commissions)}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-muted/40 border border-border/40 p-4 space-y-1">
+                    <span className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Faturamento</span>
+                    <div className="text-xl font-bold tabular-nums">{formatBRL(selectedClosing.total_revenue)}</div>
+                  </div>
+                  <div className="rounded-2xl bg-primary/10 border border-primary/20 p-4 space-y-1">
+                    <span className="text-[10px] text-primary uppercase font-semibold tracking-wider">Lucro Líquido</span>
+                    <div className="text-xl font-bold text-primary tabular-nums">{formatBRL(selectedClosing.total_net_profit)}</div>
                   </div>
                 </div>
-                <div className="rounded-2xl bg-muted/40 border border-border/40 p-3 space-y-1">
-                  <span className="text-[10px] text-muted-foreground font-semibold">Serviços</span>
-                  <div className="text-sm font-bold">{selectedClosing.total_services}</div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="rounded-2xl bg-muted/40 border border-border/40 p-3 space-y-1">
+                    <span className="text-[10px] text-muted-foreground font-semibold">Comissões</span>
+                    <div className="text-sm font-bold tabular-nums">{formatBRL(selectedClosing.total_commissions)}</div>
+                  </div>
+                  <div className="rounded-2xl bg-muted/40 border border-border/40 p-3 space-y-1">
+                    <span className="text-[10px] text-muted-foreground font-semibold">Custo Peças</span>
+                    <div className="text-sm font-bold tabular-nums">
+                      {formatBRL(selectedClosing.total_revenue - selectedClosing.total_net_profit - selectedClosing.total_commissions)}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl bg-muted/40 border border-border/40 p-3 space-y-1">
+                    <span className="text-[10px] text-muted-foreground font-semibold">Serviços</span>
+                    <div className="text-sm font-bold">{selectedClosing.total_services}</div>
+                  </div>
                 </div>
-              </div>
 
               {/* Metadata */}
               <div className="rounded-2xl bg-muted/20 border border-border/30 p-3 text-xs flex justify-between items-center">
@@ -531,7 +523,7 @@ const RepairsStatus = () => {
                             </div>
                             <div className="text-right">
                               <div className="font-bold tabular-nums">{formatBRL(Number(service.charged_amount))}</div>
-                              <div className="text-emerald-500 font-medium tabular-nums text-[10px]">
+                              <div className="text-primary font-medium tabular-nums text-[10px]">
                                 Lucro: {formatBRL(Number(service.net_profit))}
                               </div>
                             </div>
@@ -549,11 +541,12 @@ const RepairsStatus = () => {
                           {/* Warranty badge */}
                           {warrantyMap[service.id] && (
                             <div className="flex items-center gap-1.5">
-                              <Badge className={`text-[10px] px-2 py-0.5 rounded-full gap-1 border ${warrantyStatusColor(warrantyMap[service.id].status)}`}>
-                                <Shield className="h-3 w-3" />
-                                {warrantyStatusLabel(warrantyMap[service.id].status)}
-                                {warrantyMap[service.id].reopen_count > 0 && ` (${warrantyMap[service.id].reopen_count + 1}ª)`}
-                              </Badge>
+                              <WarrantyStatusBadge
+                                status={warrantyMap[service.id].status}
+                                reopenCount={warrantyMap[service.id].reopen_count}
+                                format="short"
+                                className="text-[10px] px-2 py-0.5 rounded-full"
+                              />
                             </div>
                           )}
 
@@ -577,18 +570,18 @@ const RepairsStatus = () => {
                             </Button>
                             {!warrantyMap[service.id] ? (
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
-                                className="h-7 px-2 text-[10px] rounded-lg text-yellow-500"
+                                className="h-7 px-2 text-[10px] rounded-lg"
                                 onClick={() => handleOpenWarranty(service)}
                               >
                                 <ShieldAlert className="h-3 w-3 mr-1" /> Abrir garantia
                               </Button>
                             ) : (
                               <Button
-                                variant="ghost"
+                                variant="secondary"
                                 size="sm"
-                                className="h-7 px-2 text-[10px] rounded-lg text-emerald-500"
+                                className="h-7 px-2 text-[10px] rounded-lg"
                                 onClick={() => navigate('/garantia')}
                               >
                                 <ShieldCheck className="h-3 w-3 mr-1" /> Ver garantia

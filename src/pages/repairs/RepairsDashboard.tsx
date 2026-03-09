@@ -3,10 +3,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/useToast';
-import { Search, Trash2, CalendarCheck, Loader2, Download } from 'lucide-react';
+import { CalendarCheck, Download, LayoutDashboard, Loader2, Search, Shield, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DevicePasswordDisplay } from '@/components/service-orders/DevicePasswordDisplay';
@@ -14,7 +15,7 @@ import { SimpleDeviceChecklist } from '@/components/service-orders/SimpleDeviceC
 import { exportRepairsMonthToXlsx } from '@/utils/repairs/exportRepairsMonthXlsx';
 import { formatCurrencyFromReais } from '@/utils/currency';
 import { Badge } from '@/components/ui/badge';
-import { Shield } from 'lucide-react';
+import { WarrantyStatusBadge } from '@/components/repairs/WarrantyStatusBadge';
 
 type WarrantyInfo = {
   repair_service_id: string;
@@ -719,10 +720,13 @@ const RepairsDashboard = () => {
   }, []);
 
   return <div className="space-y-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-xl font-semibold">Dashboard</h2>
-          <div className="flex items-center gap-2 mt-1">
+      <PageHeader
+        title="Dashboard"
+        description="Resumo do mês, serviços e fechamento"
+        icon={<LayoutDashboard className="h-4 w-4" />}
+      >
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
@@ -739,166 +743,166 @@ const RepairsDashboard = () => {
               <span>{isMonthClosed ? 'Mês fechado' : 'Mês em aberto'}</span>
             </div>
           </div>
-        </div>
 
-        {/* Ações em desktop */}
-        <div className="hidden flex-col items-end gap-2 sm:flex sm:flex-row sm:items-center sm:gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/reparos/servicos')}
-            className="h-8 px-2 text-xs sm:text-sm font-medium"
-          >
-            Criar
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportMonth}
-            className="h-8 px-2 text-xs sm:text-sm font-medium"
-            disabled={loading}
-          >
-            <Download className="h-4 w-4" />
-            <span className="hidden text-xs font-medium sm:inline">Exportar planilha</span>
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/reparos/lixeira')}
-            className="h-8 px-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 bg-[#ff4242] text-black"
-          >
-            <Trash2 className="h-4 w-4 text-black" />
-            <span className="hidden text-xs font-medium sm:inline">Lixeira</span>
-          </Button>
-
-          {!isMonthClosed && services.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCloseMonth}
-              disabled={closingMonth}
-              className="h-8 px-2 text-muted-foreground hover:text-primary hover:bg-primary/10 bg-[#fec834] text-black"
-            >
-              {closingMonth ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="hidden text-xs font-medium sm:inline">Fechando mês...</span>
-                </>
-              ) : (
-                <>
-                  <CalendarCheck className="h-4 w-4" />
-                  <span className="hidden text-xs font-medium sm:inline">Fechar mês</span>
-                </>
-              )}
-            </Button>
-          )}
-
-          {isMonthClosed && (
+          {/* Ações em desktop */}
+          <div className="hidden flex-col items-end gap-2 sm:flex sm:flex-row sm:items-center sm:gap-2">
             <Button
               variant="outline"
-              onClick={handleReopenMonth}
-              disabled={closingMonth}
+              size="sm"
+              onClick={() => navigate('/reparos/servicos')}
+              className="h-8 px-2 text-xs sm:text-sm font-medium"
             >
-              {closingMonth ? 'Reabrindo...' : 'Reabrir Mês'}
+              Criar
             </Button>
-          )}
 
-          {/* Editor de layout dos cards */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowLayoutEditor(prev => !prev)}
-            disabled={layoutLoading}
-          >
-            {showLayoutEditor ? 'Fechar edição' : 'Editar cards'}
-          </Button>
-        </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportMonth}
+              className="h-8 px-2 text-xs sm:text-sm font-medium"
+              disabled={loading}
+            >
+              <Download className="h-4 w-4" />
+              <span className="hidden text-xs font-medium sm:inline">Exportar planilha</span>
+            </Button>
 
-        {/* Menu compacto em mobile */}
-        <div className="sm:hidden">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full justify-between px-3 text-xs font-medium"
-            onClick={() => setShowMobileActions(prev => !prev)}
-          >
-            <span>Opções rápidas</span>
-            <span className={`transition-transform ${showMobileActions ? 'rotate-90' : ''}`}>
-              ▸
-            </span>
-          </Button>
-          {showMobileActions && (
-            <div className="mt-2 space-y-2">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => navigate('/reparos/lixeira')}
+              className="h-8 px-2 text-xs sm:text-sm font-medium"
+            >
+              <Trash2 className="h-4 w-4" />
+              <span className="hidden text-xs font-medium sm:inline">Lixeira</span>
+            </Button>
+
+            {!isMonthClosed && services.length > 0 && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleCloseMonth}
+                disabled={closingMonth}
+                className="h-8 px-2 text-xs sm:text-sm font-medium"
+              >
+                {closingMonth ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="hidden text-xs font-medium sm:inline">Fechando mês...</span>
+                  </>
+                ) : (
+                  <>
+                    <CalendarCheck className="h-4 w-4" />
+                    <span className="hidden text-xs font-medium sm:inline">Fechar mês</span>
+                  </>
+                )}
+              </Button>
+            )}
+
+            {isMonthClosed && (
               <Button
                 variant="outline"
-                size="sm"
-                className="w-full justify-center text-xs font-medium"
-                onClick={() => navigate('/reparos/servicos')}
+                onClick={handleReopenMonth}
+                disabled={closingMonth}
               >
-                Criar serviço
+                {closingMonth ? 'Reabrindo...' : 'Reabrir Mês'}
               </Button>
+            )}
 
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-center text-xs font-medium"
-                onClick={handleExportMonth}
-                disabled={loading}
-              >
-                Exportar planilha
-              </Button>
+            {/* Editor de layout dos cards */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowLayoutEditor(prev => !prev)}
+              disabled={layoutLoading}
+            >
+              {showLayoutEditor ? 'Fechar edição' : 'Editar cards'}
+            </Button>
+          </div>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-center text-xs font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 bg-[#ff4242] text-black"
-                onClick={() => navigate('/reparos/lixeira')}
-              >
-                Lixeira
-              </Button>
-
-              {!isMonthClosed && services.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-center text-xs font-medium text-muted-foreground hover:text-primary hover:bg-primary/10 bg-[#fec834] text-black"
-                  disabled={closingMonth}
-                  onClick={handleCloseMonth}
-                >
-                  {closingMonth ? 'Fechando mês...' : 'Fechar mês'}
-                </Button>
-              )}
-
-              {isMonthClosed && (
+          {/* Menu compacto em mobile */}
+          <div className="sm:hidden">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-between px-3 text-xs font-medium"
+              onClick={() => setShowMobileActions(prev => !prev)}
+            >
+              <span>Opções rápidas</span>
+              <span className={`transition-transform ${showMobileActions ? 'rotate-90' : ''}`}>
+                ▸
+              </span>
+            </Button>
+            {showMobileActions && (
+              <div className="mt-2 space-y-2">
                 <Button
                   variant="outline"
                   size="sm"
                   className="w-full justify-center text-xs font-medium"
-                  disabled={closingMonth}
-                  onClick={handleReopenMonth}
+                  onClick={() => navigate('/reparos/servicos')}
                 >
-                  {closingMonth ? 'Reabrindo...' : 'Reabrir mês'}
+                  Criar serviço
                 </Button>
-              )}
 
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-center text-xs font-medium"
-                disabled={layoutLoading}
-                onClick={() => {
-                  setShowLayoutEditor(prev => !prev);
-                  setShowMobileActions(false);
-                }}
-              >
-                {showLayoutEditor ? 'Fechar edição de cards' : 'Editar cards'}
-              </Button>
-            </div>
-          )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-center text-xs font-medium"
+                  onClick={handleExportMonth}
+                  disabled={loading}
+                >
+                  Exportar planilha
+                </Button>
+
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="w-full justify-center text-xs font-medium"
+                  onClick={() => navigate('/reparos/lixeira')}
+                >
+                  Lixeira
+                </Button>
+
+                {!isMonthClosed && services.length > 0 && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-full justify-center text-xs font-medium"
+                    disabled={closingMonth}
+                    onClick={handleCloseMonth}
+                  >
+                    {closingMonth ? 'Fechando mês...' : 'Fechar mês'}
+                  </Button>
+                )}
+
+                {isMonthClosed && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-center text-xs font-medium"
+                    disabled={closingMonth}
+                    onClick={handleReopenMonth}
+                  >
+                    {closingMonth ? 'Reabrindo...' : 'Reabrir mês'}
+                  </Button>
+                )}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-center text-xs font-medium"
+                  disabled={layoutLoading}
+                  onClick={() => {
+                    setShowLayoutEditor(prev => !prev);
+                    setShowMobileActions(false);
+                  }}
+                >
+                  {showLayoutEditor ? 'Fechar edição de cards' : 'Editar cards'}
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </PageHeader>
 
       {showLayoutEditor && (
         <Card className="border-dashed border-primary/40 bg-muted/40">
@@ -1267,15 +1271,11 @@ const RepairsDashboard = () => {
                     <div className="flex items-center gap-2">
                       <div className="font-medium">{s.device_name}</div>
                       {warrantyMap[s.id] && (
-                        <Badge className={`text-[10px] px-1.5 py-0 rounded-full gap-1 ${
-                          warrantyMap[s.id].status === 'in_progress' ? 'bg-yellow-500/10 text-yellow-600 border border-yellow-500/30' :
-                          warrantyMap[s.id].status === 'completed' ? 'bg-green-500/10 text-green-600 border border-green-500/30' :
-                          'bg-slate-500/10 text-slate-600 border border-slate-500/30'
-                        }`}>
-                          <Shield className="h-3 w-3" />
-                          {warrantyMap[s.id].status === 'in_progress' ? 'Garantia ativa' : warrantyMap[s.id].status === 'completed' ? 'Garantia concluída' : 'Garantia entregue'}
-                          {warrantyMap[s.id].reopen_count > 0 && ` (${warrantyMap[s.id].reopen_count + 1}ª)`}
-                        </Badge>
+                        <WarrantyStatusBadge
+                          status={warrantyMap[s.id].status}
+                          reopenCount={warrantyMap[s.id].reopen_count}
+                          className="text-[10px] px-1.5 py-0 rounded-full"
+                        />
                       )}
                     </div>
                     <div className="text-xs text-muted-foreground">{s.service_description}</div>
@@ -1293,9 +1293,9 @@ const RepairsDashboard = () => {
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button
-                            variant="outline"
+                            variant="secondary"
                             size="xs"
-                            className="h-6 px-2 text-[10px] text-black bg-[#fec834] border-0 border-none rounded-full shadow-none opacity-100 border-white"
+                            className="h-6 px-2 text-[10px] rounded-full"
                           >
                             Ver detalhes
                           </Button>

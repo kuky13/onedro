@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/ui/page-header';
+import { WarrantyStatusBadge } from '@/components/repairs/WarrantyStatusBadge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -153,32 +155,26 @@ const RepairsWarranties = () => {
     setDeleteConfirmation(null);
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'in_progress':
-        return <Badge className="bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/30 rounded-xl text-xs">Em andamento</Badge>;
-      case 'completed':
-        return <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/30 rounded-xl text-xs">Concluído</Badge>;
-      case 'delivered':
-        return <Badge className="bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/30 rounded-xl text-xs">Entregue</Badge>;
-      default:
-        return <Badge variant="outline" className="rounded-xl text-xs">{status}</Badge>;
-    }
-  };
+  const getStatusBadge = (status: string) => (
+    <WarrantyStatusBadge
+      status={status}
+      format="short"
+      className="rounded-xl text-xs"
+    />
+  );
 
   const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('pt-BR');
   const fmtMoney = (v: number | null) => v != null ? formatCurrencyFromReais(v) : '—';
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold flex items-center gap-2">
-            <Shield className="h-5 w-5 text-primary" />
-            Garantias
-          </h2>
-          <p className="text-sm text-muted-foreground">Garantias vinculadas aos seus reparos</p>
-        </div>
+      <div className="flex items-start justify-between gap-4">
+        <PageHeader
+          title="Garantias"
+          description="Garantias vinculadas aos seus reparos"
+          icon={<Shield className="h-4 w-4" />}
+          className="flex-1"
+        />
         <Button onClick={() => setOpenDialog(true)} className="rounded-xl h-10 px-4 gap-2 font-medium">
           <PlusCircle className="h-4 w-4" />
           <span className="hidden md:inline">Nova Garantia</span>
@@ -212,7 +208,7 @@ const RepairsWarranties = () => {
       </div>
 
       {isLoading && <div className="text-sm text-muted-foreground text-center py-8">Carregando garantias...</div>}
-      {error && <div className="text-sm text-red-500 text-center py-4">Erro ao carregar garantias</div>}
+      {error && <div className="text-sm text-destructive text-center py-4">Erro ao carregar garantias</div>}
 
       {/* Warranty Cards */}
       <div className="space-y-3">
@@ -266,33 +262,53 @@ const RepairsWarranties = () => {
               )}
             </div>
 
-            <div className="flex items-center justify-between pt-1 border-t border-border/20">
-              <span className="text-[10px] text-muted-foreground">{fmtDate(w.created_at)}</span>
-              <div className="flex flex-wrap gap-2">
-                {w.status === 'in_progress' && (
-                  <Button size="sm" variant="outline" className="h-8 rounded-xl text-xs text-green-600 hover:bg-green-50 dark:hover:bg-green-500/10 gap-1.5" 
-                    onClick={() => updateStatus({ id: w.id, status: 'completed' })} disabled={isUpdating}>
-                    <CheckCircle className="w-3.5 h-3.5" /> Concluir
+              <div className="flex items-center justify-between pt-1 border-t border-border/20">
+                <span className="text-[10px] text-muted-foreground">{fmtDate(w.created_at)}</span>
+                <div className="flex flex-wrap gap-2">
+                  {w.status === 'in_progress' && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-8 rounded-xl text-xs gap-1.5"
+                      onClick={() => updateStatus({ id: w.id, status: 'completed' })}
+                      disabled={isUpdating}
+                    >
+                      <CheckCircle className="w-3.5 h-3.5" /> Concluir
+                    </Button>
+                  )}
+                  {w.status === 'completed' && (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      className="h-8 rounded-xl text-xs gap-1.5"
+                      onClick={() => updateStatus({ id: w.id, status: 'delivered' })}
+                      disabled={isUpdating}
+                    >
+                      <Truck className="w-3.5 h-3.5" /> Entregar
+                    </Button>
+                  )}
+                  {w.status === 'delivered' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 rounded-xl text-xs gap-1.5"
+                      onClick={() => updateStatus({ id: w.id, status: 'completed' })}
+                      disabled={isUpdating}
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" /> Reverter
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="h-8 rounded-xl text-xs gap-1.5"
+                    onClick={() => setDeleteConfirmation(w.id)}
+                    disabled={isDeleting || isUpdating}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Excluir
                   </Button>
-                )}
-                {w.status === 'completed' && (
-                  <Button size="sm" variant="outline" className="h-8 rounded-xl text-xs text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 gap-1.5"
-                    onClick={() => updateStatus({ id: w.id, status: 'delivered' })} disabled={isUpdating}>
-                    <Truck className="w-3.5 h-3.5" /> Entregar
-                  </Button>
-                )}
-                {w.status === 'delivered' && (
-                  <Button size="sm" variant="ghost" className="h-8 rounded-xl text-xs text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-500/10 gap-1.5"
-                    onClick={() => updateStatus({ id: w.id, status: 'completed' })} disabled={isUpdating}>
-                    <RotateCcw className="w-3.5 h-3.5" /> Reverter
-                  </Button>
-                )}
-                <Button size="sm" variant="ghost" className="h-8 rounded-xl text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 gap-1.5"
-                  onClick={() => setDeleteConfirmation(w.id)} disabled={isDeleting || isUpdating}>
-                  <Trash2 className="w-3.5 h-3.5" /> Excluir
-                </Button>
+                </div>
               </div>
-            </div>
 
             {/* Checklist de Funcionamento */}
             <Collapsible open={expandedChecklist === w.id} onOpenChange={(open) => setExpandedChecklist(open ? w.id : null)}>
@@ -433,7 +449,7 @@ const RepairsWarranties = () => {
                 </Card>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Motivo da Garantia <span className="text-red-500">*</span></label>
+                  <label className="text-sm font-medium">Motivo da Garantia <span className="text-destructive">*</span></label>
                   <Textarea
                     placeholder="Descreva detalhadamente o motivo do retorno..."
                     value={reason}
@@ -466,7 +482,10 @@ const RepairsWarranties = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteConfirmation && handleDelete(deleteConfirmation)} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction
+              onClick={() => deleteConfirmation && handleDelete(deleteConfirmation)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -497,7 +497,7 @@ const RepairsServices = () => {
           </div>
 
           {technicianId && applyCommission && (
-            <div className="flex items-center justify-between text-sm text-amber-600/80">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span className="flex items-center gap-1">Comissão Técnico ({selectedRate}%)</span>
               <span className="font-medium">- R$ {numbers.commission.toFixed(2)}</span>
             </div>
@@ -507,7 +507,7 @@ const RepairsServices = () => {
 
           <div className="flex items-center justify-between">
             <span className="font-semibold text-lg">Lucro Líquido</span>
-            <span className={`font-bold text-xl ${numbers.net >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+            <span className={`font-bold text-xl ${numbers.net >= 0 ? "text-primary" : "text-destructive"}`}>
               R$ {numbers.net.toFixed(2)}
             </span>
           </div>
