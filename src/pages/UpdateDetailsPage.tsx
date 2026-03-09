@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Home, CheckCircle, Calendar, MessageSquare, Settings, Wrench, CreditCard, Star, RotateCcw, Bot, Globe, Heart, Database, Zap, Search, Sparkles, BookOpen, Code2, Store, Shield } from "lucide-react";
+import { ArrowLeft, Home, CheckCircle, Calendar, MessageSquare, Settings, Wrench, CreditCard, Star, RotateCcw, Bot, Globe, Heart, Database, Zap, Search, Sparkles, BookOpen, Code2, Store, Shield, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 const UpdateDetailsPage = () => {
   const navigate = useNavigate();
@@ -261,131 +261,6 @@ const UpdateDetailsPage = () => {
 
         <Separator />
 
-        {/* WhatsApp Templates Section */}
-        <section className="space-y-6">
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <MessageSquare className="h-6 w-6 text-green-500" />
-              <h2 className="text-2xl font-bold text-foreground">WhatsApp Templates & Serviços</h2>
-            </div>
-            <p className="text-muted-foreground">
-              Sistema completo para criar orçamentos profissionais
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {whatsappFeatures.map((feature, index) => {
-            const IconComponent = feature.icon;
-            return <Card key={index} className="group hover:shadow-lg transition-all duration-300 border-border/50">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-xl ${feature.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                        <IconComponent className="h-6 w-6 text-white" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">{feature.title}</CardTitle>
-                        <CardDescription className="text-xs">
-                          {feature.description}
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {feature.details.map((detail, idx) => <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                          <span>{detail}</span>
-                        </li>)}
-                    </ul>
-                  </CardContent>
-                </Card>;
-          })}
-          </div>
-
-          {/* Placeholders */}
-          <Card className="border-primary/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Code2 className="h-5 w-5 text-primary" />
-                Placeholders Disponíveis
-              </CardTitle>
-              <CardDescription>
-                Variáveis substituídas automaticamente pelos dados do orçamento
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {placeholders.map((placeholder, index) => <div key={index} className="p-3 rounded-xl bg-muted/30 border border-border/50">
-                    <code className="text-xs font-mono text-primary bg-primary/10 px-2 py-1 rounded-lg">
-                      {placeholder.name}
-                    </code>
-                    <p className="text-xs text-muted-foreground mt-2">{placeholder.desc}</p>
-                  </div>)}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* How to Use */}
-          <Card className="border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Settings className="h-5 w-5 text-primary" />
-                Como Usar
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <Star className="h-4 w-4 text-yellow-500" />
-                    Criando seu Template
-                  </h4>
-                  <ol className="space-y-2">
-                    {['Clique em "WhatsApp" no header da página /worm', 'Use os botões de placeholders para inserir variáveis', 'Visualize o preview com dados de exemplo', 'Salve seu template personalizado'].map((step, idx) => <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
-                        <span className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs shrink-0">
-                          {idx + 1}
-                        </span>
-                        <span>{step}</span>
-                      </li>)}
-                  </ol>
-                </div>
-                
-                <div className="space-y-4">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <CreditCard className="h-4 w-4 text-green-500" />
-                    Configurando Serviços
-                  </h4>
-                  <ol className="space-y-2">
-                    {['Selecione o serviço desejado (ex: Troca de Tela)', 'Configure até 4 opções de qualidade', 'Defina preços, garantias e serviços inclusos', 'Clique "Gerar Orçamento" para criar a mensagem'].map((step, idx) => <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
-                        <span className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center text-xs shrink-0">
-                          {idx + 1}
-                        </span>
-                        <span>{step}</span>
-                      </li>)}
-                  </ol>
-                </div>
-              </div>
-
-              <div className="mt-6 p-4 bg-muted/30 rounded-xl border border-border/50">
-                <div className="flex items-start gap-2">
-                  <RotateCcw className="h-4 w-4 text-primary mt-0.5" />
-                  <div>
-                    <h5 className="font-medium text-sm text-foreground">Dica Importante</h5>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      O template padrão global já vem configurado com uma mensagem profissional. 
-                      Você pode personalizá-lo ou usar o botão "Reset para Padrão" para restaurar.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        <Separator />
-
-        <Separator />
-
         {/* Drippy IA Section */}
         <section className="space-y-6">
           <div className="text-center">
@@ -400,8 +275,9 @@ const UpdateDetailsPage = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {drippyFeatures.map((feature, index) => {
-            const IconComponent = feature.icon;
-            return <Card key={index} className="group hover:shadow-lg transition-all duration-300 border-border/50">
+              const IconComponent = feature.icon;
+              return (
+                <Card key={index} className="group hover:shadow-lg transition-all duration-300 border-border/50">
                   <CardHeader className="pb-3">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-xl ${feature.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
@@ -417,14 +293,133 @@ const UpdateDetailsPage = () => {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-1.5">
-                      {feature.details.map((detail, idx) => <li key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
+                      {feature.details.map((detail, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
                           <CheckCircle className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
                           <span>{detail}</span>
-                        </li>)}
+                        </li>
+                      ))}
                     </ul>
                   </CardContent>
-                </Card>;
-          })}
+                </Card>
+              );
+            })}
+            {/* New Features Cards */}
+            <Card className="group hover:shadow-lg transition-all duration-300 border-border/50">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <Bot className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-base truncate">Drippy IA</CardTitle>
+                    <CardDescription className="text-xs truncate">
+                      Nova IA com busca de dados reais
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-1.5">
+                  <li className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <CheckCircle className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
+                    <span>Pesquisa de dados em tempo real</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <CheckCircle className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
+                    <span>Presente em todo o site</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <CheckCircle className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
+                    <span>Geração inteligente de conteúdo</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="group hover:shadow-lg transition-all duration-300 border-border/50">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <Smartphone className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-base truncate">Central de Testes</CardTitle>
+                    <CardDescription className="text-xs truncate">
+                      Nova ferramenta de diagnóstico
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-1.5">
+                  <li className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <CheckCircle className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
+                    <span>Checklist completo de hardware</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <CheckCircle className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
+                    <span>Relatórios automáticos</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="group hover:shadow-lg transition-all duration-300 border-border/50">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-red-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <BookOpen className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-base truncate">Documentação</CardTitle>
+                    <CardDescription className="text-xs truncate">
+                      Nova central em /docs
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-1.5">
+                  <li className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <CheckCircle className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
+                    <span>Manuais detalhados</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <CheckCircle className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
+                    <span>Guias passo a passo</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="group hover:shadow-lg transition-all duration-300 border-border/50">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <CreditCard className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-base truncate">Geração de PDF</CardTitle>
+                    <CardDescription className="text-xs truncate">
+                      Impressão profissional
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-1.5">
+                  <li className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <CheckCircle className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
+                    <span>Layouts personalizáveis</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <CheckCircle className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
+                    <span>Suporte a impressoras térmicas</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
           </div>
 
           {/* FAQ */}

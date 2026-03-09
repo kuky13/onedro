@@ -1,9 +1,8 @@
-import { PlusCircle, List, Settings, Shield, Users, Wrench, Smartphone, ArrowLeft, Hammer, Store, Download, Brain } from 'lucide-react';
+import { PlusCircle, List, Settings, Shield, Users, Wrench, Smartphone, Hammer, Store, Download, Brain } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { GlassCard, RippleButton } from '@/components/ui/animations/micro-interactions';
 import { StaggerContainer } from '@/components/ui/animations/page-transitions';
-import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 
 interface QuickAccessAction {
@@ -17,16 +16,8 @@ interface QuickAccessAction {
 }
 
 const quickAccessActions: QuickAccessAction[] = [{
-  id: 'new-budget',
-  label: 'Novo Orçamento',
-  icon: PlusCircle,
-  path: '/worm',
-  permission: 'create_budgets',
-  gradient: 'from-green-500 to-emerald-500',
-  iconColor: 'text-green-600'
-}, {
   id: 'budgets',
-  label: 'Ver Orçamentos',
+  label: 'Orçamentos',
   icon: List,
   path: '/worm',
   permission: 'view_own_budgets',
@@ -97,14 +88,6 @@ const quickAccessActions: QuickAccessAction[] = [{
   gradient: 'from-emerald-500 to-green-500',
   iconColor: 'text-emerald-600'
 }, {
-  id: 'ia',
-  label: 'IA',
-  icon: Brain,
-  path: '/ia',
-  permission: null,
-  gradient: 'from-purple-500 to-indigo-500',
-  iconColor: 'text-purple-600'
-}, {
   id: 'settings',
   label: 'Configurações',
   icon: Settings,
@@ -131,15 +114,8 @@ const AppsPage = () => {
   );
 
   return (
-    <div className="p-4 space-y-6 max-w-7xl mx-auto">
+    <div className="p-4 pt-16 md:pt-4 space-y-6 max-w-7xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => navigate('/dashboard')}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
         <h1 className="text-2xl font-semibold">Todos os Apps</h1>
       </div>
 

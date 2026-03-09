@@ -5,6 +5,7 @@ import { ArrowLeft, User, Shield, Settings, FileText, Cookie, Home } from 'lucid
 import { useIOSDetection } from '@/hooks/useIOSDetection';
 import { ProfileSettingsLite } from '@/components/lite/ProfileSettingsLite';
 import { SecuritySettingsLite } from '@/components/lite/SecuritySettingsLite';
+import { AccountDataSettingsLite } from '@/components/lite/AccountDataSettingsLite';
 import { CompanySettingsLite } from '@/components/lite/CompanySettingsLite';
 import { BudgetWarningSettingsLite } from '@/components/lite/BudgetWarningSettingsLite';
 import { AdvancedFeaturesSettingsLite } from '@/components/lite/AdvancedFeaturesSettingsLite';
@@ -50,6 +51,7 @@ export const SettingsLite = ({
         return <div className="space-y-6">
             <ProfileSettingsLite userId={userId} profile={profile} />
             <SecuritySettingsLite />
+            <AccountDataSettingsLite userId={userId} userEmail={profile?.email} />
           </div>;
       case 'app':
         return <div className="space-y-6">

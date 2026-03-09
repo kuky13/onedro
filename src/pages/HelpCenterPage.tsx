@@ -142,7 +142,6 @@ const HelpCenterPage = () => {
 
   // Atalhos rápidos
   const quickAccessItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', color: 'text-indigo-500' },
   { icon: Wrench, label: 'Reparos', path: '/reparos', color: 'text-orange-600' },
   { icon: Calculator, label: 'Criar Orçamento', path: '/worm', color: 'text-blue-500' },
   { icon: ClipboardList, label: 'Ordens de Serviço', path: '/service-orders', color: 'text-green-500' },
@@ -522,29 +521,6 @@ const HelpCenterPage = () => {
       </div>
 
   }, {
-    id: 'dashboard',
-    title: 'Dashboard (Visão Geral)',
-    icon: <LayoutDashboard className="h-5 w-5" />,
-    description: 'Acompanhe as métricas e indicadores de vendas e serviços da sua loja',
-    content:
-    <div className="space-y-6">
-        <div className="bg-card p-4 rounded-lg border border-border">
-          <h4 className="font-semibold text-foreground mb-2">📊 Métricas Principais</h4>
-          <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-            <li>Visualize o faturamento total e ticket médio do período.</li>
-            <li>Acompanhe quantos orçamentos foram aprovados ou rejeitados.</li>
-            <li>Veja as tarefas pendentes e os próximos compromissos da assistência.</li>
-          </ul>
-        </div>
-        <div className="bg-primary/10 p-4 rounded-lg border border-border">
-          <h4 className="font-semibold text-foreground mb-2">📈 Gráficos e Analytics</h4>
-          <p className="text-sm text-muted-foreground">
-            O Dashboard traz gráficos mostrando a evolução das suas receitas ao longo dos meses e a distribuição dos serviços mais realizados.
-          </p>
-        </div>
-      </div>
-
-  }, {
     id: 'reparos',
     title: 'Central de Reparos',
     icon: <Wrench className="h-5 w-5" />,
@@ -583,21 +559,6 @@ const HelpCenterPage = () => {
       </div>
 
   }, {
-    id: 'apps',
-    title: 'Hub de Aplicativos',
-    icon: <Grid className="h-5 w-5" />,
-    description: 'Ative ou gerencie integrações no sistema',
-    content:
-    <div className="space-y-6">
-        <div className="bg-card p-4 rounded-lg border border-border">
-          <h4 className="font-semibold text-foreground mb-2">🧩 Módulos Extra</h4>
-          <p className="text-sm text-muted-foreground">
-            No Hub de Aplicativos (/apps) você encontra opções para expandir o seu OneDrip, ativando módulos de gestão de estoque, emissão de nota, integradores, entre outros, que são disponibilizados gradualmente.
-          </p>
-        </div>
-      </div>
-
-  }, {
     id: 'peliculas',
     title: 'Consulta de Películas',
     icon: <Smartphone className="h-5 w-5" />,
@@ -608,21 +569,6 @@ const HelpCenterPage = () => {
           <h4 className="font-semibold text-foreground mb-2">📱 Compatibilidade</h4>
           <p className="text-sm text-muted-foreground">
             Sabe aquele momento que falta a película de um modelo Específico? Use nossa busca em (/p) para saber instantaneamente quais outras películas do seu estoque servem naquele aparelho.
-          </p>
-        </div>
-      </div>
-
-  }, {
-    id: 'notificacoes',
-    title: 'Central de Notificações',
-    icon: <Bell className="h-5 w-5" />,
-    description: 'Fique por dentro das atualizações e alertas do sistema',
-    content:
-    <div className="space-y-6">
-        <div className="bg-card p-4 rounded-lg border border-border">
-          <h4 className="font-semibold text-foreground mb-2">🔔 Alertas e Avisos</h4>
-          <p className="text-sm text-muted-foreground">
-            Receba notificações em tempo real sobre orçamentos aprovados, mensagens de clientes, tarefas da bancada que precisam de atenção, e novos recursos adicionados à plataforma.
           </p>
         </div>
       </div>
@@ -808,10 +754,6 @@ const HelpCenterPage = () => {
     answer: "Acesse /store para criar ou gerenciar sua loja. Se ainda não tiver uma, você será direcionado para /store/nova.",
     category: "store"
   }, {
-    question: "Onde vejo o faturamento total da minha loja?",
-    answer: "Todas as métricas principais, incluindo o faturamento, ticket médio e orçamentos aprovados, ficam logo na primeira tela ao acessar o Dashboard.",
-    category: "dashboard"
-  }, {
     question: "Como defino quem fez um conserto?",
     answer: "Em 'Reparos', você pode cadastrar Técnicos na aba correspondente e vinculá-los aos serviços que estão em andamento.",
     category: "reparos"
@@ -820,17 +762,9 @@ const HelpCenterPage = () => {
     answer: "Acesse a seção de Garantias e pesquise pelo número do orçamento, ordem de serviço, cliente ou IMEI do dispositivo. O sistema indicará os dias restantes.",
     category: "garantia"
   }, {
-    question: "O que é o Hub de Aplicativos?",
-    answer: "É uma seção onde você pode ativar, desativar e gerenciar integrações extras ou módulos opcionais disponíveis no ecossistema OneDrip.",
-    category: "apps"
-  }, {
     question: "Como saber qual película serve em qual celular?",
     answer: "Acesse a Consulta de Películas (/p) e digite o modelo do celular. O sistema vai listar todos os aparelhos que utilizam a mesma película.",
     category: "peliculas"
-  }, {
-    question: "Como limpo minhas notificações?",
-    answer: "Ao acessar a página de Notificações pelo ícone do sino, você pode visualizar todos os alertas e usar o botão de Marcar Todas como Lidas para limpar o painel.",
-    category: "notificacoes"
   }, {
     question: "Como baixar vídeos pelo sistema?",
     answer: "Acesse /downloads, cole o link do vídeo (YouTube, Instagram, TikTok, etc.), escolha a qualidade desejada e clique em Baixar.",
@@ -861,10 +795,6 @@ const HelpCenterPage = () => {
     label: 'Ordens de Serviço',
     icon: <ClipboardList className="h-4 w-4" />
   }, {
-    id: 'service-orders-advanced',
-    label: 'Sistema Avançado',
-    icon: <Crown className="h-4 w-4" />
-  }, {
     id: 'trash',
     label: 'Lixeira',
     icon: <Trash2 className="h-4 w-4" />
@@ -885,10 +815,6 @@ const HelpCenterPage = () => {
     label: 'Minha Loja',
     icon: <Home className="h-4 w-4" />
   }, {
-    id: 'dashboard',
-    label: 'Dashboard',
-    icon: <LayoutDashboard className="h-4 w-4" />
-  }, {
     id: 'reparos',
     label: 'Reparos',
     icon: <Wrench className="h-4 w-4" />
@@ -896,10 +822,6 @@ const HelpCenterPage = () => {
     id: 'garantia',
     label: 'Garantias',
     icon: <ShieldCheck className="h-4 w-4" />
-  }, {
-    id: 'apps',
-    label: 'Aplicativos',
-    icon: <Grid className="h-4 w-4" />
   }, {
     id: 'peliculas',
     label: 'Películas',
@@ -916,11 +838,8 @@ const HelpCenterPage = () => {
     id: 'conta-seguranca',
     label: 'Conta e Segurança',
     icon: <Lock className="h-4 w-4" />
-  }, {
-    id: 'notificacoes',
-    label: 'Notificações',
-    icon: <Bell className="h-4 w-4" />
-  }];
+}, {
+    id: 'suporte',}];
   const filteredSections = useMemo(() => {
     return helpSections.filter((section) => {
       const matchesSearch = section.title.toLowerCase().includes(searchTerm.toLowerCase()) || section.description.toLowerCase().includes(searchTerm.toLowerCase());

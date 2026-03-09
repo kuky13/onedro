@@ -7,11 +7,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Settings, Building2, User, Eye, EyeOff,
   ArrowLeft, Save, LogOut, HelpCircle, Lock, Mail, Menu, Home, BookOpen,
-  Headphones, MessageCircle, Shield, CheckCircle2, Zap
+  Headphones, MessageCircle, Shield, CheckCircle2, Zap, Database
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { CompanyBrandingSettings } from '@/components/CompanyBrandingSettings';
 import { ResetAppButton } from './ResetAppButton';
+import { AccountDataSettingsLite } from '@/components/lite/AccountDataSettingsLite';
+import { DataPrivacyTab } from '@/components/settings/DataPrivacyTab';
 import { useAuth } from '@/hooks/useAuth';
 import { useLicense } from '@/hooks/useLicense';
 import { Input } from '@/components/ui/input';
@@ -34,6 +36,13 @@ const SECTIONS = [
     description: 'Conta, segurança e preferências',
     icon: User,
     color: 'bg-violet-500',
+  },
+  {
+    id: 'privacidade',
+    label: 'Dados e Privacidade',
+    description: 'Gerenciamento de dados e LGPD',
+    icon: Shield,
+    color: 'bg-emerald-500',
   },
 ] as const;
 
@@ -248,10 +257,18 @@ export function ServiceOrdersSettingsHub() {
                     </Suspense>
                   </CardContent>
                 </Card>
+
+                {user && (
+                  <AccountDataSettingsLite 
+                    userId={user.id} 
+                    userEmail={user.email} 
+                    className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none"
+                  />
+                )}
               </TabsContent>
 
               {/* Perfil Pessoal */}
-              <TabsContent value="perfil" className="mt-0">
+              <TabsContent value="perfil" className="mt-0 space-y-6">
                 <Card className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -341,7 +358,14 @@ export function ServiceOrdersSettingsHub() {
                 </Card>
               </TabsContent>
 
-
+              {/* Dados e Privacidade */}
+              <TabsContent value="privacidade" className="mt-0">
+                <Card className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none">
+                  <CardContent className="pt-6">
+                    <DataPrivacyTab />
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
             </Tabs>
           </div>
