@@ -21,8 +21,7 @@ interface CacheMessage {
 
 class MultiTabCache {
   private cache = new Map<string, CacheEntry>();
-  private channel: BroadcastChannel | null = null;
-  private channelReady: Promise<void>;
+  private channel: any = null;
   private readonly config = ROUTE_CONFIG.cache;
   private listeners = new Set<(key: string, data: any) => void>();
 
