@@ -308,6 +308,9 @@ export const PlansPage = () => {
               <button onClick={() => navigate('/cookies')} className="hover:text-primary transition-colors underline-offset-2 hover:underline">
                 Cookies
               </button>
+              <button onClick={() => navigate('/docs')} className="hover:text-primary transition-colors underline-offset-2 hover:underline">
+                Documentação
+              </button>
             </div>
           </footer>
         </div>
