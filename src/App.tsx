@@ -10,18 +10,19 @@ import { Button } from "@/components/ui/button";
 import { ReloadMonitor } from "@/components/ReloadMonitor";
 import { lazyWithRetry } from "@/utils/lazyWithRetry";
 
-// ── Imports estáticos: apenas rotas da landing/auth (carregamento imediato) ──
-import Index from "./pages/Index";
-import { AuthPage } from "./pages/AuthPage";
-import { SignUpPage } from "./pages/SignUpPage";
-import { SignPage } from "./pages/SignPage";
-import { PlansPage } from "./plans/PlansPage";
+// ── Imports estáticos: apenas o essencial para o shell ──
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "./components/ThemeProvider";
-import { IOSRedirectHandler } from "./components/IOSRedirectHandler";
 import { PWAProvider } from "./components/PWAProvider";
-import { SmartNavigation } from "@/components/SmartNavigation";
 import { ChunkLoadRecoveryBanner } from "@/components/ChunkLoadRecoveryBanner";
+
+// ── Lazy imports: landing/auth pages (não precisam estar no bundle inicial) ──
+const Index = lazyWithRetry(() => import("./pages/Index"));
+const AuthPage = lazyWithRetry(() => import("./pages/AuthPage").then(m => ({ default: m.AuthPage })));
+const SignUpPage = lazyWithRetry(() => import("./pages/SignUpPage").then(m => ({ default: m.SignUpPage })));
+const SignPage = lazyWithRetry(() => import("./pages/SignPage").then(m => ({ default: m.SignPage })));
+const PlansPage = lazyWithRetry(() => import("./plans/PlansPage").then(m => ({ default: m.PlansPage })));
+const SmartNavigation = lazyWithRetry(() => import("@/components/SmartNavigation").then(m => ({ default: m.SmartNavigation })));
 const VpsStatusBanner = lazyWithRetry(() => import("@/components/VpsStatusBanner"));
 import { useChunkLoadTelemetry } from "@/hooks/useChunkLoadTelemetry";
 import { setSecureItem, getSecureItem } from "@/utils/secureStorage";
