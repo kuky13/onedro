@@ -28,8 +28,33 @@ export default function DownloadsPage() {
   const [format, setFormat] = useState<MediaDownloadFormat>("mp4");
   const [quality, setQuality] = useState("best");
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<{ downloadUrl: string; filename: string; size?: number } | null>(null);
+
+  const handleFileDownload = async () => {
+    if (!result) return;
+    setDownloading(true);
+    try {
+      const response = await fetch(result.downloadUrl);
+      if (!response.ok) throw new Error("Fetch failed");
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = result.filename || "download";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      toast.success("Download iniciado!");
+    } catch {
+      // Fallback: open in new tab
+      window.open(result.downloadUrl, "_blank");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   useEffect(() => {
     if (!loading) { setProgress(0); return; }
@@ -213,11 +238,18 @@ export default function DownloadsPage() {
           {result.size && (
             <p className="text-xs text-muted-foreground">Tamanho: {formatSize(result.size)}</p>
           )}
-          <Button asChild className="w-full" size="lg">
-            <a href={result.downloadUrl} download={result.filename} target="_blank" rel="noopener noreferrer">
-              <ArrowDown className="h-4 w-4 mr-2" />
-              Baixar arquivo
-            </a>
+          <Button onClick={handleFileDownload} disabled={downloading} className="w-full" size="lg">
+            {downloading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Baixando...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <ArrowDown className="h-4 w-4" />
+                Baixar arquivo
+              </span>
+            )}
           </Button>
         </div>
       )}
