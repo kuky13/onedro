@@ -261,8 +261,8 @@ export function ServiceOrdersSettingsHub() {
                 {user && (
                   <AccountDataSettingsLite 
                     userId={user.id} 
-                    userEmail={user.email} 
-        ?? ''     ?? ''         className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none"
+                    userEmail={user.email ?? ''} 
+                    className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none"
                   />
                 )}
               </TabsContent>
