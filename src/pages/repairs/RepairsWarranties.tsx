@@ -449,7 +449,7 @@ const RepairsWarranties = () => {
                 </Card>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Motivo da Garantia <span className="text-red-500">*</span></label>
+                  <label className="text-sm font-medium">Motivo da Garantia <span className="text-destructive">*</span></label>
                   <Textarea
                     placeholder="Descreva detalhadamente o motivo do retorno..."
                     value={reason}
