@@ -10,9 +10,9 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({
-  title,
-  description,
-  icon,
+  title: _title,
+  description: _description,
+  icon: _icon,
   className,
   children
 }: PageHeaderProps) {
