@@ -424,33 +424,33 @@ const RepairsStatus = () => {
           {selectedClosing && (
             <div className="space-y-4 py-2">
               {/* Summary cards */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-2xl bg-muted/40 border border-border/40 p-4 space-y-1">
-                  <span className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Faturamento</span>
-                  <div className="text-xl font-bold tabular-nums">{formatBRL(selectedClosing.total_revenue)}</div>
-                </div>
-                <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-4 space-y-1">
-                  <span className="text-[10px] text-emerald-500 uppercase font-semibold tracking-wider">Lucro Líquido</span>
-                  <div className="text-xl font-bold text-emerald-500 tabular-nums">{formatBRL(selectedClosing.total_net_profit)}</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-2xl bg-red-500/10 border border-red-500/20 p-3 space-y-1">
-                  <span className="text-[10px] text-red-400 font-semibold">Comissões</span>
-                  <div className="text-sm font-bold text-red-400 tabular-nums">{formatBRL(selectedClosing.total_commissions)}</div>
-                </div>
-                <div className="rounded-2xl bg-orange-500/10 border border-orange-500/20 p-3 space-y-1">
-                  <span className="text-[10px] text-orange-400 font-semibold">Custo Peças</span>
-                  <div className="text-sm font-bold text-orange-400 tabular-nums">
-                    {formatBRL(selectedClosing.total_revenue - selectedClosing.total_net_profit - selectedClosing.total_commissions)}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-muted/40 border border-border/40 p-4 space-y-1">
+                    <span className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Faturamento</span>
+                    <div className="text-xl font-bold tabular-nums">{formatBRL(selectedClosing.total_revenue)}</div>
+                  </div>
+                  <div className="rounded-2xl bg-primary/10 border border-primary/20 p-4 space-y-1">
+                    <span className="text-[10px] text-primary uppercase font-semibold tracking-wider">Lucro Líquido</span>
+                    <div className="text-xl font-bold text-primary tabular-nums">{formatBRL(selectedClosing.total_net_profit)}</div>
                   </div>
                 </div>
-                <div className="rounded-2xl bg-muted/40 border border-border/40 p-3 space-y-1">
-                  <span className="text-[10px] text-muted-foreground font-semibold">Serviços</span>
-                  <div className="text-sm font-bold">{selectedClosing.total_services}</div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="rounded-2xl bg-muted/40 border border-border/40 p-3 space-y-1">
+                    <span className="text-[10px] text-muted-foreground font-semibold">Comissões</span>
+                    <div className="text-sm font-bold tabular-nums">{formatBRL(selectedClosing.total_commissions)}</div>
+                  </div>
+                  <div className="rounded-2xl bg-muted/40 border border-border/40 p-3 space-y-1">
+                    <span className="text-[10px] text-muted-foreground font-semibold">Custo Peças</span>
+                    <div className="text-sm font-bold tabular-nums">
+                      {formatBRL(selectedClosing.total_revenue - selectedClosing.total_net_profit - selectedClosing.total_commissions)}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl bg-muted/40 border border-border/40 p-3 space-y-1">
+                    <span className="text-[10px] text-muted-foreground font-semibold">Serviços</span>
+                    <div className="text-sm font-bold">{selectedClosing.total_services}</div>
+                  </div>
                 </div>
-              </div>
 
               {/* Metadata */}
               <div className="rounded-2xl bg-muted/20 border border-border/30 p-3 text-xs flex justify-between items-center">
