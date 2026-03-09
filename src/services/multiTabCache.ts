@@ -184,7 +184,7 @@ class MultiTabCache {
   clear(): void {
     this.cache.clear();
     
-    this.channel.postMessage({
+    this.channel?.postMessage({
       type: 'clear',
       timestamp: Date.now()
     });
