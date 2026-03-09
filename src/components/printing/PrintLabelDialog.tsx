@@ -283,28 +283,26 @@ export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, compa
           Etiqueta
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[calc(100vw-32px)] sm:max-w-md md:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Imprimir Etiqueta Térmica</DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <label className="text-sm font-medium mb-1 block">Tamanho do Papel</label>
-              <Select value={size} onValueChange={(v: '58mm' | '80mm') => setSize(v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="58mm">58mm (Pequeno)</SelectItem>
-                  <SelectItem value="80mm">80mm (Padrão)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        <div className="grid gap-3 sm:gap-4 py-3 sm:py-4">
+          <div>
+            <label className="text-sm font-medium mb-1 block">Tamanho do Papel</label>
+            <Select value={size} onValueChange={(v: '58mm' | '80mm') => setSize(v)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="58mm">58mm (Pequeno)</SelectItem>
+                <SelectItem value="80mm">80mm (Padrão)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="border rounded-md p-4 bg-gray-50 flex justify-center overflow-auto max-h-[400px]">
+          <div className="border rounded-md p-2 sm:p-4 bg-gray-50 dark:bg-gray-800 flex justify-center overflow-x-auto overflow-y-auto max-h-[50vh] sm:max-h-[400px]">
             <ThermalLabel
               ref={contentRef}
               order={order}
