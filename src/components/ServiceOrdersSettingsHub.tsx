@@ -7,8 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Settings, Building2, User, Eye, EyeOff,
   ArrowLeft, Save, LogOut, HelpCircle, Lock, Mail, Menu, Home, BookOpen,
-  Headphones, MessageCircle, Shield, CheckCircle2, Zap
-} from 'lucide-react';
+  Headphones, MessageCircle, Shield, CheckCircle2, Zapucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { CompanyBrandingSettings } from '@/components/CompanyBrandingSettings';
 import { ResetAppButton } from './ResetAppButton';
@@ -262,7 +261,7 @@ export function ServiceOrdersSettingsHub() {
                   <AccountDataSettingsLite 
                     userId={user.id} 
                     userEmail={user.email} 
-                    className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none"
+        ?? ''             className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none"
                   />
                 )}
               </TabsContent>
