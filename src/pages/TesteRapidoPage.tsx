@@ -16,12 +16,16 @@ const initialData: DeviceChecklistData = {
 const TesteRapidoPage = () => {
   const [checklist, setChecklist] = useState<DeviceChecklistData>({ ...initialData });
 
+  const navigate = useNavigate();
+
   return (
     <div className="p-4 space-y-6 max-w-3xl mx-auto pb-24">
-      
-
-
-
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-xl font-bold text-foreground">Teste Rápido</h1>
+      </div>
 
 
 
