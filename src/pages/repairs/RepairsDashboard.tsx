@@ -1161,64 +1161,48 @@ const RepairsDashboard = () => {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {showMonthlyRevenue && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Faturamento do mês</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold">{formatCurrencyFromReais(totals.faturamento)}</div>
-            </CardContent>
-          </Card>
+          <div className="rounded-2xl bg-muted/30 backdrop-blur-sm border border-border/30 p-4 space-y-1.5 hover:bg-muted/40 transition-colors">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Faturamento</span>
+            <div className="text-xl font-bold tabular-nums">{formatCurrencyFromReais(totals.faturamento)}</div>
+          </div>
         )}
         {showAssistantNetProfit && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Lucro líquido da Assistência</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold">{formatCurrencyFromReais(totals.lucro)}</div>
-            </CardContent>
-          </Card>
+          <div className="rounded-2xl bg-primary/10 backdrop-blur-sm border border-primary/20 p-4 space-y-1.5">
+            <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">Lucro líquido</span>
+            <div className="text-xl font-bold tabular-nums text-primary">{formatCurrencyFromReais(totals.lucro)}</div>
+          </div>
         )}
         {showPartsCosts && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Custos de peças</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold">{formatCurrencyFromReais(totals.custoPecas)}</div>
-            </CardContent>
-          </Card>
+          <div className="rounded-2xl bg-muted/30 backdrop-blur-sm border border-border/30 p-4 space-y-1.5 hover:bg-muted/40 transition-colors">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Custos peças</span>
+            <div className="text-xl font-bold tabular-nums">{formatCurrencyFromReais(totals.custoPecas)}</div>
+          </div>
         )}
         {showTechnicianProfit && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Lucro do técnico</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold">
-                {formatCurrencyFromReais(totals.comissoes - technicianVale)}
-              </div>
+          <div className="rounded-2xl bg-muted/30 backdrop-blur-sm border border-border/30 p-4 space-y-1.5 hover:bg-muted/40 transition-colors">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Lucro técnico</span>
+            <div className="text-xl font-bold tabular-nums">
+              {formatCurrencyFromReais(totals.comissoes - technicianVale)}
+            </div>
 
-              <div className="mt-3 space-y-2">
-                <div className="text-xs text-muted-foreground">Vale do técnico (R$)</div>
-                <Input
-                  inputMode="decimal"
-                  placeholder="Ex: 50,00"
-                  value={technicianValeInput}
-                  onChange={e => setTechnicianValeInput(e.target.value)}
-                  className="h-9"
-                />
+            <div className="mt-3 space-y-2 pt-2 border-t border-border/20">
+              <div className="text-[10px] text-muted-foreground font-medium">Vale do técnico (R$)</div>
+              <Input
+                inputMode="decimal"
+                placeholder="Ex: 50,00"
+                value={technicianValeInput}
+                onChange={e => setTechnicianValeInput(e.target.value)}
+                className="h-8 text-xs rounded-xl"
+              />
 
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Vale aplicado</span>
-                  <span className="font-medium text-foreground">{formatCurrencyFromReais(technicianVale)}</span>
-                </div>
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-muted-foreground">Vale aplicado</span>
+                <span className="font-medium text-foreground">{formatCurrencyFromReais(technicianVale)}</span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
       </div>
 
