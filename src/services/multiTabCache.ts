@@ -126,8 +126,8 @@ class MultiTabCache {
   set<T>(key: string, data: T, ttl = this.config.defaultTTL): void {
     this.setLocal(key, data, ttl);
     
-    // Notificar outras abas
-    this.channel.postMessage({
+    // Notificar outras abas (se canal já estiver pronto)
+    this.channel?.postMessage({
       type: 'update',
       key,
       data: { data, ttl },
