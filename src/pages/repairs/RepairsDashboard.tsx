@@ -1473,8 +1473,8 @@ const RepairsDashboard = () => {
                   </div>
                 </div>)}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>;
 };
 export default RepairsDashboard;
