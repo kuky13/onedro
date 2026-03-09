@@ -633,7 +633,7 @@ const RepairsStatus = () => {
 
       {/* Dialog de detalhes do serviço */}
       <Dialog open={!!selectedServiceDetails} onOpenChange={(open) => !open && setSelectedServiceDetails(null)}>
-        <DialogContent className="w-[95vw] max-w-xl max-h-[80vh] overflow-y-auto rounded-2xl p-5 sm:p-6">
+        <DialogContent className="w-[95vw] max-w-xl max-h-[80vh] overflow-y-auto rounded-3xl p-5 sm:p-6">
           <DialogHeader className="space-y-1.5">
             <DialogTitle className="text-base sm:text-lg">Checklist e dados do aparelho</DialogTitle>
             <DialogDescription className="text-xs sm:text-sm">
