@@ -838,8 +838,7 @@ const HelpCenterPage = () => {
     id: 'conta-seguranca',
     label: 'Conta e Segurança',
     icon: <Lock className="h-4 w-4" />
-}, {
-    id: 'suporte',}];
+}];
   const filteredSections = useMemo(() => {
     return helpSections.filter((section) => {
       const matchesSearch = section.title.toLowerCase().includes(searchTerm.toLowerCase()) || section.description.toLowerCase().includes(searchTerm.toLowerCase());
