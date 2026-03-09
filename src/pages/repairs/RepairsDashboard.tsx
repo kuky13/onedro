@@ -1276,7 +1276,7 @@ const RepairsDashboard = () => {
               </div>
             )}
 
-            {!loading && !isServiceSearching && (serviceSearch.trim() ? serviceSearchResults : services).map((s: any) => <div key={s.id} className="grid grid-cols-1 gap-2 rounded-lg border p-3 md:grid-cols-6">
+            {!loading && !isServiceSearching && (serviceSearch.trim() ? serviceSearchResults : services).map((s: any) => <div key={s.id} className="rounded-2xl border border-border/30 bg-muted/5 p-4 hover:bg-muted/15 hover:border-primary/20 transition-all duration-200 grid grid-cols-1 gap-2 md:grid-cols-6">
                   <div className="md:col-span-2">
                     <div className="flex items-center gap-2">
                       <div className="font-medium">{s.device_name}</div>
