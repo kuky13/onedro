@@ -723,7 +723,7 @@ const RepairsDashboard = () => {
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ];
 
-  return <div className="space-y-4">
+  return <div className="space-y-6">
       <PageHeader
         title="Dashboard"
         description="Resumo do mês, serviços e fechamento"
@@ -734,7 +734,7 @@ const RepairsDashboard = () => {
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="rounded-2xl border border-border/40 bg-muted/30 backdrop-blur-sm px-4 py-2 text-sm font-medium text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none cursor-pointer"
             >
               {yearOptions.map((y) => (
                 <option key={y} value={y}>{y}</option>
@@ -743,14 +743,14 @@ const RepairsDashboard = () => {
             <select
               value={selectedMonthNum}
               onChange={(e) => setSelectedMonthNum(Number(e.target.value))}
-              className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring capitalize"
+              className="rounded-2xl border border-border/40 bg-muted/30 backdrop-blur-sm px-4 py-2 text-sm font-medium text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 capitalize appearance-none cursor-pointer"
             >
               {monthNames.map((name, i) => (
                 <option key={i + 1} value={i + 1}>{name}</option>
               ))}
             </select>
-            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/60 px-3 py-1 text-xs text-muted-foreground">
-              <span className={`h-1.5 w-1.5 rounded-full ${isMonthClosed ? 'bg-primary' : 'bg-primary/60'}`} />
+            <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium ${isMonthClosed ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-muted/40 text-muted-foreground border border-border/30'}`}>
+              <span className={`h-2 w-2 rounded-full ${isMonthClosed ? 'bg-primary' : 'bg-muted-foreground/50 animate-pulse'}`} />
               <span>{isMonthClosed ? 'Mês fechado' : 'Mês em aberto'}</span>
             </div>
           </div>
