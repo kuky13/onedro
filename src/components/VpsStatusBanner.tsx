@@ -12,7 +12,7 @@ export const VpsStatusBanner = () => {
     <div className="bg-destructive/10 border-b border-destructive/20 px-4 py-2 flex items-center justify-between gap-2 text-sm">
       <div className="flex items-center gap-2 text-destructive">
         <WifiOff className="h-4 w-4 shrink-0" />
-        <span>Servidor VPS indisponível. Downloads e algumas funções podem estar offline.</span>
+        <span>Conexão instável ou processamento demorado, tente novamente.</span>
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <button
