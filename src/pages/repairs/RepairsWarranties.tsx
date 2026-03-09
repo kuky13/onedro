@@ -168,14 +168,13 @@ const RepairsWarranties = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold flex items-center gap-2">
-            <Shield className="h-5 w-5 text-primary" />
-            Garantias
-          </h2>
-          <p className="text-sm text-muted-foreground">Garantias vinculadas aos seus reparos</p>
-        </div>
+      <div className="flex items-start justify-between gap-4">
+        <PageHeader
+          title="Garantias"
+          description="Garantias vinculadas aos seus reparos"
+          icon={<Shield className="h-4 w-4" />}
+          className="flex-1"
+        />
         <Button onClick={() => setOpenDialog(true)} className="rounded-xl h-10 px-4 gap-2 font-medium">
           <PlusCircle className="h-4 w-4" />
           <span className="hidden md:inline">Nova Garantia</span>
