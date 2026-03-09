@@ -291,22 +291,26 @@ export const WormBudgetList = ({
 
             <div className="relative flex items-center gap-2">
               <PrintGroupDialog budgets={group.budgets}>
-                <Button variant="outline" size="sm" className="rounded-xl shrink-0 border-primary/20">
-                  <Printer className="h-3.5 w-3.5 mr-1.5" />
-                  Imprimir
+                <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl border-primary/20" title="Imprimir">
+                  <Printer className="h-4 w-4" />
                 </Button>
               </PrintGroupDialog>
 
-              <Button variant="outline" size="sm" onClick={() => {
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-8 w-8 rounded-xl border-primary/20 bg-success text-primary-foreground"
+                onClick={() => {
                   if (isIOS()) {
                     setSharingBudgets(group.budgets);
                     setIsShareSheetOpen(true);
                   } else {
                     handleCopyDeviceBudgets(group.budgets);
                   }
-                }} className="rounded-xl shrink-0 border-primary/20 bg-success text-primary-foreground">
-                <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
-                Copiar
+                }}
+                title="Copiar para WhatsApp"
+              >
+                <MessageCircle className="h-4 w-4" />
               </Button>
 
               {showTutorial && deviceGroups[0]?.key === group.key &&
