@@ -154,7 +154,7 @@ export const PrintGroupDialog: React.FC<PrintGroupDialogProps> = ({ budgets, tri
           </TabsContent>
           
           <TabsContent value="58mm" className="mt-4 space-y-4">
-            <div className="border rounded-md p-4 bg-gray-100 dark:bg-gray-800 overflow-auto max-h-[400px] flex justify-center">
+            <div className="border rounded-md p-2 sm:p-4 bg-gray-100 dark:bg-gray-800 overflow-x-auto overflow-y-auto max-h-[50vh] sm:max-h-[400px] flex justify-center">
               <GroupBudgetPreview 
                 budgets={budgets}
                 template={getTemplate()}
