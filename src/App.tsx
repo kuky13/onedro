@@ -170,7 +170,7 @@ const AppContent = () => {
   // Fluxo de aceite removido
 
   return <>
-    <VpsStatusBanner />
+    <Suspense fallback={null}><VpsStatusBanner /></Suspense>
     <ChunkLoadRecoveryBanner />
     <ReloadMonitor />
     <Suspense fallback={null}><SessionPersistence /></Suspense>
