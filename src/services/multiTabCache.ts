@@ -171,7 +171,7 @@ class MultiTabCache {
   invalidate(key: string): void {
     this.cache.delete(key);
     
-    this.channel.postMessage({
+    this.channel?.postMessage({
       type: 'invalidate',
       key,
       timestamp: Date.now()
