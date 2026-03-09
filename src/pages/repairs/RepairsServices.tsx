@@ -497,7 +497,7 @@ const RepairsServices = () => {
           </div>
 
           {technicianId && applyCommission && (
-            <div className="flex items-center justify-between text-sm text-amber-600/80">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span className="flex items-center gap-1">Comissão Técnico ({selectedRate}%)</span>
               <span className="font-medium">- R$ {numbers.commission.toFixed(2)}</span>
             </div>

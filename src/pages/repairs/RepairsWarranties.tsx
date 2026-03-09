@@ -208,7 +208,7 @@ const RepairsWarranties = () => {
       </div>
 
       {isLoading && <div className="text-sm text-muted-foreground text-center py-8">Carregando garantias...</div>}
-      {error && <div className="text-sm text-red-500 text-center py-4">Erro ao carregar garantias</div>}
+      {error && <div className="text-sm text-destructive text-center py-4">Erro ao carregar garantias</div>}
 
       {/* Warranty Cards */}
       <div className="space-y-3">
