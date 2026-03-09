@@ -633,7 +633,7 @@ const RepairsStatus = () => {
 
       {/* Dialog de detalhes do serviço */}
       <Dialog open={!!selectedServiceDetails} onOpenChange={(open) => !open && setSelectedServiceDetails(null)}>
-        <DialogContent className="w-[95vw] max-w-xl max-h-[80vh] overflow-y-auto rounded-2xl p-5 sm:p-6">
+        <DialogContent className="w-[95vw] max-w-xl max-h-[80vh] overflow-y-auto rounded-3xl p-5 sm:p-6">
           <DialogHeader className="space-y-1.5">
             <DialogTitle className="text-base sm:text-lg">Checklist e dados do aparelho</DialogTitle>
             <DialogDescription className="text-xs sm:text-sm">
@@ -644,7 +644,7 @@ const RepairsStatus = () => {
           {selectedServiceDetails && (
             <div className="mt-4 space-y-4">
               {(selectedServiceDetails.client_name || selectedServiceDetails.client_phone || selectedServiceDetails.service_order_number || selectedServiceDetails.imei_serial) && (
-                <div className="rounded-xl border border-border/40 bg-muted/30 p-4 space-y-2">
+                <div className="rounded-2xl border border-border/30 bg-muted/20 backdrop-blur-sm p-4 space-y-2">
                   <div className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Identificação</div>
                   {selectedServiceDetails.client_name && (
                     <div className="text-sm"><span className="font-medium">Cliente: </span>{selectedServiceDetails.client_name}</div>
@@ -662,21 +662,21 @@ const RepairsStatus = () => {
               )}
 
               {(selectedServiceDetails.device_password_type || selectedServiceDetails.device_password_value) && (
-                <div className="rounded-xl border border-border/40 bg-muted/30 p-4">
+                <div className="rounded-2xl border border-border/30 bg-muted/20 backdrop-blur-sm p-4">
                   <div className="mb-2 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Senha do dispositivo</div>
                   <DevicePasswordDisplay value={{ type: selectedServiceDetails.device_password_type, value: selectedServiceDetails.device_password_value, metadata: selectedServiceDetails.device_password_metadata }} />
                 </div>
               )}
 
               {selectedServiceDetails.device_checklist && (
-                <div className="rounded-xl border border-border/40 bg-muted/30 p-4">
+                <div className="rounded-2xl border border-border/30 bg-muted/20 backdrop-blur-sm p-4">
                   <div className="mb-2 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Checklist</div>
                   <SimpleDeviceChecklist data={selectedServiceDetails.device_checklist} />
                 </div>
               )}
 
               {!(selectedServiceDetails.client_name || selectedServiceDetails.client_phone || selectedServiceDetails.service_order_number || selectedServiceDetails.imei_serial || selectedServiceDetails.device_password_type || selectedServiceDetails.device_password_value || selectedServiceDetails.device_checklist) && (
-                <div className="text-center py-8 text-muted-foreground text-sm border-2 border-dashed rounded-xl">
+                <div className="text-center py-8 text-muted-foreground text-sm border-2 border-dashed rounded-2xl">
                   Nenhuma informação adicional registrada.
                 </div>
               )}

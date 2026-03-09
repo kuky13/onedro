@@ -723,7 +723,7 @@ const RepairsDashboard = () => {
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ];
 
-  return <div className="space-y-4">
+  return <div className="space-y-6">
       <PageHeader
         title="Dashboard"
         description="Resumo do mês, serviços e fechamento"
@@ -734,7 +734,7 @@ const RepairsDashboard = () => {
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="rounded-2xl border border-border/40 bg-muted/30 backdrop-blur-sm px-4 py-2 text-sm font-medium text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none cursor-pointer"
             >
               {yearOptions.map((y) => (
                 <option key={y} value={y}>{y}</option>
@@ -743,14 +743,14 @@ const RepairsDashboard = () => {
             <select
               value={selectedMonthNum}
               onChange={(e) => setSelectedMonthNum(Number(e.target.value))}
-              className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring capitalize"
+              className="rounded-2xl border border-border/40 bg-muted/30 backdrop-blur-sm px-4 py-2 text-sm font-medium text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 capitalize appearance-none cursor-pointer"
             >
               {monthNames.map((name, i) => (
                 <option key={i + 1} value={i + 1}>{name}</option>
               ))}
             </select>
-            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/60 px-3 py-1 text-xs text-muted-foreground">
-              <span className={`h-1.5 w-1.5 rounded-full ${isMonthClosed ? 'bg-primary' : 'bg-primary/60'}`} />
+            <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium ${isMonthClosed ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-muted/40 text-muted-foreground border border-border/30'}`}>
+              <span className={`h-2 w-2 rounded-full ${isMonthClosed ? 'bg-primary' : 'bg-muted-foreground/50 animate-pulse'}`} />
               <span>{isMonthClosed ? 'Mês fechado' : 'Mês em aberto'}</span>
             </div>
           </div>
@@ -1161,123 +1161,122 @@ const RepairsDashboard = () => {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {showMonthlyRevenue && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Faturamento do mês</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold">{formatCurrencyFromReais(totals.faturamento)}</div>
-            </CardContent>
-          </Card>
+          <div className="rounded-2xl bg-muted/30 backdrop-blur-sm border border-border/30 p-4 space-y-1.5 hover:bg-muted/40 transition-colors">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Faturamento</span>
+            <div className="text-xl font-bold tabular-nums">{formatCurrencyFromReais(totals.faturamento)}</div>
+          </div>
         )}
         {showAssistantNetProfit && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Lucro líquido da Assistência</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold">{formatCurrencyFromReais(totals.lucro)}</div>
-            </CardContent>
-          </Card>
+          <div className="rounded-2xl bg-primary/10 backdrop-blur-sm border border-primary/20 p-4 space-y-1.5">
+            <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">Lucro líquido</span>
+            <div className="text-xl font-bold tabular-nums text-primary">{formatCurrencyFromReais(totals.lucro)}</div>
+          </div>
         )}
         {showPartsCosts && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Custos de peças</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold">{formatCurrencyFromReais(totals.custoPecas)}</div>
-            </CardContent>
-          </Card>
+          <div className="rounded-2xl bg-muted/30 backdrop-blur-sm border border-border/30 p-4 space-y-1.5 hover:bg-muted/40 transition-colors">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Custos peças</span>
+            <div className="text-xl font-bold tabular-nums">{formatCurrencyFromReais(totals.custoPecas)}</div>
+          </div>
         )}
         {showTechnicianProfit && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Lucro do técnico</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold">
-                {formatCurrencyFromReais(totals.comissoes - technicianVale)}
-              </div>
+          <div className="rounded-2xl bg-muted/30 backdrop-blur-sm border border-border/30 p-4 space-y-1.5 hover:bg-muted/40 transition-colors">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Lucro técnico</span>
+            <div className="text-xl font-bold tabular-nums">
+              {formatCurrencyFromReais(totals.comissoes - technicianVale)}
+            </div>
 
-              <div className="mt-3 space-y-2">
-                <div className="text-xs text-muted-foreground">Vale do técnico (R$)</div>
-                <Input
-                  inputMode="decimal"
-                  placeholder="Ex: 50,00"
-                  value={technicianValeInput}
-                  onChange={e => setTechnicianValeInput(e.target.value)}
-                  className="h-9"
-                />
+            <div className="mt-3 space-y-2 pt-2 border-t border-border/20">
+              <div className="text-[10px] text-muted-foreground font-medium">Vale do técnico (R$)</div>
+              <Input
+                inputMode="decimal"
+                placeholder="Ex: 50,00"
+                value={technicianValeInput}
+                onChange={e => setTechnicianValeInput(e.target.value)}
+                className="h-8 text-xs rounded-xl"
+              />
 
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Vale aplicado</span>
-                  <span className="font-medium text-foreground">{formatCurrencyFromReais(technicianVale)}</span>
-                </div>
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-muted-foreground">Vale aplicado</span>
+                <span className="font-medium text-foreground">{formatCurrencyFromReais(technicianVale)}</span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
       </div>
 
-      <Card className="relative overflow-visible md:max-w-md">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Buscar técnico rápido</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Nome do técnico..." className="h-9 pl-8" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+      <div className="rounded-2xl border border-border/30 bg-muted/5 p-4 md:max-w-md">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Search className="h-4 w-4 text-primary" />
           </div>
-          <div className="mt-4 space-y-2">
-            {searching && <div className="py-2 text-center text-xs text-muted-foreground">Buscando...</div>}
-            {!searching && foundTechnicians.length === 0 && <div className="py-2 text-center text-xs text-muted-foreground">
-                Nenhum técnico encontrado
-              </div>}
-            {!searching && foundTechnicians.map(tech => <div key={tech.id} className="flex items-center justify-between gap-2 rounded border p-2 text-sm transition-colors hover:bg-muted/50">
-                  <div>
-                    <div className="font-medium">{tech.name}</div>
-                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                      <span className={`inline-block h-1.5 w-1.5 rounded-full ${tech.is_active ? 'bg-primary' : 'bg-destructive'}`} />
-                      {tech.is_active ? 'Ativo' : 'Inativo'}
-                    </div>
+          <span className="text-sm font-semibold">Buscar técnico</span>
+        </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Nome do técnico..." className="h-10 pl-9 rounded-xl bg-muted/30 border-border/30" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+        </div>
+        <div className="mt-3 space-y-2">
+          {searching && <div className="py-2 text-center text-xs text-muted-foreground">Buscando...</div>}
+          {!searching && foundTechnicians.length === 0 && <div className="py-2 text-center text-xs text-muted-foreground">
+              Nenhum técnico encontrado
+            </div>}
+          {!searching && foundTechnicians.map(tech => <div key={tech.id} className="flex items-center justify-between gap-2 rounded-2xl border border-border/30 bg-muted/10 p-3 text-sm transition-colors hover:bg-muted/30 hover:border-primary/20">
+                <div>
+                  <div className="font-medium text-sm">{tech.name}</div>
+                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
+                    <span className={`inline-block h-1.5 w-1.5 rounded-full ${tech.is_active ? 'bg-primary' : 'bg-destructive'}`} />
+                    {tech.is_active ? 'Ativo' : 'Inativo'}
                   </div>
-                  <div className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                    {tech.default_commission_rate}%
-                  </div>
-                </div>)}
-          </div>
-        </CardContent>
-      </Card>
+                </div>
+                <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                  {tech.default_commission_rate}%
+                </span>
+              </div>)}
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader className="space-y-4">
+      <div className="rounded-2xl border border-border/30 bg-muted/5 overflow-hidden">
+        <div className="p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Últimos serviços do mês</CardTitle>
-            <Button variant="outline" onClick={loadMonth} disabled={loading}>
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                <CalendarCheck className="h-4 w-4 text-primary" />
+              </div>
+              <span className="text-sm font-semibold">Serviços do mês</span>
+            </div>
+            <Button variant="ghost" size="sm" onClick={loadMonth} disabled={loading} className="rounded-xl h-8 text-xs">
               Atualizar
             </Button>
           </div>
           <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar serviço por aparelho ou descrição..." className="pl-8" value={serviceSearch} onChange={e => setServiceSearch(e.target.value)} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar serviço por aparelho ou descrição..." className="pl-9 h-10 rounded-xl bg-muted/30 border-border/30" value={serviceSearch} onChange={e => setServiceSearch(e.target.value)} />
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-2">
-            {(loading || isServiceSearching) && <div className="text-sm text-muted-foreground">Carregando...</div>}
+        </div>
+        <div className="px-4 pb-4">
+          <div className="space-y-3">
+            {(loading || isServiceSearching) && <div className="text-center py-8 text-sm text-muted-foreground">Carregando...</div>}
 
-            {!loading && !isServiceSearching && serviceSearch.trim() && serviceSearchResults.length === 0 && <div className="text-sm text-muted-foreground">
-                  Nenhum serviço encontrado.
-                </div>}
+            {!loading && !isServiceSearching && serviceSearch.trim() && serviceSearchResults.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Search className="h-8 w-8 text-muted-foreground/30 mb-3" />
+                <p className="text-sm text-muted-foreground">Nenhum serviço encontrado.</p>
+              </div>
+            )}
 
-            {!loading && !isServiceSearching && !serviceSearch.trim() && services.length === 0 && <div className="text-sm text-muted-foreground">
-                  Nenhum serviço lançado neste mês.
-                </div>}
+            {!loading && !isServiceSearching && !serviceSearch.trim() && services.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="rounded-3xl bg-muted/40 p-5 mb-4">
+                  <CalendarCheck className="h-10 w-10 text-muted-foreground/50" />
+                </div>
+                <h3 className="text-base font-semibold">Nenhum serviço neste mês</h3>
+                <p className="text-sm text-muted-foreground mt-1">Lance serviços para ver o resumo aqui.</p>
+              </div>
+            )}
 
-            {!loading && !isServiceSearching && (serviceSearch.trim() ? serviceSearchResults : services).map((s: any) => <div key={s.id} className="grid grid-cols-1 gap-2 rounded-lg border p-3 md:grid-cols-6">
+            {!loading && !isServiceSearching && (serviceSearch.trim() ? serviceSearchResults : services).map((s: any) => <div key={s.id} className="rounded-2xl border border-border/30 bg-muted/5 p-4 hover:bg-muted/15 hover:border-primary/20 transition-all duration-200 grid grid-cols-1 gap-2 md:grid-cols-6">
                   <div className="md:col-span-2">
                     <div className="flex items-center gap-2">
                       <div className="font-medium">{s.device_name}</div>
@@ -1474,8 +1473,8 @@ const RepairsDashboard = () => {
                   </div>
                 </div>)}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>;
 };
 export default RepairsDashboard;

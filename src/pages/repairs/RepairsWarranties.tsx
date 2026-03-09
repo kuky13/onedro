@@ -338,7 +338,7 @@ const RepairsWarranties = () => {
 
       {/* Create Dialog */}
       <Dialog open={openDialog} onOpenChange={(o) => !o ? handleCloseDialog() : setOpenDialog(true)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl">
           <DialogHeader>
             <DialogTitle>Nova Garantia de Reparo</DialogTitle>
           </DialogHeader>
@@ -358,7 +358,7 @@ const RepairsWarranties = () => {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">Mostra reparos de todos os meses (incluindo arquivados)</p>
-                <div className="max-h-60 overflow-auto rounded-xl border border-border bg-card">
+                <div className="max-h-60 overflow-auto rounded-2xl border border-border/30 bg-card">
                   {searchingRepairs && <div className="p-4 text-center text-xs text-muted-foreground">Buscando...</div>}
                   {!searchingRepairs && repairResults.map(r => (
                     <button
@@ -395,7 +395,7 @@ const RepairsWarranties = () => {
                   </Button>
                 </div>
 
-                <Card className="bg-muted/30 border-border/30">
+                <Card className="bg-muted/20 backdrop-blur-sm border-border/30 rounded-2xl">
                   <CardContent className="p-4 grid grid-cols-2 gap-3">
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

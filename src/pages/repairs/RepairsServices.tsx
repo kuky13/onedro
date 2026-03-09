@@ -444,32 +444,32 @@ const RepairsServices = () => {
         type="button"
         onClick={() => selectMobileStep(5)}
         className={
-          "mt-3 w-full rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-left " +
-          "cursor-pointer transition-colors hover:bg-muted/40 " +
+          "mt-3 w-full rounded-2xl border border-border/30 bg-muted/20 backdrop-blur-sm px-4 py-3 text-left " +
+          "cursor-pointer transition-all hover:bg-muted/30 hover:border-primary/20 " +
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         }
         aria-label="Ir para o resumo do pedido (etapa 6)"
       >
         <div className="grid grid-cols-3 gap-3 text-[11px]">
           <div className="min-w-0">
-            <div className="text-muted-foreground">Cobrado</div>
-            <div className="font-medium text-foreground truncate">
+            <div className="text-muted-foreground font-medium">Cobrado</div>
+            <div className="font-semibold text-foreground truncate">
               R$ {(Number(chargedAmount) || 0).toFixed(2)}
             </div>
           </div>
 
           <div className="min-w-0">
-            <div className="text-muted-foreground">Custo</div>
-            <div className="font-medium text-foreground truncate">
+            <div className="text-muted-foreground font-medium">Custo</div>
+            <div className="font-semibold text-foreground truncate">
               R$ {(Number(costAmount) || 0).toFixed(2)}
             </div>
           </div>
 
           <div className="min-w-0 text-right">
-            <div className="text-muted-foreground">Líquido</div>
+            <div className="text-muted-foreground font-medium">Líquido</div>
             <div
               className={
-                "font-medium truncate " +
+                "font-semibold truncate " +
                 (numbers.net >= 0 ? "text-primary" : "text-destructive")
               }
             >
@@ -568,28 +568,31 @@ const RepairsServices = () => {
               Etapa {mobileStep + 1} de 6
             </p>
 
-            {/* Stepper clicável (mobile) */}
+            {/* Stepper clicável (mobile) - Premium */}
             <TooltipProvider>
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+              <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1">
                 {mobileSteps.map(step => {
                   const status = stepStatus[step.id];
                   const isActive = mobileStep === step.id;
                   const Icon = status === "ok" ? Check : status === "pending" ? AlertCircle : null;
-                  const iconClass = status === "ok" ? "text-primary" : status === "pending" ? "text-destructive" : "text-muted-foreground";
 
                   return (
                     <Tooltip key={step.id}>
                       <TooltipTrigger asChild>
-                        <Button
+                        <button
                           type="button"
-                          size="sm"
-                          variant={isActive ? "default" : "outline"}
                           onClick={() => selectMobileStep(step.id as MobileStep)}
-                          className="shrink-0 h-9 px-3"
+                          className={`shrink-0 h-9 px-3 rounded-2xl text-xs font-medium flex items-center gap-1.5 transition-all duration-200 border ${
+                            isActive
+                              ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20'
+                              : status === 'ok'
+                                ? 'bg-primary/10 text-primary border-primary/20'
+                                : 'bg-muted/30 text-muted-foreground border-border/30 hover:bg-muted/50'
+                          }`}
                         >
-                          <span className="text-xs">{step.label}</span>
-                          {Icon ? <Icon className={`h-3.5 w-3.5 ${iconClass}`} /> : null}
-                        </Button>
+                          <span>{step.label}</span>
+                          {Icon && !isActive ? <Icon className={`h-3 w-3 ${status === 'ok' ? 'text-primary' : 'text-destructive'}`} /> : null}
+                        </button>
                       </TooltipTrigger>
                       <TooltipContent>
                         {status === "ok" ? "Ok" : status === "pending" ? "Pendente" : "Opcional"}
@@ -606,8 +609,8 @@ const RepairsServices = () => {
 
           <CardContent className="grid gap-5 pt-4">
             {mobileStepNotice ? (
-              <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3 text-sm">
-                <Info className="h-4 w-4 mt-0.5 text-primary" />
+              <div className="flex items-start gap-2 rounded-2xl border border-border/30 bg-muted/20 backdrop-blur-sm p-3 text-sm">
+                <Info className="h-4 w-4 mt-0.5 text-primary shrink-0" />
                 <p className="text-muted-foreground text-xs leading-relaxed">{mobileStepNotice}</p>
               </div>
             ) : null}
