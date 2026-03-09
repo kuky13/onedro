@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { RefreshCcw, Server, Timer, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { lazy, Suspense } from 'react';
 const VpsRequestFlow = lazy(() => import('@/components/super-admin/VpsRequestFlow').then(m => ({ default: m.VpsRequestFlow })));
 
 type VpsCheckState =
