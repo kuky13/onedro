@@ -26,7 +26,8 @@ async function fetchHealthRaw(url: string) {
 export function VpsMonitorPage() {
   const healthUrl = useMemo(() => {
     const base = API_BASE_URL.replace(/\/$/, '');
-    return `${base}/api/health`;
+    // API_BASE_URL includes /api
+    return `${base}/health`;
   }, []);
 
   const [state, setState] = useState<VpsCheckState>({ status: 'idle' });
@@ -37,7 +38,7 @@ export function VpsMonitorPage() {
     const started = performance.now();
     const checkedAt = new Date().toISOString();
     try {
-      const payload = await apiGet<unknown>('/api/health', { timeoutMs: 10_000 });
+      const payload = await apiGet<unknown>('/health', { timeoutMs: 10_000 });
       const latencyMs = Math.round(performance.now() - started);
       setState({ status: 'up', checkedAt, latencyMs, payload });
     } catch (e: any) {

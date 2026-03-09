@@ -47,42 +47,60 @@ export async function requestMediaDownload(payload: MediaDownloadRequest): Promi
   size?: number;
 }> {
   const callViaDirectFetch = async () => {
-    const res = await fetch(`${API_BASE_URL.replace(/\/$/, "")}/api/download`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
 
-    const raw = await safeParseJson(res);
-    const parsed = MediaDownloadResponseSchema.safeParse(raw ?? {});
-    const body = (parsed.success ? parsed.data : {}) as MediaDownloadResponse;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout as requested
 
-    if (!res.ok) {
-      const msg =
-        (res.status === 500 && body.details)
-          ? body.details
-          : (body.error || body.message || `Erro HTTP ${res.status}`);
-      throw new Error(msg);
+    try {
+      // API_BASE_URL is now .../api, so we append /download
+      const res = await fetch(`${API_BASE_URL.replace(/\/$/, "")}/download`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      const raw = await safeParseJson(res);
+      const parsed = MediaDownloadResponseSchema.safeParse(raw ?? {});
+      const body = (parsed.success ? parsed.data : {}) as MediaDownloadResponse;
+
+      if (!res.ok) {
+        const msg =
+          (res.status === 500 && body.details)
+            ? body.details
+            : (body.error || body.message || `Erro HTTP ${res.status}`);
+        throw new Error(msg);
+      }
+
+      const successFlag = body.success;
+      const downloadUrl = body.downloadUrl;
+      if (successFlag !== true || !downloadUrl) {
+        throw new Error(body.error || body.message || "API não retornou URL de download válida");
+      }
+
+      const normalizedUrl = normalizeDownloadUrl(downloadUrl);
+      const filename = body.fileName || body.filename || normalizedUrl.split("/").pop() || "video_download";
+      const size = body.size ?? body.fileSize;
+
+      return {
+        downloadUrl: normalizedUrl,
+        filename,
+        ...(typeof size === "number" ? { size } : {}),
+      };
+    } catch (e: any) {
+      clearTimeout(timeoutId);
+      if (e.name === 'AbortError') {
+        throw new Error('Conexão instável ou processamento demorado, tente novamente');
+      }
+      throw e;
     }
-
-    const successFlag = body.success;
-    const downloadUrl = body.downloadUrl;
-    if (successFlag !== true || !downloadUrl) {
-      throw new Error(body.error || body.message || "API não retornou URL de download válida");
-    }
-
-    const normalizedUrl = normalizeDownloadUrl(downloadUrl);
-    const filename = body.fileName || body.filename || normalizedUrl.split("/").pop() || "video_download";
-    const size = body.size ?? body.fileSize;
-
-    return {
-      downloadUrl: normalizedUrl,
-      filename,
-      ...(typeof size === "number" ? { size } : {}),
-    };
   };
 
   const callViaEdgeProxy = async () => {

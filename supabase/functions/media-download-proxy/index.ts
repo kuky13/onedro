@@ -42,13 +42,19 @@ serve(async (req) => {
       });
     }
 
+    const authHeader = req.headers.get("Authorization");
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+    if (authHeader) {
+      headers["Authorization"] = authHeader;
+    }
+
     const upstreamUrl = `${API_BASE}/api/download`;
     const upstream = await fetch(upstreamUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
+      headers,
       body: JSON.stringify({ url, format, quality }),
     });
 

@@ -18,7 +18,7 @@ export class ApiError extends Error {
   }
 }
 
-export const API_BASE_URL = (import.meta as any)?.env?.VITE_API_URL || 'https://api.kuky.help';
+export const API_BASE_URL = (import.meta as any)?.env?.VITE_API_URL || 'https://api.kuky.help/api';
 
 const buildUrl = (
   path: string,
@@ -38,7 +38,12 @@ const buildUrl = (
 
 const getAccessToken = async () => {
   const { data } = await supabase.auth.getSession();
-  return data.session?.access_token ?? null;
+  if (data.session?.access_token) {
+    return data.session.access_token;
+  }
+  // Try to refresh session if expired or missing
+  const { data: refreshData } = await supabase.auth.refreshSession();
+  return refreshData.session?.access_token ?? null;
 };
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -92,7 +97,13 @@ async function apiFetch<T>(
 
       if (!res.ok) {
         const status = res.status;
-        // Don't retry on client errors (4xx)
+        
+        // Handle 401 specifically if needed, but for now we throw error
+        if (status === 401) {
+             // Optional: trigger logout or redirect logic here if global handling is desired
+        }
+
+        // Don't retry on client errors (4xx) unless it's a specific case
         if (status >= 400 && status < 500) {
           throw new ApiError(`Erro HTTP ${status} ao chamar API`, { status, endpoint });
         }
@@ -129,7 +140,7 @@ async function apiFetch<T>(
       }
 
       if (e?.name === 'AbortError') {
-        throw new ApiError('Timeout ao chamar API', { endpoint });
+        throw new ApiError('Conexão instável ou processamento demorado, tente novamente', { endpoint });
       }
       throw e;
     } finally {

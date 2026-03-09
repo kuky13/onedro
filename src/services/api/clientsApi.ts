@@ -1,17 +1,17 @@
 import { apiGet, apiPost, apiPut, apiDelete } from './apiClient';
 
 export const clientsApi = {
-  list: () => apiGet<any[]>('/api/clients'),
+  list: () => apiGet<any[]>('/clients'),
 
   getById: (id: string) =>
-    apiGet<any>(`/api/clients/${id}`),
+    apiGet<any>(`/clients/${id}`),
 
   create: (data: Record<string, unknown>) =>
-    apiPost<any>('/api/clients', data),
+    apiPost<any>('/clients', data),
 
   update: (id: string, data: Record<string, unknown>) =>
-    apiPut<any>(`/api/clients/${id}`, data),
+    apiPut<any>(`/clients/${id}`, data),
 
   delete: (id: string) =>
-    apiDelete(`/api/clients/${id}`),
+    apiDelete(`/clients/${id}`),
 };

@@ -16,7 +16,8 @@ export const useApiStatus = (options?: { intervalMs?: number; enabled?: boolean 
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 8_000);
 
-      const res = await fetch(`${API_BASE_URL.replace(/\/$/, '')}/api/health`, {
+      // API_BASE_URL includes /api now
+      const res = await fetch(`${API_BASE_URL.replace(/\/$/, '')}/health`, {
         signal: controller.signal,
         headers: { Accept: 'application/json' },
       });
