@@ -75,7 +75,11 @@ class SecurityAuditLogger {
   private constructor() {
     this.sessionId = this.generateSessionId();
     this.initializeClientInfo();
-    this.startPeriodicFlush();
+    // Circuit breaker aberto por padrão — site_events retorna 400 (PGRST102)
+    // Reabilitar quando a tabela for corrigida no Supabase
+    this.isCircuitOpen = true;
+    // NÃO iniciar flush periódico enquanto circuito está aberto
+    // this.startPeriodicFlush();
     
     // Listener para mudanças de autenticação
     supabase.auth.onAuthStateChange((event, session) => {
@@ -113,38 +117,10 @@ class SecurityAuditLogger {
     return `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  private async initializeClientInfo() {
-    try {
-      // Obter IP do cliente (através de serviço externo ou header)
-      this.userAgent = navigator.userAgent;
-      
-      // Tentar obter IP (em produção, isso viria do backend)
-      // Usar um timeout curto para não travar a inicialização se o serviço estiver fora ou bloqueado
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-      try {
-        const response = await fetch('https://api.ipify.org?format=json', { 
-          signal: controller.signal,
-          mode: 'cors',
-          cache: 'no-cache'
-        });
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          const data = await response.json();
-          this.ipAddress = data.ip;
-        } else {
-          this.ipAddress = 'unknown';
-        }
-      } catch (err) {
-        clearTimeout(timeoutId);
-        this.ipAddress = 'unknown';
-        // Não logar erro de socket/aborto para evitar poluição no console
-      }
-    } catch (error) {
-      this.ipAddress = 'unknown';
-    }
+  private initializeClientInfo() {
+    // IP deve vir do backend, não de serviço externo (elimina fetch bloqueante ao api.ipify.org)
+    this.userAgent = navigator.userAgent;
+    this.ipAddress = 'unknown';
   }
 
   /**
@@ -270,12 +246,13 @@ class SecurityAuditLogger {
   }
 
   /**
-   * Inicia o flush periódico dos eventos
+   * Inicia o flush periódico dos eventos (desabilitado enquanto circuit breaker está aberto)
    */
+  // @ts-ignore -- mantido para reativação futura quando site_events for corrigido
   private startPeriodicFlush(): void {
     this.flushInterval = setInterval(() => {
       this.flushEvents();
-    }, 30000); // Flush a cada 30 segundos
+    }, 30000);
   }
 
   /**

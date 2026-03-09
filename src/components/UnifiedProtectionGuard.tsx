@@ -80,35 +80,21 @@ export const UnifiedProtectionGuard = ({
     }
   }, [licenseData]);
 
-  // Função para verificação periódica de licença
+  // Função para verificação periódica de licença (sem logging pesado)
   const performPeriodicLicenseCheck = async () => {
     if (!user?.id) return;
 
     try {
       const licenseResult = await routeMiddleware.checkLicenseStatus(user.id);
 
-      // Log da verificação periódica
-      await securityLogger.logUserActivity(
-        user.id,
-        "license_check",
-        `Verificação periódica de licença: ${licenseResult.status}`,
-        {
-          check_type: "periodic",
-          license_status: licenseResult.status,
-          expires_at: licenseResult.expiresAt,
-          interval: "5_minutes",
-        },
-      );
-
       // Se a licença estiver inativa, forçar verificação completa
       if (licenseResult.status === "inactive" || licenseResult.status === "expired") {
-        console.warn("🚨 Licença inativa detectada na verificação periódica");
         await checkRouteProtection(true);
       }
 
       setLastLicenseCheck(new Date());
     } catch (error) {
-      console.error("❌ Erro na verificação periódica de licença:", error);
+      // silencioso em produção
     }
   };
 
@@ -209,21 +195,17 @@ export const UnifiedProtectionGuard = ({
     }
   }, [licenseData, licenseLoading, licenseFingerprint]);
 
-  // Configurar verificação periódica de licença
+  // Configurar verificação periódica de licença (15 min — realtime cobre mudanças imediatas)
   useEffect(() => {
     if (user?.id && !skipMiddleware) {
-      // Verificação inicial
-      performPeriodicLicenseCheck();
+      // SEM verificação inicial — checkRouteProtection já faz isso na montagem
 
-      // Configurar verificação periódica a cada 5 minutos
       periodicCheckRef.current = setInterval(
         () => {
           performPeriodicLicenseCheck();
         },
-        5 * 60 * 1000,
-      ); // 5 minutos
-
-      console.log("🔄 Verificação periódica de licença configurada (5 min)");
+        15 * 60 * 1000,
+      ); // 15 minutos
     }
 
     return () => {

@@ -1,4 +1,3 @@
-import { BroadcastChannel } from 'broadcast-channel';
 import { ROUTE_CONFIG } from '@/config/routeConfig';
 
 /**
@@ -22,29 +21,32 @@ interface CacheMessage {
 
 class MultiTabCache {
   private cache = new Map<string, CacheEntry>();
-  private channel: BroadcastChannel;
+  private channel: any = null;
   private readonly config = ROUTE_CONFIG.cache;
   private listeners = new Set<(key: string, data: any) => void>();
 
   private checkVersion() {
-    // Verificar se há mudança de versão e limpar cache se necessário
     const storedVersion = localStorage.getItem('cache-version');
     if (storedVersion !== this.config.version) {
       this.clear();
       localStorage.setItem('cache-version', this.config.version);
-      console.log('🔄 Cache limpo devido à mudança de versão');
     }
   }
 
   constructor() {
     const channelName = (this.config as any).channelName ?? 'multitab-cache';
-    this.channel = new BroadcastChannel(channelName);
-    this.setupChannelListener();
+    import('broadcast-channel').then(({ BroadcastChannel }) => {
+      this.channel = new BroadcastChannel(channelName);
+      this.setupChannelListener();
+    }).catch(() => {
+      // fallback: sem sincronização multi-tab
+    });
     this.startCleanupTimer();
     this.checkVersion();
   }
 
   private setupChannelListener() {
+    if (!this.channel) return;
     this.channel.addEventListener('message', (event: MessageEvent<CacheMessage>) => {
       const { type, key, data, timestamp } = event.data;
       
@@ -122,8 +124,8 @@ class MultiTabCache {
   set<T>(key: string, data: T, ttl = this.config.defaultTTL): void {
     this.setLocal(key, data, ttl);
     
-    // Notificar outras abas
-    this.channel.postMessage({
+    // Notificar outras abas (se canal já estiver pronto)
+    this.channel?.postMessage({
       type: 'update',
       key,
       data: { data, ttl },
@@ -167,7 +169,7 @@ class MultiTabCache {
   invalidate(key: string): void {
     this.cache.delete(key);
     
-    this.channel.postMessage({
+    this.channel?.postMessage({
       type: 'invalidate',
       key,
       timestamp: Date.now()
@@ -180,7 +182,7 @@ class MultiTabCache {
   clear(): void {
     this.cache.clear();
     
-    this.channel.postMessage({
+    this.channel?.postMessage({
       type: 'clear',
       timestamp: Date.now()
     });
@@ -228,7 +230,7 @@ class MultiTabCache {
   destroy(): void {
     this.cache.clear();
     this.listeners.clear();
-    this.channel.close();
+    this.channel?.close();
   }
 }
 
