@@ -46,17 +46,15 @@ export const DataPrivacyTab = ({ userId }: DataPrivacyTabProps) => {
 
   const checkDeletionStatus = async () => {
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('user_profiles')
-        .select('deletion_scheduled_at')
+        .select('updated_at')
         .eq('id', userId)
         .single();
         
-      if (data?.deletion_scheduled_at) {
-        setDeletionScheduledAt(data.deletion_scheduled_at);
-      }
-    } catch (error) {
-      console.error('Error checking deletion status:', error);
+      // deletion_scheduled_at doesn't exist yet - skip for now
+    } catch (err) {
+      console.error('Error checking deletion status:', err);
     }
   };
 

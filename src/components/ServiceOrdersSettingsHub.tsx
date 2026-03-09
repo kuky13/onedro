@@ -7,7 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Settings, Building2, User, Eye, EyeOff,
   ArrowLeft, Save, LogOut, HelpCircle, Lock, Mail, Menu, Home, BookOpen,
-  Headphones, MessageCircle, Shield, CheckCircle2, Zapucide-react';
+  Headphones, MessageCircle, Shield, CheckCircle2, Zapt';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { CompanyBrandingSettings } from '@/components/CompanyBrandingSettings';
 import { ResetAppButton } from './ResetAppButton';
@@ -261,7 +261,7 @@ export function ServiceOrdersSettingsHub() {
                   <AccountDataSettingsLite 
                     userId={user.id} 
                     userEmail={user.email} 
-        ?? ''             className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none"
+        ?? ''     ?? ''         className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none"
                   />
                 )}
               </TabsContent>
@@ -361,8 +361,7 @@ export function ServiceOrdersSettingsHub() {
               <TabsContent value="privacidade" className="mt-0">
                 <Card className="!border-0 !bg-muted/30 !rounded-2xl !shadow-none">
                   <CardContent className="pt-6">
-                    <DataPrivacyTab />
-                  </CardContent>
+                    <Dat{user && <DataPrivacyTab userId={user.id} />}               </CardContent>
                 </Card>
               </TabsContent>
 
