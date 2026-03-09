@@ -10,7 +10,7 @@ import { CouponsManagement } from '@/components/super-admin/CouponsManagement';
 import { SmsManagement } from '@/components/super-admin/SmsManagement';
 import { LicenseManagement } from '@/components/super-admin/LicenseManagement';
 import { WhatsAppManagement } from '@/components/super-admin/WhatsAppManagement';
-import { VpsMonitorPage } from '@/components/super-admin/VpsMonitorPage';
+
 import { lazyWithRetry } from '@/utils/lazyWithRetry';
 import { Suspense } from 'react';
 
