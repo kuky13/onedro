@@ -1237,30 +1237,44 @@ const RepairsDashboard = () => {
         </div>
       </div>
 
-      <Card>
-        <CardHeader className="space-y-4">
+      <div className="rounded-2xl border border-border/30 bg-muted/5 overflow-hidden">
+        <div className="p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Últimos serviços do mês</CardTitle>
-            <Button variant="outline" onClick={loadMonth} disabled={loading}>
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                <CalendarCheck className="h-4 w-4 text-primary" />
+              </div>
+              <span className="text-sm font-semibold">Serviços do mês</span>
+            </div>
+            <Button variant="ghost" size="sm" onClick={loadMonth} disabled={loading} className="rounded-xl h-8 text-xs">
               Atualizar
             </Button>
           </div>
           <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar serviço por aparelho ou descrição..." className="pl-8" value={serviceSearch} onChange={e => setServiceSearch(e.target.value)} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar serviço por aparelho ou descrição..." className="pl-9 h-10 rounded-xl bg-muted/30 border-border/30" value={serviceSearch} onChange={e => setServiceSearch(e.target.value)} />
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-2">
-            {(loading || isServiceSearching) && <div className="text-sm text-muted-foreground">Carregando...</div>}
+        </div>
+        <div className="px-4 pb-4">
+          <div className="space-y-3">
+            {(loading || isServiceSearching) && <div className="text-center py-8 text-sm text-muted-foreground">Carregando...</div>}
 
-            {!loading && !isServiceSearching && serviceSearch.trim() && serviceSearchResults.length === 0 && <div className="text-sm text-muted-foreground">
-                  Nenhum serviço encontrado.
-                </div>}
+            {!loading && !isServiceSearching && serviceSearch.trim() && serviceSearchResults.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Search className="h-8 w-8 text-muted-foreground/30 mb-3" />
+                <p className="text-sm text-muted-foreground">Nenhum serviço encontrado.</p>
+              </div>
+            )}
 
-            {!loading && !isServiceSearching && !serviceSearch.trim() && services.length === 0 && <div className="text-sm text-muted-foreground">
-                  Nenhum serviço lançado neste mês.
-                </div>}
+            {!loading && !isServiceSearching && !serviceSearch.trim() && services.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="rounded-3xl bg-muted/40 p-5 mb-4">
+                  <CalendarCheck className="h-10 w-10 text-muted-foreground/50" />
+                </div>
+                <h3 className="text-base font-semibold">Nenhum serviço neste mês</h3>
+                <p className="text-sm text-muted-foreground mt-1">Lance serviços para ver o resumo aqui.</p>
+              </div>
+            )}
 
             {!loading && !isServiceSearching && (serviceSearch.trim() ? serviceSearchResults : services).map((s: any) => <div key={s.id} className="grid grid-cols-1 gap-2 rounded-lg border p-3 md:grid-cols-6">
                   <div className="md:col-span-2">
