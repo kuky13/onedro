@@ -830,6 +830,22 @@ const HelpCenterPage = () => {
     question: "Como limpo minhas notificações?",
     answer: "Ao acessar a página de Notificações pelo ícone do sino, você pode visualizar todos os alertas e usar o botão de Marcar Todas como Lidas para limpar o painel.",
     category: "notificacoes"
+  }, {
+    question: "Como baixar vídeos pelo sistema?",
+    answer: "Acesse /downloads, cole o link do vídeo (YouTube, Instagram, TikTok, etc.), escolha a qualidade desejada e clique em Baixar.",
+    category: "downloads"
+  }, {
+    question: "Como abrir um chamado de suporte?",
+    answer: "Acesse /suporte e escolha o canal mais adequado: WhatsApp (resposta imediata), Discord (comunidade) ou E-mail (suporte@onedrip.email).",
+    category: "suporte"
+  }, {
+    question: "Como alterar minha senha?",
+    answer: "Acesse Configurações > Conta > Alterar Senha. Você também pode usar a opção 'Esqueci minha senha' na tela de login para receber um link de redefinição por e-mail.",
+    category: "conta-seguranca"
+  }, {
+    question: "Meus dados estão protegidos pela LGPD?",
+    answer: "Sim! O OneDrip segue a Lei Geral de Proteção de Dados. Você pode solicitar a exportação ou exclusão dos seus dados a qualquer momento em Configurações > Conta.",
+    category: "conta-seguranca"
   }];
   const categories = [{
     id: 'all',
