@@ -290,6 +290,12 @@ const AppContent = () => {
           </UnifiedProtectionGuard>
         </MaintenanceGuard>} />
 
+        <Route path="/downloads" element={<MaintenanceGuard>
+          <UnifiedProtectionGuard>
+            <AppShell><DownloadsPage /></AppShell>
+          </UnifiedProtectionGuard>
+        </MaintenanceGuard>} />
+
 
         {/* Gestão administrativa de usuários */}
         <Route path="/admins/usuarios" element={<MaintenanceGuard>
