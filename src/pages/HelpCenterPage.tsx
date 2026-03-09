@@ -626,6 +626,145 @@ const HelpCenterPage = () => {
         </div>
       </div>
 
+  }, {
+    id: 'downloads',
+    title: 'Download de Vídeos',
+    icon: <Download className="h-5 w-5" />,
+    description: 'Use o downloader integrado para baixar vídeos do YouTube e outras plataformas',
+    content:
+    <div className="space-y-6">
+        <div className="bg-card p-4 rounded-lg border border-border">
+          <h4 className="font-semibold text-foreground mb-2">📥 Como Baixar Vídeos</h4>
+          <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+            <li>Acesse a página <strong>/downloads</strong> pelo menu ou diretamente na URL.</li>
+            <li>Cole o link do vídeo (YouTube, Instagram, TikTok, Twitter/X, etc.).</li>
+            <li>Escolha a qualidade e formato desejado (MP4, MP3, etc.).</li>
+            <li>Clique em <strong>Baixar</strong> e aguarde o processamento.</li>
+            <li>O download será iniciado automaticamente no seu navegador.</li>
+          </ol>
+        </div>
+
+        <div className="bg-primary/10 p-4 rounded-lg border border-border">
+          <h4 className="font-semibold text-foreground mb-2">🌐 Plataformas Suportadas</h4>
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li><strong>YouTube</strong> — vídeos, shorts e playlists</li>
+            <li><strong>Instagram</strong> — reels, stories e posts</li>
+            <li><strong>TikTok</strong> — vídeos públicos</li>
+            <li><strong>Twitter/X</strong> — vídeos de tweets</li>
+            <li><strong>Facebook</strong> — vídeos públicos</li>
+          </ul>
+        </div>
+
+        <div className="bg-destructive/10 p-4 rounded-lg border border-border">
+          <h4 className="font-semibold text-foreground mb-2">⚠️ Importante</h4>
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Baixe apenas conteúdos para uso pessoal ou com autorização do autor.</li>
+            <li>O OneDrip não se responsabiliza pelo uso indevido de conteúdos protegidos por direitos autorais.</li>
+            <li>A qualidade do download depende do vídeo original.</li>
+          </ul>
+        </div>
+      </div>
+
+  }, {
+    id: 'suporte',
+    title: 'Suporte e Atendimento',
+    icon: <Headphones className="h-5 w-5" />,
+    description: 'Saiba como entrar em contato com a equipe de suporte por WhatsApp, Discord ou Email',
+    content:
+    <div className="space-y-6">
+        <div className="bg-card p-4 rounded-lg border border-border">
+          <h4 className="font-semibold text-foreground mb-2">📞 Canais de Atendimento</h4>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border/30">
+              <span className="text-lg">💬</span>
+              <div>
+                <p className="font-semibold text-foreground">WhatsApp</p>
+                <p>Resposta imediata, disponível 24/7. Canal mais rápido para dúvidas urgentes.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border/30">
+              <span className="text-lg">🎮</span>
+              <div>
+                <p className="font-semibold text-foreground">Discord</p>
+                <p>Comunidade ativa e suporte técnico. Tempo de resposta: 1-2h.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border/30">
+              <span className="text-lg">📧</span>
+              <div>
+                <p className="font-semibold text-foreground">E-mail</p>
+                <p>suporte@onedrip.email — Seg-Sex, 9h-18h. Resposta em 4-8h.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-primary/10 p-4 rounded-lg border border-border">
+          <h4 className="font-semibold text-foreground mb-2">🎯 Quando Usar Cada Canal</h4>
+          <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+            <li><strong>Problemas urgentes</strong> (sistema fora do ar, erro crítico) → WhatsApp</li>
+            <li><strong>Dúvidas técnicas</strong> (como usar funcionalidade, configurações) → Discord ou Drippy IA</li>
+            <li><strong>Solicitações formais</strong> (cancelamento, reembolso, LGPD) → E-mail</li>
+            <li><strong>Sugestões e feedback</strong> → Discord ou E-mail</li>
+          </ul>
+        </div>
+
+        <div className="bg-secondary/50 p-4 rounded-lg border border-border">
+          <h4 className="font-semibold text-foreground mb-2">🤖 Drippy IA como Primeiro Suporte</h4>
+          <p className="text-sm text-muted-foreground">
+            Antes de abrir um chamado, tente perguntar para a <strong>Drippy IA</strong> em <code>/chat</code>. 
+            Ela conhece todo o sistema e pode resolver a maioria das dúvidas instantaneamente!
+          </p>
+        </div>
+      </div>
+
+  }, {
+    id: 'conta-seguranca',
+    title: 'Conta e Segurança',
+    icon: <Lock className="h-5 w-5" />,
+    description: 'Gerencie sua conta, altere senha, exporte dados e entenda a LGPD',
+    content:
+    <div className="space-y-6">
+        <div className="bg-card p-4 rounded-lg border border-border">
+          <h4 className="font-semibold text-foreground mb-2">🔑 Gerenciamento de Senha</h4>
+          <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+            <li><strong>Alterar Senha:</strong> Acesse Configurações {'>'} Conta {'>'} Alterar Senha.</li>
+            <li><strong>Esqueceu a Senha:</strong> Na tela de login, clique em "Esqueci minha senha" para receber um link de redefinição por e-mail.</li>
+            <li><strong>Dica:</strong> Use uma senha forte com pelo menos 8 caracteres, incluindo letras, números e símbolos.</li>
+          </ul>
+        </div>
+
+        <div className="bg-primary/10 p-4 rounded-lg border border-border">
+          <h4 className="font-semibold text-foreground mb-2">✉️ Verificação de E-mail</h4>
+          <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+            <li>Ao criar sua conta, um e-mail de verificação é enviado automaticamente.</li>
+            <li>Confira sua caixa de entrada e pasta de spam.</li>
+            <li>Se não recebeu, acesse <code>/verify</code> para reenviar o e-mail de confirmação.</li>
+            <li>A verificação é obrigatória para acessar funcionalidades protegidas do sistema.</li>
+          </ul>
+        </div>
+
+        <div className="bg-secondary/50 p-4 rounded-lg border border-border">
+          <h4 className="font-semibold text-foreground mb-2">📦 Exportação e Exclusão de Dados</h4>
+          <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+            <li><strong>Exportar Dados:</strong> Em Configurações {'>'} Conta, solicite a exportação completa dos seus dados em formato compatível.</li>
+            <li><strong>Excluir Conta:</strong> Você pode solicitar a exclusão permanente da sua conta e dados pessoais.</li>
+            <li><strong>Prazo:</strong> Solicitações de exclusão são processadas em até 30 dias conforme a LGPD.</li>
+          </ul>
+        </div>
+
+        <div className="bg-muted p-4 rounded-lg border border-border">
+          <h4 className="font-semibold text-foreground mb-2">🛡️ LGPD e Privacidade</h4>
+          <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+            <li>O OneDrip segue a <strong>Lei Geral de Proteção de Dados (LGPD)</strong>.</li>
+            <li>Seus dados são armazenados de forma segura e criptografada.</li>
+            <li>Consulte nossa <strong>Política de Privacidade</strong> em <code>/privacy</code>.</li>
+            <li>Consulte nossos <strong>Termos de Uso</strong> em <code>/terms</code>.</li>
+            <li>Para solicitações formais de dados, envie e-mail para suporte@onedrip.email.</li>
+          </ul>
+        </div>
+      </div>
+
   }];
   const faqItems: FAQItem[] = [{
     question: "Como posso recuperar um orçamento excluído?",
