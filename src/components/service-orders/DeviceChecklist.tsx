@@ -477,8 +477,7 @@ export const DeviceChecklist: React.FC<DeviceChecklistProps> = ({
       
 
       {/* Card do Checklist */}
-      <Card className="border-border/50">
-        
+      
 
 
 
@@ -513,8 +512,6 @@ export const DeviceChecklist: React.FC<DeviceChecklistProps> = ({
 
 
 
-        
-        
 
 
 
@@ -864,8 +861,11 @@ export const DeviceChecklist: React.FC<DeviceChecklistProps> = ({
 
 
 
-        
-      </Card>
+
+
+
+
+      
 
       {/* Test Runner Modal */}
       <ChecklistTestRunner
