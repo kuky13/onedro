@@ -32,10 +32,8 @@ export const AuthPage = () => {
     signIn,
     requestPasswordReset,
     loading,
-    user
   } = useAuth();
   const { showSuccess, showError } = useToast();
-  const navigate = useNavigate();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
