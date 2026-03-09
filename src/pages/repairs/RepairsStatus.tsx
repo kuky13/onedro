@@ -317,13 +317,11 @@ const RepairsStatus = () => {
 
   return (
     <div className="space-y-6 pb-6">
-      {/* Header premium */}
-      <div className="space-y-1">
-        <h2 className="text-2xl font-bold tracking-tight">Status e Fechamentos</h2>
-        <p className="text-sm text-muted-foreground">
-          Histórico de meses fechados e desempenho financeiro
-        </p>
-      </div>
+      <PageHeader
+        title="Status e Fechamentos"
+        description="Histórico de meses fechados e desempenho financeiro"
+        icon={<Archive className="h-4 w-4" />}
+      />
 
       {/* Stats pills */}
       {closings.length > 0 && (
