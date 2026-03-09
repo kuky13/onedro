@@ -330,9 +330,9 @@ const RepairsStatus = () => {
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Total faturado</span>
             <div className="text-xs sm:text-base font-bold tabular-nums break-all leading-tight">{formatBRL(totalRevenue)}</div>
           </div>
-          <div className="rounded-2xl bg-emerald-500/10 backdrop-blur-sm border border-emerald-500/20 p-3 space-y-1 min-w-0 overflow-hidden">
-            <span className="text-[10px] uppercase tracking-wider text-emerald-500 font-semibold">Lucro total</span>
-            <div className="text-xs sm:text-base font-bold tabular-nums text-emerald-500 break-all leading-tight">{formatBRL(totalProfit)}</div>
+          <div className="rounded-2xl bg-primary/10 backdrop-blur-sm border border-primary/20 p-3 space-y-1 min-w-0 overflow-hidden">
+            <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">Lucro total</span>
+            <div className="text-xs sm:text-base font-bold tabular-nums text-primary break-all leading-tight">{formatBRL(totalProfit)}</div>
           </div>
           <div className="rounded-2xl bg-muted/40 backdrop-blur-sm border border-border/40 p-3 space-y-1 min-w-0 overflow-hidden">
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Serviços</span>
