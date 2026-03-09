@@ -4,16 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Database, Download, Trash2, AlertTriangle, FileText, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 // @ts-ignore - Dialog components are used in JSX below
 import {
   Dialog,
