@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Download, Loader2, Link2, Music, Video, CheckCircle2, Clipboard, Globe, ArrowDown, FileVideo, FileAudio, Sparkles } from "lucide-react";
+import { Download, Loader2, Link2, Video, CheckCircle2, Clipboard, Globe, ArrowDown, FileVideo, FileAudio, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
