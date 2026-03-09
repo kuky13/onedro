@@ -34,9 +34,8 @@ class MultiTabCache {
   }
 
   constructor() {
-    // Lazy-load broadcast-channel para reduzir bundle inicial
     const channelName = (this.config as any).channelName ?? 'multitab-cache';
-    this.channelReady = import('broadcast-channel').then(({ BroadcastChannel }) => {
+    import('broadcast-channel').then(({ BroadcastChannel }) => {
       this.channel = new BroadcastChannel(channelName);
       this.setupChannelListener();
     }).catch(() => {
