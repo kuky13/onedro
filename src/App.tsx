@@ -88,6 +88,7 @@ const AdminUsersPage = lazyWithRetry(() => import("./pages/AdminUsersPage").then
 const PeliculasCompatibilityPage = lazyWithRetry(() => import("./pages/PeliculasCompatibilityPage"));
 const PeliculasEditPage = lazyWithRetry(() => import("./pages/PeliculasEditPage"));
 const AppsPage = lazyWithRetry(() => import("./pages/AppsPage"));
+const DownloadsPage = lazyWithRetry(() => import("./pages/DownloadsPage"));
 
 const StoreLayout = lazyWithRetry(() => import("./pages/store/StoreLayout"));
 const StoreCreatePage = lazyWithRetry(() => import("./pages/store/StoreCreatePage"));
