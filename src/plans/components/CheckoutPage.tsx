@@ -161,7 +161,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       // 1. Criar purchase_registration antes do PIX
       const { data: registration, error: regError } = await supabase
         .from('purchase_registrations')
-        .insert({
+        .insert([{
           customer_name: contactData.name,
           customer_email: contactData.email,
           customer_phone: contactData.phone,
@@ -170,9 +170,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           currency: 'BRL',
           payment_method: 'PIX',
           status: 'pending',
-          user_id: user?.id,
-          metadata: { provider: 'abacatepay' }
-        })
+          user_id: user?.id || null,
+          metadata: { provider: 'abacatepay' } as unknown as import('@/integrations/supabase/types').Json
+        }])
         .select()
         .single();
 
