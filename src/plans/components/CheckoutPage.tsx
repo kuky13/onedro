@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PLANS_CONTENT } from '../data/content';
 import { PixPaymentDisplay } from './PixPaymentDisplay';
-import { createPixPayment } from '@/lib/mercadopago-client';
+import { createAbacatePayPix, createAbacatePayBilling } from '@/lib/abacatepay-client';
 import { getMercadoPagoPlan } from '@/lib/mercadopago-products';
 import { toast } from 'sonner';
 import { usePlanPrice } from '@/hooks/usePlanPrice';
@@ -156,15 +156,14 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const handlePixPayment = async () => {
     setIsLoading(true);
     try {
-      toast.info('Gerando QR Code PIX...');
-      const pixPayment = await createPixPayment({
-        planId: mercadoPagoPlan.id,
-        planType: currentPlanType,
-        paymentMethod: 'pix',
+      toast.info('Gerando QR Code PIX (AbacatePay)...');
+      const pixPayment = await createAbacatePayPix({
+        amount: Math.round(finalPrice * 100),
+        description: planData.nome,
         customerName: contactData.name,
         customerEmail: contactData.email,
         customerPhone: contactData.phone,
-        isAuthenticated: true
+        purchaseRegistrationId: undefined 
       });
       setPixData({
         qrCode: pixPayment.qr_code,
@@ -183,22 +182,21 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const handleSubscription = async () => {
     setIsLoading(true);
     try {
-      toast.info('Criando assinatura...');
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('create-mercadopago-subscription', {
-        body: {
-          planType: currentPlanType,
-          customerName: contactData.name,
-          customerEmail: contactData.email,
-          customerPhone: contactData.phone
-        }
+      toast.info('Criando assinatura (AbacatePay)...');
+      const billing = await createAbacatePayBilling({
+        amount: Math.round(finalPrice * 100),
+        description: `Assinatura ${planData.nome}`,
+        customerName: contactData.name,
+        customerEmail: contactData.email,
+        customerPhone: contactData.phone,
+        frequency: "MULTIPLE_PAYMENTS",
+        returnUrl: window.location.origin + "/plans",
+        completionUrl: window.location.origin + "/purchase-success",
       });
-      if (error) throw error;
-      if (data?.redirect_url) {
-        toast.success('Redirecionando para autorização...');
-        window.location.href = data.redirect_url;
+
+      if (billing.url) {
+        toast.success('Redirecionando para pagamento...');
+        window.location.href = billing.url;
       } else {
         throw new Error('URL de redirecionamento não recebida');
       }

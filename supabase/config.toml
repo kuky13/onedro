@@ -9,37 +9,25 @@ verify_jwt = false
 [functions.audit-system]
 verify_jwt = false
 
-[functions.cancel-mercadopago-payment]
-verify_jwt = false
-
-[functions.cancel-mercadopago-subscription]
-verify_jwt = false
-
 [functions.chat-ai]
-verify_jwt = false
-
-[functions.check-mercadopago-payment]
 verify_jwt = false
 
 [functions.cleanup-service-orders]
 verify_jwt = false
 
-[functions.create-mercadopago-checkout]
+[functions.create-abacatepay-checkout]
 verify_jwt = false
 
-[functions.create-mercadopago-subscription]
+[functions.check-abacatepay-payment]
+verify_jwt = false
+
+[functions.abacatepay-webhook]
 verify_jwt = false
 
 [functions.evolution-list-groups]
 verify_jwt = false
 
 [functions.manage-user-profile]
-verify_jwt = false
-
-[functions.mercadopago-subscription-webhook]
-verify_jwt = false
-
-[functions.mercadopago-webhook]
 verify_jwt = false
 
 [functions.notification-system]

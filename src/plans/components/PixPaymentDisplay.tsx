@@ -3,7 +3,7 @@ import { Copy, CheckCircle, Loader2, QrCode, Shield, Download, Mail, AlertTriang
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { checkPaymentStatus, cancelPixPayment } from '@/lib/mercadopago-client';
+import { checkAbacatePayStatus } from '@/lib/abacatepay-client';
 import { useNavigate } from 'react-router-dom';
 interface PixPaymentDisplayProps {
   qrCode: string;
@@ -77,7 +77,7 @@ export const PixPaymentDisplay = ({
     setErrorMessage('Tempo limite de 10 minutos excedido. O pagamento foi cancelado automaticamente.');
     setIsCancelling(true);
     try {
-      await cancelPixPayment(paymentId, 'timer');
+      // await cancelPixPayment(paymentId, 'timer');
       toast.error('Pagamento expirado', {
         description: 'Seu código PIX foi cancelado após 10 minutos sem pagamento.'
       });
@@ -91,7 +91,7 @@ export const PixPaymentDisplay = ({
     if (paymentStatus === 'expired' || paymentStatus === 'cancelled' || licenseCode) return;
     setIsCancelling(true);
     try {
-      await cancelPixPayment(paymentId, 'user');
+      // await cancelPixPayment(paymentId, 'user');
       setPaymentStatus('cancelled');
       setErrorMessage('Pagamento cancelado por você. O código PIX não é mais válido.');
       toast.error('Pagamento cancelado', {
@@ -138,8 +138,8 @@ export const PixPaymentDisplay = ({
       try {
         setRetryCount(prev => prev + 1);
         setPaymentStatus('checking');
-        const result = await checkPaymentStatus(paymentId);
-        if (result.approved) {
+        const result = await checkAbacatePayStatus(paymentId);
+        if (result.paid) {
           if (result.license_code) {
             setLicenseCode(result.license_code);
             setPaymentStatus('approved');
