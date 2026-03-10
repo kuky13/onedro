@@ -264,6 +264,14 @@ interface ChecklistSectionProps {
   autoTestCount?: number;
   totalAutoTestable?: number;
 }
+interface ChecklistItemProps {
+  id: string;
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  disabled?: boolean;
+  isAutoTestable?: boolean;
+}
 
 // ChecklistSection and ChecklistItem kept as internal helpers
 const _ChecklistSection: React.FC<ChecklistSectionProps> = ({
