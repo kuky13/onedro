@@ -1615,7 +1615,7 @@ serve(async (req: Request) => {
     // Se não encontrou cliente pelo telefone, buscar cliente padrão do usuário
     if (!matchedClient) {
       try {
-        const { data: defaultClient } = await supabaseClient
+        const { data: defaultClient } = await supabase
           .from("clients")
           .select("id, name, phone")
           .eq("user_id", ownerId)

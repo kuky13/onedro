@@ -336,7 +336,7 @@ export const DeviceChecklist: React.FC<DeviceChecklistProps> = ({
   // Migrar dados antigos para o novo formato se necessário
   const checklistData = value ? migrateOldChecklistData(value) : initialChecklistData;
 
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+  const [_openSections, setOpenSections] = useState<Record<string, boolean>>({
     tela: true,
     audio: false,
     cameras: false,
@@ -348,7 +348,7 @@ export const DeviceChecklist: React.FC<DeviceChecklistProps> = ({
   const [isTestRunnerOpen, setIsTestRunnerOpen] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
-  const toggleSection = (section: string) => {
+  const _toggleSection = (section: string) => {
     setOpenSections((prev) => ({
       ...prev,
       [section]: !prev[section]
@@ -360,7 +360,7 @@ export const DeviceChecklist: React.FC<DeviceChecklistProps> = ({
     setIsTestRunnerOpen(false);
   };
 
-  const updateChecklistItem = (
+  const _updateChecklistItem = (
   section: keyof DeviceChecklistData,
   item: string,
   checked: boolean) =>
@@ -375,7 +375,7 @@ export const DeviceChecklist: React.FC<DeviceChecklistProps> = ({
     onChange(updatedData);
   };
 
-  const markAllItems = (event?: React.MouseEvent) => {
+  const _markAllItems = (event?: React.MouseEvent) => {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -392,7 +392,7 @@ export const DeviceChecklist: React.FC<DeviceChecklistProps> = ({
     onChange(allMarked);
   };
 
-  const unmarkAllItems = (event?: React.MouseEvent) => {
+  const _unmarkAllItems = (event?: React.MouseEvent) => {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -400,24 +400,8 @@ export const DeviceChecklist: React.FC<DeviceChecklistProps> = ({
     onChange(initialChecklistData);
   };
 
-  // Contar itens auto-testáveis marcados por seção
-  const countAutoTestable = (section: keyof DeviceChecklistData) => {
-    const items = autoTestableItems[section];
-    if (!items) return 0;
-    const sectionData = checklistData[section] as Record<string, boolean>;
-    return items.filter((item) => sectionData[item]).length;
-  };
-
-  const getAutoTestableLength = (section: string): number => {
-    return autoTestableItems[section]?.length ?? 0;
-  };
-
-  const isAutoTestable = (section: string, item: string): boolean => {
-    const items = autoTestableItems[section];
-    if (!items) return false;
-    return items.includes(item);
-  };
-
+  // Suppress unused warnings - these are kept for future UI re-integration
+  void _openSections; void _toggleSection; void _updateChecklistItem; void _markAllItems; void _unmarkAllItems;
   return (
     <div className="space-y-4">
       {/* Botão de Diagnóstico */}
