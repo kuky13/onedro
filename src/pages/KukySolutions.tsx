@@ -35,6 +35,7 @@ const CONTACT_INFO = {
   phone: "+55 (64) 99602-8022",
   address: "Mineiros, GO - Brasil",
   website: "https://kuky.pro",
+  cnpj: "64.797.431/0001-03",
   social: {
     github: "https://github.com/kuky13",
     instagram: "https://www.instagram.com/kuky.png"
