@@ -41,7 +41,11 @@ serve(async (req) => {
     const abacatePayToken = Deno.env.get("ABACATEPAY_API_TOKEN")!;
 
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const supabaseAdmin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    // const supabaseAdmin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    
+    // Fallback if SERVICE_ROLE_KEY is missing (it shouldn't be, but...)
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || supabaseKey;
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
     // Authentication check
     if (isAuthenticated) {
@@ -52,12 +56,18 @@ serve(async (req) => {
     }
 
     // Prepare customer object
-    const customer = {
-      name: customerName || "Cliente",
-      email: customerEmail || "email@example.com",
-      cellphone: customerPhone || "(11) 99999-9999",
-      taxId: customerTaxId || "000.000.000-00" // Required by AbacatePay
-    };
+    let customer = undefined;
+    
+    // Only include customer if taxId looks somewhat valid (not default 000...)
+    // Or if we have actual data.
+    if (customerTaxId && customerTaxId !== "000.000.000-00") {
+      customer = {
+        name: customerName || "Cliente",
+        email: customerEmail || "email@example.com",
+        cellphone: customerPhone || "(11) 99999-9999",
+        taxId: customerTaxId
+      };
+    }
 
     let result;
     let endpoint;
@@ -68,7 +78,8 @@ serve(async (req) => {
       payload = {
         amount,
         description: description || "Pagamento via PIX",
-        customer,
+        // Only include customer if defined
+        ...(customer ? { customer } : {}),
         metadata: {
           purchaseRegistrationId
         }
@@ -77,7 +88,7 @@ serve(async (req) => {
       // Billing (Checkout Page)
       endpoint = `${ABACATEPAY_API_URL}/billing/create`;
       payload = {
-        frequency: "ONE_TIME",
+        frequency: frequency || "ONE_TIME",
         methods: ["PIX", "CARD"],
         products: [
           {
@@ -90,7 +101,8 @@ serve(async (req) => {
         ],
         returnUrl: returnUrl || `${req.headers.get("origin")}/plans`,
         completionUrl: completionUrl || `${req.headers.get("origin")}/purchase-success`,
-        customer,
+        // Only include customer if defined
+        ...(customer ? { customer } : {}),
         metadata: {
           purchaseRegistrationId
         }
@@ -124,9 +136,14 @@ serve(async (req) => {
        
        const abacateId = data.data.id;
        
-       await supabaseAdmin.from("purchase_registrations").update({
-         mercadopago_payment_id: abacateId,
-       }).eq("id", purchaseRegistrationId);
+       try {
+         await supabaseAdmin.from("purchase_registrations").update({
+           mercadopago_payment_id: abacateId,
+         }).eq("id", purchaseRegistrationId);
+       } catch (dbError) {
+         console.error("Database Update Error (Non-critical):", dbError);
+         // Continue even if DB update fails, as we return the QR code
+       }
     }
 
     return new Response(JSON.stringify(data), {

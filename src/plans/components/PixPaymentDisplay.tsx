@@ -249,9 +249,18 @@ export const PixPaymentDisplay = ({
                 <p className="text-xs text-muted-foreground">Gerando sua licença...</p>
               </div>}
 
-            {qrCodeBase64 ? <img src={`data:image/png;base64,${qrCodeBase64}`} alt="QR Code PIX" className="w-48 h-48 sm:w-64 sm:h-64 object-contain" /> : <div className="w-48 h-48 sm:w-64 sm:h-64 flex items-center justify-center bg-muted">
+            {/* Verifica se qrCodeBase64 é uma string válida e se começa com data:image, caso contrário tenta adicionar o prefixo */}
+            {qrCodeBase64 ? (
+              <img 
+                src={qrCodeBase64.startsWith('data:image') ? qrCodeBase64 : `data:image/png;base64,${qrCodeBase64}`} 
+                alt="QR Code PIX" 
+                className="w-48 h-48 sm:w-64 sm:h-64 object-contain" 
+              />
+            ) : (
+              <div className="w-48 h-48 sm:w-64 sm:h-64 flex items-center justify-center bg-muted">
                 <QrCode className="h-24 w-24 sm:h-32 sm:w-32 text-muted-foreground" />
-              </div>}
+              </div>
+            )}
           </div>
 
           <p className="text-xs sm:text-sm text-muted-foreground text-center px-2">
