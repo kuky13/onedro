@@ -290,6 +290,16 @@ const KukySolutions = () => {
                 </a>
               </div>
             </div>
+
+            <div className="flex items-start gap-3 p-4 bg-background rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Shield className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm text-foreground mb-1">CNPJ</p>
+                <p className="text-xs lg:text-sm text-muted-foreground">{CONTACT_INFO.cnpj}</p>
+              </div>
+            </div>
           </div>
 
           {/* Redes Sociais */}
