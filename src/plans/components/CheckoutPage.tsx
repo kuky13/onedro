@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Shield, Check, Clock, Zap, MessageCircle, Loader2, User, Mail, Phone, AlertCircle, Atom } from 'lucide-react';
+import { ArrowLeft, Shield, Check, Clock, Zap, MessageCircle, Loader2, User, Mail, Phone, AlertCircle, Atom, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -87,14 +87,16 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [contactData, setContactData] = useState({
     name: '',
     email: '',
-    phone: ''
+    phone: '',
+    taxId: ''
   });
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [finalPrice, setFinalPrice] = useState(dynamicPrice);
   const [errors, setErrors] = useState({
     name: '',
     email: '',
-    phone: ''
+    phone: '',
+    taxId: ''
   });
   const daysToAdd = currentPlanType === 'yearly' ? 365 : 30;
 
@@ -108,11 +110,29 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     setAppliedCoupon(coupon);
     setFinalPrice(newPrice);
   };
+  const validateCPF = (cpf: string) => {
+    cpf = cpf.replace(/[^\d]+/g, '');
+    if (cpf.length !== 11 || !!cpf.match(/(\d)\1{10}/)) return false;
+    let soma = 0;
+    let resto;
+    for (let i = 1; i <= 9; i++) soma = soma + parseInt(cpf.substring(i - 1, i)) * (11 - i);
+    resto = (soma * 10) % 11;
+    if ((resto === 10) || (resto === 11)) resto = 0;
+    if (resto !== parseInt(cpf.substring(9, 10))) return false;
+    soma = 0;
+    for (let i = 1; i <= 10; i++) soma = soma + parseInt(cpf.substring(i - 1, i)) * (12 - i);
+    resto = (soma * 10) % 11;
+    if ((resto === 10) || (resto === 11)) resto = 0;
+    if (resto !== parseInt(cpf.substring(10, 11))) return false;
+    return true;
+  };
+
   const validateForm = (): boolean => {
     const newErrors = {
       name: '',
       email: '',
-      phone: ''
+      phone: '',
+      taxId: ''
     };
     let isValid = true;
     if (!contactData.name.trim() || contactData.name.trim().length < 2) {
@@ -128,8 +148,25 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       newErrors.phone = 'Telefone inválido';
       isValid = false;
     }
+    if (!validateCPF(contactData.taxId)) {
+      newErrors.taxId = 'CPF inválido';
+      isValid = false;
+    }
     setErrors(newErrors);
     return isValid;
+  };
+
+  const handleTaxIdChange = (value: string) => {
+    let cleaned = value.replace(/\D/g, '');
+    if (cleaned.length <= 11) {
+      cleaned = cleaned.replace(/(\d{3})(\d)/, '$1.$2');
+      cleaned = cleaned.replace(/(\d{3})(\d)/, '$1.$2');
+      cleaned = cleaned.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+      setContactData({
+        ...contactData,
+        taxId: cleaned
+      });
+    }
   };
   const handlePhoneChange = (value: string) => {
     let cleaned = value.replace(/\D/g, '');
@@ -165,6 +202,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           customer_name: contactData.name,
           customer_email: contactData.email,
           customer_phone: contactData.phone,
+          customer_tax_id: contactData.taxId,
           plan_type: currentPlanType,
           amount: Math.round(finalPrice * 100),
           currency: 'BRL',
@@ -188,6 +226,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         customerName: contactData.name,
         customerEmail: contactData.email,
         customerPhone: contactData.phone,
+        customerTaxId: contactData.taxId,
         purchaseRegistrationId: registration.id
       });
 
@@ -224,6 +263,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         customerName: contactData.name,
         customerEmail: contactData.email,
         customerPhone: contactData.phone,
+        customerTaxId: contactData.taxId,
         frequency: "MULTIPLE_PAYMENTS",
         returnUrl: window.location.origin + "/plans",
         completionUrl: window.location.origin + "/purchase-success",
@@ -355,6 +395,15 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     <Input id="phone" type="tel" placeholder="(11) 99999-9999" value={contactData.phone} onChange={(e) => handlePhoneChange(e.target.value)} className={`pl-10 ${errors.phone ? 'border-red-500' : ''}`} />
                   </div>
                   {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
+                </div>
+
+                <div>
+                  <Label htmlFor="taxId" className="text-sm text-foreground">CPF</Label>
+                  <div className="relative mt-1.5">
+                    <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input id="taxId" type="text" placeholder="000.000.000-00" value={contactData.taxId} onChange={(e) => handleTaxIdChange(e.target.value)} className={`pl-10 ${errors.taxId ? 'border-red-500' : ''}`} />
+                  </div>
+                  {errors.taxId && <p className="text-xs text-red-500 mt-1">{errors.taxId}</p>}
                 </div>
 
                 <Button type="submit" className="w-full py-5 mt-4 bg-primary hover:bg-primary/90 text-primary-foreground">
