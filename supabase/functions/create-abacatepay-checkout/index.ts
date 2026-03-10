@@ -22,6 +22,7 @@ serve(async (req) => {
       customerPhone,
       customerTaxId,
       paymentMethod, // PIX or CARD (for billing)
+      frequency, // ONE_TIME or MULTIPLE_PAYMENTS
       type, // 'pix' (direct qr code) or 'billing' (checkout page)
       returnUrl,
       completionUrl,
