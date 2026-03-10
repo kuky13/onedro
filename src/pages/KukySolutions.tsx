@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Mail, Phone, MapPin, Globe, Heart, Users, Target, Eye, Github, Instagram, Award, Sparkles, Zap, ArrowLeft, CheckCircle } from "lucide-react";
+import { Mail, Phone, MapPin, Globe, Heart, Users, Target, Eye, Github, Instagram, Award, Sparkles, Zap, ArrowLeft, CheckCircle, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 
 // ========================================
@@ -35,6 +35,7 @@ const CONTACT_INFO = {
   phone: "+55 (64) 99602-8022",
   address: "Mineiros, GO - Brasil",
   website: "https://kuky.pro",
+  cnpj: "64.797.431/0001-03",
   social: {
     github: "https://github.com/kuky13",
     instagram: "https://www.instagram.com/kuky.png"
@@ -289,6 +290,16 @@ const KukySolutions = () => {
                 </a>
               </div>
             </div>
+
+            <div className="flex items-start gap-3 p-4 bg-background rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Shield className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm text-foreground mb-1">CNPJ</p>
+                <p className="text-xs lg:text-sm text-muted-foreground">{CONTACT_INFO.cnpj}</p>
+              </div>
+            </div>
           </div>
 
           {/* Redes Sociais */}
@@ -334,6 +345,7 @@ const KukySolutions = () => {
             <img src="/kukysolutions-logo.svg" alt="KukySolutions" className="h-6 w-6" />
             <span className="text-sm text-muted-foreground">{COMPANY_INFO.name}</span>
           </div>
+          <p className="text-xs text-muted-foreground mb-1">CNPJ: {CONTACT_INFO.cnpj}</p>
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} {COMPANY_INFO.name}. Todos os direitos reservados.
           </p>

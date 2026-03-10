@@ -149,6 +149,7 @@ export const HoustonPage: React.FC = () => {
         {/* Footer */}
         <div className="text-center text-xs lg:text-sm text-muted-foreground space-y-1">
           <p>© 2026 OneDrip</p>
+          <p className="text-[10px] text-muted-foreground/70">CNPJ: 64.797.431/0001-03</p>
           {systemStatus?.updated_at && <p>Última atualização: {new Date(systemStatus.updated_at).toLocaleString("pt-BR")}</p>}
         </div>
       </div>

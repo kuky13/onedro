@@ -501,6 +501,7 @@ export const CookiesPage = () => {
               <p className="text-sm text-muted-foreground">
                 © 2026 OneDrip - KukySolutions™ | Todos os direitos reservados
               </p>
+              <p className="text-xs text-muted-foreground/70 mt-1">CNPJ: 64.797.431/0001-03</p>
             </div>
           </CardContent>
         </Card>
