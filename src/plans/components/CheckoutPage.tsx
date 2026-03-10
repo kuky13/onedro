@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { PLANS_CONTENT } from '../data/content';
 import { PixPaymentDisplay } from './PixPaymentDisplay';
 import { createAbacatePayPix, createAbacatePayBilling } from '@/lib/abacatepay-client';
-import { getMercadoPagoPlan } from '@/lib/mercadopago-products';
+
 import { toast } from 'sonner';
 import { usePlanPrice } from '@/hooks/usePlanPrice';
 import { useAuth } from '@/hooks/useAuth';
