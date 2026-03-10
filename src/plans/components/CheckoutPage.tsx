@@ -58,7 +58,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     ...staticPlanData,
     preco: dynamicPrice
   };
-  const mercadoPagoPlan = getMercadoPagoPlan(currentPlanType);
+  
 
   // Auth redirect
   useEffect(() => {
