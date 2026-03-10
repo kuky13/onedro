@@ -238,7 +238,7 @@ function migrateOldChecklistData(oldData: any): DeviceChecklistData {
 }
 
 // Mapeamento de quais itens são testáveis automaticamente
-const autoTestableItems: {[key: string]: string[];} = {
+const _autoTestableItems: {[key: string]: string[];} = {
   tela: ['touch_screen', 'multi_touch', 'cores_pixels', 'sem_manchas', 'brilho', 'rotacao_tela'],
   audio: ['alto_falante', 'microfone', 'gravacao_audio'],
   cameras: ['camera_frontal', 'camera_traseira', 'flash', 'gravacao_video'],
@@ -246,6 +246,7 @@ const autoTestableItems: {[key: string]: string[];} = {
   sistema: ['bateria', 'carregamento', 'wifi', 'armazenamento'],
   extras: [] as string[]
 };
+void _autoTestableItems;
 
 interface DeviceChecklistProps {
   value?: DeviceChecklistData | null;
