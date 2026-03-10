@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Mail, Phone, MapPin, Globe, Heart, Users, Target, Eye, Github, Instagram, Award, Sparkles, Zap, ArrowLeft, CheckCircle } from "lucide-react";
+import { Mail, Phone, MapPin, Globe, Heart, Users, Target, Eye, Github, Instagram, Award, Sparkles, Zap, ArrowLeft, CheckCircle, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 
 // ========================================
