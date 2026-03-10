@@ -120,15 +120,12 @@ serve(async (req) => {
 
     // Update database logic (simplified for now, mimicking existing logic)
     if (isAuthenticated && purchaseRegistrationId) {
-       // Update purchase_registration with AbacatePay ID (using mercadopago_payment_id col for compatibility or metadata)
-       // Let's store it in metadata for cleanliness, but maybe mercadopago_payment_id if front-end expects it.
-       // The front-end expects payment_id in the response.
+       // Update purchase_registration with AbacatePay ID (using mercadopago_payment_id col for compatibility)
        
        const abacateId = data.data.id;
        
        await supabaseAdmin.from("purchase_registrations").update({
-         metadata: { abacatepay_id: abacateId },
-         // We can use mercadopago_payment_id temporarily if needed, but let's stick to metadata
+         mercadopago_payment_id: abacateId,
        }).eq("id", purchaseRegistrationId);
     }
 
