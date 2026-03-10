@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { PLANS_CONTENT } from '../data/content';
 import { PixPaymentDisplay } from './PixPaymentDisplay';
 import { createAbacatePayPix, createAbacatePayBilling } from '@/lib/abacatepay-client';
-import { getMercadoPagoPlan } from '@/lib/mercadopago-products';
+
 import { toast } from 'sonner';
 import { usePlanPrice } from '@/hooks/usePlanPrice';
 import { useAuth } from '@/hooks/useAuth';
@@ -58,7 +58,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     ...staticPlanData,
     preco: dynamicPrice
   };
-  const mercadoPagoPlan = getMercadoPagoPlan(currentPlanType);
+  
 
   // Auth redirect
   useEffect(() => {
@@ -157,14 +157,49 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     setIsLoading(true);
     try {
       toast.info('Gerando QR Code PIX (AbacatePay)...');
+
+      // 1. Criar purchase_registration antes do PIX
+      const { data: registration, error: regError } = await supabase
+        .from('purchase_registrations')
+        .insert([{
+          customer_name: contactData.name,
+          customer_email: contactData.email,
+          customer_phone: contactData.phone,
+          plan_type: currentPlanType,
+          amount: Math.round(finalPrice * 100),
+          currency: 'BRL',
+          payment_method: 'PIX',
+          status: 'pending',
+          user_id: user?.id || null,
+          metadata: { provider: 'abacatepay' } as unknown as import('@/integrations/supabase/types').Json
+        }])
+        .select()
+        .single();
+
+      if (regError || !registration) {
+        console.error('Erro ao criar registro de compra:', regError);
+        throw new Error('Erro ao preparar pagamento');
+      }
+
+      // 2. Gerar PIX com purchaseRegistrationId
       const pixPayment = await createAbacatePayPix({
         amount: Math.round(finalPrice * 100),
         description: planData.nome,
         customerName: contactData.name,
         customerEmail: contactData.email,
         customerPhone: contactData.phone,
-        purchaseRegistrationId: undefined 
+        purchaseRegistrationId: registration.id
       });
+
+      // 3. Atualizar registro com paymentId do AbacatePay
+      await supabase
+        .from('purchase_registrations')
+        .update({
+          mercadopago_payment_id: pixPayment.payment_id,
+          metadata: { provider: 'abacatepay', abacatepay_id: pixPayment.payment_id }
+        })
+        .eq('id', registration.id);
+
       setPixData({
         qrCode: pixPayment.qr_code,
         qrCodeBase64: pixPayment.qr_code_base64,

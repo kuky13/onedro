@@ -22,6 +22,7 @@ serve(async (req) => {
       customerPhone,
       customerTaxId,
       paymentMethod, // PIX or CARD (for billing)
+      frequency, // ONE_TIME or MULTIPLE_PAYMENTS
       type, // 'pix' (direct qr code) or 'billing' (checkout page)
       returnUrl,
       completionUrl,
@@ -151,9 +152,10 @@ serve(async (req) => {
       status: 200,
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error("Error processing request:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: errMsg }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
