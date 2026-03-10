@@ -243,6 +243,7 @@ export const ConsentimentoPage = () => {
       <footer className="relative z-10 py-6 px-4 border-t border-border/40 bg-card/30 backdrop-blur-sm">
         <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <p>© 2026 OneDrip - KukySolutions™ | Todos os direitos reservados</p>
+          <p className="text-[10px] text-muted-foreground/70 mt-1">CNPJ: 64.797.431/0001-03</p>
           <div className="flex items-center gap-4">
             <Link to="/terms" className="hover:text-foreground">Termos</Link>
             <Link to="/privacy" className="hover:text-foreground">Privacidade</Link>

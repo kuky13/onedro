@@ -520,9 +520,14 @@ const Index = () => {
               <span className="font-bold text-foreground lg:text-lg">{name}</span>
             </div>
 
-            <p className="text-center lg:text-left text-xs lg:text-sm text-muted-foreground">
-              © 2026 Desenvolvendo ideias, Entregando soluções
-            </p>
+            <div className="text-center lg:text-left">
+              <p className="text-xs lg:text-sm text-muted-foreground">
+                © 2026 Desenvolvendo ideias, Entregando soluções
+              </p>
+              <p className="text-[10px] lg:text-xs text-muted-foreground/70">
+                CNPJ: 64.797.431/0001-03
+              </p>
+            </div>
 
             <div className="flex justify-center lg:justify-end items-center gap-3 lg:gap-6 text-xs lg:text-sm">
               <Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors">

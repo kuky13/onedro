@@ -345,6 +345,7 @@ const KukySolutions = () => {
             <img src="/kukysolutions-logo.svg" alt="KukySolutions" className="h-6 w-6" />
             <span className="text-sm text-muted-foreground">{COMPANY_INFO.name}</span>
           </div>
+          <p className="text-xs text-muted-foreground mb-1">CNPJ: {CONTACT_INFO.cnpj}</p>
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} {COMPANY_INFO.name}. Todos os direitos reservados.
           </p>

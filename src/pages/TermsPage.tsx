@@ -519,6 +519,7 @@ export const TermsPage = () => {
               <p className="text-sm text-muted-foreground">
                 © 2026 OneDrip - KukySolutions™ | Todos os direitos reservados
               </p>
+              <p className="text-xs text-muted-foreground/70 mt-1">CNPJ: 64.797.431/0001-03</p>
               <p className="text-xs text-muted-foreground mt-1">Versão 1.3.0</p>
             </div>
           </CardContent>
