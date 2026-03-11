@@ -87,6 +87,12 @@ const TesteRapidoPage = () => {
       
       const uniqueId = crypto.randomUUID();
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Você precisa estar logado para criar testes.');
+        return;
+      }
+
       const { data: _newTest, error } = await supabase
         .from('device_test_sessions')
         .insert([{
@@ -94,6 +100,7 @@ const TesteRapidoPage = () => {
           status: 'pending',
           device_info: { name: newTestName },
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          created_by: user.id,
         }])
         .select()
         .single();

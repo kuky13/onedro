@@ -428,20 +428,33 @@ export const DeviceChecklist: React.FC<DeviceChecklistProps> = ({
                 </p>
               </div>
             </div>
-            <Button
-              type="button"
-              variant="default"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsShareDialogOpen(true);
-              }}
-              disabled={disabled}
-              className="flex items-center gap-2 bg-primary hover:bg-primary/90">
-              
-              <Zap className="h-4 w-4" />
-              Iniciar Diagnóstico
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.location.href = '/teste-rapido';
+                }}
+                className="flex items-center gap-2 text-sm">
+                <ExternalLink className="h-4 w-4" />
+                Criar Link
+              </Button>
+              <Button
+                type="button"
+                variant="default"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsShareDialogOpen(true);
+                }}
+                disabled={disabled}
+                className="flex items-center gap-2 bg-primary hover:bg-primary/90">
+                <Zap className="h-4 w-4" />
+                Iniciar Diagnóstico
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
