@@ -212,7 +212,9 @@ serve(async (req) => {
                .limit(1)
                .maybeSingle();
 
+            let isRenewal = false;
             if (existingLicense) {
+               isRenewal = true;
                const newExpiresAt = calculateSmartExpiration(existingLicense.expires_at, daysToAdd, now);
                licenseCode = existingLicense.code;
                
@@ -280,6 +282,41 @@ serve(async (req) => {
             }
 
             console.log("Self-healing successful. License generated:", licenseCode);
+
+            // Send Email Receipt
+            try {
+              console.log("Sending email receipt via check-status...");
+              const emailRes = await fetch(`${supabaseUrl}/functions/v1/send-payment-receipt-email`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${serviceRoleKey}`
+                },
+                body: JSON.stringify({
+                  email: purchaseReg.customer_email,
+                  name: purchaseReg.customer_name,
+                  amount: data.data.amount / 100,
+                  currency: "BRL",
+                  paymentMethod: "pix",
+                  paymentId: paymentId,
+                  status: "approved",
+                  paidAt: now.toISOString(),
+                  receiptCode: paymentId.slice(-8).toUpperCase(),
+                  planType: planType,
+                  licenseCode: licenseCode,
+                  isRenewal: isRenewal,
+                  customerPhone: purchaseReg.customer_phone
+                })
+              });
+              
+              if (!emailRes.ok) {
+                 console.error("Failed to send email receipt:", await emailRes.text());
+              } else {
+                 console.log("Email receipt sent successfully.");
+              }
+            } catch (emailErr) {
+              console.error("Email notification error in self-healing:", emailErr);
+            }
 
             // Send WhatsApp notifications (buyer + admin)
             try {

@@ -470,7 +470,8 @@ export function WhatsAppManagement() {
   // --- Memos ---
 
   const selectedUser = useMemo(() => users.find(u => u.id === selectedOwnerId) || null, [users, selectedOwnerId]);
-  const webhookUrl = 'https://oghjlypdnmqecaavekyr.supabase.co/functions/v1/whatsapp-zapi-orcamentos';
+  // Use the Supabase URL from the client configuration dynamically
+  const webhookUrl = `${(supabase as any).supabaseUrl}/functions/v1/whatsapp-zapi-orcamentos`;
   const parsedGroups = useMemo(() => {
     return (groups || []).map((g: any) => {
       const rawId = g.id || g.groupId || g.jid || g.remoteJid || g.remoteJid?._serialized || '';

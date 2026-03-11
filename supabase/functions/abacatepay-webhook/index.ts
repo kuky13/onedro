@@ -378,6 +378,41 @@ serve(async (req) => {
           }).eq("id", purchaseReg.id);
 
           // 5. Notifications
+          
+          // Send Client Receipt Email (Missing in original)
+          try {
+             logStep("Sending Client Receipt Email");
+             const receiptRes = await fetch(`${supabaseUrl}/functions/v1/send-payment-receipt-email`, {
+               method: "POST",
+               headers: {
+                 "Content-Type": "application/json",
+                 "Authorization": `Bearer ${supabaseServiceKey}`
+               },
+               body: JSON.stringify({
+                 email: purchaseReg.customer_email,
+                 name: purchaseReg.customer_name,
+                 amount: paidAmount / 100,
+                 currency: "BRL",
+                 paymentMethod: method,
+                 paymentId: paymentId,
+                 status: "approved",
+                 paidAt: new Date().toISOString(),
+                 receiptCode: paymentId.slice(-8).toUpperCase(),
+                 planType: planType,
+                 licenseCode: licenseCode,
+                 isRenewal: isRenewal,
+                 customerPhone: purchaseReg.customer_phone
+               })
+             });
+             
+             if (!receiptRes.ok) {
+               const errorText = await receiptRes.text();
+               console.error("Failed to send client receipt email:", errorText);
+             } else {
+               logStep("Client Receipt Email Sent");
+             }
+          } catch (e) { console.error("Client Email Error", e); }
+
           // Send Admin Email
           try {
              await sendAdminPaymentNotification({
