@@ -86,14 +86,18 @@ const TesteRapidoPage = () => {
       // Let's use a placeholder URL structure for now as per requirement "URL de teste".
       
       const uniqueId = crypto.randomUUID();
-      const testUrl = `${window.location.origin}/testar/${uniqueId}`; // Example URL
+      const testUrl = `${window.location.origin}/testar/${uniqueId}`;
 
-      const { data, error } = await supabase.functions.invoke('create-quick-test', {
-        body: {
-          name: newTestName,
-          url: testUrl
-        }
-      });
+      const { data: _newTest, error } = await supabase
+        .from('device_test_sessions')
+        .insert([{
+          share_token: uniqueId,
+          status: 'pending',
+          device_info: { name: newTestName },
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        }])
+        .select()
+        .single();
 
       if (error) throw error;
 
