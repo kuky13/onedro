@@ -50,6 +50,7 @@ const TesteRapidoPage = () => {
       const { data: fetchedTests, error } = await supabase
         .from('device_test_sessions')
         .select('id, share_token, created_at, expires_at, device_info, status')
+        .filter('device_info->>source', 'eq', 'quick_test')
         .order('created_at', { ascending: false })
         .limit(5);
 
