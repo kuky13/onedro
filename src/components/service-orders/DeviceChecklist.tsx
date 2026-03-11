@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronRight, Smartphone, Zap } from 'lucide-react';
+import { ChevronDown, ChevronRight, Smartphone, Zap, ExternalLink } from 'lucide-react';
 import { ChecklistTestRunner } from './ChecklistTestRunner';
 import { DiagnosticShareDialog } from './DiagnosticShareDialog';
 
