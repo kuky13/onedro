@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Shield, Check, Clock, Zap, MessageCircle, Loader2, User, Mail, Phone, AlertCircle, Atom, FileText } from 'lucide-react';
+import { ArrowLeft, Shield, Check, Clock, Zap, MessageCircle, Loader2, User, Mail, Phone, AlertCircle, Atom, FileText, CreditCard, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -78,6 +78,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   // Estados
   const [step, setStep] = useState<'info' | 'payment' | 'pix'>('info');
   const [purchaseMode, setPurchaseMode] = useState<'one_time' | 'subscription'>('one_time');
+  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'card'>('pix');
   const [pixData, setPixData] = useState<{
     qrCode: string;
     qrCodeBase64?: string;
@@ -253,6 +254,72 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       setIsLoading(false);
     }
   };
+  const handleCardPayment = async () => {
+    setIsLoading(true);
+    try {
+      toast.info('Gerando link de pagamento...');
+      
+      // 1. Criar purchase_registration
+      const { data: registration, error: regError } = await supabase
+        .from('purchase_registrations')
+        .insert([{
+          customer_name: contactData.name,
+          customer_email: contactData.email,
+          customer_phone: contactData.phone,
+          customer_tax_id: contactData.taxId,
+          plan_type: currentPlanType,
+          amount: Math.round(finalPrice * 100),
+          currency: 'BRL',
+          payment_method: 'CARD', // Indica intenção de pagar com cartão
+          status: 'pending',
+          user_id: user?.id || null,
+          metadata: { provider: 'abacatepay' } as unknown as import('@/integrations/supabase/types').Json
+        }])
+        .select()
+        .single();
+
+      if (regError || !registration) {
+        console.error('Erro ao criar registro de compra:', regError);
+        throw new Error('Erro ao preparar pagamento');
+      }
+
+      // 2. Gerar Link de Checkout (Billing)
+      const billing = await createAbacatePayBilling({
+        amount: Math.round(finalPrice * 100),
+        description: `${planData.nome} (Cartão)`,
+        customerName: contactData.name,
+        customerEmail: contactData.email,
+        customerPhone: contactData.phone,
+        customerTaxId: contactData.taxId,
+        frequency: "ONE_TIME", // Pagamento único, igual ao PIX atual
+        returnUrl: window.location.origin + "/plans",
+        completionUrl: window.location.origin + "/purchase-success",
+        purchaseRegistrationId: registration.id
+      });
+
+      // 3. Atualizar registro com paymentId
+      await supabase
+        .from('purchase_registrations')
+        .update({
+          mercadopago_payment_id: billing.payment_id,
+          metadata: { provider: 'abacatepay', abacatepay_id: billing.payment_id }
+        })
+        .eq('id', registration.id);
+
+      if (billing.url) {
+        toast.success('Redirecionando para pagamento...');
+        window.location.href = billing.url;
+      } else {
+        throw new Error('URL de redirecionamento não recebida');
+      }
+    } catch (error) {
+      console.error('Erro ao criar pagamento com cartão:', error);
+      toast.error('Erro ao processar pagamento. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubscription = async () => {
     setIsLoading(true);
     try {
@@ -283,6 +350,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     }
   };
   const handleConfirmPayment = () => {
+    if (paymentMethod === 'card') {
+      return handleCardPayment();
+    }
     if (purchaseMode === 'one_time') {
       return handlePixPayment();
     }
@@ -417,33 +487,64 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             <Card className="bg-card border-border/50">
               <CardContent className="p-4">
                 <h2 className="text-lg font-semibold text-foreground mb-4">
-                  Escolha o tipo de plano
+                  Forma de Pagamento
                 </h2>
 
-                {/* Modo de compra: Pagamento único ou Assinatura */}
                 <div className="space-y-3 mb-6">
-                  <button onClick={() => setPurchaseMode('one_time')} className={`w-full p-4 rounded-xl border-2 transition-all ${purchaseMode === 'one_time' ? 'bg-primary/10 border-primary shadow-sm' : 'bg-background border-border/30 hover:border-border'}`}>
+                  {/* Opção PIX */}
+                  <button 
+                    onClick={() => setPaymentMethod('pix')} 
+                    className={`w-full p-4 rounded-xl border-2 transition-all ${paymentMethod === 'pix' ? 'bg-primary/10 border-primary shadow-sm' : 'bg-background border-border/30 hover:border-border'}`}
+                  >
                     <div className="flex items-start gap-3">
-                      <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${purchaseMode === 'one_time' ? 'border-primary' : 'border-muted-foreground'}`}>
-                        {purchaseMode === 'one_time' && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                      <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${paymentMethod === 'pix' ? 'border-primary' : 'border-muted-foreground'}`}>
+                        {paymentMethod === 'pix' && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
                       </div>
                       <div className="text-left flex-1">
-                        <p className="font-semibold text-foreground">Pagamento único via PIX</p>
+                        <div className="flex items-center gap-2">
+                          <QrCode className="h-4 w-4 text-primary" />
+                          <p className="font-semibold text-foreground">PIX</p>
+                        </div>
                         <p className="text-sm text-muted-foreground mt-0.5">
-                          Adiciona +{daysToAdd} dias de acesso. Ideal para recarregar sua licença.
+                          Aprovação imediata. Liberação automática.
+                        </p>
+                        {paymentMethod === 'pix' && (
+                          <div className="mt-2 text-xs bg-green-500/10 text-green-600 px-2 py-1 rounded inline-block">
+                            Recomendado
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Opção Cartão */}
+                  <button 
+                    onClick={() => setPaymentMethod('card')} 
+                    className={`w-full p-4 rounded-xl border-2 transition-all ${paymentMethod === 'card' ? 'bg-primary/10 border-primary shadow-sm' : 'bg-background border-border/30 hover:border-border'}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${paymentMethod === 'card' ? 'border-primary' : 'border-muted-foreground'}`}>
+                        {paymentMethod === 'card' && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                      </div>
+                      <div className="text-left flex-1">
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4 text-primary" />
+                          <p className="font-semibold text-foreground">Cartão de Crédito</p>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-0.5">
+                          Pague com segurança via AbacatePay.
                         </p>
                       </div>
                     </div>
                   </button>
-                  {/* Opção de assinatura removida conforme solicitado */}
                 </div>
 
                 {/* Botão de confirmação */}
                 <Button onClick={handleConfirmPayment} disabled={isLoading} className="w-full py-5 bg-primary hover:bg-primary/90 text-primary-foreground">
                   {isLoading ? <span className="flex items-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      {purchaseMode === 'one_time' ? 'Gerando QR Code...' : 'Criando assinatura...'}
-                    </span> : purchaseMode === 'one_time' ? 'Pagar com PIX' : 'Ativar assinatura'}
+                      {paymentMethod === 'pix' ? 'Gerando QR Code...' : 'Gerando link de pagamento...'}
+                    </span> : paymentMethod === 'pix' ? 'Pagar com PIX' : 'Ir para Pagamento'}
                 </Button>
               </CardContent>
             </Card>
