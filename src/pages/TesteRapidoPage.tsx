@@ -116,7 +116,7 @@ const TesteRapidoPage = () => {
   const handleDeleteTest = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('quick_tests')
+        .from('device_test_sessions')
         .delete()
         .eq('id', id);
 

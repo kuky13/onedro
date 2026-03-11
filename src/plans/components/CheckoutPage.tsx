@@ -77,7 +77,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
   // Estados
   const [step, setStep] = useState<'info' | 'payment' | 'pix'>('info');
-  const [purchaseMode, setPurchaseMode] = useState<'one_time' | 'subscription'>('one_time');
+  const [purchaseMode, _setPurchaseMode] = useState<'one_time' | 'subscription'>('one_time');
   const [pixData, setPixData] = useState<{
     qrCode: string;
     qrCodeBase64?: string;
