@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Share2, Plus, AlertCircle, Trash2, ExternalLink, Calendar, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Plus, AlertCircle, Trash2, ExternalLink, Calendar, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DeviceChecklist, DeviceChecklistData } from '@/components/service-orders/DeviceChecklist';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
