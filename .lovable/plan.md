@@ -1,134 +1,56 @@
 
 
-# Expansao da Documentacao do Projeto OneDrip
+# Corrigir notificações WhatsApp após compra aprovada
 
-## Objetivo
-Criar documentacao tecnica completa e detalhada para que qualquer desenvolvedor que entre no projeto consiga entender rapidamente como tudo funciona. Vamos expandir os 5 arquivos existentes e criar 7 novos arquivos `.md`.
+## Problema identificado
 
----
+Existem **3 falhas** que impedem as notificações WhatsApp de funcionar após uma compra aprovada:
 
-## Arquivos Existentes - Melhorias
+### 1. Secrets WAHA não configurados
+Os edge functions `abacatepay-webhook` e `check-abacatepay-payment` dependem de `WAHA_BASE_URL` e `WAHA_API_KEY` como env vars, mas esses secrets **não estão cadastrados** no projeto. A função `sendWhatsAppNotification` retorna silenciosamente (`if (!wahaApiKey) return;`).
 
-### `0-ai-project-context.md` - Atualizar
-- Adicionar secao sobre o sistema de Diagnostico de Dispositivos (`/testar/:token`)
-- Documentar o modulo de Peliculas (`/p`)
-- Mencionar o sistema de Gamificacao (HamsterPage/CookiePage)
-- Atualizar a lista de Guards com `MobileMenuProvider`
+### 2. Webhook não lê configurações do banco
+A tabela `whatsapp_zapi_settings` tem campos perfeitos para isso:
+- `admin_notification_phone` -- telefone do admin para receber notificação
+- `purchase_approved_template` -- template da mensagem para o admin
+- `buyer_notification_template` -- template da mensagem para o comprador
+- `waha_session` -- sessão WAHA configurada
 
-### `1-visao-geral.md` - Expandir
-- Adicionar modulo de Garantias (`/garantia`)
-- Documentar Central de Ajuda (`/central-de-ajuda`)
-- Adicionar secao sobre Notificacoes Push e sistema de Updates
-- Mencionar Apps Page e Sistema (mini-OS no browser)
+Porém o `abacatepay-webhook` ignora tudo isso e usa apenas env vars hardcoded.
 
-### `2-frontend-estrutura.md` - Detalhar
-- Documentar o sistema de `lazyWithRetry` com telemetria de chunks
-- Explicar `ChunkLoadRecoveryBanner` e `useChunkLoadTelemetry`
-- Detalhar o `SessionPersistence` e `secureStorage`
-- Documentar o `MobileMenuProvider` e navegacao mobile
+### 3. `check-abacatepay-payment` não envia WhatsApp
+A função de self-healing (polling) gera a licença mas **não envia nenhuma notificação WhatsApp** -- nem para o comprador, nem para o admin.
 
-### `3-backend-supabase.md` - Expandir
-- Listar todas as 40+ Edge Functions com descricao curta
-- Documentar o fluxo de `rate-limiter` e `security-api`
-- Explicar o sistema de notificacoes push (`send-push-notification`)
+## Solução
 
-### `4-integracoes-externas.md` - Atualizar
-- Adicionar secao sobre Evolution API e multi-broker completo
-- Documentar o sistema de download de video via VPS proxy
+### 1. Adicionar secrets WAHA
+Antes de implementar, será necessário que o usuário informe os valores de `WAHA_BASE_URL`, `WAHA_API_KEY`, e opcionalmente `WAHA_SESSION`.
 
----
+### 2. Atualizar `supabase/functions/abacatepay-webhook/index.ts`
+- Refatorar `sendWhatsAppNotification` para buscar configurações de `whatsapp_zapi_settings` do banco (admin phone, templates, waha_session)
+- Enviar mensagem ao **admin** usando `admin_notification_phone` + `purchase_approved_template`
+- Enviar mensagem ao **comprador** usando `buyer_notification_template`
+- Fallback para env vars se as configurações do banco não existirem
 
-## Novos Arquivos
+### 3. Atualizar `supabase/functions/check-abacatepay-payment/index.ts`
+- Adicionar a mesma lógica de notificação WhatsApp após o self-healing gerar a licença
+- Buscar `whatsapp_zapi_settings` para obter phone do admin e templates
+- Enviar notificação ao comprador e ao admin
 
-### `5-typescript-tipos.md` - Tipos e Interfaces
-Documentar todas as interfaces criticas do sistema:
-- `ServiceOrderData` (OS com campos de senha, checklist, etc.)
-- `Budget` (tipo canonico via Supabase Tables)
-- `User`, `UserProfile`, `DebugInfo`
-- `CompanyInfo`, `CompanyData`, `CompanyFormData`
-- `TestSession`, `TestResult`, `TestDetails`, `TestConfig`
-- `DevicePasswordType` e seus valores
-- `CheckoutParams`, `PixPaymentData`
-- `BudgetData`, `BudgetPartData` (para PDFs)
-- `AuthContextType` e `UserRole`
-- Tabela visual com cada tipo e onde e usado
+### Mudanças por arquivo
 
-### `6-hooks-referencia.md` - Guia de Hooks
-Catalogar os 60+ hooks com categorias:
-- **Autenticacao**: `useAuth`, `useTokenRotation`, `useSecurity`
-- **Licenciamento**: `useLicense`, `useLicenseVerification`, `useLicenseCache`, `useTrialLicense`
-- **Dispositivo**: `useDeviceDetection`, `useIOSDetection`, `useMobileDetection`, `useBatteryDetection`
-- **Ordens de Servico**: `useSecureServiceOrders`, `useServiceOrderEdit`, `useServiceOrderRealTime`, `useServiceOrderShare`
-- **Orcamentos (Worm)**: `useBudgetData`, `useBudgetDeletion`, `useBudgetServiceOrder`, `useCreateServiceOrderFromBudget`
-- **PWA/Offline**: `usePWA`, `useOfflineDetection`, `useSwipeGesture`
-- **UI/UX**: `useResponsive`, `useMobileMenu`, `usePopupState`, `useDebounce`
-- **Store**: `useShopProfile`, `useImportBudgetToStore`
-- **Config**: `useAppConfig`, `useCompanyBranding`, `useDrippySettings`, `useCookiePreferences`
-- Exemplos de uso para os mais importantes
+| Arquivo | Mudança |
+|---------|---------|
+| `supabase/functions/abacatepay-webhook/index.ts` | Buscar `whatsapp_zapi_settings` do BD, enviar WhatsApp ao admin e buyer usando templates e `waha_session` do BD |
+| `supabase/functions/check-abacatepay-payment/index.ts` | Adicionar envio de WhatsApp ao admin e buyer após self-healing gerar licença |
 
-### `7-rotas-e-guards.md` - Mapa de Rotas
-Tabela completa com todas as rotas do `App.tsx`:
-- Rota, Componente, Guard aplicado, Lazy/Estatico
-- Fluxo visual de redirecionamentos (auth -> licenca -> dashboard)
-- Explicacao de cada Guard: `UnifiedProtectionGuard`, `AdminGuard`, `MaintenanceGuard`
-- Como adicionar uma nova rota (passo a passo)
-
-### `8-edge-functions.md` - Backend Serverless
-Documentacao detalhada de cada Edge Function:
-- **Pagamentos**: `create-mercadopago-checkout`, `check-mercadopago-payment`, `mercadopago-webhook`, `cancel-mercadopago-payment`, `create-mercadopago-subscription`
-- **WhatsApp**: `whatsapp-proxy`, `whatsapp-webhook`, `whatsapp-qr-connect`, `whatsapp-ai-reply`, `whatsapp-instance-manage`, `waha-proxy`
-- **IA**: `chat-ai`, `triage-ai`, `analyze-budgets`
-- **Seguranca**: `security-api`, `rate-limiter`, `real-time-monitoring`, `audit-system`
-- **Usuarios**: `manage-user-profile`, `admin-reset-password`, `admin-update-user-email`, `validate-license`
-- **Comunicacao**: `send-license-email`, `send-payment-receipt-email`, `send-push-notification`, `notification-system`
-- Fluxo de request/response de cada grupo
-
-### `9-seguranca.md` - Arquitetura de Seguranca
-- Sistema `secureStorage` com criptografia AES-GCM e PBKDF2
-- `SecurityLogger` e auditoria de acessos
-- RLS (Row Level Security) - regras e padroes
-- `botDetection`, `secureCSP`, `secureNavigation`
-- Rate limiting nas Edge Functions
-- Token rotation (`useTokenRotation`)
-- Fluxo de validacao de licencas
-
-### `10-pdf-e-utils.md` - Utilitarios e Geracao de PDFs
-- Como funciona o `pdfUtils.ts` (jsPDF client-side)
-- `serviceOrderPdfUtils.ts` para recibos de OS
-- `currency.ts` - formatacao BRL
-- `whatsappUtils.ts` e `whatsappTemplateUtils.ts`
-- `authCleanup.ts` - limpeza de sessao
-- `pwaDetection.ts` e `pwaReset.ts`
-- `debugLogger.ts` e `asciiConsole.ts`
-
-### `11-guia-contribuicao.md` - Guia para Novos Devs
-- Como rodar o projeto localmente
-- Convencoes de codigo (React Query > useEffect, Zustand para global state)
-- Como criar uma nova pagina (registrar rota, escolher Guard, lazy vs estatico)
-- Como criar um novo hook
-- Como adicionar uma Edge Function
-- Checklist de PR/review
-- Erros comuns e como evitar (RLS, chunks, offline)
-
----
-
-## Detalhes Tecnicos
-
-### Arquivos a criar:
-1. `.documentação/docs/5-typescript-tipos.md`
-2. `.documentação/docs/6-hooks-referencia.md`
-3. `.documentação/docs/7-rotas-e-guards.md`
-4. `.documentação/docs/8-edge-functions.md`
-5. `.documentação/docs/9-seguranca.md`
-6. `.documentação/docs/10-pdf-e-utils.md`
-7. `.documentação/docs/11-guia-contribuicao.md`
-
-### Arquivos a editar:
-1. `.documentação/docs/0-ai-project-context.md`
-2. `.documentação/docs/1-visao-geral.md`
-3. `.documentação/docs/2-frontend-estrutura.md`
-4. `.documentação/docs/3-backend-supabase.md`
-5. `.documentação/docs/4-integracoes-externas.md`
-
-Total: **12 arquivos** (7 novos + 5 atualizados)
+### Fluxo corrigido
+```text
+Pagamento PAID
+  ├── webhook OU check-payment detecta
+  ├── Gera/renova licença
+  ├── SELECT whatsapp_zapi_settings (is_active=true)
+  ├── Envia WhatsApp ao COMPRADOR (buyer_notification_template)
+  └── Envia WhatsApp ao ADMIN (admin_notification_phone + purchase_approved_template)
+```
 
