@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Shield, Check, Clock, Zap, MessageCircle, Loader2, User, Mail, Phone, AlertCircle, Atom, FileText, CreditCard, QrCode } from 'lucide-react';
+import { ArrowLeft, Shield, Check, Clock, Zap, MessageCircle, Loader2, User, Mail, Phone, AlertCircle, Atom, FileText, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
