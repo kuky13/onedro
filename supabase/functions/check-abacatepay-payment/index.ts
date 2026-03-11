@@ -48,6 +48,82 @@ async function generateUniqueLicenseCode(supabase: any, planType: string = "mont
   return code;
 }
 
+async function sendWahaMessage(phone: string, message: string, wahaBaseUrl: string, wahaApiKey: string, session: string) {
+  let cleanPhone = phone.replace(/\D/g, "");
+  if ((cleanPhone.length === 10 || cleanPhone.length === 11) && !cleanPhone.startsWith("55")) {
+    cleanPhone = "55" + cleanPhone;
+  }
+  const chatId = `${cleanPhone}@c.us`;
+  const url = `${wahaBaseUrl.replace(/\/+$/, "")}/api/sendText?session=${encodeURIComponent(session)}`;
+  
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Api-Key": wahaApiKey },
+    body: JSON.stringify({ session, chatId, text: message }),
+  });
+  console.log(`WAHA response for ${cleanPhone}: ${res.status}`);
+}
+
+function applyTemplate(template: string, vars: Record<string, string>): string {
+  let result = template;
+  for (const [key, value] of Object.entries(vars)) {
+    result = result.replaceAll(`{{${key}}}`, value);
+  }
+  return result;
+}
+
+async function sendWhatsAppNotifications(supabaseAdmin: any, params: {
+  customerName: string; customerPhone: string; licenseCode: string; planType: string; amount?: number;
+}) {
+  const wahaBaseUrl = Deno.env.get("WAHA_BASE_URL");
+  const wahaApiKey = Deno.env.get("WAHA_API_KEY");
+
+  if (!wahaBaseUrl || !wahaApiKey) {
+    console.log("WAHA secrets not configured, skipping WhatsApp notifications");
+    return;
+  }
+
+  const { data: settings } = await supabaseAdmin
+    .from("whatsapp_zapi_settings")
+    .select("*")
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+
+  const session = settings?.waha_session || Deno.env.get("WAHA_SESSION") || "default";
+  const templateVars: Record<string, string> = {
+    nome: params.customerName,
+    licenca: params.licenseCode,
+    plano: params.planType,
+    valor: params.amount ? `R$ ${(params.amount / 100).toFixed(2)}` : "",
+  };
+
+  // Notify BUYER
+  try {
+    if (params.customerPhone) {
+      const buyerTemplate = settings?.buyer_notification_template
+        || `*✅ Pagamento Confirmado!*\n\nObrigado {{nome}}!\nSua licença: *{{licenca}}*\nPlano: {{plano}}`;
+      const buyerMsg = applyTemplate(buyerTemplate, templateVars);
+      await sendWahaMessage(params.customerPhone, buyerMsg, wahaBaseUrl, wahaApiKey, session);
+    }
+  } catch (e) {
+    console.error("WhatsApp Buyer Error:", e);
+  }
+
+  // Notify ADMIN
+  try {
+    const adminPhone = settings?.admin_notification_phone;
+    if (adminPhone) {
+      const adminTemplate = settings?.purchase_approved_template
+        || `*💰 Nova venda!*\n\nCliente: {{nome}}\nPlano: {{plano}}\nValor: {{valor}}\nLicença: {{licenca}}`;
+      const adminMsg = applyTemplate(adminTemplate, templateVars);
+      await sendWahaMessage(adminPhone, adminMsg, wahaBaseUrl, wahaApiKey, session);
+    }
+  } catch (e) {
+    console.error("WhatsApp Admin Error:", e);
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -204,6 +280,19 @@ serve(async (req) => {
             }
 
             console.log("Self-healing successful. License generated:", licenseCode);
+
+            // Send WhatsApp notifications (buyer + admin)
+            try {
+              await sendWhatsAppNotifications(supabaseAdmin, {
+                customerName: purchaseReg.customer_name,
+                customerPhone: purchaseReg.customer_phone,
+                licenseCode,
+                planType,
+                amount: data.data.amount,
+              });
+            } catch (whatsappErr) {
+              console.error("WhatsApp notification error in self-healing:", whatsappErr);
+            }
 
           } catch (genError) {
             console.error("Error generating license in check-status:", genError);
