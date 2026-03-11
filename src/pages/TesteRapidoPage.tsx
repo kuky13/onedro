@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Share2, Plus, AlertCircle, Trash2, ExternalLink, Calendar, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Plus, AlertCircle, Trash2, ExternalLink, Calendar, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DeviceChecklist, DeviceChecklistData } from '@/components/service-orders/DeviceChecklist';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -32,7 +32,7 @@ const initialData: DeviceChecklistData = {
 const TesteRapidoPage = () => {
   const [checklist, setChecklist] = useState<DeviceChecklistData>({ ...initialData });
   const [quickTests, setQuickTests] = useState<QuickTest[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [_isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [newTestName, setNewTestName] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -46,16 +46,27 @@ const TesteRapidoPage = () => {
 
   const fetchQuickTests = async () => {
     try {
-      const { data, error } = await supabase
-        .from('quick_tests')
-        .select('*')
-        .order('created_at', { ascending: false });
+      setIsLoading(true);
+      const { data: fetchedTests, error } = await supabase
+        .from('device_test_sessions')
+        .select('id, share_token, created_at, expires_at, device_info, status')
+        .order('created_at', { ascending: false })
+        .limit(5);
 
       if (error) throw error;
-      setQuickTests(data || []);
+      const mapped: QuickTest[] = (fetchedTests || []).map((t: any) => ({
+        id: t.id,
+        name: t.device_info?.name || t.share_token,
+        url: `${window.location.origin}/testar/${t.share_token}`,
+        created_at: t.created_at,
+        expires_at: t.expires_at || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      }));
+      setQuickTests(mapped);
     } catch (error) {
       console.error('Error fetching quick tests:', error);
       toast.error('Erro ao carregar testes salvos');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -75,14 +86,17 @@ const TesteRapidoPage = () => {
       // Let's use a placeholder URL structure for now as per requirement "URL de teste".
       
       const uniqueId = crypto.randomUUID();
-      const testUrl = `${window.location.origin}/testar/${uniqueId}`; // Example URL
 
-      const { data, error } = await supabase.functions.invoke('create-quick-test', {
-        body: {
-          name: newTestName,
-          url: testUrl
-        }
-      });
+      const { data: _newTest, error } = await supabase
+        .from('device_test_sessions')
+        .insert([{
+          share_token: uniqueId,
+          status: 'pending',
+          device_info: { name: newTestName },
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        }])
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -101,7 +115,7 @@ const TesteRapidoPage = () => {
   const handleDeleteTest = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('quick_tests')
+        .from('device_test_sessions')
         .delete()
         .eq('id', id);
 
