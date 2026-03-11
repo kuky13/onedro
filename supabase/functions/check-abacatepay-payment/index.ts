@@ -205,6 +205,19 @@ serve(async (req) => {
 
             console.log("Self-healing successful. License generated:", licenseCode);
 
+            // Send WhatsApp notifications (buyer + admin)
+            try {
+              await sendWhatsAppNotifications(supabaseAdmin, {
+                customerName: purchaseReg.customer_name,
+                customerPhone: purchaseReg.customer_phone,
+                licenseCode,
+                planType,
+                amount: data.data.amount,
+              });
+            } catch (whatsappErr) {
+              console.error("WhatsApp notification error in self-healing:", whatsappErr);
+            }
+
           } catch (genError) {
             console.error("Error generating license in check-status:", genError);
             // Don't fail the request, just return what we have (status PAID, no license)

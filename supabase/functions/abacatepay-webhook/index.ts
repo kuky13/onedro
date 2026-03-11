@@ -396,15 +396,16 @@ serve(async (req) => {
              });
           } catch (e) { console.error("Admin Email Error", e); }
 
-          // Send WhatsApp (simplified)
-          try {
-             if (purchaseReg.customer_phone) {
-                await sendWhatsAppNotification({
-                   phone: purchaseReg.customer_phone,
-                   message: `*✅ Pagamento Confirmado (AbacatePay)!*\n\nObrigado ${purchaseReg.customer_name}!\nLicença: ${licenseCode}`
-                });
-             }
-          } catch (e) { console.error("WhatsApp Error", e); }
+           // Send WhatsApp notifications (buyer + admin)
+           try {
+              await sendWhatsAppNotifications(supabaseAdmin, {
+                 customerName: purchaseReg.customer_name,
+                 customerPhone: purchaseReg.customer_phone,
+                 licenseCode,
+                 planType,
+                 amount: paidAmount,
+              });
+           } catch (e) { console.error("WhatsApp Notifications Error", e); }
 
        } else {
           logStep("Purchase Registration not found", { paymentId });
