@@ -86,20 +86,32 @@ const TesteRapidoPage = () => {
       // we'll point to the generic test page with a unique ID or similar.
       // Let's use a placeholder URL structure for now as per requirement "URL de teste".
       
-      const uniqueId = crypto.randomUUID();
-
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error('Você precisa estar logado para criar testes.');
         return;
       }
 
+      // Gera código de 4 dígitos com retry para evitar colisão
+      let shortToken = '';
+      let attempts = 0;
+      while (attempts < 10) {
+        shortToken = Math.floor(1000 + Math.random() * 9000).toString();
+        const { data: existing } = await supabase
+          .from('device_test_sessions')
+          .select('id')
+          .eq('share_token', shortToken)
+          .maybeSingle();
+        if (!existing) break;
+        attempts++;
+      }
+
       const { data: _newTest, error } = await supabase
         .from('device_test_sessions')
         .insert([{
-          share_token: uniqueId,
+          share_token: shortToken,
           status: 'pending',
-          device_info: { name: newTestName },
+          device_info: { name: newTestName, source: 'quick_test' },
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
           created_by: user.id,
         }])
