@@ -32,7 +32,7 @@ const initialData: DeviceChecklistData = {
 const TesteRapidoPage = () => {
   const [checklist, setChecklist] = useState<DeviceChecklistData>({ ...initialData });
   const [quickTests, setQuickTests] = useState<QuickTest[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [_isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [newTestName, setNewTestName] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
