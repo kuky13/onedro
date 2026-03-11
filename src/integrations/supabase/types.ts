@@ -2200,6 +2200,7 @@ export type Database = {
           customer_email: string
           customer_name: string
           customer_phone: string
+          customer_tax_id: string | null
           email_sent: boolean | null
           email_sent_at: string | null
           id: string
@@ -2222,6 +2223,7 @@ export type Database = {
           customer_email: string
           customer_name: string
           customer_phone: string
+          customer_tax_id?: string | null
           email_sent?: boolean | null
           email_sent_at?: string | null
           id?: string
@@ -2244,6 +2246,7 @@ export type Database = {
           customer_email?: string
           customer_name?: string
           customer_phone?: string
+          customer_tax_id?: string | null
           email_sent?: boolean | null
           email_sent_at?: string | null
           id?: string
