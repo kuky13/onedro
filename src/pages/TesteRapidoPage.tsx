@@ -46,16 +46,27 @@ const TesteRapidoPage = () => {
 
   const fetchQuickTests = async () => {
     try {
-      const { data, error } = await supabase
-        .from('quick_tests')
-        .select('*')
-        .order('created_at', { ascending: false });
+      setIsLoading(true);
+      const { data: fetchedTests, error } = await supabase
+        .from('device_test_sessions')
+        .select('id, share_token, created_at, expires_at, device_info, status')
+        .order('created_at', { ascending: false })
+        .limit(5);
 
       if (error) throw error;
-      setQuickTests(data || []);
+      const mapped: QuickTest[] = (fetchedTests || []).map((t: any) => ({
+        id: t.id,
+        name: t.device_info?.name || t.share_token,
+        url: `${window.location.origin}/testar/${t.share_token}`,
+        created_at: t.created_at,
+        expires_at: t.expires_at || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      }));
+      setQuickTests(mapped);
     } catch (error) {
       console.error('Error fetching quick tests:', error);
       toast.error('Erro ao carregar testes salvos');
+    } finally {
+      setIsLoading(false);
     }
   };
 
