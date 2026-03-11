@@ -410,7 +410,7 @@ export const DeviceChecklist: React.FC<DeviceChecklistProps> = ({
   };
 
   // Suppress unused warnings - these are kept for future UI re-integration
-  void _openSections; void _toggleSection; void _updateChecklistItem; void _markAllItems; void _unmarkAllItems;
+  void _openSections;void _toggleSection;void _updateChecklistItem;void _markAllItems;void _unmarkAllItems;
   return (
     <div className="space-y-4">
       {/* Botão de Diagnóstico */}
@@ -429,18 +429,18 @@ export const DeviceChecklist: React.FC<DeviceChecklistProps> = ({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  window.location.href = '/teste-rapido';
-                }}
-                className="flex items-center gap-2 text-sm">
-                <ExternalLink className="h-4 w-4" />
-                Criar Link
-              </Button>
+              
+
+
+
+
+
+
+
+
+
+
+              
               <Button
                 type="button"
                 variant="default"
