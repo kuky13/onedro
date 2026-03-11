@@ -86,7 +86,6 @@ const TesteRapidoPage = () => {
       // Let's use a placeholder URL structure for now as per requirement "URL de teste".
       
       const uniqueId = crypto.randomUUID();
-      const _testUrl = `${window.location.origin}/testar/${uniqueId}`;
 
       const { data: _newTest, error } = await supabase
         .from('device_test_sessions')
