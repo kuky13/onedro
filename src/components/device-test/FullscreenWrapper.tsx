@@ -167,8 +167,9 @@ export function FullscreenWrapper({ children, onStart }: FullscreenWrapperProps)
       )}
       style={{
         height: '100dvh',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        paddingTop: 'env(safe-area-inset-top, 0px)',
+        width: '100vw',
+        top: 0,
+        left: 0,
       }}
     >
       {children}
