@@ -108,7 +108,7 @@ serve(async (req) => {
       paymentMethod === "pix"
         ? "PIX"
         : paymentMethod === "card"
-        ? "Cartão (Mercado Pago)"
+        ? "Cartão (Abacate Pay)"
         : paymentMethod;
 
     const statusLabel =
@@ -157,7 +157,7 @@ serve(async (req) => {
       </p>
       <p style="margin: 4px 0; font-size: 14px;"><strong>Método:</strong> ${paymentMethodLabel}</p>
       <p style="margin: 4px 0; font-size: 14px;"><strong>Data e hora:</strong> ${paidAtFormatted}</p>
-      <p style="margin: 4px 0; font-size: 13px; color: #6b7280;"><strong>ID do pagamento (Mercado Pago):</strong> ${paymentId}</p>
+      <p style="margin: 4px 0; font-size: 13px; color: #6b7280;"><strong>ID do pagamento (Abacate Pay):</strong> ${paymentId}</p>
     </div>
 
     <h2 style="font-size: 16px; margin: 0 0 8px 0; color: #111827;">Dados da Licença</h2>
@@ -266,7 +266,7 @@ serve(async (req) => {
       <p style="margin: 4px 0; font-size: 14px;"><strong>Método:</strong> ${paymentMethodLabel}</p>
       <p style="margin: 4px 0; font-size: 14px;"><strong>Status:</strong> ${statusLabel}</p>
       <p style="margin: 4px 0; font-size: 14px;"><strong>Data e hora:</strong> ${paidAtFormatted}</p>
-      <p style="margin: 4px 0; font-size: 13px; color: #6b7280;"><strong>ID Mercado Pago:</strong> ${paymentId}</p>
+      <p style="margin: 4px 0; font-size: 13px; color: #6b7280;"><strong>ID Abacate Pay:</strong> ${paymentId}</p>
       <p style="margin: 4px 0; font-size: 13px; color: #6b7280;"><strong>Código do recibo:</strong> ${receiptCode}</p>
     </div>
 

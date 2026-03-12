@@ -96,7 +96,7 @@ export function WhatsAppManagement() {
   const [allowedGroups, setAllowedGroups] = useState<string>('');
   const [evolutionInstanceName, setEvolutionInstanceName] = useState<string>('');
   const [adminNotificationPhone, setAdminNotificationPhone] = useState<string>('');
-  const [purchaseTemplate, setPurchaseTemplate] = useState<string>(`*🚀 Nova Venda Aprovada!*\n\n` + `👤 *Cliente:* {{client_name}}\n` + `📧 *Email:* {{email}}\n` + `📱 *Tel:* {{phone}}\n` + `💰 *Valor:* R$ {{amount}}\n` + `📦 *Plano:* {{plan_type}}\n` + `🎫 *Licença:* \`{{license_code}}\`\n\n` + `*ID MP:* \`{{mp_id}}\`\n` + `*Status:* {{status}}\n` + `*Método:* {{method}}\n\n` + `{{datetime_brt}}\n\n` + `O sistema processou tudo automaticamente. ✅`);
+  const [purchaseTemplate, setPurchaseTemplate] = useState<string>(`*🚀 Nova Venda Aprovada!*\n\n` + `👤 *Cliente:* {{client_name}}\n` + `📧 *Email:* {{email}}\n` + `📱 *Tel:* {{phone}}\n` + `💰 *Valor:* R$ {{amount}}\n` + `📦 *Plano:* {{plan_type}}\n` + `🎫 *Licença:* \`{{license_code}}\`\n\n` + `*ID Abacate Pay:* \`{{mp_id}}\`\n` + `*Status:* {{status}}\n` + `*Método:* {{method}}\n\n` + `{{datetime_brt}}\n\n` + `O sistema processou tudo automaticamente. ✅`);
   const [buyerTemplate, setBuyerTemplate] = useState<string>(`*✅ Pagamento Confirmado!*\n\n` + `Olá *{{client_name}}*, seu pagamento foi aprovado com sucesso!\n\n` + `*Detalhes da Compra:*\n` + `📦 *Plano:* {{plan_name}}\n` + `💰 *Valor:* R$ {{amount}}\n` + `🎫 *Licença:* \`{{license_code}}\`\n` + `📅 *Validade:* {{validity}}\n\n` + `{{datetime_brt}}\n\n` + `Obrigado por escolher nosso sistema! 🐧`);
 
   // --- Queries ---
@@ -312,9 +312,9 @@ export function WhatsAppManagement() {
         plan_type: 'monthly',
         plan_name: 'Mensal',
         license_code: 'OLIVEIRA20000',
-        mp_id: '141591010070',
-        status: 'approved',
-        method: 'pix',
+        mp_id: 'bill_abc123456',
+        status: 'Aprovado',
+        method: 'PIX',
         datetime_brt: '19/01/2025 as 15:00 (Brasília)',
         validity: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')
       };
@@ -655,7 +655,7 @@ export function WhatsAppManagement() {
                       <Button variant="outline" size="icon" onClick={() => openTestDialog('admin')} title="Enviar teste">
                         <Send className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => setPurchaseTemplate(`*🚀 Nova Venda Aprovada!*\n\n` + `👤 *Cliente:* {{client_name}}\n` + `📧 *Email:* {{email}}\n` + `📱 *Tel:* {{phone}}\n` + `💰 *Valor:* R$ {{amount}}\n` + `📦 *Plano:* {{plan_type}}\n` + `🎫 *Licença:* \`{{license_code}}\`\n\n` + `*ID MP:* \`{{mp_id}}\`\n` + `*Status:* {{status}}\n` + `*Método:* {{method}}\n\n` + `{{datetime_brt}}\n\n` + `O sistema processou tudo automaticamente. ✅`)} title="Aplicar modelo sugerido">
+                      <Button variant="outline" size="sm" onClick={() => setPurchaseTemplate(`*🚀 Nova Venda Aprovada!*\n\n` + `👤 *Cliente:* {{client_name}}\n` + `📧 *Email:* {{email}}\n` + `📱 *Tel:* {{phone}}\n` + `💰 *Valor:* R$ {{amount}}\n` + `📦 *Plano:* {{plan_type}}\n` + `🎫 *Licença:* \`{{license_code}}\`\n\n` + `*ID Abacate Pay:* \`{{mp_id}}\`\n` + `*Status:* {{status}}\n` + `*Método:* {{method}}\n\n` + `{{datetime_brt}}\n\n` + `O sistema processou tudo automaticamente. ✅`)} title="Aplicar modelo sugerido">
                         Modelo
                       </Button>
                     </div>
