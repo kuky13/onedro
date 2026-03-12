@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { LayoutDashboard, Users, LogOut, Menu, X, Shield, Home, Film, Brain, Grid3X3, CreditCard, Ticket, MessageSquare, Key, Package, Bug, Server, ShoppingBag } from 'lucide-react';
+import { LayoutDashboard, Users, Menu, X, Shield, Home, Film, Brain, Grid3X3, CreditCard, Ticket, MessageSquare, Key, Package, Bug, Server, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -80,16 +80,7 @@ export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate('/sign');
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-    }
-  };
+  const { user } = useAuth();
 
   const isCurrentPath = (href: string) => {
     if (href === '/supadmin') return location.pathname === '/supadmin';
@@ -225,8 +216,8 @@ export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
                     <p className="text-[10px] text-muted-foreground">Administrador</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleSignOut}>
-                  <LogOut className="h-4 w-4" />
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/dashboard')}>
+                  <ArrowLeft className="h-4 w-4" />
                 </Button>
               </div>
             </div>
