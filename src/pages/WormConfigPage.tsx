@@ -16,7 +16,7 @@ export const WormConfigPage = () => {
             <WormHeader />
             <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 space-y-8">
                 <h1 className="text-3xl font-bold">Configurações</h1>
-                <p className="text-muted-foreground">Personalize a geração de documentos e mensagens.</p>
+                <p className="text-muted-foreground">Personalize a geração de mensagens.</p>
 
                 <div className="grid md:grid-cols-2 gap-6">
                     <Card className="cursor-pointer hover:shadow-lg transition-all border-l-4 border-l-green-500" onClick={() => navigate('/worm/config/whatsapp')}>
@@ -37,20 +37,20 @@ export const WormConfigPage = () => {
                     </Card>
 
                     <Card className="cursor-pointer hover:shadow-lg transition-all border-l-4 border-l-blue-500" onClick={() => navigate('/worm/config/pdf')}>
-                        <CardContent className="p-6 flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-blue-100 rounded-full dark:bg-blue-900/20">
-                                    <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-semibold">PDF e Impressão</h3>
-                                    <p className="text-sm text-muted-foreground mt-1">
-                                        Layouts de impressão térmica (58mm/80mm) e A4.
-                                    </p>
-                                </div>
-                            </div>
-                            <ChevronRight className="h-6 w-6 text-muted-foreground" />
-                        </CardContent>
+                        
+
+
+
+
+
+
+
+
+
+
+
+
+          
                     </Card>
                 </div>
             </main>
