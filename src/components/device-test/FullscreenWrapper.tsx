@@ -33,6 +33,25 @@ export function FullscreenWrapper({ children, onStart }: FullscreenWrapperProps)
     } catch { }
   }, []);
 
+  // Remove #root safe-area padding when fullscreen wrapper is active
+  useEffect(() => {
+    const root = document.getElementById('root');
+    if (root) {
+      root.style.paddingTop = '0px';
+      root.style.paddingBottom = '0px';
+      root.style.paddingLeft = '0px';
+      root.style.paddingRight = '0px';
+    }
+    return () => {
+      if (root) {
+        root.style.paddingTop = '';
+        root.style.paddingBottom = '';
+        root.style.paddingLeft = '';
+        root.style.paddingRight = '';
+      }
+    };
+  }, []);
+
   const requestFullscreen = async () => {
     if (isIOS) {
       setIsFullscreen(true);
@@ -148,8 +167,9 @@ export function FullscreenWrapper({ children, onStart }: FullscreenWrapperProps)
       )}
       style={{
         height: '100dvh',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        paddingTop: 'env(safe-area-inset-top, 0px)',
+        width: '100vw',
+        top: 0,
+        left: 0,
       }}
     >
       {children}
