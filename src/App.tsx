@@ -1,4 +1,5 @@
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Suspense, useEffect, useState } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -460,7 +461,7 @@ const AppContent = () => {
         </div>
       </div>
     </div>}
-    {location.pathname !== '/sistema'}
+    <SpeedInsights />
   </>;
 };
 const App = () => {
