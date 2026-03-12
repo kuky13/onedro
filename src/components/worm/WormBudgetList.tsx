@@ -52,12 +52,20 @@ export const WormBudgetList = ({
   const [showTutorial, setShowTutorial] = useState(false);
 
   useEffect(() => {
+    const lastSeen = localStorage.getItem('has_seen_copy_budget_tutorial');
+    if (lastSeen) {
+      const timestamp = parseInt(lastSeen, 10);
+      if (!isNaN(timestamp) && Date.now() - timestamp < 3600000) {
+        setShowTutorial(false);
+        return;
+      }
+    }
     setShowTutorial(true);
   }, []);
 
   const handleCloseTutorial = (e: React.MouseEvent) => {
     e.stopPropagation();
-    localStorage.setItem('has_seen_copy_budget_tutorial', 'true');
+    localStorage.setItem('has_seen_copy_budget_tutorial', Date.now().toString());
     setShowTutorial(false);
   };
 
@@ -330,7 +338,7 @@ export const WormBudgetList = ({
                         className="w-full text-xs h-7 rounded-lg font-semibold text-primary"
                         onClick={handleCloseTutorial}>
 
-                        Entendi
+                        OK
                       </Button>
                     </div>
                   </div>

@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronRight, Smartphone, Zap, ExternalLink } from 'lucide-react';
+import { ChevronDown, ChevronRight, Smartphone, Zap, ExternalLink, Timer } from 'lucide-react';
 import { ChecklistTestRunner } from './ChecklistTestRunner';
 import { DiagnosticShareDialog } from './DiagnosticShareDialog';
 
@@ -419,7 +419,7 @@ export const DeviceChecklist: React.FC<DeviceChecklistProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/20">
-                <Smartphone className="h-5 w-5 text-primary" />
+                <Timer className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <h3 className="font-medium text-foreground">Diagnóstico Automático</h3>

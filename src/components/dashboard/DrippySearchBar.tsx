@@ -60,12 +60,20 @@ export const DrippySearchBar = ({ className = "" }: DrippySearchBarProps) => {
   const [showDrippyTip, setShowDrippyTip] = useState(false);
 
   useEffect(() => {
+    const lastSeen = localStorage.getItem('has_seen_drippy_tutorial');
+    if (lastSeen) {
+      const timestamp = parseInt(lastSeen, 10);
+      if (!isNaN(timestamp) && Date.now() - timestamp < 3600000) {
+        setShowDrippyTip(false);
+        return;
+      }
+    }
     setShowDrippyTip(true);
   }, []);
 
   const handleCloseDrippyTip = (e: React.MouseEvent) => {
     e.stopPropagation();
-    localStorage.setItem('has_seen_drippy_tutorial', 'true');
+    localStorage.setItem('has_seen_drippy_tutorial', Date.now().toString());
     setShowDrippyTip(false);
   };
   const { profile } = useAuth();

@@ -1,4 +1,4 @@
-import { List, Settings, Shield, Users, Wrench, Smartphone, Hammer, Store, Download } from 'lucide-react';
+import { List, Settings, Shield, Users, Wrench, Smartphone, Hammer, Store, Download, Timer } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { GlassCard, RippleButton } from '@/components/ui/animations/micro-interactions';
@@ -42,7 +42,7 @@ const quickAccessActions: QuickAccessAction[] = [{
 }, {
   id: 'teste-rapido',
   label: 'Teste Rápido',
-  icon: Smartphone,
+  icon: Timer,
   path: '/teste-rapido',
   permission: null,
   gradient: 'from-cyan-500 to-teal-500',
