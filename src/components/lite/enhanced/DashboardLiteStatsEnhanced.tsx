@@ -33,9 +33,9 @@ export const DashboardLiteStatsEnhanced = ({ profile }: DashboardLiteStatsEnhanc
 
       {/* Hero header */}
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+        transition={{ duration: 0 }}
         className="flex flex-row justify-between items-start"
       >
         <div className="space-y-1">

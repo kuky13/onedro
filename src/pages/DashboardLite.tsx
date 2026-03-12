@@ -22,6 +22,36 @@ type DashboardLiteProps = {
   initialTab?: string;
 };
 
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Skeleton Component
+const DashboardSkeleton = () => (
+  <div className="w-full max-w-7xl mx-auto p-4 space-y-6">
+    {/* Header Skeleton */}
+    <div className="space-y-2">
+      <Skeleton className="h-8 w-48 rounded-lg" />
+      <Skeleton className="h-4 w-32 rounded-lg" />
+    </div>
+
+    {/* Stats Grid Skeleton */}
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {[1, 2, 3, 4].map((i) => (
+        <Skeleton key={i} className="h-24 rounded-2xl" />
+      ))}
+    </div>
+
+    {/* Quick Access Skeleton */}
+    <div className="space-y-4">
+      <Skeleton className="h-6 w-40 rounded-lg" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-20 rounded-2xl" />
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
 export const DashboardLite = ({ initialTab }: DashboardLiteProps) => {
   const [activeTab, setActiveTab] = useState(initialTab ?? 'dashboard');
   const [isRestoringState, setIsRestoringState] = useState(true);
@@ -71,10 +101,9 @@ export const DashboardLite = ({ initialTab }: DashboardLiteProps) => {
       }
     };
 
-    // Aguardar um pouco para garantir que os dados estejam carregados
-    const timer = setTimeout(restoreNavigationState, 500);
+    // Executar imediatamente sem delay artificial
+    restoreNavigationState();
     
-    return () => clearTimeout(timer);
   }, [user?.id]);
 
   // Salvar estado de navegação quando activeTab muda
@@ -194,6 +223,15 @@ export const DashboardLite = ({ initialTab }: DashboardLiteProps) => {
   // Otimização para iOS: não renderizar nada até dados estarem prontos
   // IMPORTANTE: Este return condicional deve vir APÓS todos os hooks
   if (!isReady) {
+    // Show skeleton if company data is loading but user is auth
+    if (user?.id) {
+      return (
+        <div className="min-h-[100dvh] bg-background pt-safe-top">
+          <DashboardSkeleton />
+        </div>
+      );
+    }
+
     const loadingMessage = isRestoringState
       ? 'Comendo cookies...'
       : companyDataLoader.isLoading
