@@ -36,8 +36,7 @@ export const WormConfigPage = () => {
                         </CardContent>
                     </Card>
 
-                    <Card className="cursor-pointer hover:shadow-lg transition-all border-l-4 border-l-blue-500" onClick={() => navigate('/worm/config/pdf')}>
-                        
+                    
 
 
 
@@ -50,8 +49,9 @@ export const WormConfigPage = () => {
 
 
 
-          
-                    </Card>
+
+
+        
                 </div>
             </main>
         </div>;
