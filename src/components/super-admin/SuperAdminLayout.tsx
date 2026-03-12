@@ -225,8 +225,8 @@ export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
                     <p className="text-[10px] text-muted-foreground">Administrador</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleSignOut}>
-                  <LogOut className="h-4 w-4" />
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/dashboard')}>
+                  <ArrowLeft className="h-4 w-4" />
                 </Button>
               </div>
             </div>
