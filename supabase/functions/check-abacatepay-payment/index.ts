@@ -82,6 +82,7 @@ async function sendWhatsAppNotifications(supabaseAdmin: any, params: {
   paymentId: string;
   paymentMethod: string;
   status: string;
+  customerTaxId?: string; // Added optional
 }) {
   const wahaBaseUrl = Deno.env.get("WAHA_BASE_URL");
   const wahaApiKey = Deno.env.get("WAHA_API_KEY");
@@ -115,6 +116,8 @@ async function sendWhatsAppNotifications(supabaseAdmin: any, params: {
     client_name: params.customerName,
     email: params.customerEmail,
     phone: params.customerPhone,
+    cpf: params.customerTaxId || "N/A",
+    customer_tax_id: params.customerTaxId || "N/A",
     amount: amountFormatted,
     plan_type: params.planType,
     plan_name: planName,
@@ -215,7 +218,8 @@ serve(async (req) => {
       if (purchaseReg) {
         customerData = {
           name: purchaseReg.customer_name,
-          email: purchaseReg.customer_email
+          email: purchaseReg.customer_email,
+          tax_id: purchaseReg.customer_tax_id
         };
 
         // 2. Check if license already exists
@@ -352,6 +356,7 @@ serve(async (req) => {
                 customerName: purchaseReg.customer_name,
                 customerPhone: purchaseReg.customer_phone,
                 customerEmail: purchaseReg.customer_email,
+                customerTaxId: purchaseReg.customer_tax_id, // Added
                 licenseCode,
                 planType,
                 amount: data.data.amount,

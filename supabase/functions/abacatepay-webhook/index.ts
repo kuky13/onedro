@@ -61,7 +61,8 @@ const resend = resendApiKey ? new Resend(resendApiKey) : null;
 async function sendAdminPaymentNotification(params: any) {
   if (!resend) return;
   const {
-    adminEmail, customerName, customerEmail, customerPhone, planType, amount, currency,
+    adminEmail, customerName, customerEmail, customerPhone, customerTaxId, // Added customerTaxId
+    planType, amount, currency,
     paymentStatus, paymentMethod, paidAt, paymentIdMp, paymentIdInternal,
     purchaseRegistrationId, licenseId, licenseCode, licenseExpiresAt, isRenewal, deviceInfo
   } = params;
@@ -69,6 +70,7 @@ async function sendAdminPaymentNotification(params: any) {
   const html = `
     <h1>Novo pagamento aprovado (AbacatePay)</h1>
     <p>Cliente: ${customerName} (${customerEmail})</p>
+    <p>CPF: ${customerTaxId || "N/A"}</p>
     <p>Valor: ${currency} ${amount}</p>
     <p>Plano: ${planType}</p>
     <p>Status: ${paymentStatus}</p>
@@ -118,6 +120,7 @@ async function sendWhatsAppNotifications(supabaseAdmin: any, params: {
   paymentId: string;
   paymentMethod: string;
   status: string;
+  customerTaxId?: string; // Added optional
 }) {
   const wahaBaseUrl = Deno.env.get("WAHA_BASE_URL");
   const wahaApiKey = Deno.env.get("WAHA_API_KEY");
@@ -152,6 +155,8 @@ async function sendWhatsAppNotifications(supabaseAdmin: any, params: {
     client_name: params.customerName,
     email: params.customerEmail,
     phone: params.customerPhone,
+    cpf: params.customerTaxId || "N/A",
+    customer_tax_id: params.customerTaxId || "N/A",
     amount: amountFormatted,
     plan_type: params.planType,
     plan_name: planName,
@@ -448,6 +453,7 @@ serve(async (req) => {
                 customerName: purchaseReg.customer_name,
                 customerEmail: purchaseReg.customer_email,
                 customerPhone: purchaseReg.customer_phone,
+                customerTaxId: purchaseReg.customer_tax_id, // Added
                 planType,
                 amount: paidAmount / 100, // Convert to float for display
                 currency: "BRL",
@@ -465,6 +471,7 @@ serve(async (req) => {
                  customerName: purchaseReg.customer_name,
                  customerPhone: purchaseReg.customer_phone,
                  customerEmail: purchaseReg.customer_email,
+                 customerTaxId: purchaseReg.customer_tax_id, // Added
                  licenseCode,
                  planType,
                  amount: paidAmount,
