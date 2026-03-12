@@ -80,16 +80,7 @@ export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate('/sign');
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-    }
-  };
+  const { user } = useAuth();
 
   const isCurrentPath = (href: string) => {
     if (href === '/supadmin') return location.pathname === '/supadmin';
