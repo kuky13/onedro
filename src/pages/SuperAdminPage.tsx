@@ -10,6 +10,7 @@ import { CouponsManagement } from '@/components/super-admin/CouponsManagement';
 import { SmsManagement } from '@/components/super-admin/SmsManagement';
 import { LicenseManagement } from '@/components/super-admin/LicenseManagement';
 import { WhatsAppManagement } from '@/components/super-admin/WhatsAppManagement';
+import { AbacateSalesManagement } from '@/components/super-admin/AbacateSalesManagement';
 
 import { lazyWithRetry } from '@/utils/lazyWithRetry';
 import { Suspense } from 'react';
@@ -52,6 +53,9 @@ export function SuperAdminPage() {
 
           {/* Configuração de orçamentos via WhatsApp (Evolution) */}
           <Route path="whatsapp" element={<WhatsAppManagement />} />
+
+          {/* Relatórios de Vendas Abacate Pay */}
+          <Route path="abacate" element={<AbacateSalesManagement />} />
 
           {/* Monitoramento da VPS/API externa */}
           <Route path="vps" element={<VpsMonitorPage />} />
