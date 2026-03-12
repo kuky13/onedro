@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingBag, Search, Eye, RefreshCw, FileText, User, CreditCard, Key, Calendar } from 'lucide-react';
+import { ShoppingBag, Eye, RefreshCw, FileText, User, CreditCard, Key, Calendar } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -46,9 +46,9 @@ export function AbacateSalesManagement() {
   } = useQuery<PurchaseRegistration[]>({
     queryKey: ['superadmin-abacate-sales'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('purchase_registrations')
-        .select(`
+      const { data, error } = await supabase.
+      from('purchase_registrations').
+      select(`
           id, 
           created_at, 
           customer_name, 
@@ -64,23 +64,23 @@ export function AbacateSalesManagement() {
           mercadopago_payment_id,
           metadata,
           licenses (is_active, expires_at)
-        `)
-        .order('created_at', { ascending: false });
-      
+        `).
+      order('created_at', { ascending: false });
+
       if (error) throw error;
       return data as PurchaseRegistration[];
     }
   });
 
-  const filteredSales = sales.filter(sale => {
+  const filteredSales = sales.filter((sale) => {
     const search = searchTerm.toLowerCase();
     return (
       sale.customer_name?.toLowerCase().includes(search) ||
       sale.customer_email?.toLowerCase().includes(search) ||
       sale.license_code?.toLowerCase().includes(search) ||
       sale.mercadopago_payment_id?.toLowerCase().includes(search) ||
-      sale.customer_tax_id?.includes(search)
-    );
+      sale.customer_tax_id?.includes(search));
+
   });
 
   const formatCurrency = (value: number | null) => {
@@ -116,13 +116,13 @@ export function AbacateSalesManagement() {
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="relative flex-1 sm:w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              
               <Input
                 placeholder="Buscar por nome, email, licença, ID..."
                 className="pl-9"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+                onChange={(e) => setSearchTerm(e.target.value)} />
+              
             </div>
             <Button variant="outline" size="icon" onClick={() => refetchSales()} disabled={salesLoading}>
               <RefreshCw className={`h-4 w-4 ${salesLoading ? 'animate-spin' : ''}`} />
@@ -130,22 +130,22 @@ export function AbacateSalesManagement() {
           </div>
         </CardHeader>
         <CardContent>
-          {isMobile ? (
-            <div className="space-y-4">
-              {salesLoading && (
-                <div className="flex justify-center items-center py-8 text-muted-foreground">
+          {isMobile ?
+          <div className="space-y-4">
+              {salesLoading &&
+            <div className="flex justify-center items-center py-8 text-muted-foreground">
                   <RefreshCw className="h-6 w-6 animate-spin mr-2" /> Carregando vendas...
                 </div>
-              )}
+            }
               
-              {!salesLoading && filteredSales.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground text-sm">
+              {!salesLoading && filteredSales.length === 0 &&
+            <div className="text-center py-8 text-muted-foreground text-sm">
                   Nenhuma venda encontrada.
                 </div>
-              )}
+            }
 
-              {!salesLoading && filteredSales.map((sale) => (
-                <Card key={sale.id} className="bg-muted/30 border-border/60">
+              {!salesLoading && filteredSales.map((sale) =>
+            <Card key={sale.id} className="bg-muted/30 border-border/60">
                   <CardContent className="p-4 space-y-3">
                     <div className="flex justify-between items-start gap-3">
                       <div className="min-w-0 flex-1">
@@ -172,13 +172,13 @@ export function AbacateSalesManagement() {
 
                     <div className="pt-2 border-t border-border/50 flex items-center justify-between gap-2">
                        <div className="min-w-0 flex-1">
-                         {sale.license_code ? (
-                           <code className="text-xs bg-background px-1.5 py-0.5 rounded border font-mono block truncate w-fit max-w-full">
+                         {sale.license_code ?
+                    <code className="text-xs bg-background px-1.5 py-0.5 rounded border font-mono block truncate w-fit max-w-full">
                              {sale.license_code}
-                           </code>
-                         ) : (
-                           <span className="text-xs text-muted-foreground italic">Sem licença</span>
-                         )}
+                           </code> :
+
+                    <span className="text-xs text-muted-foreground italic">Sem licença</span>
+                    }
                        </div>
                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setSelectedSale(sale)}>
                          <Eye className="h-3.5 w-3.5 mr-1.5" />
@@ -187,10 +187,10 @@ export function AbacateSalesManagement() {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-md border">
+            )}
+            </div> :
+
+          <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -203,26 +203,26 @@ export function AbacateSalesManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {salesLoading && (
-                    <TableRow>
+                  {salesLoading &&
+                <TableRow>
                       <TableCell colSpan={6} className="h-24 text-center">
                         <div className="flex justify-center items-center gap-2 text-muted-foreground">
                           <RefreshCw className="h-4 w-4 animate-spin" /> Carregando vendas...
                         </div>
                       </TableCell>
                     </TableRow>
-                  )}
+                }
 
-                  {!salesLoading && filteredSales.length === 0 && (
-                    <TableRow>
+                  {!salesLoading && filteredSales.length === 0 &&
+                <TableRow>
                       <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                         Nenhuma venda encontrada.
                       </TableCell>
                     </TableRow>
-                  )}
+                }
 
-                  {!salesLoading && filteredSales.map((sale) => (
-                    <TableRow key={sale.id}>
+                  {!salesLoading && filteredSales.map((sale) =>
+                <TableRow key={sale.id}>
                       <TableCell className="text-xs">
                         <div className="font-medium">{new Date(sale.created_at).toLocaleDateString('pt-BR')}</div>
                         <div className="text-[10px] text-muted-foreground">
@@ -251,11 +251,11 @@ export function AbacateSalesManagement() {
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))}
+                )}
                 </TableBody>
               </Table>
             </div>
-          )}
+          }
         </CardContent>
       </Card>
 
@@ -272,14 +272,14 @@ export function AbacateSalesManagement() {
             </DialogDescription>
           </DialogHeader>
 
-          {selectedSale && (
-            <div className="space-y-6 py-4">
+          {selectedSale &&
+          <div className="space-y-6 py-4">
               {/* Status Banner */}
               <div className={`p-4 rounded-lg border flex items-center justify-between ${
-                selectedSale.status === 'completed' || selectedSale.status === 'approved' 
-                  ? 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300' 
-                  : 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-300'
-              }`}>
+            selectedSale.status === 'completed' || selectedSale.status === 'approved' ?
+            'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300' :
+            'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-300'}`
+            }>
                 <div className="flex flex-col">
                   <span className="text-xs uppercase font-bold tracking-wider opacity-70">Status do Pagamento</span>
                   <span className="font-bold text-lg">{selectedSale.status?.toUpperCase() || 'PENDENTE'}</span>
@@ -355,8 +355,8 @@ export function AbacateSalesManagement() {
                      </code>
                    </div>
                    
-                   {selectedSale.licenses && (
-                     <div className="flex items-center gap-4 text-sm">
+                   {selectedSale.licenses &&
+                <div className="flex items-center gap-4 text-sm">
                        <div className="flex flex-col items-center md:items-end">
                          <span className="text-xs text-muted-foreground">Status</span>
                          <Badge variant={selectedSale.licenses.is_active ? 'default' : 'destructive'}>
@@ -371,7 +371,7 @@ export function AbacateSalesManagement() {
                          </span>
                        </div>
                      </div>
-                   )}
+                }
                 </div>
               </div>
 
@@ -384,9 +384,9 @@ export function AbacateSalesManagement() {
               </div>
 
             </div>
-          )}
+          }
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }
