@@ -109,7 +109,15 @@ function applyTemplate(template: string, vars: Record<string, string>): string {
 }
 
 async function sendWhatsAppNotifications(supabaseAdmin: any, params: {
-  customerName: string; customerPhone: string; licenseCode: string; planType: string; amount?: number;
+  customerName: string; 
+  customerPhone: string; 
+  customerEmail: string;
+  licenseCode: string; 
+  planType: string; 
+  amount?: number;
+  paymentId: string;
+  paymentMethod: string;
+  status: string;
 }) {
   const wahaBaseUrl = Deno.env.get("WAHA_BASE_URL");
   const wahaApiKey = Deno.env.get("WAHA_API_KEY");
@@ -128,18 +136,38 @@ async function sendWhatsAppNotifications(supabaseAdmin: any, params: {
     .maybeSingle();
 
   const session = settings?.waha_session || Deno.env.get("WAHA_SESSION") || "default";
+  
+  const nowBRT = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+  const amountFormatted = params.amount ? (params.amount / 100).toFixed(2) : "0.00";
+  const planName = params.planType === "yearly" ? "Anual" : "Mensal";
+
   const templateVars: Record<string, string> = {
+    // Compatibilidade com variáveis antigas
     nome: params.customerName,
     licenca: params.licenseCode,
     plano: params.planType,
-    valor: params.amount ? `R$ ${(params.amount / 100).toFixed(2)}` : "",
+    valor: `R$ ${amountFormatted}`,
+    
+    // Novas variáveis
+    client_name: params.customerName,
+    email: params.customerEmail,
+    phone: params.customerPhone,
+    amount: amountFormatted,
+    plan_type: params.planType,
+    plan_name: planName,
+    license_code: params.licenseCode,
+    mp_id: params.paymentId,
+    status: params.status,
+    method: params.paymentMethod,
+    datetime_brt: nowBRT,
+    validity: params.planType === "yearly" ? "1 Ano" : "30 Dias"
   };
 
   // 1. Notify BUYER
   try {
     if (params.customerPhone) {
       const buyerTemplate = settings?.buyer_notification_template
-        || `*✅ Pagamento Confirmado!*\n\nObrigado {{nome}}!\nSua licença: *{{licenca}}*\nPlano: {{plano}}`;
+        || `*✅ Pagamento Confirmado!*\n\nObrigado {{client_name}}!\nSua licença: *{{license_code}}*\nPlano: {{plan_name}}`;
       const buyerMsg = applyTemplate(buyerTemplate, templateVars);
       await sendWahaMessage(params.customerPhone, buyerMsg, wahaBaseUrl, wahaApiKey, session);
       logStep("WhatsApp sent to buyer", { phone: params.customerPhone });
@@ -153,7 +181,7 @@ async function sendWhatsAppNotifications(supabaseAdmin: any, params: {
     const adminPhone = settings?.admin_notification_phone;
     if (adminPhone) {
       const adminTemplate = settings?.purchase_approved_template
-        || `*💰 Nova venda!*\n\nCliente: {{nome}}\nPlano: {{plano}}\nValor: {{valor}}\nLicença: {{licenca}}`;
+        || `*💰 Nova venda!*\n\nCliente: {{client_name}}\nPlano: {{plan_name}}\nValor: R$ {{amount}}\nLicença: {{license_code}}`;
       const adminMsg = applyTemplate(adminTemplate, templateVars);
       await sendWahaMessage(adminPhone, adminMsg, wahaBaseUrl, wahaApiKey, session);
       logStep("WhatsApp sent to admin", { phone: adminPhone });
@@ -436,9 +464,13 @@ serve(async (req) => {
               await sendWhatsAppNotifications(supabaseAdmin, {
                  customerName: purchaseReg.customer_name,
                  customerPhone: purchaseReg.customer_phone,
+                 customerEmail: purchaseReg.customer_email,
                  licenseCode,
                  planType,
                  amount: paidAmount,
+                 paymentId: paymentId,
+                 paymentMethod: method,
+                 status: "Aprovado"
               });
            } catch (e) { console.error("WhatsApp Notifications Error", e); }
 
