@@ -13,8 +13,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DevicePasswordDisplay } from '@/components/service-orders/DevicePasswordDisplay';
 import { SimpleDeviceChecklist } from '@/components/service-orders/SimpleDeviceChecklist';
-import { exportRepairsMonthToXlsx } from '@/utils/repairs/exportRepairsMonthXlsx';
-import * as XLSX from 'xlsx';
 
 type MonthlyClosing = {
   id: string;
@@ -251,6 +249,8 @@ const RepairsStatus = () => {
       });
 
       const monthName = formatMonth(selectedClosing.reference_month);
+
+      const XLSX = await import("xlsx");
 
       // Build complete XLSX
       const headers = [

@@ -1,5 +1,3 @@
-import * as XLSX from "xlsx";
-
 export type RepairServiceExportRow = {
   created_at: string;
   device_name: string;
@@ -28,10 +26,11 @@ const formatDateTimePtBR = (iso: string) => {
   });
 };
 
-export const exportRepairsMonthToXlsx = (
+export const exportRepairsMonthToXlsx = async (
   services: RepairServiceExportRow[],
   options: ExportOptions
 ) => {
+  const XLSX = await import("xlsx");
   const technicianNames = Array.from(
     new Set(
       (services || [])

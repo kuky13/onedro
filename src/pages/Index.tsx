@@ -235,14 +235,22 @@ const InfiniteBrandCarousel = () => {
 const Index = () => {
   const { user, loading } = useAuth();
   const { name, logo } = useAppInfo();
+  // Carregamento da empresa não deve bloquear a landing page
   const { isLoading: companyLoading } = useCompanyDataLoader();
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
-  if (loading || user && companyLoading) {
+
+  // Se o usuário estiver autenticado e carregando dados da empresa, aí sim mostramos skeleton
+  // Mas se for apenas "loading" (verificando sessão), mostramos a landing page imediatamente
+  // e deixamos o redirecionamento acontecer assim que o user for confirmado.
+  if (user && companyLoading) {
     return <DashboardSkeleton />;
   }
-  if (user) {
+
+  // Se já confirmamos que tem usuário, redireciona
+  if (user && !loading) {
     return <Navigate to="/dashboard" replace />;
   }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header - Responsivo */}

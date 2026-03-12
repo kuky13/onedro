@@ -1,4 +1,3 @@
-import { jsPDF } from "jspdf";
 import { formatCurrency } from "@/utils/currency";
 
 interface PdfGeneratorOptions {
@@ -142,7 +141,7 @@ interface GroupPdfGeneratorOptions {
   companyAddress?: string;
 }
 
-export const generateGroupBudgetPdf = ({
+export const generateGroupBudgetPdf = async ({
   budgets,
   template,
   paperWidth,
@@ -151,6 +150,7 @@ export const generateGroupBudgetPdf = ({
   companyAddress
 }: GroupPdfGeneratorOptions) => {
   try {
+    const { jsPDF } = await import("jspdf");
     console.log('Starting Group PDF Generation (Single Document Mode)', { 
       budgetsCount: budgets.length, 
       templateLength: template?.length,
@@ -259,7 +259,7 @@ export const generateGroupBudgetPdf = ({
   }
 };
 
-export const generateBudgetPdf = ({
+export const generateBudgetPdf = async ({
   budget,
   parts,
   template,
@@ -268,6 +268,7 @@ export const generateBudgetPdf = ({
   companyPhone,
   companyAddress
 }: PdfGeneratorOptions) => {
+  const { jsPDF } = await import("jspdf");
   // Configuração do documento
   const width = paperWidth === '58mm' ? 58 : 80;
   

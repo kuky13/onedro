@@ -638,7 +638,7 @@ const RepairsDashboard = () => {
 
       if (error) throw error;
 
-      exportRepairsMonthToXlsx((data || []).map((r: any) => ({
+      await exportRepairsMonthToXlsx((data || []).map((r: any) => ({
         created_at: r.created_at,
         device_name: r.device_name,
         service_description: r.service_description,
