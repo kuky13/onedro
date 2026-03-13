@@ -58,10 +58,8 @@ export const TermsPage = () => {
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
               Termos de Uso e Licença de Software
             </CardTitle>
-            <p className="text-muted-foreground mt-2">OneDrip - Última atualização de contrato: 01 de março de 2026
-
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">KukySolutions™ | onedrip.com.br</p>
+            <p className="text-muted-foreground mt-2">OneDrip - Última atualização de contrato: 13 de março de 2026</p>
+            <p className="text-sm text-muted-foreground mt-1">KukySolutions™ | CNPJ: 64.797.431/0001-03 | onedrip.com.br</p>
           </CardHeader>
 
           <CardContent className="space-y-8">
@@ -300,8 +298,15 @@ export const TermsPage = () => {
                 <div>
                   <h3 className="font-medium mb-2">9.1 Taxas e Pagamentos</h3>
                   <p className="text-muted-foreground">
-                    Os valores e condições de pagamento estão especificados no plano contratado. Pagamentos devem ser
-                    realizados nas datas acordadas.
+                    Os valores e condições de pagamento estão especificados no plano contratado. Os pagamentos são
+                    processados exclusivamente via <strong>AbacatePay</strong> (intermediador de pagamento), utilizando
+                    <strong> PIX</strong> como método de pagamento. Pagamentos devem ser realizados nas datas acordadas.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">9.3 Dados de Cobrança</h3>
+                  <p className="text-muted-foreground">
+                    As cobranças são emitidas por KukySolutions™, CNPJ 64.797.431/0001-03, através da plataforma AbacatePay.
                   </p>
                 </div>
                 <div>
@@ -344,24 +349,22 @@ export const TermsPage = () => {
                   </p>
                   <p className="text-muted-foreground mb-2">
                     O valor será devolvido ao usuário descontadas as taxas administrativas cobradas pelo intermediador
-                    de pagamento (Mercado Pago), atualmente equivalentes a 4,99% do valor da transação.
+                    de pagamento (AbacatePay), atualmente equivalentes a 1,99% do valor da transação via PIX.
                   </p>
                   <p className="text-muted-foreground">
-                    O prazo para processamento do reembolso pode variar conforme a forma de pagamento utilizada, podendo
-                    levar até 30 dias úteis, dependendo das políticas das operadoras de cartão de crédito e instituições
-                    financeiras.
+                    O prazo para processamento do reembolso pode variar, podendo levar até 15 dias úteis, dependendo
+                    das políticas da instituição financeira do usuário.
                   </p>
                 </div>
                 <div>
                   <h3 className="font-medium mb-2">10.3 Forma de Reembolso</h3>
+                  <p className="text-muted-foreground mb-2">
+                    Como os pagamentos são realizados exclusivamente via PIX através da AbacatePay:
+                  </p>
                   <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
                     <li>
-                      <strong>Cartão de crédito:</strong> o estorno será solicitado diretamente à operadora do cartão e
-                      poderá aparecer em até duas faturas subsequentes.
-                    </li>
-                    <li>
-                      <strong>PIX ou boleto bancário:</strong> o valor será devolvido diretamente na conta bancária
-                      indicada pelo usuário, dentro do prazo informado acima.
+                      <strong>PIX:</strong> o valor será devolvido diretamente na conta bancária (chave PIX) indicada
+                      pelo usuário, dentro do prazo informado acima.
                     </li>
                   </ul>
                 </div>
@@ -495,6 +498,9 @@ export const TermsPage = () => {
               <div className="space-y-2">
                 <p className="text-muted-foreground">
                   <strong>Responsável:</strong> André Ribeiro Lima (KukySolutions™)
+                </p>
+                <p className="text-muted-foreground">
+                  <strong>CNPJ:</strong> 64.797.431/0001-03
                 </p>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Mail className="h-4 w-4" />
