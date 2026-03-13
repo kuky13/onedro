@@ -33,23 +33,20 @@ export function FullscreenWrapper({ children, onStart }: FullscreenWrapperProps)
     } catch { }
   }, []);
 
-  // Remove #root safe-area padding when fullscreen wrapper is active
+  // Force fullscreen by injecting high-priority CSS overrides
   useEffect(() => {
-    const root = document.getElementById('root');
-    if (root) {
-      root.style.paddingTop = '0px';
-      root.style.paddingBottom = '0px';
-      root.style.paddingLeft = '0px';
-      root.style.paddingRight = '0px';
-    }
-    return () => {
-      if (root) {
-        root.style.paddingTop = '';
-        root.style.paddingBottom = '';
-        root.style.paddingLeft = '';
-        root.style.paddingRight = '';
+    const style = document.createElement('style');
+    style.id = 'fullscreen-wrapper-override';
+    style.textContent = `
+      #root {
+        padding: 0 !important;
+        margin: 0 !important;
+        min-height: 100dvh !important;
+        max-width: 100vw !important;
       }
-    };
+    `;
+    document.head.appendChild(style);
+    return () => { style.remove(); };
   }, []);
 
   const requestFullscreen = async () => {
