@@ -84,7 +84,7 @@ export function DiagnosticShareDialog({
 
   // Hook de realtime para atualizações resilientes
   useDeviceTestRealtime({
-    sessionId: session?.id,
+    sessionId: session?.id as string | undefined,
     enabled: isOpen && !!session?.id,
     onUpdate: (updatedSession) => {
       console.log("📡 Sessão atualizada via hook:", updatedSession.status);
