@@ -149,7 +149,11 @@ async function apiFetch<T>(
       }
 
       if (e?.name === 'AbortError') {
-        throw new ApiError('Conexão instável ou processamento demorado, tente novamente', { endpoint });
+        throw new ApiError('A VPS está processando sua solicitação, por favor aguarde um momento ou tente novamente.', { endpoint });
+      }
+      // Wrap network errors with friendly message
+      if (isNetworkError(e)) {
+        throw new ApiError('A VPS está processando sua solicitação, por favor aguarde um momento ou tente novamente.', { endpoint });
       }
       throw e;
     } finally {
