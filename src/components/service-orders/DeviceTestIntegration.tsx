@@ -14,10 +14,13 @@ import { toast } from 'sonner';
 import type { TestSession } from '@/types/deviceTest';
 import QRCode from 'qrcode';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useDeviceTestRealtime } from "@/hooks/useDeviceTestRealtime";
+
 interface DeviceTestIntegrationProps {
   serviceOrderId: string;
   disabled?: boolean;
 }
+
 export const DeviceTestIntegration: React.FC<DeviceTestIntegrationProps> = ({
   serviceOrderId,
   disabled = false
@@ -28,49 +31,33 @@ export const DeviceTestIntegration: React.FC<DeviceTestIntegrationProps> = ({
   const [copied, setCopied] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+
   useEffect(() => {
     if (serviceOrderId) {
       loadExistingSession();
     }
   }, [serviceOrderId]);
 
-  // Realtime subscription for session updates
-  useEffect(() => {
-    if (!session?.id) return;
-
-    const channel = supabase
-      .channel(`device-test-${session.id}`)
-      .on(
-        'postgres_changes' as any,
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'device_test_sessions',
-          filter: `id=eq.${session.id}`,
-        },
-        (payload: any) => {
-          console.log('📡 DeviceTestIntegration: sessão atualizada em tempo real:', payload.new?.status);
-          const updated = payload.new;
-          if (updated) {
-            setSession({
-              ...updated,
-              device_info: updated.device_info as any || {},
-              test_results: updated.test_results as any || {},
-              status: updated.status as TestSession['status'],
-              expires_at: updated.expires_at || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            });
-            if (updated.status === 'completed') {
-              toast.success('✅ Teste de dispositivo concluído!');
-            }
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [session?.id]);
+  // Hook de realtime para atualizações resilientes
+  useDeviceTestRealtime({
+    sessionId: session?.id,
+    enabled: !!session?.id,
+    onUpdate: (updatedSession) => {
+      console.log('📡 DeviceTestIntegration: sessão atualizada via hook:', updatedSession.status);
+      setSession(prev => ({
+        ...prev!,
+        ...updatedSession,
+        device_info: updatedSession.device_info || {},
+        test_results: updatedSession.test_results || {},
+        status: updatedSession.status as TestSession['status'],
+        expires_at: updatedSession.expires_at || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }));
+      
+      if (updatedSession.status === 'completed') {
+        toast.success('✅ Teste de dispositivo concluído!');
+      }
+    }
+  });
   const loadExistingSession = async () => {
     try {
       setLoading(true);

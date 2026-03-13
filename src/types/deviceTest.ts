@@ -20,6 +20,7 @@ export interface DeviceInfo {
   platform?: string;
   language?: string;
   viewport?: string;
+  source?: string;
 }
 
 export interface TestResult {

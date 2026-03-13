@@ -20,7 +20,7 @@ import {
   Play,
   Activity,
 } from "lucide-react";
-import { TESTS_CONFIG } from "@/types/deviceTest";
+import { TESTS_CONFIG, TestSession } from "@/types/deviceTest";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -28,23 +28,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
+import { useDeviceTestRealtime } from "@/hooks/useDeviceTestRealtime";
+
 interface DiagnosticShareDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenDirect: () => void;
   serviceOrderId?: string | undefined;
   onChecklistUpdate?: (checklistData: any) => void;
-}
-
-interface TestSession {
-  id: string;
-  share_token: string;
-  status: "pending" | "in_progress" | "completed" | "expired";
-  expires_at: string | null;
-  created_at: string;
-  completed_at: string | null;
-  overall_score: number | null;
-  test_results: Record<string, any> | null;
 }
 
 const statusConfig = {
@@ -90,6 +81,34 @@ export function DiagnosticShareDialog({
   const [diagnosticUrl, setDiagnosticUrl] = useState<string>("");
   const [userId, setUserId] = useState<string | null>(null);
   const [pendingQRRegeneration, setPendingQRRegeneration] = useState(false);
+
+  // Hook de realtime para atualizações resilientes
+  const { isConnected, connectionType } = useDeviceTestRealtime({
+    sessionId: session?.id,
+    enabled: isOpen && !!session?.id,
+    onUpdate: (updatedSession) => {
+      console.log("📡 Sessão atualizada via hook:", updatedSession.status);
+      setSession(prev => ({
+        ...prev!,
+        ...updatedSession,
+        test_results: updatedSession.test_results || {},
+        device_info: updatedSession.device_info || {}
+      }));
+
+      // Notificar mudanças de status
+      if (updatedSession.status === "in_progress") {
+        toast.info("🔬 Diagnóstico atualizado!");
+      } else if (updatedSession.status === "completed") {
+        toast.success("✅ Diagnóstico concluído!");
+
+        // Atualizar o checklist automaticamente quando concluído
+        if (onChecklistUpdate && updatedSession.test_results) {
+          const checklistData = mapTestResultsToChecklist(updatedSession.test_results);
+          onChecklistUpdate(checklistData);
+        }
+      }
+    }
+  });
 
   // Carregar sessão existente ou criar nova quando o dialog abre
   useEffect(() => {
@@ -175,55 +194,6 @@ export function DiagnosticShareDialog({
     };
   };
 
-  // Subscrição em tempo real para atualizações da sessão
-  useEffect(() => {
-    if (!session?.id) return;
-
-    const channel = supabase
-      .channel(`diagnostic-session-${session.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "device_test_sessions",
-          filter: `id=eq.${session.id}`,
-        },
-        (payload: any) => {
-          console.log("📡 Sessão atualizada em tempo real:", payload.new);
-          const updatedSession = payload.new as any;
-          setSession({
-            id: updatedSession.id,
-            share_token: updatedSession.share_token,
-            status: updatedSession.status,
-            expires_at: updatedSession.expires_at,
-            created_at: updatedSession.created_at,
-            completed_at: updatedSession.completed_at,
-            overall_score: updatedSession.overall_score,
-            test_results: updatedSession.test_results,
-          });
-
-          // Notificar mudanças de status
-          if (updatedSession.status === "in_progress") {
-            toast.info("🔬 Diagnóstico atualizado!");
-          } else if (updatedSession.status === "completed") {
-            toast.success("✅ Diagnóstico concluído!");
-
-            // Atualizar o checklist automaticamente quando concluído
-            if (onChecklistUpdate && updatedSession.test_results) {
-              const checklistData = mapTestResultsToChecklist(updatedSession.test_results);
-              onChecklistUpdate(checklistData);
-            }
-          }
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [session?.id, onChecklistUpdate]);
-
   const loadOrCreateSession = async () => {
     setIsLoading(true);
     try {
@@ -240,10 +210,12 @@ export function DiagnosticShareDialog({
       setUserId(user.id);
 
       // Buscar sessão existente ativa (não concluída, não expirada)
+      // FIX: Garantir que não pegamos sessões de "quick_test"
       const { data: existingSession, error: fetchError } = await supabase
         .from("device_test_sessions")
         .select("*")
         .eq("created_by", user.id)
+        .neq("device_info->>source", "quick_test") // Ignorar testes rápidos
         .in("status", ["pending", "in_progress"])
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false })
@@ -264,6 +236,7 @@ export function DiagnosticShareDialog({
           completed_at: existingSession.completed_at,
           overall_score: existingSession.overall_score,
           test_results: existingSession.test_results as any,
+          device_info: existingSession.device_info as any || {},
         });
         setDiagnosticUrl(`${window.location.origin}/testar/${existingSession.share_token}`);
         toast.info("Usando sessão de diagnóstico existente");
@@ -281,42 +254,66 @@ export function DiagnosticShareDialog({
 
   const createNewSession = async (userId: string) => {
     try {
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      const shareToken = Array.from(crypto.getRandomValues(new Uint8Array(4)))
-        .map(b => chars[b % chars.length])
-        .join('');
-      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      // Tentar gerar token único até 3 vezes
+      let shareToken = '';
+      let attempts = 0;
+      let created = false;
+      let sessionData = null;
 
-      const { data, error } = await supabase
-        .from("device_test_sessions")
-        .insert({
-          share_token: shareToken,
-          status: "pending",
-          expires_at: expiresAt,
-          service_order_id: serviceOrderId || null,
-          created_by: userId,
-          device_info: {},
-          test_results: {},
-        })
-        .select()
-        .single();
+      while (attempts < 3 && !created) {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        shareToken = Array.from(crypto.getRandomValues(new Uint8Array(4)))
+          .map(b => chars[b % chars.length])
+          .join('');
+        
+        // Verificar se já existe
+        const { data: existing } = await supabase
+          .from('device_test_sessions')
+          .select('id')
+          .eq('share_token', shareToken)
+          .maybeSingle();
+          
+        if (!existing) {
+          const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+          const { data, error } = await supabase
+            .from("device_test_sessions")
+            .insert({
+              share_token: shareToken,
+              status: "pending",
+              expires_at: expiresAt,
+              service_order_id: serviceOrderId || null,
+              created_by: userId,
+              device_info: { source: 'diagnostic_share' }, // Marcar origem
+              test_results: {},
+            })
+            .select()
+            .single();
+            
+          if (!error && data) {
+            created = true;
+            sessionData = data;
+          }
+        }
+        attempts++;
+      }
 
-      if (error) throw error;
-
-      if (data) {
-        console.log("✨ Nova sessão criada:", data.share_token);
+      if (sessionData) {
+        console.log("✨ Nova sessão criada:", sessionData.share_token);
         setSession({
-          id: data.id,
-          share_token: data.share_token,
-          status: data.status as TestSession["status"],
-          expires_at: data.expires_at,
-          created_at: data.created_at,
-          completed_at: data.completed_at,
-          overall_score: data.overall_score,
-          test_results: data.test_results as any,
+          id: sessionData.id,
+          share_token: sessionData.share_token,
+          status: sessionData.status as TestSession["status"],
+          expires_at: sessionData.expires_at,
+          created_at: sessionData.created_at,
+          completed_at: sessionData.completed_at,
+          overall_score: sessionData.overall_score,
+          test_results: sessionData.test_results as any,
+          device_info: sessionData.device_info as any || {},
         });
-        setDiagnosticUrl(`${window.location.origin}/testar/${data.share_token}`);
+        setDiagnosticUrl(`${window.location.origin}/testar/${sessionData.share_token}`);
         toast.success("Link de diagnóstico criado!");
+      } else {
+        throw new Error("Falha ao gerar token único");
       }
     } catch (err) {
       console.error("Erro ao criar sessão:", err);

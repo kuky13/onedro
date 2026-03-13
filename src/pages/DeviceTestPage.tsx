@@ -198,18 +198,28 @@ export default function DeviceTestPage() {
       accumulatedResultsRef.current = { ...accumulatedResultsRef.current, [testId]: result };
       const updatedResults = { ...accumulatedResultsRef.current };
 
-      const { error } = await supabase
-        .from("device_test_sessions")
-        .update({ test_results: JSON.parse(JSON.stringify(updatedResults)) })
-        .eq("share_token", session.share_token);
+      // Optimistic update
+      setSession(prev => prev ? { ...prev, test_results: updatedResults } : prev);
+
+      // Use RPC for atomic update to avoid race conditions
+      const { error } = await supabase.rpc('update_device_test_result', {
+        p_session_id: session.id,
+        p_test_id: testId,
+        p_result: result
+      });
 
       if (error) {
         console.error("Error syncing to cloud:", error);
+        // Fallback to standard update if RPC fails
+        const { error: fallbackError } = await supabase
+          .from("device_test_sessions")
+          .update({ test_results: JSON.parse(JSON.stringify(updatedResults)) })
+          .eq("share_token", session.share_token);
+          
+        if (fallbackError) console.error("Fallback sync error:", fallbackError);
       } else {
-        console.log(`☁️ Teste "${testId}" salvo na nuvem`);
+        console.log(`☁️ Teste "${testId}" salvo na nuvem via RPC`);
       }
-
-      setSession(prev => prev ? { ...prev, test_results: updatedResults } : prev);
     } catch (err) {
       console.error("Error updating result:", err);
     }
