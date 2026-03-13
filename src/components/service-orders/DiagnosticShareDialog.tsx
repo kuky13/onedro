@@ -231,13 +231,13 @@ export function DiagnosticShareDialog({
           id: existingSession.id,
           share_token: existingSession.share_token,
           status: existingSession.status as TestSession["status"],
-          expires_at: existingSession.expires_at,
+          expires_at: existingSession.expires_at ?? '',
           created_at: existingSession.created_at,
           completed_at: existingSession.completed_at,
           overall_score: existingSession.overall_score,
           test_results: existingSession.test_results as any,
           device_info: existingSession.device_info as any || {},
-        });
+        } as TestSession);
         setDiagnosticUrl(`${window.location.origin}/testar/${existingSession.share_token}`);
         toast.info("Usando sessão de diagnóstico existente");
       } else {
