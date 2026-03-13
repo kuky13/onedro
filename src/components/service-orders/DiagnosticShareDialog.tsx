@@ -303,13 +303,13 @@ export function DiagnosticShareDialog({
           id: sessionData.id,
           share_token: sessionData.share_token,
           status: sessionData.status as TestSession["status"],
-          expires_at: sessionData.expires_at,
+          expires_at: sessionData.expires_at ?? '',
           created_at: sessionData.created_at,
           completed_at: sessionData.completed_at,
           overall_score: sessionData.overall_score,
           test_results: sessionData.test_results as any,
           device_info: sessionData.device_info as any || {},
-        });
+        } as TestSession);
         setDiagnosticUrl(`${window.location.origin}/testar/${sessionData.share_token}`);
         toast.success("Link de diagnóstico criado!");
       } else {
