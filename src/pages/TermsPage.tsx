@@ -349,12 +349,11 @@ export const TermsPage = () => {
                   </p>
                   <p className="text-muted-foreground mb-2">
                     O valor será devolvido ao usuário descontadas as taxas administrativas cobradas pelo intermediador
-                    de pagamento (Mercado Pago), atualmente equivalentes a 4,99% do valor da transação.
+                    de pagamento (AbacatePay), atualmente equivalentes a 1,99% do valor da transação via PIX.
                   </p>
                   <p className="text-muted-foreground">
-                    O prazo para processamento do reembolso pode variar conforme a forma de pagamento utilizada, podendo
-                    levar até 30 dias úteis, dependendo das políticas das operadoras de cartão de crédito e instituições
-                    financeiras.
+                    O prazo para processamento do reembolso pode variar, podendo levar até 15 dias úteis, dependendo
+                    das políticas da instituição financeira do usuário.
                   </p>
                 </div>
                 <div>
