@@ -16,8 +16,8 @@ import {
   Lock,
   RefreshCw,
   Globe,
-  CheckCircle } from
-"lucide-react";
+  CheckCircle,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export const TermsPage = () => {
@@ -34,8 +34,8 @@ export const TermsPage = () => {
         <div className="absolute -top-1/2 -right-1/2 w-96 h-96 bg-gradient-to-br from-primary/15 to-primary/5 rounded-full blur-3xl animate-pulse"></div>
         <div
           className="absolute -bottom-1/2 -left-1/2 w-96 h-96 bg-gradient-to-tr from-secondary/10 to-primary/5 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}>
-        </div>
+          style={{ animationDelay: "1s" }}
+        ></div>
       </div>
 
       <div className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
@@ -59,7 +59,9 @@ export const TermsPage = () => {
               Termos de Uso e Licença de Software
             </CardTitle>
             <p className="text-muted-foreground mt-2">OneDrip - Última atualização de contrato: 13 de março de 2026</p>
-            <p className="text-sm text-muted-foreground mt-1">KukySolutions™ | CNPJ: 64.797.431/0001-03 | onedrip.com.br</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              KukySolutions™ | CNPJ: 64.797.431/0001-03 | onedrip.com.br
+            </p>
           </CardHeader>
 
           <CardContent className="space-y-8">
@@ -70,7 +72,7 @@ export const TermsPage = () => {
               </p>
               <p className="text-xs text-muted-foreground text-center mt-2">
                 Ao instalar, copiar ou usar de qualquer forma este software, você concorda em ficar vinculado aos termos
-                e condições desta licença. Se você não concordar com estes termos, não instale nem use o software.
+                e condições desta licença. Se você não concordar com estes termos, não instale nem use o site.
               </p>
             </section>
 
@@ -306,7 +308,8 @@ export const TermsPage = () => {
                 <div>
                   <h3 className="font-medium mb-2">9.3 Dados de Cobrança</h3>
                   <p className="text-muted-foreground">
-                    As cobranças são emitidas por KukySolutions™, CNPJ 64.797.431/0001-03, através da plataforma AbacatePay.
+                    As cobranças são emitidas por KukySolutions™, CNPJ 64.797.431/0001-03, através da plataforma
+                    AbacatePay.
                   </p>
                 </div>
                 <div>
@@ -352,8 +355,8 @@ export const TermsPage = () => {
                     de pagamento (AbacatePay), atualmente equivalentes a 1,99% do valor da transação via PIX.
                   </p>
                   <p className="text-muted-foreground">
-                    O prazo para processamento do reembolso pode variar, podendo levar até 15 dias úteis, dependendo
-                    das políticas da instituição financeira do usuário.
+                    O prazo para processamento do reembolso pode variar, podendo levar até 15 dias úteis, dependendo das
+                    políticas da instituição financeira do usuário.
                   </p>
                 </div>
                 <div>
@@ -526,11 +529,11 @@ export const TermsPage = () => {
                 © 2026 OneDrip - KukySolutions™ | Todos os direitos reservados
               </p>
               <p className="text-xs text-muted-foreground/70 mt-1">CNPJ: 64.797.431/0001-03</p>
-              <p className="text-xs text-muted-foreground mt-1">Versão 1.3.0</p>
+              <p className="text-xs text-muted-foreground mt-1">Versão 1.3.1</p>
             </div>
           </CardContent>
         </Card>
       </div>
-    </div>);
-
+    </div>
+  );
 };
