@@ -58,10 +58,8 @@ export const TermsPage = () => {
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
               Termos de Uso e Licença de Software
             </CardTitle>
-            <p className="text-muted-foreground mt-2">OneDrip - Última atualização de contrato: 01 de março de 2026
-
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">KukySolutions™ | onedrip.com.br</p>
+            <p className="text-muted-foreground mt-2">OneDrip - Última atualização de contrato: 13 de março de 2026</p>
+            <p className="text-sm text-muted-foreground mt-1">KukySolutions™ | CNPJ: 64.797.431/0001-03 | onedrip.com.br</p>
           </CardHeader>
 
           <CardContent className="space-y-8">
