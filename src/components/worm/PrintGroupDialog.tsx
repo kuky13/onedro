@@ -8,7 +8,7 @@ import {
   DialogDescription,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Printer } from 'lucide-react';
+import { Printer, AlertTriangle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { generateGroupBudgetPdf, processBudgetTemplate } from '@/utils/wormPdfGenerator';
 import { usePdfTemplates, DEFAULT_PDF_SERVICE_TEMPLATE } from '@/hooks/worm/usePdfTemplates';
@@ -126,6 +126,16 @@ export const PrintGroupDialog: React.FC<PrintGroupDialogProps> = ({ budgets, tri
             Gera um único PDF contendo todos os {budgets.length} orçamentos deste grupo.
           </DialogDescription>
         </DialogHeader>
+
+        {budgets.length > 1 && (
+          <div className="bg-yellow-50 text-yellow-800 p-3 rounded-md text-sm border border-yellow-200 mb-4 flex gap-2 items-start dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-900/50">
+            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+            <div>
+              <strong>Atenção:</strong> Isso gerará um <u>único documento</u> combinando as {budgets.length} opções.
+              Pode ocorrer erros na impressão se os orçamentos forem de aparelhos diferentes.
+            </div>
+          </div>
+        )}
 
         <Tabs defaultValue="80mm" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
