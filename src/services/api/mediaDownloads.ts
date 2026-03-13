@@ -103,7 +103,7 @@ export async function requestMediaDownload(payload: MediaDownloadRequest): Promi
     } catch (e: any) {
       clearTimeout(timeoutId);
       if (e.name === 'AbortError') {
-        throw new Error('Conexão instável ou processamento demorado, tente novamente');
+        throw new Error('A VPS está processando sua solicitação, por favor aguarde um momento ou tente novamente.');
       }
       throw e;
     }
