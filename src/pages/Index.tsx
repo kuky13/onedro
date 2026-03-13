@@ -220,8 +220,8 @@ const InfiniteBrandCarousel = () => {
                 loading="lazy"
                 decoding="async"
                 width="35"
-                height="35"
-                />
+                height="35" />
+              
 
                 </div>
             )}
@@ -257,14 +257,14 @@ const Index = () => {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border/50">
         <div className="max-w-7xl mx-auto flex justify-between items-center px-4 lg:px-8 py-3 lg:py-4">
           <Link to="/landing" className="flex items-center gap-2">
-            <img 
-              alt={name} 
-              className="h-7 w-7 lg:h-9 lg:w-9" 
-              src={logo} 
+            <img
+              alt={name}
+              className="h-7 w-7 lg:h-9 lg:w-9"
+              src={logo}
               width="36"
               height="36"
-              loading="eager"
-            />
+              loading="eager" />
+            
             <span className="font-bold text-lg lg:text-xl text-foreground">{name}</span>
           </Link>
           <div className="flex items-center gap-2 lg:gap-4">
@@ -336,7 +336,7 @@ const Index = () => {
               </div>
               <div className="flex items-center gap-1 lg:gap-2">
                 <Smartphone className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
-                <span>Adaptado para celular</span>
+                <span>Feito para celular</span>
               </div>
               <div className="hidden lg:flex items-center gap-2">
                 <Clock className="h-4 w-4" />
@@ -561,14 +561,14 @@ const Index = () => {
               to="/kukysolutions"
               className="flex items-center gap-1.5 text-xs lg:text-sm text-muted-foreground hover:text-foreground transition-colors">
 
-              <img 
-                src="/kukysolutions-logo.svg" 
-                alt="KukySolutions" 
+              <img
+                src="/kukysolutions-logo.svg"
+                alt="KukySolutions"
                 className="h-4 w-4 lg:h-5 lg:w-5 opacity-70"
                 width="20"
                 height="20"
-                loading="lazy"
-              />
+                loading="lazy" />
+              
               KukySolutions
             </Link>
           </div>
