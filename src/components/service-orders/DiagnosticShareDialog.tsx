@@ -83,7 +83,7 @@ export function DiagnosticShareDialog({
   const [pendingQRRegeneration, setPendingQRRegeneration] = useState(false);
 
   // Hook de realtime para atualizações resilientes
-  const { isConnected, connectionType } = useDeviceTestRealtime({
+  useDeviceTestRealtime({
     sessionId: session?.id,
     enabled: isOpen && !!session?.id,
     onUpdate: (updatedSession) => {
