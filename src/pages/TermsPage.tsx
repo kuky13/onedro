@@ -499,6 +499,9 @@ export const TermsPage = () => {
                 <p className="text-muted-foreground">
                   <strong>Responsável:</strong> André Ribeiro Lima (KukySolutions™)
                 </p>
+                <p className="text-muted-foreground">
+                  <strong>CNPJ:</strong> 64.797.431/0001-03
+                </p>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Mail className="h-4 w-4" />
                   <span>suporte@onedrip.email</span>
