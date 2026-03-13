@@ -47,11 +47,17 @@ export async function requestMediaDownload(payload: MediaDownloadRequest): Promi
   size?: number;
 }> {
   const callViaDirectFetch = async () => {
-    const { data } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
+    // Refresh token proactively if near expiry
+    const { data: sessionData } = await supabase.auth.getSession();
+    let token = sessionData.session?.access_token;
+    const expiresAt = sessionData.session?.expires_at;
+    if (expiresAt && expiresAt - Math.floor(Date.now() / 1000) < 60) {
+      const { data: refreshData } = await supabase.auth.refreshSession();
+      token = refreshData.session?.access_token ?? token;
+    }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout as requested
+    const timeoutId = setTimeout(() => controller.abort(), 120_000); // 120s for video processing
 
     try {
       // API_BASE_URL is now .../api, so we append /download
