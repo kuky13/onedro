@@ -36,12 +36,21 @@ const buildUrl = (
   return url.toString();
 };
 
-const getAccessToken = async () => {
+const getAccessToken = async (): Promise<string | null> => {
   const { data } = await supabase.auth.getSession();
-  if (data.session?.access_token) {
-    return data.session.access_token;
+  const session = data.session;
+
+  if (session?.access_token) {
+    // Check if token expires in less than 60s – refresh proactively
+    const expiresAt = session.expires_at; // unix seconds
+    if (expiresAt && expiresAt - Math.floor(Date.now() / 1000) < 60) {
+      const { data: refreshData } = await supabase.auth.refreshSession();
+      return refreshData.session?.access_token ?? null;
+    }
+    return session.access_token;
   }
-  // Try to refresh session if expired or missing
+
+  // No session – try to refresh (handles stale/expired tokens)
   const { data: refreshData } = await supabase.auth.refreshSession();
   return refreshData.session?.access_token ?? null;
 };
