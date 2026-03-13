@@ -358,14 +358,13 @@ export const TermsPage = () => {
                 </div>
                 <div>
                   <h3 className="font-medium mb-2">10.3 Forma de Reembolso</h3>
+                  <p className="text-muted-foreground mb-2">
+                    Como os pagamentos são realizados exclusivamente via PIX através da AbacatePay:
+                  </p>
                   <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
                     <li>
-                      <strong>Cartão de crédito:</strong> o estorno será solicitado diretamente à operadora do cartão e
-                      poderá aparecer em até duas faturas subsequentes.
-                    </li>
-                    <li>
-                      <strong>PIX ou boleto bancário:</strong> o valor será devolvido diretamente na conta bancária
-                      indicada pelo usuário, dentro do prazo informado acima.
+                      <strong>PIX:</strong> o valor será devolvido diretamente na conta bancária (chave PIX) indicada
+                      pelo usuário, dentro do prazo informado acima.
                     </li>
                   </ul>
                 </div>
