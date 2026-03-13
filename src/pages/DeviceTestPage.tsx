@@ -202,10 +202,10 @@ export default function DeviceTestPage() {
       setSession(prev => prev ? { ...prev, test_results: updatedResults } : prev);
 
       // Use RPC for atomic update to avoid race conditions
-      const { error } = await supabase.rpc('update_device_test_result', {
+      const { error } = await supabase.rpc('update_device_test_result' as any, {
         p_session_id: session.id,
         p_test_id: testId,
-        p_result: result
+        p_result: result as any
       });
 
       if (error) {
