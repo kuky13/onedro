@@ -298,8 +298,15 @@ export const TermsPage = () => {
                 <div>
                   <h3 className="font-medium mb-2">9.1 Taxas e Pagamentos</h3>
                   <p className="text-muted-foreground">
-                    Os valores e condições de pagamento estão especificados no plano contratado. Pagamentos devem ser
-                    realizados nas datas acordadas.
+                    Os valores e condições de pagamento estão especificados no plano contratado. Os pagamentos são
+                    processados exclusivamente via <strong>AbacatePay</strong> (intermediador de pagamento), utilizando
+                    <strong> PIX</strong> como método de pagamento. Pagamentos devem ser realizados nas datas acordadas.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">9.3 Dados de Cobrança</h3>
+                  <p className="text-muted-foreground">
+                    As cobranças são emitidas por KukySolutions™, CNPJ 64.797.431/0001-03, através da plataforma AbacatePay.
                   </p>
                 </div>
                 <div>
