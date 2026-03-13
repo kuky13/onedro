@@ -30,7 +30,7 @@ Ele foi construído para ajudar prestadores de serviços, assistências técnica
 
 ### 🛒 Sistema de Lojas Virtuais (Stores)
 *   O sistema abriga a possibilidade dos usuários criarem as suas próprias páginas de venda ou catálogos de serviços (acessível via `/loja/[slug-da-loja]`). 
-*   Tem controles de carrinho de compras, faturamento e integração **Mercado Pago** para checkout (`/store`).
+*   Tem controles de carrinho de compras, faturamento e integração de pagamentos (fluxo atual no código: **AbacatePay/PIX**; pode haver referências legadas a Mercado Pago) para checkout (`/store`).
 
 ### 🤖 Inteligência Artificial (IA) & Chat
 *   **Painel IA**: Para interagir com uma Inteligência Artificial focada em triagem e negociações de valores por WhatsApp, auxiliando ao lojista de forma automatizada.
@@ -59,6 +59,6 @@ O projeto usa stacks muito modernas do ecossistema JS/TS:
 ## 🚀 4. O Fluxo do Usuário Perfeito
 
 1.  O usuário entra em `/landing` ou acessa os planos do sistema SaaS.
-2.  Faz o pagamento via Mercado Pago, criando um webhook em nuvem que avisa o sistema para gerar uma licença (`/verify-licenca`).
+2.  Faz o pagamento (fluxo atual no código: AbacatePay/PIX), com webhook em nuvem que avisa o sistema para gerar uma licença (`/verify-licenca`).
 3.  Uma vez logado, ele usa módulos baseados em PWA *offline-first* (onde alguns dados são cacheados e funcionam com má conectividade).
 4.  O cliente emite orçamentos/OS que enviam gatilhos pelo lado do servidor (Edge Functions) para o WhatsApp usando bibliotecas externas (Waha, Evolution API, ou Z-API).
