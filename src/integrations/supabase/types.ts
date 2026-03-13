@@ -7215,6 +7215,10 @@ export type Database = {
       toggle_maintenance_mode: { Args: { active: boolean }; Returns: boolean }
       trust_device: { Args: { p_device_fingerprint: string }; Returns: Json }
       unblock_expired_entries: { Args: never; Returns: number }
+      update_device_test_result: {
+        Args: { p_result: Json; p_session_id: string; p_test_id: string }
+        Returns: undefined
+      }
       update_expired_licenses_daily: {
         Args: never
         Returns: {

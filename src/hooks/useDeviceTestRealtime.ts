@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { TestSession } from '@/types/deviceTest';
-import { toast } from 'sonner';
 
 interface DeviceTestRealtimeStatus {
   isConnected: boolean;
@@ -10,12 +9,12 @@ interface DeviceTestRealtimeStatus {
   errorCount: number;
 }
 
-interface UseDeviceTestRealtimeOptions {
-  sessionId?: string;
+export type UseDeviceTestRealtimeOptions = {
+  sessionId?: string | undefined;
   enabled?: boolean;
   onUpdate?: (session: TestSession) => void;
   pollingInterval?: number;
-}
+};
 
 export const useDeviceTestRealtime = ({
   sessionId,

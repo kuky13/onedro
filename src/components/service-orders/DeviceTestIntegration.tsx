@@ -40,7 +40,7 @@ export const DeviceTestIntegration: React.FC<DeviceTestIntegrationProps> = ({
 
   // Hook de realtime para atualizações resilientes
   useDeviceTestRealtime({
-    sessionId: session?.id,
+    sessionId: session?.id as string | undefined,
     enabled: !!session?.id,
     onUpdate: (updatedSession) => {
       console.log('📡 DeviceTestIntegration: sessão atualizada via hook:', updatedSession.status);

@@ -36,12 +36,21 @@ const buildUrl = (
   return url.toString();
 };
 
-const getAccessToken = async () => {
+const getAccessToken = async (): Promise<string | null> => {
   const { data } = await supabase.auth.getSession();
-  if (data.session?.access_token) {
-    return data.session.access_token;
+  const session = data.session;
+
+  if (session?.access_token) {
+    // Check if token expires in less than 60s – refresh proactively
+    const expiresAt = session.expires_at; // unix seconds
+    if (expiresAt && expiresAt - Math.floor(Date.now() / 1000) < 60) {
+      const { data: refreshData } = await supabase.auth.refreshSession();
+      return refreshData.session?.access_token ?? null;
+    }
+    return session.access_token;
   }
-  // Try to refresh session if expired or missing
+
+  // No session – try to refresh (handles stale/expired tokens)
   const { data: refreshData } = await supabase.auth.refreshSession();
   return refreshData.session?.access_token ?? null;
 };
@@ -76,7 +85,7 @@ async function apiFetch<T>(
     }
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), opts?.timeoutMs ?? 12_000);
+    const timer = setTimeout(() => controller.abort(), opts?.timeoutMs ?? 30_000);
 
     try {
       const headers: Record<string, string> = {
@@ -140,7 +149,11 @@ async function apiFetch<T>(
       }
 
       if (e?.name === 'AbortError') {
-        throw new ApiError('Conexão instável ou processamento demorado, tente novamente', { endpoint });
+        throw new ApiError('A VPS está processando sua solicitação, por favor aguarde um momento ou tente novamente.', { endpoint });
+      }
+      // Wrap network errors with friendly message
+      if (isNetworkError(e)) {
+        throw new ApiError('A VPS está processando sua solicitação, por favor aguarde um momento ou tente novamente.', { endpoint });
       }
       throw e;
     } finally {

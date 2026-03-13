@@ -83,8 +83,8 @@ export function DiagnosticShareDialog({
   const [pendingQRRegeneration, setPendingQRRegeneration] = useState(false);
 
   // Hook de realtime para atualizações resilientes
-  const { isConnected, connectionType } = useDeviceTestRealtime({
-    sessionId: session?.id,
+  useDeviceTestRealtime({
+    sessionId: session?.id as string | undefined,
     enabled: isOpen && !!session?.id,
     onUpdate: (updatedSession) => {
       console.log("📡 Sessão atualizada via hook:", updatedSession.status);
@@ -231,13 +231,13 @@ export function DiagnosticShareDialog({
           id: existingSession.id,
           share_token: existingSession.share_token,
           status: existingSession.status as TestSession["status"],
-          expires_at: existingSession.expires_at,
+          expires_at: existingSession.expires_at ?? '',
           created_at: existingSession.created_at,
           completed_at: existingSession.completed_at,
           overall_score: existingSession.overall_score,
           test_results: existingSession.test_results as any,
           device_info: existingSession.device_info as any || {},
-        });
+        } as TestSession);
         setDiagnosticUrl(`${window.location.origin}/testar/${existingSession.share_token}`);
         toast.info("Usando sessão de diagnóstico existente");
       } else {
@@ -303,13 +303,13 @@ export function DiagnosticShareDialog({
           id: sessionData.id,
           share_token: sessionData.share_token,
           status: sessionData.status as TestSession["status"],
-          expires_at: sessionData.expires_at,
+          expires_at: sessionData.expires_at ?? '',
           created_at: sessionData.created_at,
           completed_at: sessionData.completed_at,
           overall_score: sessionData.overall_score,
           test_results: sessionData.test_results as any,
           device_info: sessionData.device_info as any || {},
-        });
+        } as TestSession);
         setDiagnosticUrl(`${window.location.origin}/testar/${sessionData.share_token}`);
         toast.success("Link de diagnóstico criado!");
       } else {

@@ -13,13 +13,23 @@ export const useApiStatus = (options?: { intervalMs?: number; enabled?: boolean 
 
   const checkHealth = useCallback(async () => {
     try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 8_000);
+      // Ensure we have a valid token before calling health
+      const { data: sessionData } = await (await import('@/integrations/supabase/client')).supabase.auth.getSession();
+      const expiresAt = sessionData.session?.expires_at;
+      if (expiresAt && expiresAt - Math.floor(Date.now() / 1000) < 60) {
+        await (await import('@/integrations/supabase/client')).supabase.auth.refreshSession();
+      }
 
-      // API_BASE_URL includes /api now
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15_000);
+
+      const token = sessionData.session?.access_token;
       const res = await fetch(`${API_BASE_URL.replace(/\/$/, '')}/health`, {
         signal: controller.signal,
-        headers: { Accept: 'application/json' },
+        headers: {
+          Accept: 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
       });
       clearTimeout(timer);
 
