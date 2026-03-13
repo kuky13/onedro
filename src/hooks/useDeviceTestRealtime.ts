@@ -9,12 +9,12 @@ interface DeviceTestRealtimeStatus {
   errorCount: number;
 }
 
-export interface UseDeviceTestRealtimeOptions {
-  sessionId?: string;
+export type UseDeviceTestRealtimeOptions = {
+  sessionId?: string | undefined;
   enabled?: boolean;
   onUpdate?: (session: TestSession) => void;
   pollingInterval?: number;
-}
+};
 
 export const useDeviceTestRealtime = ({
   sessionId,
