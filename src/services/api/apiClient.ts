@@ -85,7 +85,7 @@ async function apiFetch<T>(
     }
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), opts?.timeoutMs ?? 12_000);
+    const timer = setTimeout(() => controller.abort(), opts?.timeoutMs ?? 30_000);
 
     try {
       const headers: Record<string, string> = {
