@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { Eye, EyeOff, ArrowLeft, Shield, Smartphone, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { cleanupAuthState, forceReload } from '@/utils/authCleanup';
+import { cleanupAuthState } from '@/utils/authCleanup';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const AuthPage = () => {
   const [email, setEmail] = useState('');
@@ -16,17 +17,20 @@ export const AuthPage = () => {
   const [showResetForm, setShowResetForm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
   // ... rest of the code
 
-  // @ts-ignore unused but keeps isResetting state functional
   const handleFullReset = () => {
     setIsResetting(true);
     cleanupAuthState();
     showSuccess({
       title: 'Sistema Resetado',
-      description: 'Cookies e cache limpos. Recarregando...'
+      description: 'Cookies e cache limpos.'
     });
-    forceReload(1500);
+    queryClient.invalidateQueries();
+    navigate('/auth', { replace: true });
   };
   const {
     signIn,

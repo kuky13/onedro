@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -342,6 +343,10 @@ export const DeviceChecklist: React.FC<DeviceChecklistProps> = ({
   disabled = false,
   serviceOrderId
 }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isQuickTestPage = location.pathname === '/teste-rapido';
+
   // Migrar dados antigos para o novo formato se necessário
   const checklistData = value ? migrateOldChecklistData(value) : initialChecklistData;
 
@@ -429,18 +434,20 @@ export const DeviceChecklist: React.FC<DeviceChecklistProps> = ({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  window.location.href = '/teste-rapido';
-                }}
-                className="flex items-center gap-2 text-sm">
-                <ExternalLink className="h-4 w-4" />
-                Criar Link
-              </Button>
+              {!isQuickTestPage && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    navigate('/teste-rapido');
+                  }}
+                  className="flex items-center gap-2 text-sm">
+                  <ExternalLink className="h-4 w-4" />
+                  Criar Link
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="default"

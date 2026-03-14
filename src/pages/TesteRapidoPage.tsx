@@ -16,6 +16,7 @@ interface QuickTest {
   id: string;
   name: string;
   url: string;
+  token: string;
   created_at: string;
   expires_at: string;
 }
@@ -37,6 +38,7 @@ const TesteRapidoPage = () => {
   const [newTestName, setNewTestName] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [createdTest, setCreatedTest] = useState<{ token: string; url: string } | null>(null);
 
   const navigate = useNavigate();
 
@@ -58,6 +60,7 @@ const TesteRapidoPage = () => {
       const mapped: QuickTest[] = (fetchedTests || []).map((t: any) => ({
         id: t.id,
         name: t.device_info?.name || t.share_token,
+        token: t.share_token,
         url: `${window.location.origin}/testar/${t.share_token}`,
         created_at: t.created_at,
         expires_at: t.expires_at || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
@@ -79,54 +82,42 @@ const TesteRapidoPage = () => {
 
     setIsCreating(true);
     try {
-      // Generate a temporary share token (simulated for now, would typically be from DeviceTestIntegration)
-      // In a real scenario, we might want to create a real session or just a static link
-      // For this requirement, we'll assume we are generating a link to a viewer page
-      // But since we don't have a specific viewer for "quick tests" without a device/OS, 
-      // we'll point to the generic test page with a unique ID or similar.
-      // Let's use a placeholder URL structure for now as per requirement "URL de teste".
-      
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user) {
         toast.error('Você precisa estar logado para criar testes.');
         return;
       }
 
-      // Gera código de 4 dígitos com retry para evitar colisão
-      let shortToken = '';
-      let attempts = 0;
-      while (attempts < 10) {
-        shortToken = Math.floor(1000 + Math.random() * 9000).toString();
-        const { data: existing } = await supabase
-          .from('device_test_sessions')
-          .select('id')
-          .eq('share_token', shortToken)
-          .maybeSingle();
-        if (!existing) break;
-        attempts++;
-      }
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 12_000);
 
-      const { data: _newTest, error } = await supabase
-        .from('device_test_sessions')
-        .insert([{
-          share_token: shortToken,
-          status: 'pending',
-          device_info: { name: newTestName, source: 'quick_test' },
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          created_by: user.id,
-        }])
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('create_quick_test_session', {
+        p_name: newTestName,
+        p_expires_days: 7,
+      }, {
+        signal: controller.signal,
+      } as any);
+
+      window.clearTimeout(timeoutId);
 
       if (error) throw error;
 
+      const row = Array.isArray(data) ? data[0] : data;
+      const token = row?.share_token;
+      if (!token) throw new Error('Não foi possível gerar um código válido');
+
+      const url = `${window.location.origin}/testar/${token}`;
+      setCreatedTest({ token, url });
+
       toast.success('Teste rápido criado com sucesso!');
-      setNewTestName('');
-      setIsDialogOpen(false);
       fetchQuickTests(); // Refresh list
     } catch (error) {
       console.error('Error creating test:', error);
-      toast.error('Erro ao criar teste. Tente novamente.');
+      const message = (error as any)?.name === 'AbortError'
+        ? 'Demorou demais para gerar. Tente novamente.'
+        : (error as any)?.message || 'Erro ao criar teste. Tente novamente.';
+      toast.error(message);
     } finally {
       setIsCreating(false);
     }
@@ -166,7 +157,15 @@ const TesteRapidoPage = () => {
           <h1 className="text-xl font-bold text-foreground">Teste Rápido</h1>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) {
+              setCreatedTest(null);
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="h-4 w-4" />
@@ -182,33 +181,97 @@ const TesteRapidoPage = () => {
             </DialogHeader>
             
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="test-name">Nome do Teste</Label>
-                <Input 
-                  id="test-name" 
-                  placeholder="Ex: iPhone 11 - Cliente João" 
-                  value={newTestName}
-                  onChange={(e) => setNewTestName(e.target.value)}
-                />
-              </div>
+              {!createdTest && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="test-name">Nome do Teste</Label>
+                    <Input
+                      id="test-name"
+                      placeholder="Ex: iPhone 11 - Cliente João"
+                      value={newTestName}
+                      onChange={(e) => setNewTestName(e.target.value)}
+                    />
+                  </div>
 
-              <div className="rounded-md bg-muted p-4 space-y-3 text-sm text-muted-foreground">
-                <div className="flex gap-2">
-                  <Clock className="h-4 w-4 text-orange-500 shrink-0" />
-                  <span>Este link expira automaticamente em <strong>7 dias</strong>.</span>
+                  <div className="rounded-md bg-muted p-4 space-y-3 text-sm text-muted-foreground">
+                    <div className="flex gap-2">
+                      <Clock className="h-4 w-4 text-orange-500 shrink-0" />
+                      <span>Este link expira automaticamente em <strong>7 dias</strong>.</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <AlertCircle className="h-4 w-4 text-blue-500 shrink-0" />
+                      <span>Limite de 5 testes ativos. Ao criar o 6º, o mais antigo será substituído.</span>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {createdTest && (
+                <div className="space-y-3">
+                  <div className="text-sm text-muted-foreground">Código do link</div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {createdTest.token
+                      .split('')
+                      .slice(0, 4)
+                      .map((d, idx) => (
+                        <div
+                          key={`${d}-${idx}`}
+                          className="h-12 rounded-lg border border-border/50 bg-background/60 flex items-center justify-center font-mono text-2xl text-foreground"
+                        >
+                          {d}
+                        </div>
+                      ))}
+                  </div>
+
+                  <div className="rounded-md bg-muted/40 border border-border/40 p-2">
+                    <code className="text-[10px] text-muted-foreground break-all select-all line-clamp-2">
+                      {createdTest.url}
+                    </code>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(createdTest.token);
+                        toast.success('Código copiado!');
+                      }}
+                      className="gap-2"
+                    >
+                      <Copy className="h-4 w-4" />
+                      Copiar código
+                    </Button>
+                    <Button
+                      onClick={() => window.open(createdTest.url, '_blank', 'noopener,noreferrer')}
+                      className="gap-2"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      Abrir
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <AlertCircle className="h-4 w-4 text-blue-500 shrink-0" />
-                  <span>Limite de 5 testes ativos. Ao criar o 6º, o mais antigo será substituído.</span>
-                </div>
-              </div>
+              )}
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
-              <Button onClick={handleCreateTest} disabled={isCreating}>
-                {isCreating ? 'Criando...' : 'Gerar Link'}
-              </Button>
+              {createdTest ? (
+                <Button
+                  onClick={() => {
+                    setIsDialogOpen(false);
+                    setCreatedTest(null);
+                    setNewTestName('');
+                  }}
+                >
+                  Fechar
+                </Button>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+                  <Button onClick={handleCreateTest} disabled={isCreating}>
+                    {isCreating ? 'Criando...' : 'Gerar Link'}
+                  </Button>
+                </>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -231,6 +294,22 @@ const TesteRapidoPage = () => {
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-1 min-w-0">
                       <h3 className="font-medium truncate">{test.name}</h3>
+                      <div className="flex items-center gap-2 pt-1">
+                        <div className="grid grid-cols-4 gap-1">
+                          {test.token
+                            .split('')
+                            .slice(0, 4)
+                            .map((d, idx) => (
+                              <div
+                                key={`${test.id}-${d}-${idx}`}
+                                className="h-8 w-8 rounded-md border border-border/50 bg-muted/30 flex items-center justify-center font-mono text-base"
+                              >
+                                {d}
+                              </div>
+                            ))}
+                        </div>
+                        <span className="text-xs text-muted-foreground">Código</span>
+                      </div>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />

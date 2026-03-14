@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCcw } from 'lucide-react';
-import { cleanupAuthState, forceReload } from '@/utils/authCleanup';
+import { cleanupAuthState } from '@/utils/authCleanup';
+import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 
 interface ResetAppButtonProps {
   variant?: 'ghost' | 'outline' | 'destructive';
@@ -11,11 +13,14 @@ interface ResetAppButtonProps {
 
 export function ResetAppButton({ variant = 'ghost', size = 'sm', className = '' }: ResetAppButtonProps) {
   const [isResetting, setIsResetting] = useState(false);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const handleFullReset = () => {
     setIsResetting(true);
     cleanupAuthState();
-    forceReload(1500);
+    queryClient.invalidateQueries();
+    navigate('/auth', { replace: true });
   };
 
   return (

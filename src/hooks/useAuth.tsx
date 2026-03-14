@@ -1,10 +1,11 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/useToast';
-import { cleanupAuthState, forceReload } from '@/utils/authCleanup';
+import { cleanupAuthState } from '@/utils/authCleanup';
 import { useTokenRotation } from '@/hooks/useTokenRotation';
+import { useNavigate } from 'react-router-dom';
 
 const devLog = (...args: any[]) => {
   if (import.meta.env.DEV) console.log(...args);
@@ -58,6 +59,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
   const { showSuccess, showError } = useToast();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Ativar rotação automática de tokens quando há sessão ativa
   useTokenRotation({
@@ -184,7 +187,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             // Verificar se precisa ir para verificação
             if (!session.user.email_confirmed_at) {
               devLog('📧 Email não confirmado, redirecionando para verificação');
-              window.location.href = '/verify';
+              navigate('/verify', { replace: true });
               return;
             }
 
@@ -215,6 +218,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     });
                 }
               });
+
+            queryClient.invalidateQueries();
           }, 0);
         }
       }
@@ -224,7 +229,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       subscription.unsubscribe();
       mounted = false;
     };
-  }, []);
+  }, [navigate, queryClient]);
 
   const signIn = async (email: string, password: string): Promise<{ error: Error | null }> => {
     try {
@@ -317,8 +322,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           });
         }, 0);
 
-        // Force page reload para garantir estado limpo
-        forceReload(1000);
+        await queryClient.invalidateQueries();
+
+        if (!signInData.user.email_confirmed_at) {
+          navigate('/verify', { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
       }
 
       return { error: null };
@@ -546,13 +556,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       console.log('✅ Logout realizado com sucesso');
-      
-      // Force page reload para garantir estado limpo
-      forceReload(500);
+
+      await queryClient.invalidateQueries();
+      queryClient.clear();
+      navigate('/auth', { replace: true });
     } catch (error) {
       console.error('❌ Erro no logout:', error);
-      // Mesmo com erro, force o reload para limpar estado
-      forceReload(500);
+      await queryClient.invalidateQueries();
+      queryClient.clear();
+      navigate('/auth', { replace: true });
     }
   };
 

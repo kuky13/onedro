@@ -2,7 +2,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Suspense, useEffect, useState } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams, Link } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
@@ -10,6 +10,7 @@ import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReloadMonitor } from "@/components/ReloadMonitor";
 import { lazyWithRetry } from "@/utils/lazyWithRetry";
+import { queryClient } from "@/lib/queryClient";
 
 // ── Imports estáticos: apenas o essencial para o shell ──
 import NotFound from "./pages/NotFound";
@@ -114,18 +115,6 @@ const ServiceOrderEditWrapper = () => {
   // exactOptionalPropertyTypes quando passamos a prop explicitamente.
   return <ServiceOrderEditForm serviceOrderId={id!} />;
 };
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutos
-      gcTime: 1000 * 60 * 30, // 30 minutos (mantém cache em memória por mais tempo)
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: 'always',
-      refetchOnMount: true,
-      retry: 1
-    }
-  }
-});
 const AppContent = () => {
   const {
     loading: authLoading
@@ -162,10 +151,32 @@ const AppContent = () => {
 
   // Fluxo de aceite removido
 
-  // Mostrar loading apenas enquanto carrega autenticação
-  if (authLoading) {
+  const publicRoutePrefixes = [
+    '/landing',
+    '/auth',
+    '/signup',
+    '/sign',
+    '/verify',
+    '/reset-password',
+    '/privacy',
+    '/terms',
+    '/cookies',
+    '/consentimento',
+    '/concentimento',
+    '/share/',
+    '/testar/',
+    '/loja/',
+    '/status/',
+    '/docs',
+    '/houston',
+    '/hamster',
+  ];
+
+  const isPublicRoute = publicRoutePrefixes.some((prefix) => location.pathname === prefix || location.pathname.startsWith(prefix));
+
+  if (authLoading && !isPublicRoute) {
     return <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      <div className="animate-spin rounded-full h-24 w-24 border-b-2 border-primary"></div>
     </div>;
   }
 
@@ -188,7 +199,8 @@ const AppContent = () => {
 
     {/* Modal de aceite removido */}
 
-    <SmartNavigation>
+    <Suspense fallback={null}>
+      <SmartNavigation>
       <Suspense
         fallback={
           <div className="min-h-screen flex items-center justify-center">
@@ -430,7 +442,8 @@ const AppContent = () => {
         <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
-    </SmartNavigation>
+      </SmartNavigation>
+    </Suspense>
     {showInfoNote && !noteDismissed && !temporarilyHidden && <div className="fixed z-40 animate-fade-in max-w-sm bottom-20 left-4 right-4 md:bottom-4 md:left-auto md:right-4">
       <div className="rounded-xl bg-card/95 backdrop-blur-lg border border-border/50 shadow-lg p-3 md:p-4">
         <div className="flex items-start gap-2 md:gap-3">
@@ -465,7 +478,6 @@ const AppContent = () => {
   </>;
 };
 const App = () => {
-  console.log('🔄 App component iniciando...');
   return <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
       <TooltipProvider>

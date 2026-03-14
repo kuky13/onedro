@@ -102,7 +102,7 @@ export const DeviceTestIntegration: React.FC<DeviceTestIntegrationProps> = ({
         const {
           data: sessionData,
           error: fetchError
-        } = await supabase.from('device_test_sessions').select('*').eq('id', data).single();
+        } = await supabase.from('device_test_sessions').select('*').eq('id', data).maybeSingle();
         if (fetchError) throw fetchError;
         if (sessionData) {
           setSession({
@@ -113,6 +113,8 @@ export const DeviceTestIntegration: React.FC<DeviceTestIntegrationProps> = ({
             expires_at: sessionData.expires_at || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
           });
           toast.success('Link de teste gerado com sucesso!');
+        } else {
+          toast.error('Sessão criada, mas não foi possível carregar. Tente novamente.');
         }
       }
     } catch (err) {

@@ -1,14 +1,10 @@
-/**
- * Authentication cleanup utilities to prevent infinite loops and auth issues
- */
+import type { QueryClient } from '@tanstack/react-query';
 
 /**
  * Clean up all authentication-related data from storage
  * This prevents "limbo" states where users get stuck in redirect loops
  */
 export const cleanupAuthState = (): void => {
-  console.log('🧹 Limpando estado de autenticação...');
-  
   try {
     // Remove standard auth tokens from localStorage
     const keysToRemove: string[] = [];
@@ -20,10 +16,8 @@ export const cleanupAuthState = (): void => {
       }
     });
     
-    // Remove collected keys
-    keysToRemove.forEach(key => {
+    keysToRemove.forEach((key) => {
       localStorage.removeItem(key);
-      console.log(`🗑️ Removed: ${key}`);
     });
     
     // Also clean sessionStorage if it exists
@@ -31,7 +25,6 @@ export const cleanupAuthState = (): void => {
       Object.keys(sessionStorage).forEach((key) => {
         if (key.startsWith('supabase.auth.') || key.includes('sb-') || key.startsWith('sb.')) {
           sessionStorage.removeItem(key);
-          console.log(`🗑️ Removed from session: ${key}`);
         }
       });
     }
@@ -48,32 +41,14 @@ export const cleanupAuthState = (): void => {
         // Also try with common domains
         document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + window.location.hostname;
       }
-      console.log('🗑️ Cookies limpos (best effort)');
     } catch (e) {
-      console.warn('⚠️ Erro ao limpar cookies:', e);
+      void e;
     }
-    
-    console.log('✅ Estado de autenticação limpo');
   } catch (error) {
-    console.warn('⚠️ Erro ao limpar estado de autenticação:', error);
+    void error;
   }
 };
 
-/**
- * Force a complete page reload to ensure clean state
- */
-export const forceReload = (delay: number = 100): void => {
-  setTimeout(() => {
-    window.location.href = window.location.origin + '/';
-  }, delay);
-};
-
-/**
- * Safe redirect that prevents loops by cleaning state first
- */
-export const safeAuthRedirect = (path: string): void => {
-  cleanupAuthState();
-  setTimeout(() => {
-    window.location.href = window.location.origin + path;
-  }, 100);
+export const invalidateAuthCache = async (queryClient: QueryClient) => {
+  await queryClient.invalidateQueries();
 };

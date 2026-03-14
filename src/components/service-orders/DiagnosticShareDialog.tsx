@@ -81,6 +81,7 @@ export function DiagnosticShareDialog({
   const [diagnosticUrl, setDiagnosticUrl] = useState<string>("");
   const [userId, setUserId] = useState<string | null>(null);
   const [pendingQRRegeneration, setPendingQRRegeneration] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Hook de realtime para atualizações resilientes
   useDeviceTestRealtime({
@@ -88,12 +89,15 @@ export function DiagnosticShareDialog({
     enabled: isOpen && !!session?.id,
     onUpdate: (updatedSession) => {
       console.log("📡 Sessão atualizada via hook:", updatedSession.status);
-      setSession(prev => ({
-        ...prev!,
-        ...updatedSession,
-        test_results: updatedSession.test_results || {},
-        device_info: updatedSession.device_info || {}
-      }));
+      setSession((prev) => {
+        const base = prev ?? ({} as any);
+        return {
+          ...base,
+          ...updatedSession,
+          test_results: updatedSession.test_results || {},
+          device_info: updatedSession.device_info || {},
+        };
+      });
 
       // Notificar mudanças de status
       if (updatedSession.status === "in_progress") {
@@ -124,6 +128,7 @@ export function DiagnosticShareDialog({
       setQrDataUrl(null);
       setCopied(false);
       setPendingQRRegeneration(false);
+      setLoadError(null);
     }
   }, [isOpen]);
 
@@ -196,10 +201,25 @@ export function DiagnosticShareDialog({
 
   const loadOrCreateSession = async () => {
     setIsLoading(true);
+    setLoadError(null);
     try {
+      const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number) => {
+        return await Promise.race([
+          promise,
+          new Promise<T>((_, reject) => {
+            const id = setTimeout(() => {
+              clearTimeout(id);
+              reject(new Error('timeout'));
+            }, timeoutMs);
+          }),
+        ]);
+      };
+
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        data: { session: authSession },
+      } = await withTimeout(supabase.auth.getSession(), 6000);
+
+      const user = authSession?.user;
 
       if (!user) {
         toast.error("Você precisa estar logado");
@@ -211,7 +231,8 @@ export function DiagnosticShareDialog({
 
       // Buscar sessão existente ativa (não concluída, não expirada)
       // FIX: Garantir que não pegamos sessões de "quick_test"
-      const { data: existingSession, error: fetchError } = await supabase
+      const { data: existingSession, error: fetchError } = await withTimeout(
+        supabase
         .from("device_test_sessions")
         .select("*")
         .eq("created_by", user.id)
@@ -220,12 +241,16 @@ export function DiagnosticShareDialog({
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false })
         .limit(1)
-        .maybeSingle();
+        .maybeSingle(),
+        8000
+      );
 
       if (fetchError) throw fetchError;
 
-      if (existingSession) {
-        // Usar sessão existente
+      const existingToken = existingSession?.share_token;
+      const isNumericToken = typeof existingToken === 'string' && /^\d{4}$/.test(existingToken);
+
+      if (existingSession && isNumericToken) {
         console.log("♻️ Reutilizando sessão existente:", existingSession.share_token);
         setSession({
           id: existingSession.id,
@@ -241,12 +266,19 @@ export function DiagnosticShareDialog({
         setDiagnosticUrl(`${window.location.origin}/testar/${existingSession.share_token}`);
         toast.info("Usando sessão de diagnóstico existente");
       } else {
+        if (existingSession?.id && !isNumericToken) {
+          await supabase.from('device_test_sessions').delete().eq('id', existingSession.id);
+        }
         // Criar nova sessão
-        await createNewSession(user.id);
+        await withTimeout(createNewSession(user.id), 8000);
       }
     } catch (err) {
       console.error("Erro ao carregar sessão:", err);
-      toast.error("Erro ao carregar diagnóstico");
+      const msg = (err as any)?.message === 'timeout'
+        ? 'Demorou demais para carregar. Tente novamente.'
+        : 'Erro ao carregar diagnóstico';
+      setLoadError(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -254,47 +286,35 @@ export function DiagnosticShareDialog({
 
   const createNewSession = async (userId: string) => {
     try {
-      // Tentar gerar token único até 3 vezes
-      let shareToken = '';
-      let attempts = 0;
-      let created = false;
-      let sessionData = null;
+      let sessionData: any = null;
+      for (let attempt = 0; attempt < 50; attempt++) {
+        const rand = crypto.getRandomValues(new Uint16Array(1))[0];
+        const shareToken = String(1000 + (rand % 9000));
 
-      while (attempts < 3 && !created) {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        shareToken = Array.from(crypto.getRandomValues(new Uint8Array(4)))
-          .map(b => chars[b % chars.length])
-          .join('');
-        
-        // Verificar se já existe
-        const { data: existing } = await supabase
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+        const { data, error } = await supabase
           .from('device_test_sessions')
-          .select('id')
-          .eq('share_token', shareToken)
-          .maybeSingle();
-          
-        if (!existing) {
-          const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-          const { data, error } = await supabase
-            .from("device_test_sessions")
-            .insert({
-              share_token: shareToken,
-              status: "pending",
-              expires_at: expiresAt,
-              service_order_id: serviceOrderId || null,
-              created_by: userId,
-              device_info: { source: 'diagnostic_share' }, // Marcar origem
-              test_results: {},
-            })
-            .select()
-            .single();
-            
-          if (!error && data) {
-            created = true;
-            sessionData = data;
-          }
+          .insert({
+            share_token: shareToken,
+            status: 'pending',
+            expires_at: expiresAt,
+            service_order_id: serviceOrderId || null,
+            created_by: userId,
+            device_info: { source: 'diagnostic_share' },
+            test_results: {},
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          sessionData = data;
+          break;
         }
-        attempts++;
+
+        const pgCode = (error as any)?.code;
+        if (pgCode !== '23505') {
+          throw error;
+        }
       }
 
       if (sessionData) {
@@ -313,7 +333,7 @@ export function DiagnosticShareDialog({
         setDiagnosticUrl(`${window.location.origin}/testar/${sessionData.share_token}`);
         toast.success("Link de diagnóstico criado!");
       } else {
-        throw new Error("Falha ao gerar token único");
+        throw new Error('Falha ao gerar token único');
       }
     } catch (err) {
       console.error("Erro ao criar sessão:", err);
@@ -340,12 +360,12 @@ export function DiagnosticShareDialog({
     setIsLoading(false);
   };
 
-  const handleCopyLink = async () => {
-    if (!diagnosticUrl) return;
+  const handleCopyCode = async () => {
+    if (!session?.share_token) return;
     try {
-      await navigator.clipboard.writeText(diagnosticUrl);
+      await navigator.clipboard.writeText(session.share_token);
       setCopied(true);
-      toast.success("Link copiado!");
+      toast.success('Código copiado!');
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       toast.error("Erro ao copiar");
@@ -437,6 +457,20 @@ export function DiagnosticShareDialog({
               </div>
             ) : (
               <div className="space-y-3">
+                {loadError && (
+                  <div className="p-3 bg-destructive/10 rounded-lg border border-destructive/20">
+                    <p className="text-sm text-destructive">{loadError}</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-3 w-full"
+                      onClick={loadOrCreateSession}
+                    >
+                      Tentar novamente
+                    </Button>
+                  </div>
+                )}
+
                 {/* Status e Progresso */}
                 {session?.status === "in_progress" && progress && (
                   <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
@@ -471,12 +505,47 @@ export function DiagnosticShareDialog({
                   </div>
                 )}
 
-                {/* URL Display */}
-                {diagnosticUrl && (
-                  <div className="p-2.5 bg-muted/40 rounded-lg border border-border/40">
-                    <code className="text-[10px] text-muted-foreground break-all select-all line-clamp-2">
-                      {diagnosticUrl}
-                    </code>
+                {session?.share_token && (
+                  <div className="p-3 bg-muted/40 rounded-lg border border-border/40 space-y-2">
+                    <div className="text-[11px] text-muted-foreground">Código</div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {session.share_token
+                        .split('')
+                        .slice(0, 4)
+                        .map((ch, idx) => (
+                          <div
+                            key={`${ch}-${idx}`}
+                            className="h-11 rounded-lg border border-border/50 bg-background/60 flex items-center justify-center font-mono text-xl text-foreground"
+                          >
+                            {ch}
+                          </div>
+                        ))}
+                    </div>
+                    {diagnosticUrl && (
+                      <div className="rounded-md bg-background/50 border border-border/40 p-2">
+                        <code className="text-[10px] text-muted-foreground break-all select-all line-clamp-2">
+                          {diagnosticUrl}
+                        </code>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-4 gap-2 text-[11px] text-muted-foreground">
+                      <div className="flex items-center gap-2 col-span-4">
+                        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary font-semibold">1</span>
+                        Envie o código ou QR para o cliente
+                      </div>
+                      <div className="flex items-center gap-2 col-span-4">
+                        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary font-semibold">2</span>
+                        Abra o link no celular
+                      </div>
+                      <div className="flex items-center gap-2 col-span-4">
+                        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary font-semibold">3</span>
+                        Faça os testes seguindo a tela
+                      </div>
+                      <div className="flex items-center gap-2 col-span-4">
+                        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary font-semibold">4</span>
+                        Resultados aparecem aqui em tempo real
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -487,10 +556,10 @@ export function DiagnosticShareDialog({
                       variant="outline"
                       size="sm"
                       className="h-auto py-2.5 px-3 flex flex-col items-center gap-1"
-                      onClick={handleCopyLink}
+                      onClick={handleCopyCode}
                     >
                       {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                      <span className="text-xs font-medium">{copied ? "Copiado!" : "Copiar"}</span>
+                      <span className="text-xs font-medium">{copied ? 'Copiado!' : 'Copiar código'}</span>
                     </Button>
 
                     <Button

@@ -1,22 +1,22 @@
 project_id = "oghjlypdnmqecaavekyr"
 
 [functions.admin-reset-password]
-verify_jwt = false
+verify_jwt = true
 
 [functions.admin-update-user-email]
-verify_jwt = false
+verify_jwt = true
 
 [functions.audit-system]
-verify_jwt = false
+verify_jwt = true
 
 [functions.chat-ai]
-verify_jwt = false
+verify_jwt = true
 
 [functions.cleanup-service-orders]
-verify_jwt = false
+verify_jwt = true
 
 [functions.create-abacatepay-checkout]
-verify_jwt = false
+verify_jwt = true
 
 [functions.check-abacatepay-payment]
 verify_jwt = false
@@ -25,61 +25,61 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.evolution-list-groups]
-verify_jwt = false
+verify_jwt = true
 
 [functions.manage-user-profile]
-verify_jwt = false
+verify_jwt = true
 
 [functions.notification-system]
-verify_jwt = false
+verify_jwt = true
 
 [functions.rate-limiter]
 verify_jwt = false
 
 [functions.real-time-monitoring]
-verify_jwt = false
+verify_jwt = true
 
 [functions.security-api]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-license-email]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-payment-receipt-email]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-push-notification]
-verify_jwt = false
+verify_jwt = true
 
 [functions.triage-ai]
-verify_jwt = false
+verify_jwt = true
 
 [functions.validate-license]
 verify_jwt = false
 
 [functions.waha-list-groups]
-verify_jwt = false
+verify_jwt = true
 
 [functions.waha-proxy]
-verify_jwt = false
+verify_jwt = true
 
 [functions.whatsapp-admin-cleanup]
-verify_jwt = false
+verify_jwt = true
 
 [functions.whatsapp-ai-reply]
-verify_jwt = false
+verify_jwt = true
 
 [functions.whatsapp-context]
-verify_jwt = false
+verify_jwt = true
 
 [functions.whatsapp-instance-manage]
-verify_jwt = false
+verify_jwt = true
 
 [functions.whatsapp-proxy]
-verify_jwt = false
+verify_jwt = true
 
 [functions.whatsapp-qr-connect]
-verify_jwt = false
+verify_jwt = true
 
 [functions.whatsapp-webhook]
 verify_jwt = false
@@ -88,16 +88,16 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.zapi-list-groups]
-verify_jwt = false
+verify_jwt = true
 
 [functions.media-download-proxy]
 verify_jwt = false
 
 [functions.sync-budgets-to-store]
-verify_jwt = false
+verify_jwt = true
 
 [functions.analyze-budgets]
-verify_jwt = false
+verify_jwt = true
 
 [functions.create-quick-test]
-verify_jwt = false
+verify_jwt = true

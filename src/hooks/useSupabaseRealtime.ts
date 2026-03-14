@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient, QueryKey } from '@tanstack/react-query';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import { subscribePostgresChanges } from '@/integrations/supabase/realtimeRegistry';
 
 interface BaseRealtimeOptions {
   channelName: string;
@@ -19,29 +19,25 @@ interface UseSupabaseRealtimeOptions<T extends Record<string, any> = Record<stri
 export const useSupabaseRealtime = <T extends Record<string, any> = Record<string, any>>(
   options: UseSupabaseRealtimeOptions<T>
 ) => {
-  const { channelName, table, event = '*', schema = 'public', filter, enabled = true, onPayload } = options;
+  const { table, event = '*', schema = 'public', filter, enabled = true, onPayload } = options;
 
   useEffect(() => {
     if (!enabled) return;
 
-    const config: any = {
-      event,
-      schema,
-      table,
-      ...(filter ? { filter } : {}),
-    };
-
-    const channel = (supabase as any)
-      .channel(channelName)
-      .on('postgres_changes' as any, config, (payload: RealtimePostgresChangesPayload<T>) => {
+    const unsubscribe = subscribePostgresChanges<T>(
+      {
+        schema,
+        table,
+        event,
+        filter,
+      },
+      (payload) => {
         onPayload?.(payload);
-      })
-      .subscribe();
+      }
+    );
 
-    return () => {
-      (supabase as any).removeChannel(channel);
-    };
-  }, [channelName, table, event, schema, filter, enabled, onPayload]);
+    return unsubscribe;
+  }, [table, event, schema, filter, enabled, onPayload]);
 };
 
 interface RealtimeQueryInvalidationOptions extends BaseRealtimeOptions {

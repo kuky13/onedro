@@ -5,9 +5,7 @@ import {
   ArrowLeft,
   Bell,
   Brush,
-  Cookie,
   Database,
-  FileText,
   Shield,
   Trash2,
   User,
@@ -194,18 +192,7 @@ function SettingsHome({
         </div>
       )}
 
-      <div className="pt-1 flex items-center justify-between text-xs text-muted-foreground">
-        <span>OneDrip · v{appVersion}</span>
-        <span>{new Date().getFullYear()}</span>
-      </div>
-
-      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-        <Link to="/terms" className="hover:text-foreground transition-colors">Termos</Link>
-        <span>•</span>
-        <Link to="/privacy" className="hover:text-foreground transition-colors">Privacidade</Link>
-        <span>•</span>
-        <Link to="/cookies" className="hover:text-foreground transition-colors">Cookies</Link>
-      </div>
+      <div className="pt-1" />
     </div>
   );
 }
@@ -511,36 +498,6 @@ export function SettingsLite(props: SettingsLiteProps) {
         iconBgClassName: 'bg-purple-500/15',
         iconClassName: 'text-purple-300',
         href: mode === 'route' ? '/settings/account-data' : undefined,
-      },
-      {
-        key: 'terms',
-        group: 'Políticas',
-        title: 'Termos de uso',
-        description: 'Termos e condições do serviço',
-        icon: FileText,
-        iconBgClassName: 'bg-sky-500/15',
-        iconClassName: 'text-sky-300',
-        href: '/terms',
-      },
-      {
-        key: 'privacy',
-        group: 'Políticas',
-        title: 'Privacidade',
-        description: 'Como seus dados são tratados',
-        icon: Shield,
-        iconBgClassName: 'bg-indigo-500/15',
-        iconClassName: 'text-indigo-300',
-        href: '/privacy',
-      },
-      {
-        key: 'cookies',
-        group: 'Políticas',
-        title: 'Cookies',
-        description: 'Preferências e política de cookies',
-        icon: Cookie,
-        iconBgClassName: 'bg-orange-500/15',
-        iconClassName: 'text-orange-300',
-        href: '/cookies',
       },
     ],
     [mode]
