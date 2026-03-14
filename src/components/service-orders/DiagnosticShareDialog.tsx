@@ -83,14 +83,87 @@ export function DiagnosticShareDialog({
   const [pendingQRRegeneration, setPendingQRRegeneration] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  const generateAlphaToken = (length = 4) => {
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const bytes = new Uint8Array(length);
+    crypto.getRandomValues(bytes);
+    let out = "";
+    for (let i = 0; i < length; i++) {
+      out += alphabet[bytes[i] % alphabet.length];
+    }
+    return out;
+  };
+
+  const tryUpgradeSessionToAlphaToken = async (row: any) => {
+    const currentToken = row?.share_token as string | undefined;
+    const status = row?.status as TestSession["status"] | undefined;
+    if (!row?.id || !currentToken || !status) return row;
+
+    const isAlpha = /^[A-Z]{4}$/.test(currentToken);
+    if (isAlpha) return row;
+
+    if (status === "in_progress") return row;
+
+    for (let attempt = 0; attempt < 40; attempt++) {
+      const nextToken = generateAlphaToken(4);
+      const { data, error } = await supabase
+        .from("device_test_sessions")
+        .update({ share_token: nextToken })
+        .eq("id", row.id)
+        .select("*")
+        .single();
+
+      if (!error && data) return data;
+
+      const pgCode = (error as any)?.code;
+      if (pgCode !== "23505") {
+        return row;
+      }
+    }
+
+    return row;
+  };
+
   // Hook de realtime para atualizações resilientes
   useDeviceTestRealtime({
     sessionId: session?.id as string | undefined,
     enabled: isOpen && !!session?.id,
     onUpdate: (updatedSession) => {
-      console.log("📡 Sessão atualizada via hook:", updatedSession.status);
       setSession((prev) => {
         const base = prev ?? ({} as any);
+        const prevStatus = (base?.status ?? null) as TestSession["status"] | null;
+        const nextStatus = (updatedSession.status ?? prevStatus) as TestSession["status"];
+
+        if (prevStatus !== nextStatus) {
+          if (nextStatus === "in_progress") {
+            toast.info("🔬 Diagnóstico iniciado!");
+          }
+
+          if (nextStatus === "completed") {
+            toast.success("✅ Diagnóstico concluído!");
+
+            if (updatedSession.test_results) {
+              const checklistData = mapTestResultsToChecklist(updatedSession.test_results);
+
+              if (onChecklistUpdate) {
+                onChecklistUpdate(checklistData);
+              }
+
+              if (serviceOrderId) {
+                supabase
+                  .from("service_orders")
+                  .update({ device_checklist: checklistData })
+                  .eq("id", serviceOrderId)
+                  .then(({ error }) => {
+                    if (error) {
+                      console.error("Erro ao salvar checklist na OS:", error);
+                    }
+                  });
+              }
+            }
+          }
+        }
+
         return {
           ...base,
           ...updatedSession,
@@ -98,19 +171,6 @@ export function DiagnosticShareDialog({
           device_info: updatedSession.device_info || {},
         };
       });
-
-      // Notificar mudanças de status
-      if (updatedSession.status === "in_progress") {
-        toast.info("🔬 Diagnóstico atualizado!");
-      } else if (updatedSession.status === "completed") {
-        toast.success("✅ Diagnóstico concluído!");
-
-        // Atualizar o checklist automaticamente quando concluído
-        if (onChecklistUpdate && updatedSession.test_results) {
-          const checklistData = mapTestResultsToChecklist(updatedSession.test_results);
-          onChecklistUpdate(checklistData);
-        }
-      }
     }
   });
 
@@ -229,29 +289,27 @@ export function DiagnosticShareDialog({
 
       setUserId(user.id);
 
-      // Buscar sessão existente ativa (não concluída, não expirada)
-      // FIX: Garantir que não pegamos sessões de "quick_test"
-      const { data: existingSession, error: fetchError } = await withTimeout(
-        supabase
+      let query = supabase
         .from("device_test_sessions")
         .select("*")
         .eq("created_by", user.id)
-        .neq("device_info->>source", "quick_test") // Ignorar testes rápidos
-        .in("status", ["pending", "in_progress"])
+        .filter("device_info->>source", "eq", "diagnostic_share")
+        .in("status", ["pending", "in_progress", "completed"])
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-        8000
-      );
+        .limit(1);
+
+      if (serviceOrderId) {
+        query = query.eq("service_order_id", serviceOrderId);
+      }
+
+      const { data: existingSessionRaw, error: fetchError } = await withTimeout(query.maybeSingle(), 8000);
 
       if (fetchError) throw fetchError;
 
-      const existingToken = existingSession?.share_token;
-      const isNumericToken = typeof existingToken === 'string' && /^\d{4}$/.test(existingToken);
+      const existingSession = existingSessionRaw ? await tryUpgradeSessionToAlphaToken(existingSessionRaw) : null;
 
-      if (existingSession && isNumericToken) {
-        console.log("♻️ Reutilizando sessão existente:", existingSession.share_token);
+      if (existingSession?.id && existingSession?.share_token) {
         setSession({
           id: existingSession.id,
           share_token: existingSession.share_token,
@@ -264,11 +322,7 @@ export function DiagnosticShareDialog({
           device_info: existingSession.device_info as any || {},
         } as TestSession);
         setDiagnosticUrl(`${window.location.origin}/testar/${existingSession.share_token}`);
-        toast.info("Usando sessão de diagnóstico existente");
       } else {
-        if (existingSession?.id && !isNumericToken) {
-          await supabase.from('device_test_sessions').delete().eq('id', existingSession.id);
-        }
         // Criar nova sessão
         await withTimeout(createNewSession(user.id), 8000);
       }
@@ -288,8 +342,7 @@ export function DiagnosticShareDialog({
     try {
       let sessionData: any = null;
       for (let attempt = 0; attempt < 50; attempt++) {
-        const rand = crypto.getRandomValues(new Uint16Array(1))[0];
-        const shareToken = String(1000 + (rand % 9000));
+        const shareToken = generateAlphaToken(4);
 
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
         const { data, error } = await supabase

@@ -7,6 +7,7 @@ import { TestResult } from "@/components/device-test/TestResult";
 import { Loader2, ShieldX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { TestSession, TestResults, TestResult as TestResultType, DeviceInfo } from "@/types/deviceTest";
+import { filterTestResultsForStorage, sanitizeDeviceInfoForStorage, sanitizeTestResultForStorage } from "@/utils/deviceTestStorage";
 
 export default function DeviceTestPage() {
   const { shareToken } = useParams<{ shareToken: string }>();
@@ -114,7 +115,7 @@ export default function DeviceTestPage() {
     if (!session) return;
 
     try {
-      const deviceInfo: DeviceInfo = {
+      const runtimeDeviceInfo: DeviceInfo = {
         user_agent: navigator.userAgent,
         screen_resolution: `${window.screen.width}x${window.screen.height}`,
         platform: navigator.platform,
@@ -122,12 +123,16 @@ export default function DeviceTestPage() {
         viewport: `${window.innerWidth}x${window.innerHeight}`,
       };
 
+      const persistedDeviceInfo = await sanitizeDeviceInfoForStorage(session.device_info || {}, runtimeDeviceInfo, {
+        source: session.device_info?.source,
+      });
+
       const { error: updateError } = await supabase
         .from("device_test_sessions")
         .update({
           status: "in_progress",
           started_at: new Date().toISOString(),
-          device_info: JSON.parse(JSON.stringify(deviceInfo)),
+          device_info: JSON.parse(JSON.stringify(persistedDeviceInfo)),
         })
         .eq("share_token", session.share_token);
 
@@ -136,7 +141,7 @@ export default function DeviceTestPage() {
         return;
       }
 
-      setSession({ ...session, status: "in_progress", device_info: deviceInfo });
+      setSession({ ...session, status: "in_progress", device_info: { ...session.device_info, ...runtimeDeviceInfo } });
     } catch (err) {
       console.error("Error starting test:", err);
     }
@@ -156,12 +161,19 @@ export default function DeviceTestPage() {
         ? (passedTests.length / completedTests.length) * 100
         : 0;
 
+      const source = session.device_info?.source;
+      const storagePayload = source === "quick_test"
+        ? filterTestResultsForStorage(testResults, { source })
+        : null;
+
+      const persistedResults = storagePayload?.filteredResults ?? testResults;
+
       const { data: updatedSession, error: updateError } = await supabase
         .from("device_test_sessions")
         .update({
           status: "completed",
           completed_at: new Date().toISOString(),
-          test_results: JSON.parse(JSON.stringify(testResults)),
+          test_results: JSON.parse(JSON.stringify(persistedResults)),
           overall_score: overallScore,
         })
         .eq("share_token", session.share_token)
@@ -172,18 +184,17 @@ export default function DeviceTestPage() {
         throw updateError;
       }
 
-      const persistedResults = (updatedSession.test_results as unknown as TestResults) || testResults;
-      accumulatedResultsRef.current = persistedResults;
+      accumulatedResultsRef.current = testResults;
 
       setSession(prev => prev ? {
         ...prev,
-        test_results: persistedResults,
+        test_results: (updatedSession.test_results as unknown as TestResults) || persistedResults,
         overall_score: updatedSession.overall_score,
         status: updatedSession.status as TestSession["status"],
         completed_at: updatedSession.completed_at,
         updated_at: updatedSession.updated_at,
       } : prev);
-      setResults(persistedResults);
+      setResults(testResults);
       setCompleted(true);
     } catch (err) {
       console.error("Error completing test:", err);
@@ -201,11 +212,14 @@ export default function DeviceTestPage() {
       // Optimistic update
       setSession(prev => prev ? { ...prev, test_results: updatedResults } : prev);
 
+      const source = session.device_info?.source;
+      const persistedResult = sanitizeTestResultForStorage(testId, result, { source });
+
       // Use RPC for atomic update to avoid race conditions
       const { error } = await supabase.rpc('update_device_test_result' as any, {
         p_session_id: session.id,
         p_test_id: testId,
-        p_result: result as any
+        p_result: persistedResult as any
       });
 
       if (error) {

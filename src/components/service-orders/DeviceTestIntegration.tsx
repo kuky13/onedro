@@ -43,19 +43,23 @@ export const DeviceTestIntegration: React.FC<DeviceTestIntegrationProps> = ({
     sessionId: session?.id as string | undefined,
     enabled: !!session?.id,
     onUpdate: (updatedSession) => {
-      console.log('📡 DeviceTestIntegration: sessão atualizada via hook:', updatedSession.status);
-      setSession(prev => ({
-        ...prev!,
-        ...updatedSession,
-        device_info: updatedSession.device_info || {},
-        test_results: updatedSession.test_results || {},
-        status: updatedSession.status as TestSession['status'],
-        expires_at: updatedSession.expires_at || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      }));
-      
-      if (updatedSession.status === 'completed') {
-        toast.success('✅ Teste de dispositivo concluído!');
-      }
+      setSession(prev => {
+        const prevStatus = (prev?.status ?? null) as TestSession['status'] | null;
+        const nextStatus = (updatedSession.status ?? prevStatus) as TestSession['status'];
+
+        if (prevStatus !== nextStatus && nextStatus === 'completed') {
+          toast.success('✅ Teste de dispositivo concluído!');
+        }
+
+        return {
+          ...prev!,
+          ...updatedSession,
+          device_info: updatedSession.device_info || {},
+          test_results: updatedSession.test_results || {},
+          status: updatedSession.status as TestSession['status'],
+          expires_at: updatedSession.expires_at || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        };
+      });
     }
   });
   const loadExistingSession = async () => {
