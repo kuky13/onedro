@@ -3,6 +3,7 @@ import { MobileMenuProvider, useMobileMenuContext } from '@/components/mobile/Mo
 import { MobileHamburgerButton } from '@/components/mobile/MobileHamburgerButton';
 import { MobileHamburgerMenu } from '@/components/mobile/MobileHamburgerMenu';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLocation } from 'react-router-dom';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -11,10 +12,18 @@ interface AppShellProps {
 const AppShellContent = ({ children }: AppShellProps) => {
   const { isOpen, toggleMenu, closeMenu, menuData, handleLogout } = useMobileMenuContext();
   const isMobile = useIsMobile();
-  const pathname = window.location.pathname;
+  const { pathname } = useLocation();
 
   // Don't show floating hamburger on /dashboard — AdaptiveLayout has its own header
-  const showFloatingHamburger = isMobile && pathname !== '/dashboard' && pathname !== '/chat' && pathname !== '/teste-rapido';
+  const showFloatingHamburger =
+    isMobile &&
+    pathname !== '/dashboard' &&
+    pathname !== '/chat' &&
+    pathname !== '/teste-rapido' &&
+    pathname !== '/worm' &&
+    !pathname.startsWith('/service-orders') &&
+    !pathname.startsWith('/store/orcamentos') &&
+    !pathname.startsWith('/reparos');
 
   return (
     <div className="min-h-screen bg-background">

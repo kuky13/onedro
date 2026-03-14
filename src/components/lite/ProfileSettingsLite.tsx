@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
-import { Check, Pencil, Save, User } from 'lucide-react';
+import { Check, Save, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SettingsGlassCard } from '@/components/lite/settings/SettingsLitePrimitives';
 import { useToast } from '@/hooks/useToast';
@@ -26,19 +25,8 @@ export const ProfileSettingsLite = ({ userId, profile }: ProfileSettingsLiteProp
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const { showSuccess, showError, showInfo } = useToast();
-  const fileRef = useRef<HTMLInputElement | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const { showSuccess, showError } = useToast();
   const [nameFocused, setNameFocused] = useState(false);
-
-  const initials = useMemo(() => {
-    const src = (formData.name || '').trim() || (formData.email || '').trim();
-    if (!src) return 'U';
-    const parts = src.split(/\s+/g).filter(Boolean);
-    const a = parts[0]?.[0] ?? 'U';
-    const b = parts.length > 1 ? parts[parts.length - 1]?.[0] : parts[0]?.[1];
-    return `${a}${b ?? ''}`.toUpperCase();
-  }, [formData.email, formData.name]);
 
   useEffect(() => {
     if (profile) {
@@ -48,12 +36,6 @@ export const ProfileSettingsLite = ({ userId, profile }: ProfileSettingsLiteProp
       });
     }
   }, [profile]);
-
-  useEffect(() => {
-    return () => {
-      if (avatarUrl) URL.revokeObjectURL(avatarUrl);
-    };
-  }, [avatarUrl]);
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
@@ -78,17 +60,6 @@ export const ProfileSettingsLite = ({ userId, profile }: ProfileSettingsLiteProp
     }
   };
 
-  const onPickAvatar = () => {
-    showInfo({ title: 'Imagem local', description: 'Por enquanto a foto fica apenas neste dispositivo.' });
-    fileRef.current?.click();
-  };
-
-  const onAvatarFileChange = (file: File | null) => {
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setAvatarUrl(url);
-  };
-
   return (
     <SettingsGlassCard>
       <div className="p-5">
@@ -104,32 +75,6 @@ export const ProfileSettingsLite = ({ userId, profile }: ProfileSettingsLiteProp
           </div>
         </div>
 
-        <div className="mt-5 flex flex-col items-center text-center">
-          <div className="relative">
-            <Avatar className="h-24 w-24 ring-1 ring-border/40">
-              {avatarUrl ? <AvatarImage src={avatarUrl} alt={formData.name || formData.email || 'Usuário'} /> : null}
-              <AvatarFallback className="text-xl font-semibold bg-muted/40">{initials}</AvatarFallback>
-            </Avatar>
-            <button
-              type="button"
-              onClick={onPickAvatar}
-              className="absolute -bottom-2 -right-2 h-9 w-9 rounded-full bg-background/70 backdrop-blur-sm border border-border/40 shadow-sm flex items-center justify-center hover:bg-background/90 transition-colors"
-              aria-label="Editar avatar"
-            >
-              <Pencil className="h-4 w-4 text-foreground" />
-            </button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => onAvatarFileChange(e.target.files?.[0] ?? null)}
-            />
-          </div>
-
-          <div className="mt-3 text-sm font-medium text-foreground">{formData.name || 'Seu nome'}</div>
-          <div className="text-xs text-muted-foreground">{formData.email || '—'}</div>
-        </div>
       </div>
 
       <Separator className="bg-border/30" />
