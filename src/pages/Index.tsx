@@ -19,8 +19,9 @@ import {
   MessageCircle,
   Download,
   Wrench,
-  Store } from
-"lucide-react";
+  Store
+} from
+  "lucide-react";
 import { DashboardSkeleton } from "@/components/ui/loading-states";
 import { useAppInfo } from "@/hooks/useAppConfig";
 import { useCompanyDataLoader } from "@/hooks/useCompanyDataLoader";
@@ -28,131 +29,131 @@ import { PWATestAccessButton } from "@/components/pwa/PWATestAccessButton";
 
 // Logos das marcas para o carrossel
 const BRANDS = [
-{
-  name: "LG",
-  url: "/logos/LG_logo_(2014).svg.png"
-},
-{
-  name: "Huawei",
-  url: "/logos/Huawei_logo.png"
-},
-{
-  name: "Realme",
-  url: "/logos/Realme_logo.png"
-},
-{
-  name: "Samsung",
-  url: "/logos/Samsung_old_logo_before_year_2015.svg.png"
-},
-{
-  name: "Xiaomi",
-  url: "/logos/Xiaomi_logo_(2021-).svg.png"
-},
-{
-  name: "Oppo",
-  url: "/logos/OPPO_LOGO_2019.png"
-},
-{
-  name: "Apple",
-  url: "/logos/Apple_logo_white.svg.png"
-},
-{
-  name: "Vivo",
-  url: "/logos/Vivo_logo_2019.svg.png"
-},
-{
-  name: "Motorola",
-  url: "/logos/Motorola-logo-black-and-white.png"
-}];
+  {
+    name: "LG",
+    url: "/logos/LG_logo_(2014).svg.png"
+  },
+  {
+    name: "Huawei",
+    url: "/logos/Huawei_logo.png"
+  },
+  {
+    name: "Realme",
+    url: "/logos/Realme_logo.png"
+  },
+  {
+    name: "Samsung",
+    url: "/logos/Samsung_old_logo_before_year_2015.svg.png"
+  },
+  {
+    name: "Xiaomi",
+    url: "/logos/Xiaomi_logo_(2021-).svg.png"
+  },
+  {
+    name: "Oppo",
+    url: "/logos/OPPO_LOGO_2019.png"
+  },
+  {
+    name: "Apple",
+    url: "/logos/Apple_logo_white.svg.png"
+  },
+  {
+    name: "Vivo",
+    url: "/logos/Vivo_logo_2019.svg.png"
+  },
+  {
+    name: "Motorola",
+    url: "/logos/Motorola-logo-black-and-white.png"
+  }];
 
 
 // Vantagens práticas para técnicos
 const VANTAGENS = [
-{
-  icone: Zap,
-  titulo: "Orçamento em 2 minutos",
-  descricao: "Sem papel, sem demora. Cliente recebe na hora."
-},
-{
-  icone: Search,
-  titulo: "Busca instantânea",
-  descricao: "Encontre qualquer orçamento em segundos."
-},
-{
-  icone: Receipt,
-  titulo: "PDF profissional",
-  descricao: "Orçamentos com logo e dados da sua loja."
-},
-{
-  icone: MessageCircle,
-  titulo: "Envio via WhatsApp",
-  descricao: "Um toque e o cliente recebe o orçamento."
-},
-{
-  icone: Smartphone,
-  titulo: "Adaptado para celular",
-  descricao: "Use direto do balcão, sem computador."
-},
-{
-  icone: Download,
-  titulo: "Backup automático",
-  descricao: "Nunca mais perca dados de clientes."
-}];
+  {
+    icone: Zap,
+    titulo: "Orçamento em 2 minutos",
+    descricao: "Sem papel, sem demora. Cliente recebe na hora."
+  },
+  {
+    icone: Search,
+    titulo: "Busca instantânea",
+    descricao: "Encontre qualquer orçamento em segundos."
+  },
+  {
+    icone: Receipt,
+    titulo: "PDF profissional",
+    descricao: "Orçamentos com logo e dados da sua loja."
+  },
+  {
+    icone: MessageCircle,
+    titulo: "Envio via WhatsApp",
+    descricao: "Um toque e o cliente recebe o orçamento."
+  },
+  {
+    icone: Smartphone,
+    titulo: "Adaptado para celular",
+    descricao: "Use direto do balcão, sem computador."
+  },
+  {
+    icone: Download,
+    titulo: "Tudo na nuvem",
+    descricao: "Nunca mais perca dados de clientes."
+  }];
 
 
 // Funcionalidades principais
 const FUNCIONALIDADES = [
-{
-  icone: FileText,
-  titulo: "Orçamentos Inteligentes",
-  descricao: "PDF personalizado, WhatsApp integrado, validade automática."
-},
-{
-  icone: Users,
-  titulo: "Gestão de Clientes",
-  descricao: "Histórico completo, busca rápida, dados organizados."
-},
-{
-  icone: Shield,
-  titulo: "Ordem de Serviço",
-  descricao: "Acompanhamento em tempo real, status automático."
-},
-{
-  icone: Wrench,
-  titulo: "Controle de Reparos",
-  descricao: "Quanto entrou, quanto cada técnico fez."
-},
-{
-  icone: Store,
-  titulo: "Loja Virtual",
-  descricao: "Catálogo online com pedidos via WhatsApp."
-}];
+  {
+    icone: FileText,
+    titulo: "Orçamentos Inteligentes",
+    descricao: "PDF personalizado, WhatsApp integrado, validade automática."
+  },
+  {
+    icone: Users,
+    titulo: "Gestão de Clientes",
+    descricao: "Histórico completo, busca rápida, dados organizados."
+  },
+  {
+    icone: Shield,
+    titulo: "Ordem de Serviço",
+    descricao: "Acompanhamento em tempo real, status automático."
+  },
+  {
+    icone: Wrench,
+    titulo: "Controle de Reparos",
+    descricao: "Quanto entrou, quanto cada técnico fez."
+  },
+  {
+    icone: Store,
+    titulo: "Loja Virtual",
+    descricao: "Catálogo online com pedidos via WhatsApp."
+  }];
 
 
 // Depoimentos
 const DEPOIMENTOS = [
-{
-  nome: "Paulo oliveira",
-  cargo: "Proprietário - Oliveira Imports",
-  rating: 4.5,
-  texto:
-  "Antes eu perdia clientes por causa do orçamento e Agora faço em 2 min e envio para o cliente um PDF e uma mensagem no Whatsapp."
-},
-{
-  nome: "Maria",
-  cargo: "Atendente de assistência",
-  rating: 4.2,
-  texto: "Consigo achar qualquer Orçamento em segundos. Organizou completamente minha rotina."
-},
-{
-  nome: "André",
-  cargo: "Técnico - Oliveira Imports",
-  rating: 5.0,
-  texto: "Minha rotina na assistência ficou muito mais facil pra salvar ordens de serviço e os reparos que eu fiz."
-}];
+  {
+    nome: "Paulo oliveira",
+    cargo: "Proprietário - Oliveira Imports",
+    rating: 4.5,
+    texto:
+      "Antes eu perdia clientes por causa do orçamento e Agora faço em 2 min e envio para o cliente um PDF e uma mensagem no Whatsapp."
+  },
+  {
+    nome: "Maria",
+    cargo: "Atendente de assistência",
+    rating: 4.2,
+    texto: "Consigo achar qualquer Orçamento em segundos. Organizou completamente minha rotina."
+  },
+  {
+    nome: "André",
+    cargo: "Técnico - Oliveira Imports",
+    rating: 5.0,
+    texto: "Minha rotina na assistência ficou muito mais facil pra salvar ordens de serviço e os reparos que eu fiz."
+  }];
 
 
-const StarRating = ({ rating }: {rating: number;}) => {
+const StarRating = ({ rating }: { rating: number; }) => {
   return (
     <div className="flex items-center gap-1 mb-2 lg:mb-4">
       {[1, 2, 3, 4, 5].map((star) => {
@@ -161,7 +162,7 @@ const StarRating = ({ rating }: {rating: number;}) => {
           <div key={star} className="relative inline-block">
             {/* Base Star (Empty/Gray) */}
             <Star className="h-3.5 w-3.5 lg:h-5 lg:w-5 text-gray-300 fill-gray-100" />
-            
+
             {/* Filled Star Overlay */}
             <div
               className="absolute top-0 left-0 h-full overflow-hidden"
@@ -178,22 +179,22 @@ const StarRating = ({ rating }: {rating: number;}) => {
 
 // FAQ
 const FAQ = [
-{
-  pergunta: "Funciona no celular?",
-  resposta: "Sim, 100%. Você usa direto do balcão, sem precisar de computador."
-},
-{
-  pergunta: "E se eu não gostar?",
-  resposta: "7 dias grátis pra testar. Não gostou, não paga nada."
-},
-{
-  pergunta: "Preciso instalar algo?",
-  resposta: "Não. Acessa pelo navegador do celular ou computador."
-},
-{
-  pergunta: "Meus dados ficam seguros?",
-  resposta: "Backup automático na nuvem. Mesmo que perca o celular, seus dados estão salvos."
-}];
+  {
+    pergunta: "Funciona no celular?",
+    resposta: "Sim, 100%. Você usa direto do balcão, sem precisar de computador."
+  },
+  {
+    pergunta: "E se eu não gostar?",
+    resposta: "7 dias grátis pra testar. Não gostou, não paga nada."
+  },
+  {
+    pergunta: "Preciso instalar algo?",
+    resposta: "Não. Acessa pelo navegador do celular ou computador."
+  },
+  {
+    pergunta: "Meus dados ficam seguros?",
+    resposta: "Backup automático na nuvem. Mesmo que perca o celular, seus dados estão salvos."
+  }];
 
 const InfiniteBrandCarousel = () => {
   return (
@@ -207,24 +208,24 @@ const InfiniteBrandCarousel = () => {
 
         <div className="flex w-max animate-infinite-scroll [animation-duration:60s]">
           {[1, 2, 3, 4].map((copy) =>
-          <div key={copy} className="flex items-center gap-8 lg:gap-16 px-4">
+            <div key={copy} className="flex items-center gap-8 lg:gap-16 px-4">
               {BRANDS.map((brand, idx) =>
-            <div
-              key={`${brand.name}-${copy}-${idx}`}
-              className="flex items-center justify-center min-w-[60px] lg:min-w-[100px] h-8 lg:h-12">
+                <div
+                  key={`${brand.name}-${copy}-${idx}`}
+                  className="flex items-center justify-center min-w-[60px] lg:min-w-[100px] h-8 lg:h-12">
 
                   <img
-                src={brand.url}
-                alt={brand.name}
-                className="h-full w-auto object-contain max-h-5 lg:max-h-8 opacity-60"
-                loading="lazy"
-                decoding="async"
-                width="35"
-                height="35" />
-              
+                    src={brand.url}
+                    alt={brand.name}
+                    className="h-full w-auto object-contain max-h-5 lg:max-h-8 opacity-60"
+                    loading="lazy"
+                    decoding="async"
+                    width="35"
+                    height="35" />
+
 
                 </div>
-            )}
+              )}
             </div>
           )}
         </div>
@@ -264,7 +265,7 @@ const Index = () => {
               width="36"
               height="36"
               loading="eager" />
-            
+
             <span className="font-bold text-lg lg:text-xl text-foreground">{name}</span>
           </Link>
           <div className="flex items-center gap-2 lg:gap-4">
@@ -452,7 +453,7 @@ const Index = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-6 max-w-lg lg:max-w-6xl mx-auto">
             {DEPOIMENTOS.map((dep, idx) =>
-            <div key={idx} className="bg-background rounded-xl lg:rounded-2xl p-4 lg:p-8 border border-border/50">
+              <div key={idx} className="bg-background rounded-xl lg:rounded-2xl p-4 lg:p-8 border border-border/50">
                 <StarRating rating={dep.rating} />
                 <p className="text-sm lg:text-base text-foreground mb-3 lg:mb-6 leading-relaxed">"{dep.texto}"</p>
                 <div>
@@ -474,23 +475,23 @@ const Index = () => {
 
           <div className="space-y-2 lg:space-y-3">
             {FAQ.map((item, idx) =>
-            <div key={idx} className="bg-muted/20 rounded-xl lg:rounded-2xl border border-border/30 overflow-hidden">
+              <div key={idx} className="bg-muted/20 rounded-xl lg:rounded-2xl border border-border/30 overflow-hidden">
                 <button
-                onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
-                className="w-full flex items-center justify-between p-4 lg:p-6 text-left">
+                  onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
+                  className="w-full flex items-center justify-between p-4 lg:p-6 text-left">
 
                   <span className="font-medium text-sm lg:text-lg text-foreground">{item.pergunta}</span>
                   {expandedFaq === idx ?
-                <ChevronUp className="h-4 w-4 lg:h-5 lg:w-5 text-muted-foreground flex-shrink-0" /> :
+                    <ChevronUp className="h-4 w-4 lg:h-5 lg:w-5 text-muted-foreground flex-shrink-0" /> :
 
-                <ChevronDown className="h-4 w-4 lg:h-5 lg:w-5 text-muted-foreground flex-shrink-0" />
-                }
+                    <ChevronDown className="h-4 w-4 lg:h-5 lg:w-5 text-muted-foreground flex-shrink-0" />
+                  }
                 </button>
                 {expandedFaq === idx &&
-              <div className="px-4 lg:px-6 pb-4 lg:pb-6">
+                  <div className="px-4 lg:px-6 pb-4 lg:pb-6">
                     <p className="text-sm lg:text-base text-muted-foreground">{item.resposta}</p>
                   </div>
-              }
+                }
               </div>
             )}
           </div>
@@ -568,7 +569,7 @@ const Index = () => {
                 width="20"
                 height="20"
                 loading="lazy" />
-              
+
               KukySolutions
             </Link>
           </div>
