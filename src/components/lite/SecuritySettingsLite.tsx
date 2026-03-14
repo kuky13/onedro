@@ -1,7 +1,7 @@
 import { openWhatsApp } from '@/utils/whatsappUtils';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Shield, MessageCircle, Lock, Mail, LogOut, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, User, Shield, Settings, FileText, Cookie, Home, Building2, Bell, Database, Trash2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { ArrowLeft, User, Shield, Settings, FileText, Cookie, Home } from 'lucide-react';
 import { useIOSDetection } from '@/hooks/useIOSDetection';
 import { ProfileSettingsLite } from '@/components/lite/ProfileSettingsLite';
 import { SecuritySettingsLite } from '@/components/lite/SecuritySettingsLite';
