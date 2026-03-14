@@ -42,7 +42,7 @@ const TesteRapidoPage = () => {
   const [newTestName, setNewTestName] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [createdTest, setCreatedTest] = useState<{ token: string; url: string } | null>(null);
+  const [createdTest, setCreatedTest] = useState<{token: string;url: string;} | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportSessionId, setReportSessionId] = useState<string | null>(null);
   const completedToastRef = useRef<Set<string>>(new Set());
@@ -65,12 +65,12 @@ const TesteRapidoPage = () => {
   const fetchQuickTests = async () => {
     try {
       setIsLoading(true);
-      const { data: fetchedTests, error } = await supabase
-        .from('device_test_sessions')
-        .select('id, share_token, created_at, expires_at, device_info, status')
-        .filter('device_info->>source', 'eq', 'quick_test')
-        .order('created_at', { ascending: false })
-        .limit(5);
+      const { data: fetchedTests, error } = await supabase.
+      from('device_test_sessions').
+      select('id, share_token, created_at, expires_at, device_info, status').
+      filter('device_info->>source', 'eq', 'quick_test').
+      order('created_at', { ascending: false }).
+      limit(5);
 
       if (error) throw error;
       const mapped: QuickTest[] = (fetchedTests || []).map((t: any) => ({
@@ -80,7 +80,7 @@ const TesteRapidoPage = () => {
         url: `${window.location.origin}/testar/${t.share_token}`,
         created_at: t.created_at,
         expires_at: t.expires_at || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        status: (t.status || 'pending') as QuickTest['status'],
+        status: (t.status || 'pending') as QuickTest['status']
       }));
 
       for (const t of mapped) {
@@ -118,9 +118,9 @@ const TesteRapidoPage = () => {
 
       const { data, error } = await supabase.rpc('create_quick_test_session', {
         p_name: newTestName,
-        p_expires_days: 7,
+        p_expires_days: 7
       }, {
-        signal: controller.signal,
+        signal: controller.signal
       } as any);
 
       window.clearTimeout(timeoutId);
@@ -138,9 +138,9 @@ const TesteRapidoPage = () => {
       fetchQuickTests(); // Refresh list
     } catch (error) {
       console.error('Error creating test:', error);
-      const message = (error as any)?.name === 'AbortError'
-        ? 'Demorou demais para gerar. Tente novamente.'
-        : (error as any)?.message || 'Erro ao criar teste. Tente novamente.';
+      const message = (error as any)?.name === 'AbortError' ?
+      'Demorou demais para gerar. Tente novamente.' :
+      (error as any)?.message || 'Erro ao criar teste. Tente novamente.';
       toast.error(message);
     } finally {
       setIsCreating(false);
@@ -149,15 +149,15 @@ const TesteRapidoPage = () => {
 
   const handleDeleteTest = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('device_test_sessions')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.
+      from('device_test_sessions').
+      delete().
+      eq('id', id);
 
       if (error) throw error;
-      
+
       toast.success('Teste removido');
-      setQuickTests(prev => prev.filter(t => t.id !== id));
+      setQuickTests((prev) => prev.filter((t) => t.id !== id));
     } catch (error) {
       console.error('Error deleting test:', error);
       toast.error('Erro ao remover teste');
@@ -197,8 +197,8 @@ const TesteRapidoPage = () => {
             if (!open) {
               setCreatedTest(null);
             }
-          }}
-        >
+          }}>
+          
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="h-4 w-4" />
@@ -214,16 +214,16 @@ const TesteRapidoPage = () => {
             </DialogHeader>
             
             <div className="space-y-4 py-4">
-              {!createdTest && (
-                <>
+              {!createdTest &&
+              <>
                   <div className="space-y-2">
                     <Label htmlFor="test-name">Nome do Teste</Label>
                     <Input
-                      id="test-name"
-                      placeholder="Ex: iPhone 11 - Cliente João"
-                      value={newTestName}
-                      onChange={(e) => setNewTestName(e.target.value)}
-                    />
+                    id="test-name"
+                    placeholder="Ex: iPhone 11 - Cliente João"
+                    value={newTestName}
+                    onChange={(e) => setNewTestName(e.target.value)} />
+                  
                   </div>
 
                   <div className="rounded-md bg-muted p-4 space-y-3 text-sm text-muted-foreground">
@@ -237,23 +237,23 @@ const TesteRapidoPage = () => {
                     </div>
                   </div>
                 </>
-              )}
+              }
 
-              {createdTest && (
-                <div className="space-y-3">
+              {createdTest &&
+              <div className="space-y-3">
                   <div className="text-sm text-muted-foreground">Código do link</div>
                   <div className="grid grid-cols-4 gap-2">
-                    {createdTest.token
-                      .split('')
-                      .slice(0, 4)
-                      .map((d, idx) => (
-                        <div
-                          key={`${d}-${idx}`}
-                          className="h-12 rounded-lg border border-border/50 bg-background/60 flex items-center justify-center font-mono text-2xl text-foreground"
-                        >
+                    {createdTest.token.
+                  split('').
+                  slice(0, 4).
+                  map((d, idx) =>
+                  <div
+                    key={`${d}-${idx}`}
+                    className="h-12 rounded-lg border border-border/50 bg-background/60 flex items-center justify-center font-mono text-2xl text-foreground">
+                    
                           {d}
                         </div>
-                      ))}
+                  )}
                   </div>
 
                   <div className="rounded-md bg-muted/40 border border-border/40 p-2">
@@ -264,55 +264,55 @@ const TesteRapidoPage = () => {
 
                   <div className="grid grid-cols-2 gap-2">
                     <Button
-                      variant="outline"
-                      onClick={() => {
-                        navigator.clipboard.writeText(createdTest.token);
-                        toast.success('Código copiado!');
-                      }}
-                      className="gap-2"
-                    >
+                    variant="outline"
+                    onClick={() => {
+                      navigator.clipboard.writeText(createdTest.token);
+                      toast.success('Código copiado!');
+                    }}
+                    className="gap-2">
+                    
                       <Copy className="h-4 w-4" />
                       Copiar código
                     </Button>
                     <Button
-                      onClick={() => window.open(createdTest.url, '_blank', 'noopener,noreferrer')}
-                      className="gap-2"
-                    >
+                    onClick={() => window.open(createdTest.url, '_blank', 'noopener,noreferrer')}
+                    className="gap-2">
+                    
                       <ExternalLink className="h-4 w-4" />
                       Abrir
                     </Button>
                   </div>
                 </div>
-              )}
+              }
             </div>
 
             <DialogFooter>
-              {createdTest ? (
-                <Button
-                  onClick={() => {
-                    setIsDialogOpen(false);
-                    setCreatedTest(null);
-                    setNewTestName('');
-                  }}
-                >
+              {createdTest ?
+              <Button
+                onClick={() => {
+                  setIsDialogOpen(false);
+                  setCreatedTest(null);
+                  setNewTestName('');
+                }}>
+                
                   Fechar
-                </Button>
-              ) : (
-                <>
+                </Button> :
+
+              <>
                   <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
                   <Button onClick={handleCreateTest} disabled={isCreating}>
                     {isCreating ? 'Criando...' : 'Gerar Link'}
                   </Button>
                 </>
-              )}
+              }
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
       {/* Lista de Testes Ativos */}
-      {quickTests.length > 0 && (
-        <div className="space-y-4">
+      {quickTests.length > 0 &&
+      <div className="space-y-4">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             Links Ativos 
             <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
@@ -321,46 +321,46 @@ const TesteRapidoPage = () => {
           </h2>
           
           <div className="grid gap-3">
-            {quickTests.map((test) => (
-              <Card key={test.id} className="overflow-hidden">
+            {quickTests.map((test) =>
+          <Card key={test.id} className="overflow-hidden">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-1 min-w-0">
                       <h3 className="font-medium truncate">{test.name}</h3>
                       <div className="flex items-center gap-2 text-xs">
                         <span
-                          className={
-                            test.status === 'completed'
-                              ? 'text-green-500'
-                              : test.status === 'in_progress'
-                                ? 'text-blue-500'
-                                : test.status === 'expired'
-                                  ? 'text-red-500'
-                                  : 'text-muted-foreground'
-                          }
-                        >
-                          {test.status === 'completed'
-                            ? 'Concluído'
-                            : test.status === 'in_progress'
-                              ? 'Em andamento'
-                              : test.status === 'expired'
-                                ? 'Expirado'
-                                : 'Aguardando'}
+                      className={
+                      test.status === 'completed' ?
+                      'text-green-500' :
+                      test.status === 'in_progress' ?
+                      'text-blue-500' :
+                      test.status === 'expired' ?
+                      'text-red-500' :
+                      'text-muted-foreground'
+                      }>
+                      
+                          {test.status === 'completed' ?
+                      'Concluído' :
+                      test.status === 'in_progress' ?
+                      'Em andamento' :
+                      test.status === 'expired' ?
+                      'Expirado' :
+                      'Aguardando'}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 pt-1">
                         <div className="grid grid-cols-4 gap-1">
-                          {test.token
-                            .split('')
-                            .slice(0, 4)
-                            .map((d, idx) => (
-                              <div
-                                key={`${test.id}-${d}-${idx}`}
-                                className="h-8 w-8 rounded-md border border-border/50 bg-muted/30 flex items-center justify-center font-mono text-base"
-                              >
+                          {test.token.
+                      split('').
+                      slice(0, 4).
+                      map((d, idx) =>
+                      <div
+                        key={`${test.id}-${d}-${idx}`}
+                        className="h-8 w-8 rounded-md border border-border/50 bg-muted/30 flex items-center justify-center font-mono text-base">
+                        
                                 {d}
                               </div>
-                            ))}
+                      )}
                         </div>
                         <span className="text-xs text-muted-foreground">Código</span>
                       </div>
@@ -370,12 +370,12 @@ const TesteRapidoPage = () => {
                           Expira em {format(new Date(test.expires_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
                         </span>
                       </div>
-                      <a 
-                        href={test.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-xs text-primary hover:underline flex items-center gap-1 mt-1 truncate"
-                      >
+                      <a
+                    href={test.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline flex items-center gap-1 mt-1 truncate">
+                    
                         <ExternalLink className="h-3 w-3" />
                         {test.url}
                       </a>
@@ -383,41 +383,41 @@ const TesteRapidoPage = () => {
                     
                     <div className="flex items-center gap-2 shrink-0">
                       <Button
-                        variant={test.status === 'completed' ? 'default' : 'outline'}
-                        size="sm"
-                        className="h-8"
-                        onClick={() => handleOpenReport(test.id, test.status)}
-                      >
+                    variant={test.status === 'completed' ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-8"
+                    onClick={() => handleOpenReport(test.id, test.status)}>
+                    
                         Relatório
                       </Button>
-                      <Button 
-                        variant="outline" 
-                        size="icon" 
-                        className="h-8 w-8"
-                        onClick={() => copyToClipboard(test.url, test.id)}
-                      >
-                        {copiedId === test.id ? (
-                          <Check className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
+                      <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => copyToClipboard(test.url, test.id)}>
+                    
+                        {copiedId === test.id ?
+                    <Check className="h-4 w-4 text-green-500" /> :
+
+                    <Copy className="h-4 w-4" />
+                    }
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
-                        onClick={() => handleDeleteTest(test.id)}
-                      >
+                      <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                    onClick={() => handleDeleteTest(test.id)}>
+                    
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            ))}
+          )}
           </div>
         </div>
-      )}
+      }
 
       <DeviceTestReportDialog
         open={reportOpen}
@@ -426,13 +426,13 @@ const TesteRapidoPage = () => {
           if (!open) setReportSessionId(null);
         }}
         sessionId={reportSessionId}
-        title="Relatório do Teste Rápido"
-      />
+        title="Relatório do Teste Rápido" />
+      
 
-      <div className="space-y-2">
-        <h2 className="text-lg font-semibold">Checklist Manual</h2>
-        <p className="text-sm text-muted-foreground">Realize um teste rápido localmente sem gerar link.</p>
-      </div>
+      
+
+
+      
 
       <DeviceChecklist
         value={checklist}
@@ -440,8 +440,8 @@ const TesteRapidoPage = () => {
 
       <Button
         className="w-full h-11"
-        onClick={() => setLocalReportOpen(true)}
-      >
+        onClick={() => setLocalReportOpen(true)}>
+        
         Baixar Relatório do Checklist
       </Button>
 
@@ -449,31 +449,31 @@ const TesteRapidoPage = () => {
         open={localReportOpen}
         onOpenChange={setLocalReportOpen}
         results={checklistToTestResults(checklist)}
-        title="Relatório do Checklist Manual"
-      />
+        title="Relatório do Checklist Manual" />
+      
       
     </div>);
 };
 
 // Helper component for icon
-function Clock({ className }: { className?: string }) {
+function Clock({ className }: {className?: string;}) {
   return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width="24" 
-      height="24" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}>
+      
       <circle cx="12" cy="12" r="10" />
       <polyline points="12 6 12 12 16 14" />
-    </svg>
-  )
+    </svg>);
+
 }
 
 export default TesteRapidoPage;
