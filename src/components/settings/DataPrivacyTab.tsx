@@ -182,7 +182,7 @@ export const DataPrivacyTab = ({ userId, userEmail }: DataPrivacyTabProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 rounded-2xl border border-border/50 bg-background/30 p-4 overflow-hidden">
         {/* Export Section */}
         <Card className="md:col-span-2 border-primary/20 bg-primary/5">
           <CardHeader>

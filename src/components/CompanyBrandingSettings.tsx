@@ -110,7 +110,11 @@ function InlineBudgetWarningSettings() {
       </Button>
     </>;
 }
-export function CompanyBrandingSettings() {
+type CompanyBrandingSettingsProps = {
+  variant?: 'embedded' | 'page';
+};
+
+export function CompanyBrandingSettings({ variant = 'embedded' }: CompanyBrandingSettingsProps) {
   const {
     companyInfo,
     loading,
@@ -461,26 +465,25 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
       setGeneratingPDF(false);
     }
   };
-  return <div className="min-h-screen bg-background px-3 py-4 sm:p-4 md:p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-6 md:mb-8">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 sm:p-3 bg-primary/10 rounded-xl flex-shrink-0">
-              <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground truncate">
-                Marca da Empresa
-              </h1>
-              <p className="text-sm text-muted-foreground mt-0.5">Configure dados da sua empresa</p>
-            </div>
-          </div>
-          <Separator className="my-4 md:my-6" />
-        </div>
+  const isPage = variant === 'page';
 
-        {/* Status Cards */}
-        
+  return (
+    <div className={isPage ? 'min-h-screen bg-background px-3 py-4 sm:p-4 md:p-6' : undefined}>
+      <div className={isPage ? 'max-w-4xl mx-auto' : undefined}>
+        {isPage && (
+          <div className="mb-6 md:mb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 sm:p-3 bg-primary/10 rounded-xl flex-shrink-0">
+                <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground truncate">Marca da Empresa</h1>
+                <p className="text-sm text-muted-foreground mt-0.5">Configure dados da sua empresa</p>
+              </div>
+            </div>
+            <Separator className="my-4 md:my-6" />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 gap-5 md:gap-8">
           {/* Budget Warning Settings - enhanced (inline) */}
@@ -734,7 +737,6 @@ de garantia, NÃO ABRANGENDO OUTRAS PARTES e respeitando as condições aqui des
 
         </div>
       </div>
-
-
-    </div>;
+    </div>
+  );
 }

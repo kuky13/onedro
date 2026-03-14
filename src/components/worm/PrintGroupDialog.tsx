@@ -132,36 +132,16 @@ export const PrintGroupDialog: React.FC<PrintGroupDialogProps> = ({ budgets, tri
             <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
             <div>
               <strong>Atenção:</strong> Isso gerará um <u>único documento</u> combinando as {budgets.length} opções.
-              Pode ocorrer erros na impressão se os orçamentos forem de aparelhos diferentes.
+              Pode ocorrer erros na impressão se tiver muitos orçamentos de 1 aparelho.
             </div>
           </div>
         )}
 
-        <Tabs defaultValue="80mm" className="w-full">
+        <Tabs defaultValue="58mm" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="80mm" className="text-xs sm:text-sm">80mm (Padrão)</TabsTrigger>
-            <TabsTrigger value="58mm" className="text-xs sm:text-sm">58mm (Pequeno)</TabsTrigger>
+            <TabsTrigger value="58mm" className="text-xs sm:text-sm">58mm (Padrão)</TabsTrigger>
+            <TabsTrigger value="80mm" className="text-xs sm:text-sm">80mm (Grande)</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="80mm" className="mt-4 space-y-4">
-            <div className="border rounded-md p-2 sm:p-4 bg-gray-100 dark:bg-gray-800 overflow-x-auto flex justify-center">
-              <GroupBudgetPreview 
-                budgets={budgets}
-                template={getTemplate()}
-                paperWidth="80mm"
-                companyName={companyData.shop_name}
-                companyPhone={companyData.contact_phone}
-                companyAddress={companyData.address}
-              />
-            </div>
-            <Button 
-              className="w-full" 
-              onClick={() => handleGeneratePdf('80mm')}
-            >
-              <Printer className="mr-2 h-4 w-4" />
-              Imprimir 80mm
-            </Button>
-          </TabsContent>
           
           <TabsContent value="58mm" className="mt-4 space-y-4">
             <div className="border rounded-md p-2 sm:p-4 bg-gray-100 dark:bg-gray-800 overflow-x-auto flex justify-center">
@@ -180,6 +160,26 @@ export const PrintGroupDialog: React.FC<PrintGroupDialogProps> = ({ budgets, tri
             >
               <Printer className="mr-2 h-4 w-4" />
               Imprimir 58mm
+            </Button>
+          </TabsContent>
+          
+          <TabsContent value="80mm" className="mt-4 space-y-4">
+            <div className="border rounded-md p-2 sm:p-4 bg-gray-100 dark:bg-gray-800 overflow-x-auto flex justify-center">
+              <GroupBudgetPreview 
+                budgets={budgets}
+                template={getTemplate()}
+                paperWidth="80mm"
+                companyName={companyData.shop_name}
+                companyPhone={companyData.contact_phone}
+                companyAddress={companyData.address}
+              />
+            </div>
+            <Button 
+              className="w-full" 
+              onClick={() => handleGeneratePdf('80mm')}
+            >
+              <Printer className="mr-2 h-4 w-4" />
+              Imprimir 80mm
             </Button>
           </TabsContent>
         </Tabs>

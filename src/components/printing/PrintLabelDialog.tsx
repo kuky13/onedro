@@ -129,7 +129,7 @@ interface PrintLabelDialogProps {
 }
 
 export const PrintLabelDialog: React.FC<PrintLabelDialogProps> = ({ order, companyData, triggerClassName }) => {
-  const [size, setSize] = useState<'58mm' | '80mm'>('80mm');
+  const [size, setSize] = useState<'58mm' | '80mm'>('58mm');
   const [isGenerating, setIsGenerating] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 

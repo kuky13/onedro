@@ -683,37 +683,11 @@ export const WormBudgetCard = ({
             <DialogDescription>Visualize e escolha o tamanho do papel para gerar o PDF térmico.</DialogDescription>
           </DialogHeader>
 
-          <Tabs defaultValue="80mm" className="w-full">
+          <Tabs defaultValue="58mm" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="80mm">80mm (Padrão)</TabsTrigger>
-              <TabsTrigger value="58mm">58mm (Pequeno)</TabsTrigger>
+              <TabsTrigger value="58mm">58mm (Padrão)</TabsTrigger>
+              <TabsTrigger value="80mm">80mm (Grande)</TabsTrigger>
             </TabsList>
-
-            <TabsContent value="80mm" className="mt-4 space-y-4">
-              <div className="border rounded-md p-4 bg-gray-100 dark:bg-gray-800 overflow-auto max-h-[400px] flex justify-center">
-                <BudgetPreview
-                  budget={budget}
-                  parts={parts}
-                  template={
-                    pdfTemplates?.find((t: any) => t.is_default)?.service_section_template || DEFAULT_SERVICE_TEMPLATE
-                  }
-                  paperWidth="80mm"
-                  companyName={getCompanyDataForPDF().shop_name}
-                  companyPhone={getCompanyDataForPDF().contact_phone}
-                  companyAddress={getCompanyDataForPDF().address}
-                />
-              </div>
-              <Button
-                className="w-full"
-                onClick={() => {
-                  handleGeneratePdf("80mm");
-                  setIsPdfDialogOpen(false);
-                }}
-              >
-                <Printer className="mr-2 h-4 w-4" />
-                Imprimir 80mm
-              </Button>
-            </TabsContent>
 
             <TabsContent value="58mm" className="mt-4 space-y-4">
               <div className="border rounded-md p-4 bg-gray-100 dark:bg-gray-800 overflow-auto max-h-[400px] flex justify-center">
@@ -738,6 +712,32 @@ export const WormBudgetCard = ({
               >
                 <Printer className="mr-2 h-4 w-4" />
                 Imprimir 58mm
+              </Button>
+            </TabsContent>
+
+            <TabsContent value="80mm" className="mt-4 space-y-4">
+              <div className="border rounded-md p-4 bg-gray-100 dark:bg-gray-800 overflow-auto max-h-[400px] flex justify-center">
+                <BudgetPreview
+                  budget={budget}
+                  parts={parts}
+                  template={
+                    pdfTemplates?.find((t: any) => t.is_default)?.service_section_template || DEFAULT_SERVICE_TEMPLATE
+                  }
+                  paperWidth="80mm"
+                  companyName={getCompanyDataForPDF().shop_name}
+                  companyPhone={getCompanyDataForPDF().contact_phone}
+                  companyAddress={getCompanyDataForPDF().address}
+                />
+              </div>
+              <Button
+                className="w-full"
+                onClick={() => {
+                  handleGeneratePdf("80mm");
+                  setIsPdfDialogOpen(false);
+                }}
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                Imprimir 80mm
               </Button>
             </TabsContent>
           </Tabs>

@@ -244,23 +244,11 @@ export const PdfTemplateEditor = ({ template, onSuccess, onCancel }: PdfTemplate
                 <div className="flex flex-col space-y-2 h-full overflow-hidden">
                     <Label>Pré-visualização (Simulação)</Label>
                     <div className="flex-1 border rounded-md bg-gray-50 dark:bg-gray-900/50 p-4 overflow-hidden flex flex-col">
-                        <Tabs defaultValue="80mm" className="w-full h-full flex flex-col">
+                        <Tabs defaultValue="58mm" className="w-full h-full flex flex-col">
                             <TabsList className="grid w-full grid-cols-2 mb-4">
-                                <TabsTrigger value="80mm">80mm (Padrão)</TabsTrigger>
-                                <TabsTrigger value="58mm">58mm (Pequeno)</TabsTrigger>
+                                <TabsTrigger value="58mm">58mm (Padrão)</TabsTrigger>
+                                <TabsTrigger value="80mm">80mm (Grande)</TabsTrigger>
                             </TabsList>
-                            
-                            <TabsContent value="80mm" className="flex-1 overflow-auto flex justify-center bg-gray-100 dark:bg-gray-800 rounded-md p-4 mt-0">
-                                <BudgetPreview 
-                                    budget={previewData.budget}
-                                    parts={previewData.parts}
-                                    template={serviceTemplate}
-                                    paperWidth="80mm"
-                                    companyName={previewData.companyInfo.shop_name}
-                                    companyPhone={previewData.companyInfo.contact_phone}
-                                    companyAddress={previewData.companyInfo.address}
-                                />
-                            </TabsContent>
                             
                             <TabsContent value="58mm" className="flex-1 overflow-auto flex justify-center bg-gray-100 dark:bg-gray-800 rounded-md p-4 mt-0">
                                 <BudgetPreview 
@@ -268,6 +256,18 @@ export const PdfTemplateEditor = ({ template, onSuccess, onCancel }: PdfTemplate
                                     parts={previewData.parts}
                                     template={serviceTemplate}
                                     paperWidth="58mm"
+                                    companyName={previewData.companyInfo.shop_name}
+                                    companyPhone={previewData.companyInfo.contact_phone}
+                                    companyAddress={previewData.companyInfo.address}
+                                />
+                            </TabsContent>
+                            
+                            <TabsContent value="80mm" className="flex-1 overflow-auto flex justify-center bg-gray-100 dark:bg-gray-800 rounded-md p-4 mt-0">
+                                <BudgetPreview 
+                                    budget={previewData.budget}
+                                    parts={previewData.parts}
+                                    template={serviceTemplate}
+                                    paperWidth="80mm"
                                     companyName={previewData.companyInfo.shop_name}
                                     companyPhone={previewData.companyInfo.contact_phone}
                                     companyAddress={previewData.companyInfo.address}
