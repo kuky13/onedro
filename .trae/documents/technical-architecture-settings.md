@@ -2,45 +2,32 @@
 ```mermaid
 graph TD
   A["User Browser"] --> B["React Frontend Application"]
-  B --> C["Supabase JS SDK"]
-  C --> D["Supabase Service"]
+  B --> C["Client-side Router"]
+  C --> D["/settings + subroutes"]
+  D --> E["SettingsLite Component Library"]
 
   subgraph "Frontend Layer"
     B
-  end
-
-  subgraph "Service Layer (Provided by Supabase)"
+    C
     D
+    E
   end
 ```
 
 ## 2.Technology Description
-- Frontend: React@18 + react-router-dom@6 + tailwindcss@3 + Radix UI (shadcn/ui) + vite
-- Backend: None (chamadas diretas via Supabase SDK)
-- BaaS: Supabase (Auth + Database)
+- Frontend: React@18 + TypeScript + react-router + tailwindcss@3 (glassmorphism) + vite
+- Backend: None (escopo é apenas UI/UX do /settings)
 
 ## 3.Route definitions
 | Route | Purpose |
-|-------|---------|
-| /settings | Hub de configurações com navegação interna por seções (empresa, perfil, privacidade) |
-| /service-orders/settings | Redirecionar para /settings |
+|---|---|
+| /settings | Hub principal de configurações (lista + busca + seções) |
+| /settings/profile | Editar dados de perfil |
+| /settings/security | Ações e preferências de segurança |
+| /settings/company | Dados/preferências de empresa |
+| /settings/budget-warning | Configurar/visualizar avisos de orçamento |
+| /settings/cache-clear | Fluxo de limpeza de cache com confirmação |
+| /settings/account-data | Exportar/excluir dados da conta |
 
 ## 6.Data model(if applicable)
-### 6.1 Data model definition
-```mermaid
-erDiagram
-  USER_PROFILES {
-    uuid id
-    string name
-  }
-```
-
-### 6.2 Data Definition Language
-User Profiles (user_profiles)
-```
--- Campos mínimos observados pelo front-end
-CREATE TABLE user_profiles (
-  id UUID PRIMARY KEY,
-  name TEXT
-);
-```
+Não aplicável para este redesign (sem requisitos de persistência definidos no escopo).

@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-import { Database, Download, Trash2, AlertTriangle, ChevronRight } from 'lucide-react';
+import { AlertTriangle, ChevronRight, Database, Download, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Separator } from '@/components/ui/separator';
+import { SettingsGlassCard, SettingsRow } from '@/components/lite/settings/SettingsLitePrimitives';
 
 interface AccountDataSettingsLiteProps {
   userId: string;
@@ -61,71 +61,73 @@ export const AccountDataSettingsLite = ({ userId, userEmail, className }: Accoun
   };
 
   return (
-    <Card className={`rounded-2xl border-border/50 ${className || ''}`}>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <div className="h-8 w-8 rounded-xl bg-purple-500/10 flex items-center justify-center">
-            <Database className="h-4 w-4 text-purple-400" />
+    <SettingsGlassCard className={className}>
+      <div className="p-5">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-full bg-purple-500/15 flex items-center justify-center">
+            <Database className="h-[18px] w-[18px] text-purple-300" />
           </div>
-          Dados e Privacidade
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        <button
+          <div>
+            <div className="text-base font-semibold text-foreground">Dados da conta</div>
+            <div className="text-xs text-muted-foreground">Exportar e solicitações LGPD</div>
+          </div>
+        </div>
+      </div>
+
+      <Separator className="bg-border/30" />
+
+      <div className="divide-y divide-border/30">
+        <SettingsRow
+          icon={Download}
+          title={isExporting ? 'Exportando...' : 'Exportar dados'}
+          description="Baixe uma cópia completa dos seus dados"
+          iconBgClassName="bg-blue-500/15"
+          iconClassName="text-blue-300"
           onClick={handleExportData}
           disabled={isExporting}
-          className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/30 hover:bg-secondary/60 transition-colors text-left disabled:opacity-50"
-        >
-          <div className="h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-            <Download className="h-4 w-4 text-blue-400" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground">
-              {isExporting ? 'Exportando...' : 'Exportar Dados'}
-            </p>
-            <p className="text-xs text-muted-foreground">Baixe uma cópia completa dos seus dados</p>
-          </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-        </button>
+        />
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <button className="w-full flex items-center gap-3 p-3 rounded-xl bg-destructive/5 hover:bg-destructive/10 transition-colors text-left">
-              <div className="h-9 w-9 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
-                <Trash2 className="h-4 w-4 text-destructive" />
+            <button
+              type="button"
+              className="w-full flex items-center gap-3 px-4 py-3 min-h-11 text-left transition-colors hover:bg-muted/35 active:bg-muted/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35"
+            >
+              <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 bg-destructive/15">
+                <Trash2 className="h-[18px] w-[18px] text-destructive" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-destructive">Excluir Conta</p>
-                <p className="text-xs text-destructive/60">Solicitar exclusão permanente (LGPD)</p>
+                <div className="text-sm font-medium truncate text-destructive">Excluir conta</div>
+                <div className="text-xs text-muted-foreground truncate">Solicitar exclusão permanente (LGPD)</div>
               </div>
-              <ChevronRight className="h-4 w-4 text-destructive/40 shrink-0" />
+              <ChevronRight className="h-4 w-4 shrink-0 text-destructive/50" />
             </button>
           </AlertDialogTrigger>
           <AlertDialogContent className="rounded-2xl">
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2 text-destructive">
                 <AlertTriangle className="h-5 w-5" />
-                Excluir Conta
+                Excluir conta
               </AlertDialogTitle>
               <AlertDialogDescription className="space-y-3">
                 <p>Você está prestes a solicitar a exclusão permanente da sua conta e de todos os seus dados pessoais.</p>
-                <div className="bg-secondary/50 p-3 rounded-xl text-xs font-mono">
-                  Atenção: Esta ação é irreversível e resultará na perda de todos os seus orçamentos, ordens de serviço e cadastros.
+                <div className="bg-muted/30 border border-border/30 p-3 rounded-xl text-xs">
+                  Esta ação é irreversível e resultará na perda de dados como orçamentos, ordens de serviço e cadastros.
                 </div>
                 <p className="text-sm font-medium text-foreground">
-                  Prazo: Solicitações de exclusão são processadas em até 30 dias conforme a LGPD.
+                  Prazo: solicitações são processadas em até 30 dias conforme a LGPD.
                 </p>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
               <AlertDialogAction onClick={handleDeleteRequest} className="bg-destructive hover:bg-destructive/90 rounded-xl">
-                Solicitar Exclusão
+                Solicitar exclusão
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </CardContent>
-    </Card>
+      </div>
+    </SettingsGlassCard>
   );
 };

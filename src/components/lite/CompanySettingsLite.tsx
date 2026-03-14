@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Building2, Save, Check } from 'lucide-react';
+import { Building2, Check, Save } from 'lucide-react';
 import { useCompanyBranding } from '@/hooks/useCompanyBranding';
 import { LogoUploadZone } from '@/components/logo/LogoUploadZone';
+import { SettingsGlassCard } from '@/components/lite/settings/SettingsLitePrimitives';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 interface CompanySettingsLiteProps {
   userId: string;
@@ -72,63 +74,103 @@ export const CompanySettingsLite = ({ userId, profile }: CompanySettingsLiteProp
   };
 
   return (
-    <Card className="rounded-2xl border-border/50">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Building2 className="h-4 w-4 text-primary" />
+    <SettingsGlassCard>
+      <div className="p-5">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-full bg-primary/15 flex items-center justify-center">
+            <Building2 className="h-[18px] w-[18px] text-primary" />
           </div>
-          Informações da Empresa
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Logo da Empresa</Label>
+          <div>
+            <div className="text-base font-semibold text-foreground">Empresa</div>
+            <div className="text-xs text-muted-foreground">Logo, contato e informações</div>
+          </div>
+        </div>
+
+        <div className="mt-5 flex flex-col items-center">
           <LogoUploadZone
             currentLogoUrl={companyInfo?.logo_url || ''}
             onUpload={handleLogoUpload}
             onRemove={() => updateCompanyInfo({ logo_url: '' })}
             isUploading={false}
             isRemoving={false}
+            cardClassName="rounded-full aspect-square w-28 max-w-none"
           />
+          <div className="mt-2 text-xs text-muted-foreground">Toque para enviar um logo</div>
         </div>
+      </div>
 
-        {[
-          { id: 'name', label: 'Nome da Empresa', type: 'text', placeholder: 'Nome da sua empresa', value: formData.name, onChange: (v: string) => setFormData(p => ({ ...p, name: v })) },
-          { id: 'cnpj', label: 'CNPJ', type: 'text', placeholder: '00.000.000/0000-00', value: formData.cnpj, onChange: (v: string) => setFormData(p => ({ ...p, cnpj: formatCNPJ(v) })), maxLength: 18 },
-          { id: 'whatsapp_phone', label: 'WhatsApp', type: 'tel', placeholder: '(11) 99999-9999', value: formData.whatsapp_phone, onChange: (v: string) => setFormData(p => ({ ...p, whatsapp_phone: formatPhone(v) })), maxLength: 15 },
-          { id: 'email', label: 'Email', type: 'email', placeholder: 'contato@empresa.com', value: formData.email, onChange: (v: string) => setFormData(p => ({ ...p, email: v })) },
-        ].map((field) => (
-          <div key={field.id} className="space-y-1.5">
-            <Label htmlFor={field.id} className="text-xs text-muted-foreground">{field.label}</Label>
+      <Separator className="bg-border/30" />
+
+      <div className="p-5 space-y-4">
+        <div className="grid grid-cols-1 gap-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="company-name" className="text-xs text-muted-foreground uppercase tracking-wide">Nome</Label>
             <Input
-              id={field.id}
-              type={field.type}
-              value={field.value}
-              onChange={(e) => field.onChange(e.target.value)}
-              placeholder={field.placeholder}
-              maxLength={field.maxLength}
-              className="rounded-xl"
+              id="company-name"
+              value={formData.name}
+              onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
+              placeholder="Nome da sua empresa"
+              className="h-11 rounded-xl bg-background/50 border-border/30"
             />
           </div>
-        ))}
 
-        <div className="space-y-1.5">
-          <Label htmlFor="address" className="text-xs text-muted-foreground">Endereço</Label>
-          <Textarea
-            id="address"
-            value={formData.address}
-            onChange={(e) => setFormData(p => ({ ...p, address: e.target.value }))}
-            placeholder="Endereço completo da empresa"
-            rows={3}
-            className="rounded-xl"
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="company-cnpj" className="text-xs text-muted-foreground uppercase tracking-wide">CNPJ</Label>
+              <Input
+                id="company-cnpj"
+                value={formData.cnpj}
+                onChange={(e) => setFormData((p) => ({ ...p, cnpj: formatCNPJ(e.target.value) }))}
+                placeholder="00.000.000/0000-00"
+                maxLength={18}
+                className="h-11 rounded-xl bg-background/50 border-border/30"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="company-phone" className="text-xs text-muted-foreground uppercase tracking-wide">Telefone</Label>
+              <Input
+                id="company-phone"
+                value={formData.whatsapp_phone}
+                onChange={(e) => setFormData((p) => ({ ...p, whatsapp_phone: formatPhone(e.target.value) }))}
+                placeholder="(11) 99999-9999"
+                maxLength={15}
+                className="h-11 rounded-xl bg-background/50 border-border/30"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="company-email" className="text-xs text-muted-foreground uppercase tracking-wide">Email</Label>
+            <Input
+              id="company-email"
+              value={formData.email}
+              onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
+              placeholder="contato@empresa.com"
+              className="h-11 rounded-xl bg-background/50 border-border/30"
+              type="email"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="company-address" className="text-xs text-muted-foreground uppercase tracking-wide">Endereço</Label>
+            <Textarea
+              id="company-address"
+              value={formData.address}
+              onChange={(e) => setFormData((p) => ({ ...p, address: e.target.value }))}
+              placeholder="Endereço completo da empresa"
+              rows={3}
+              className="rounded-xl bg-background/50 border-border/30"
+            />
+          </div>
         </div>
 
         <Button
           onClick={handleSave}
           disabled={isSaving || loading}
-          className="w-full rounded-xl"
+          className={cn(
+            'w-full rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:to-primary/70',
+            success && 'from-emerald-500 to-emerald-500/80'
+          )}
           size="lg"
         >
           {isSaving ? (
@@ -138,9 +180,9 @@ export const CompanySettingsLite = ({ userId, profile }: CompanySettingsLiteProp
           ) : (
             <Save className="h-4 w-4 mr-2" />
           )}
-          {isSaving ? 'Salvando...' : success ? 'Salvo com sucesso!' : 'Salvar Informações'}
+          {isSaving ? 'Salvando...' : success ? 'Salvo' : 'Salvar'}
         </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </SettingsGlassCard>
   );
 };

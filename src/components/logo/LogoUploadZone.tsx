@@ -12,6 +12,7 @@ interface LogoUploadZoneProps {
   isUploading: boolean;
   isRemoving: boolean;
   className?: string;
+  cardClassName?: string;
 }
 export const LogoUploadZone: React.FC<LogoUploadZoneProps> = ({
   currentLogoUrl,
@@ -19,7 +20,8 @@ export const LogoUploadZone: React.FC<LogoUploadZoneProps> = ({
   onRemove,
   isUploading,
   isRemoving,
-  className
+  className,
+  cardClassName
 }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -160,7 +162,7 @@ export const LogoUploadZone: React.FC<LogoUploadZoneProps> = ({
   });
   const hasLogo = currentLogoUrl || previewUrl;
   return <div className={cn("space-y-4", className)}>
-      <Card {...getRootProps()} className={cn("relative overflow-hidden transition-all duration-200 cursor-pointer", "border-2 border-dashed hover:border-primary/50", isDragActive && "border-primary bg-primary/5", isDragReject && "border-destructive bg-destructive/5", (isUploading || isRemoving) && "cursor-not-allowed opacity-60", hasLogo ? "aspect-square max-w-48" : "aspect-video max-w-sm")}>
+      <Card {...getRootProps()} className={cn("relative overflow-hidden transition-all duration-200 cursor-pointer", "border-2 border-dashed hover:border-primary/50", isDragActive && "border-primary bg-primary/5", isDragReject && "border-destructive bg-destructive/5", (isUploading || isRemoving) && "cursor-not-allowed opacity-60", hasLogo ? "aspect-square max-w-48" : "aspect-video max-w-sm", cardClassName)}>
         <input {...getInputProps()} />
         
         <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">

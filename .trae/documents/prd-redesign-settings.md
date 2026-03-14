@@ -1,39 +1,48 @@
 ## 1. Product Overview
-Redesign da página **/settings** para se comportar e “parecer” uma aba de configurações.
-O foco é aumentar escaneabilidade, clareza de seções e navegação interna simples.
+Redesign completo da rota **/settings** no estilo **iOS Settings** com **glassmorphism**.
+Foco em navegação por lista + subpáginas, usando o componente **SettingsLite** para consistência visual e de interação.
 
 ## 2. Core Features
 
 ### 2.1 User Roles
-| Role | Registration Method | Core Permissions |
-|------|---------------------|------------------|
-| Usuário autenticado | Login (Supabase Auth) | Acessar /settings e atualizar preferências e dados pessoais |
+Não há distinção de papéis no escopo deste redesign.
 
 ### 2.2 Feature Module
-1. **Configurações**: navegação interna por seções (estilo aba), edição de perfil, marca da empresa, dados/privacidade e atalhos de suporte.
+O redesign consiste nas seguintes páginas:
+1. **Settings**: navegação por seções, busca local, cartões/linhas SettingsLite.
+2. **Profile**: visualização/edição de dados básicos do perfil.
+3. **Security**: ações de segurança da conta e preferências críticas.
+4. **Company**: dados e preferências da empresa (quando aplicável).
+5. **BudgetWarning**: configuração/visualização de avisos de orçamento.
+6. **CacheClear**: limpeza de cache local com confirmação.
+7. **AccountData**: ações de dados da conta (exportar/excluir) com avisos.
 
 ### 2.3 Page Details
 | Page Name | Module Name | Feature description |
-|-----------|-------------|---------------------|
-| Configurações (/settings) | Layout “aba de configurações” | Organizar o conteúdo em seções empilhadas com títulos claros e densidade adequada (sem hero/marketing), mantendo consistência visual com o restante do app. |
-| Configurações (/settings) | Navegação interna simples | Navegar entre seções via menu lateral (desktop) e seletor/aba (mobile), com destaque da seção ativa e rolagem/âncoras para o conteúdo correspondente. |
-| Configurações (/settings) | Seção “Marca da Empresa” | Exibir e permitir configurar identidade visual e informações da empresa (via componente existente). |
-| Configurações (/settings) | Seção “Perfil Pessoal” | Exibir e permitir atualizar nome; exibir e-mail, função e licença; permitir ações: redefinir senha, atualizar e-mail, suporte, sair e reset do app. |
-| Configurações (/settings) | Seção “Dados e Privacidade” | Exibir e permitir gerenciar dados e privacidade/LGPD (via componente existente). |
-| Configurações (/settings) | Ajuda e atalhos | Disponibilizar links para central de ajuda, suporte e chat com Drippy como bloco secundário (sem competir com as configurações). |
+|---|---|---|
+| Settings | Header + Search | Exibir título e campo de busca para filtrar itens por nome/descrição. |
+| Settings | Seções (SettingsLiteGroup) | Agrupar itens por categorias; manter ordem e espaçamento tipo iOS. |
+| Settings | Itens (SettingsLiteRow) | Navegar para subpáginas; suportar ícone, título, descrição, valor à direita, chevron, toggle/ação. |
+| Settings | Estados | Mostrar loading/empty (sem resultados) e desabilitado quando item não aplicável. |
+| Profile | Formulário | Editar e salvar dados de perfil; validar campos; exibir feedback de sucesso/erro. |
+| Security | Ações críticas | Executar ações de segurança com confirmação quando destrutivas; exibir status atual quando aplicável. |
+| Company | Formulário | Visualizar/editar dados da empresa; salvar alterações com feedback. |
+| BudgetWarning | Preferências | Configurar limites/avisos (ex.: ativar/desativar, nível/limiar) e visualizar estado atual. |
+| CacheClear | Confirmação | Explicar impacto; confirmar e executar limpeza; exibir resultado. |
+| AccountData | Exportar/Excluir | Permitir exportar dados e solicitar exclusão com confirmação forte e mensagens de risco. |
 
 ## 3. Core Process
-Fluxo do usuário autenticado:
-1) Abrir **/settings** a partir do dashboard/menus.
-2) Selecionar a seção desejada na navegação interna.
-3) Ajustar configurações na seção (ex.: salvar nome no perfil).
-4) (Opcional) Acessar ajuda/suporte.
+Fluxo principal (qualquer usuário):
+1) Abrir **/settings** → usar busca ou navegar por seções.
+2) Selecionar um item (SettingsLite) → abrir subpágina correspondente.
+3) Alterar configurações/ações → confirmar quando necessário → ver feedback e retornar.
 
 ```mermaid
 graph TD
-  A["Dashboard"] --> B["Configurações (/settings)"]
-  B --> C["Seção: Marca da Empresa"]
-  B --> D["Seção: Perfil Pessoal"]
-  B --> E["Seção: Dados e Privacidade"]
-  B --> F["Ajuda / Suporte"]
+  A["Settings"] --> B["Profile"]
+  A --> C["Security"]
+  A --> D["Company"]
+  A --> E["BudgetWarning"]
+  A --> F["CacheClear"]
+  A --> G["AccountData"]
 ```

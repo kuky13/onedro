@@ -1,10 +1,11 @@
 import { openWhatsApp } from '@/utils/whatsappUtils';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Shield, MessageCircle, Lock, Mail, LogOut, ChevronRight } from 'lucide-react';
+import { Shield, MessageCircle, Lock, Mail, LogOut, KeyRound } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { Separator } from '@/components/ui/separator';
+import { SettingsGlassCard, SettingsRow } from '@/components/lite/settings/SettingsLitePrimitives';
 
 export const SecuritySettingsLite = () => {
   const navigate = useNavigate();
@@ -41,63 +42,72 @@ export const SecuritySettingsLite = () => {
   ];
 
   return (
-    <Card className="rounded-2xl border-border/50">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Shield className="h-4 w-4 text-primary" />
+    <SettingsGlassCard>
+      <div className="p-5">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-full bg-primary/15 flex items-center justify-center">
+            <KeyRound className="h-[18px] w-[18px] text-primary" />
           </div>
-          Segurança
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {items.map((item) => (
-          <button
-            key={item.label}
-            onClick={item.action}
-            className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/30 hover:bg-secondary/60 transition-colors text-left"
-          >
-            <div className={`h-9 w-9 rounded-lg ${item.bg} flex items-center justify-center shrink-0`}>
-              <item.icon className={`h-4 w-4 ${item.color}`} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground">{item.label}</p>
-              <p className="text-xs text-muted-foreground">{item.desc}</p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-          </button>
-        ))}
+          <div>
+            <div className="text-base font-semibold text-foreground">Segurança</div>
+            <div className="text-xs text-muted-foreground">Senha, e-mail e sessão</div>
+          </div>
+        </div>
+      </div>
 
-        {/* Logout */}
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <button className="w-full flex items-center gap-3 p-3 rounded-xl bg-destructive/5 hover:bg-destructive/10 transition-colors text-left mt-2">
-              <div className="h-9 w-9 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
-                <LogOut className="h-4 w-4 text-destructive" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-destructive">Sair da Conta</p>
-                <p className="text-xs text-destructive/60">Fazer logout da aplicação</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-destructive/40 shrink-0" />
-            </button>
-          </AlertDialogTrigger>
-          <AlertDialogContent className="rounded-2xl">
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirmar Saída</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tem certeza de que deseja sair da sua conta? Você precisará fazer login novamente.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={signOut} className="bg-destructive hover:bg-destructive/90 rounded-xl">
-                Sair
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </CardContent>
-    </Card>
+      <Separator className="bg-border/30" />
+
+      <div className="divide-y divide-border/30">
+        {items.map((item) => (
+          <SettingsRow
+            key={item.label}
+            icon={item.icon}
+            title={item.label}
+            description={item.desc}
+            iconBgClassName={item.bg}
+            iconClassName={item.color}
+            onClick={item.action}
+          />
+        ))}
+      </div>
+
+      <div className="p-5">
+        <div className="text-xs text-muted-foreground uppercase tracking-wide">Sessão</div>
+        <div className="mt-2">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button
+                type="button"
+                className="w-full rounded-2xl border border-destructive/25 bg-destructive/5 px-4 py-3 hover:bg-destructive/10 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-destructive/15 flex items-center justify-center shrink-0">
+                    <LogOut className="h-[18px] w-[18px] text-destructive" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-destructive">Sair da conta</div>
+                    <div className="text-xs text-destructive/70">Encerra sua sessão neste dispositivo</div>
+                  </div>
+                </div>
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="rounded-2xl">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirmar saída</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tem certeza de que deseja sair da sua conta? Você precisará fazer login novamente.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={signOut} className="bg-destructive hover:bg-destructive/90 rounded-xl">
+                  Sair
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
+    </SettingsGlassCard>
   );
 };

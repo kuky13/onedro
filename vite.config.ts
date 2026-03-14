@@ -2,8 +2,22 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import { readFileSync } from "fs";
+
+const appVersion = (() => {
+  try {
+    const pkgRaw = readFileSync(path.resolve(__dirname, "package.json"), "utf-8");
+    const pkg = JSON.parse(pkgRaw) as { version?: string };
+    return pkg.version || "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+})();
 
 export default defineConfig(({ mode }) => ({
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion),
+  },
   server: {
     host: "::",
     port: 8080,

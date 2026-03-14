@@ -75,7 +75,7 @@ const HelpCenterPage = lazyWithRetry(() => import("./pages/HelpCenterPage"));
 const SuportePage = lazyWithRetry(() => import("./pages/SuportePage"));
 const WarrantyPage = lazyWithRetry(() => import("./pages/WarrantyPage"));
 const TesteRapidoPage = lazyWithRetry(() => import("./pages/TesteRapidoPage"));
-const ServiceOrdersSettingsHub = lazyWithRetry(() => import("./components/ServiceOrdersSettingsHub").then(m => ({ default: m.ServiceOrdersSettingsHub })));
+const SettingsLite = lazyWithRetry(() => import("./components/lite/SettingsLite").then(m => ({ default: m.SettingsLite })));
 const NotificationsPage = lazyWithRetry(() => import("./pages/NotificationsPage"));
 const DrippyPage = lazyWithRetry(() => import("./pages/DrippyPage").then(m => ({ default: m.DrippyPage })));
 const ChatPage = lazyWithRetry(() => import("./pages/ChatPage"));
@@ -279,8 +279,8 @@ const AppContent = () => {
           <AppShell><ServiceOrderTrash /></AppShell>
         </UnifiedProtectionGuard>} />
         <Route path="/docs" element={<HelpCenterPage />} />
-        <Route path="/settings" element={<UnifiedProtectionGuard>
-          <AppShell><ServiceOrdersSettingsHub /></AppShell>
+        <Route path="/settings/*" element={<UnifiedProtectionGuard>
+          <AppShell><SettingsLite /></AppShell>
         </UnifiedProtectionGuard>} />
         <Route path="/msg" element={<UnifiedProtectionGuard>
           <AppShell><NotificationsPage /></AppShell>

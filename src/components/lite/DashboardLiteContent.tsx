@@ -88,6 +88,7 @@ export const DashboardLiteContent = ({
     case 'settings':
       return (
         <SettingsLite
+          mode="stack"
           userId={userId || ''}
           profile={profile}
           onBack={onNavigateBack || (() => {})}

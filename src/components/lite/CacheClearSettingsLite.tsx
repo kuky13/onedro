@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Trash2, Loader } from 'lucide-react';
+import { AlertTriangle, Loader, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
+import { SettingsGlassCard } from '@/components/lite/settings/SettingsLitePrimitives';
 
 export const CacheClearSettingsLite = () => {
   const [isClearing, setIsClearing] = useState(false);
@@ -62,8 +62,8 @@ export const CacheClearSettingsLite = () => {
       }
 
       toast({
-        title: "Limpeza concluída! 🧹",
-        description: "Cache removido. Dados de login preservados.",
+        title: "Limpeza concluída",
+        description: "Dados locais removidos. Recarregando...",
       });
 
       setTimeout(() => { window.location.href = '/'; }, 2000);
@@ -80,58 +80,66 @@ export const CacheClearSettingsLite = () => {
   };
 
   return (
-    <Card className="rounded-2xl border-destructive/10">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <div className="h-8 w-8 rounded-xl bg-destructive/10 flex items-center justify-center">
-            <Trash2 className="h-4 w-4 text-destructive" />
+    <SettingsGlassCard className="border-destructive/25">
+      <div className="p-5">
+        <div className="flex items-start gap-3">
+          <div className="h-9 w-9 rounded-full bg-destructive/15 flex items-center justify-center shrink-0">
+            <AlertTriangle className="h-[18px] w-[18px] text-destructive" />
           </div>
-          Limpeza de Dados
-        </CardTitle>
-        <CardDescription className="text-xs">
-          Remove todos os dados salvos localmente no dispositivo.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full gap-2 border-destructive/20 text-destructive hover:bg-destructive/5 rounded-xl"
-              disabled={isClearing}
-            >
-              {isClearing ? <Loader className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-              Limpeza Total
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent className="rounded-2xl max-w-[90vw]">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-lg">⚠️ Limpeza Total de Dados</AlertDialogTitle>
-              <AlertDialogDescription className="text-sm space-y-3">
-                <p className="font-medium text-destructive">Esta ação irá remover TODOS os dados locais:</p>
-                <ul className="text-xs space-y-1 bg-secondary/30 p-3 rounded-xl">
-                  <li>• localStorage e sessionStorage</li>
-                  <li>• Bancos IndexedDB</li>
-                  <li>• Caches do Service Worker</li>
-                  <li>• Cookies do domínio</li>
-                </ul>
-                <p className="font-medium text-destructive text-sm">Você precisará fazer login novamente.</p>
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="gap-2">
-              <AlertDialogCancel className="flex-1 rounded-xl">Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={clearSiteCache}
-                className="flex-1 bg-destructive hover:bg-destructive/90 rounded-xl"
+          <div className="flex-1 min-w-0">
+            <div className="text-base font-semibold text-foreground">Limpar cache</div>
+            <div className="text-xs text-muted-foreground">
+              Remove dados locais do navegador. Use quando algo estiver travando.
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 rounded-xl"
                 disabled={isClearing}
               >
-                {isClearing ? <><Loader className="h-4 w-4 animate-spin mr-1" />Limpando...</> : 'Confirmar'}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </CardContent>
-    </Card>
+                {isClearing ? <Loader className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                Limpar agora
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="rounded-2xl max-w-[90vw]">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-lg">Limpeza de dados locais</AlertDialogTitle>
+                <AlertDialogDescription className="text-sm space-y-3">
+                  <p className="font-medium text-foreground">Isso remove dados locais como:</p>
+                  <ul className="text-xs space-y-1 bg-muted/30 p-3 rounded-xl border border-border/30">
+                    <li>• cache do navegador</li>
+                    <li>• armazenamento local</li>
+                    <li>• registros do service worker</li>
+                  </ul>
+                  <p className="text-sm text-muted-foreground">Você pode precisar fazer login novamente.</p>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="gap-2">
+                <AlertDialogCancel className="flex-1 rounded-xl">Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={clearSiteCache}
+                  className="flex-1 bg-destructive hover:bg-destructive/90 rounded-xl"
+                  disabled={isClearing}
+                >
+                  {isClearing ? (
+                    <>
+                      <Loader className="h-4 w-4 animate-spin mr-1" />
+                      Limpando...
+                    </>
+                  ) : (
+                    'Confirmar'
+                  )}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
+    </SettingsGlassCard>
   );
 };

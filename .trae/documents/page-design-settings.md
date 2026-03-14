@@ -1,88 +1,72 @@
-# Redesign da página /settings (aba de configurações)
+# Page Design — /settings (iOS Settings + Glassmorphism)
 
-## Problemas observados na versão atual
-- **Aparência de “landing page”** (hero, badges e card promocional) compete com a tarefa de “configurar” e reduz densidade de informação.
-- **Navegação por cards + tabs** não se comporta como “aba de configurações”: dificulta escaneio, não cria senso de hierarquia e mistura navegação com conteúdo.
-- **Seções pouco “autoexplicativas” na rolagem**: ao descer, o usuário perde contexto de onde está/qual seção está ativa.
-- **Ações críticas do perfil** (sair, redefinir senha, atualizar e-mail) ficam visualmente no mesmo nível de informações passivas, sem agrupamento.
-- **Redundâncias** (menu mobile + cards + tabs) aumentam carga cognitiva.
+## Global Styles (desktop-first)
+- Grid/layout: container 1120–1280px, 2 colunas (lista à esquerda + conteúdo à direita) acima de 1024px; abaixo disso vira 1 coluna com navegação por “push” (subpágina ocupa tela).
+- Tokens (exemplo):
+  - Background: #0B1020 com gradiente sutil (radial) + noise leve.
+  - Glass surface: rgba(255,255,255,0.08) com blur 18–24px; border rgba(255,255,255,0.14); shadow 0 12px 40px rgba(0,0,0,0.35).
+  - Text: primary rgba(255,255,255,0.92); secondary rgba(255,255,255,0.68).
+  - Accent: #5B8CFF; Destructive: #FF4D4F; Success: #45D483.
+  - Radius: 16 (cards), 12 (rows); hit-area mínimo 44px.
+  - Hover/focus: elevação + border mais forte; focus ring 2px em accent.
 
-## Objetivo do redesign
-Fazer a página parecer uma **tela de configurações clássica**: navegação lateral (desktop), seções bem delimitadas, leitura rápida e navegação interna simples.
+## Componente base: SettingsLite
+- SettingsLiteGroup: card de vidro com título da seção e espaçamento iOS (rows empilhadas, divisórias internas 1px).
+- SettingsLiteRow (variantes):
+  - Navigation: título + descrição opcional + chevron; clique abre subpágina.
+  - Toggle: switch à direita; row clicável apenas no switch (evitar toggles acidentais).
+  - Action: botão textual à direita (ex.: “Limpar”); suporta estado loading.
+  - Destructive: cor destructive; sempre pede confirmação.
+- Partes: leading icon (16–20px), title (16–17px), subtitle (13–14px), trailing (value/toggle/button), chevron, helper/error text.
 
 ---
 
-## Layout (desktop-first)
-- **Grid 12 colunas (CSS Grid + Tailwind)**:
-  - Coluna esquerda (3/12): **nav lateral sticky** (top: 72px) com lista de seções.
-  - Coluna direita (9/12): conteúdo com **seções empilhadas**.
-- Espaçamento base: 24px (desktop) / 16px (mobile).
-- Largura máxima do conteúdo: 1100–1200px (centralizado).
+## Página: /settings
+### Meta
+- Title: "Settings"; Description: "Gerencie preferências, segurança e dados da conta."; OG: igual ao title/description.
 
-## Meta Information
-- Title: `Configurações | OneDrip`
-- Description: `Gerencie conta, marca da empresa e privacidade.`
-- Open Graph: `og:title`, `og:description`, `og:type=website`.
+### Estrutura
+- Header fixo do conteúdo: título + campo de busca (filtra rows em tempo real).
+- Coluna esquerda (desktop): lista de seções (âncoras) + destaque da seção ativa.
+- Coluna direita: conteúdo em cards SettingsLiteGroup.
 
-## Global Styles (tokens)
-- Usar tokens existentes do design system: `bg-background`, `text-foreground`, `border-border`, `text-muted-foreground`, `primary`.
-- Componentes base: `Card`, `Separator`, `Button`, `Tabs`/`ScrollArea` (se necessário).
-- Estados:
-  - Nav item ativo: fundo `primary/10`, borda/indicador `primary`, fonte semibold.
-  - Hover: `bg-muted/50`.
-  - Focus: anel visível (acessibilidade teclado).
+### Seções & Componentes
+1) Seção "Conta"
+- Rows: "Perfil" → /settings/profile; "Segurança" → /settings/security.
+2) Seção "Organização"
+- Row: "Empresa" → /settings/company.
+3) Seção "Orçamento"
+- Row: "Avisos de orçamento" → /settings/budget-warning.
+4) Seção "Sistema"
+- Row: "Limpar cache" → /settings/cache-clear.
+5) Seção "Dados"
+- Row: "Dados da conta" → /settings/account-data.
 
-## Page Structure
-1. **Header compacto**
-   - Título “Configurações” + breadcrumb curto (opcional) + ação “Voltar/Dashboard”.
-   - Remover hero/badges promocionais.
-2. **Corpo em 2 colunas**
-   - Esquerda: navegação interna.
-   - Direita: seções (Empresa, Perfil, Dados e Privacidade) em cards.
-3. **Rodapé / Ajuda**
-   - Atalhos de ajuda/suporte como bloco secundário no final (ou no topo da coluna direita, mas abaixo do título).
+Estados
+- Empty search: mensagem curta + botão "Limpar busca".
 
-## Sections & Components (detalhamento)
+---
 
-### A) Navegação interna (desktop)
-- Componente: `SettingsSideNav`
-- Itens (âncoras):
-  - Marca da Empresa (`#empresa`)
-  - Perfil Pessoal (`#perfil`)
-  - Dados e Privacidade (`#privacidade`)
-- Interação:
-  - Clique: rolar suave até a seção (scroll + `id`).
-  - Seção ativa: atualizada por IntersectionObserver (ou por scroll spy simples).
+## Subpágina: /settings/profile
+- Layout: painel à direita (desktop) / tela cheia (mobile).
+- Conteúdo: SettingsLiteGroup com formulário (inputs), salvar no rodapé do card.
+- Estados: dirty state (habilita salvar), validação inline, toast de sucesso/erro.
 
-### B) Navegação interna (mobile)
-- Padrão: **seletor compacto** no topo do conteúdo (ex.: `Select`/`Tabs` em linha) que leva à mesma âncora.
-- Evitar duplicar 3 navegadores (cards + tabs + drawer). Manter **apenas 1**.
+## Subpágina: /settings/security
+- Conteúdo: cards de ações e preferências; itens destrutivos separados no final.
+- Interações: confirmações modais para ações críticas; texto de ajuda curto.
 
-### C) Seção “Marca da Empresa” (id: empresa)
-- Card com título + descrição curta.
-- Conteúdo: `CompanyBrandingSettings` (como hoje).
-- Subdivisões internas (visuais, não novas features): blocos “Logo”, “Identidade”, “Informações”.
+## Subpágina: /settings/company
+- Conteúdo: formulário de dados da empresa em 1–2 cards; salvar com feedback.
 
-### D) Seção “Perfil Pessoal” (id: perfil)
-- Card com 2 áreas:
-  1) **Dados** (E-mail, Nome, Função, Licença)
-  2) **Ações da conta** (redefinir senha, atualizar e-mail, suporte, sair, reset)
-- Prioridade visual:
-  - Botão “Salvar” alinhado ao campo de Nome.
-  - Ações destrutivas (Sair) isoladas e claramente marcadas.
+## Subpágina: /settings/budget-warning
+- Conteúdo: toggle principal (ativar avisos) + controle de limiar/nível + preview do estado atual.
 
-### E) Seção “Dados e Privacidade” (id: privacidade)
-- Card com título + descrição curta.
-- Conteúdo: `DataPrivacyTab` (como hoje).
+## Subpágina: /settings/cache-clear
+- Conteúdo: explicação do que será limpo + botão "Limpar cache" (destructive/action) + confirmação.
 
-### F) Bloco “Ajuda”
-- Card secundário com 3 botões: Central de Ajuda, Suporte, Chat com Drippy.
-- Colocar como **auxiliar**, sem competir com o topo da página.
+## Subpágina: /settings/account-data
+- Conteúdo: 2 cards: "Exportar dados" (ação) e "Excluir conta" (destructive, confirmação forte, texto de risco).
 
-## Responsividade
-- >= 1024px: layout 2 colunas com nav lateral sticky.
-- < 1024px: layout 1 coluna; navegação vira seletor fixo/compacto no topo do conteúdo.
-
-## Acessibilidade
-- Navegação com teclado (Tab/Enter), foco visível.
-- Cabeçalhos por seção (H2) + `aria-label` no nav.
+## Motion/Transitions
+- Transição entre lista↔subpágina: slide-in suave (200–260ms) + fade; respeitar prefers-reduced-motion.
