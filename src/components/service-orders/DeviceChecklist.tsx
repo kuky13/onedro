@@ -415,7 +415,7 @@ export const DeviceChecklist: React.FC<DeviceChecklistProps> = ({
   };
 
   // Suppress unused warnings - these are kept for future UI re-integration
-  void _openSections; void _toggleSection; void _updateChecklistItem; void _markAllItems; void _unmarkAllItems;
+  void _openSections;void _toggleSection;void _updateChecklistItem;void _markAllItems;void _unmarkAllItems;
   return (
     <div className="space-y-4">
       {/* Botão de Diagnóstico */}
@@ -427,27 +427,27 @@ export const DeviceChecklist: React.FC<DeviceChecklistProps> = ({
                 <Timer className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-medium text-foreground">Diagnóstico Automático</h3>
+                <h3 className="font-medium text-foreground">Diagnóstico Rapido </h3>
                 <p className="text-sm text-muted-foreground">
-                  Testa Touch, Cores, Áudio, Câmeras, Sensores e mais
+                  Clique no botão ao lado para poder gerar um teste mais rapido       
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {!isQuickTestPage && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    navigate('/teste-rapido');
-                  }}
-                  className="flex items-center gap-2 text-sm">
+              {!isQuickTestPage &&
+              <Button
+                type="button"
+                variant="outline"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigate('/teste-rapido');
+                }}
+                className="flex items-center gap-2 text-sm">
                   <ExternalLink className="h-4 w-4" />
                   Criar Link
                 </Button>
-              )}
+              }
               <Button
                 type="button"
                 variant="default"
