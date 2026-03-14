@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface TestResultProps {
   results: TestResults;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 interface CompanyData {
@@ -30,7 +30,7 @@ interface CompanyData {
   logo_url: string | null;
 }
 
-export function TestResult({ results }: TestResultProps) {
+export function TestResult({ results, onClose }: TestResultProps) {
   const [expandedTests, setExpandedTests] = useState<Set<string>>(new Set());
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
@@ -385,23 +385,16 @@ export function TestResult({ results }: TestResultProps) {
   };
 
   const handleClose = () => {
+    if (onClose) {
+      onClose();
+      return;
+    }
+
     try {
       window.close();
     } catch {
-      // Fallback
+      // ignore
     }
-
-    setTimeout(() => {
-      if (!window.closed) {
-        document.body.innerHTML = `
-          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: system-ui; background: #0a0a0a; color: white; text-align: center; padding: 20px;">
-            <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
-            <h1 style="font-size: 24px; margin-bottom: 8px;">Teste Concluído!</h1>
-            <p style="color: #888; font-size: 14px;">Você pode fechar esta aba manualmente.</p>
-          </div>
-        `;
-      }
-    }, 100);
   };
 
   return (

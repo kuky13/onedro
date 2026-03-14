@@ -27,6 +27,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { DeviceTestReportDialog } from "@/components/device-test/DeviceTestReportDialog";
 
 import { useDeviceTestRealtime } from "@/hooks/useDeviceTestRealtime";
 
@@ -82,6 +83,7 @@ export function DiagnosticShareDialog({
   const [userId, setUserId] = useState<string | null>(null);
   const [pendingQRRegeneration, setPendingQRRegeneration] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const generateAlphaToken = (length = 4) => {
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -482,8 +484,9 @@ export function DiagnosticShareDialog({
   const progress = getTestProgress();
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && onClose()}>
-      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-sm p-0 gap-0 max-h-[90vh] overflow-hidden">
+    <>
+      <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && onClose()}>
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-sm p-0 gap-0 max-h-[90vh] overflow-hidden">
         <DialogHeader className="p-4 pb-2 border-b border-border/30">
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-base">
@@ -556,6 +559,17 @@ export function DiagnosticShareDialog({
                     <p className="text-xs text-green-600 mb-1">Score Final</p>
                     <p className="text-2xl font-bold text-green-600">{session.overall_score.toFixed(0)}%</p>
                   </div>
+                )}
+
+                {session?.status === "completed" && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setReportOpen(true)}
+                  >
+                    Baixar Relatório
+                  </Button>
                 )}
 
                 {session?.share_token && (
@@ -690,8 +704,16 @@ export function DiagnosticShareDialog({
             )}
           </div>
         </ScrollArea>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <DeviceTestReportDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        sessionId={session?.id}
+        title="Relatório do Diagnóstico"
+      />
+    </>
   );
 }
 

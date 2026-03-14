@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, AlertCircle, Trash2, ExternalLink, Calendar, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,9 @@ import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { DeviceTestReportDialog } from '@/components/device-test/DeviceTestReportDialog';
+import { LocalDeviceTestReportDialog } from '@/components/device-test/LocalDeviceTestReportDialog';
+import { checklistToTestResults } from '@/utils/checklistToTestResults';
 
 interface QuickTest {
   id: string;
@@ -19,6 +22,7 @@ interface QuickTest {
   token: string;
   created_at: string;
   expires_at: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'expired';
 }
 
 const initialData: DeviceChecklistData = {
@@ -39,11 +43,23 @@ const TesteRapidoPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [createdTest, setCreatedTest] = useState<{ token: string; url: string } | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportSessionId, setReportSessionId] = useState<string | null>(null);
+  const completedToastRef = useRef<Set<string>>(new Set());
+
+  const [localReportOpen, setLocalReportOpen] = useState(false);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchQuickTests();
+  }, []);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      fetchQuickTests();
+    }, 7000);
+    return () => window.clearInterval(id);
   }, []);
 
   const fetchQuickTests = async () => {
@@ -64,7 +80,15 @@ const TesteRapidoPage = () => {
         url: `${window.location.origin}/testar/${t.share_token}`,
         created_at: t.created_at,
         expires_at: t.expires_at || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        status: (t.status || 'pending') as QuickTest['status'],
       }));
+
+      for (const t of mapped) {
+        if (t.status === 'completed' && !completedToastRef.current.has(t.id)) {
+          completedToastRef.current.add(t.id);
+          toast.success(`Relatório disponível: ${t.name}`);
+        }
+      }
       setQuickTests(mapped);
     } catch (error) {
       console.error('Error fetching quick tests:', error);
@@ -138,6 +162,15 @@ const TesteRapidoPage = () => {
       console.error('Error deleting test:', error);
       toast.error('Erro ao remover teste');
     }
+  };
+
+  const handleOpenReport = async (sessionId: string, status: QuickTest['status']) => {
+    if (status !== 'completed') {
+      toast.info('O relatório ficará disponível quando o teste for concluído.');
+      return;
+    }
+    setReportSessionId(sessionId);
+    setReportOpen(true);
   };
 
   const copyToClipboard = (url: string, id: string) => {
@@ -294,6 +327,27 @@ const TesteRapidoPage = () => {
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-1 min-w-0">
                       <h3 className="font-medium truncate">{test.name}</h3>
+                      <div className="flex items-center gap-2 text-xs">
+                        <span
+                          className={
+                            test.status === 'completed'
+                              ? 'text-green-500'
+                              : test.status === 'in_progress'
+                                ? 'text-blue-500'
+                                : test.status === 'expired'
+                                  ? 'text-red-500'
+                                  : 'text-muted-foreground'
+                          }
+                        >
+                          {test.status === 'completed'
+                            ? 'Concluído'
+                            : test.status === 'in_progress'
+                              ? 'Em andamento'
+                              : test.status === 'expired'
+                                ? 'Expirado'
+                                : 'Aguardando'}
+                        </span>
+                      </div>
                       <div className="flex items-center gap-2 pt-1">
                         <div className="grid grid-cols-4 gap-1">
                           {test.token
@@ -328,6 +382,14 @@ const TesteRapidoPage = () => {
                     </div>
                     
                     <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        variant={test.status === 'completed' ? 'default' : 'outline'}
+                        size="sm"
+                        className="h-8"
+                        onClick={() => handleOpenReport(test.id, test.status)}
+                      >
+                        Relatório
+                      </Button>
                       <Button 
                         variant="outline" 
                         size="icon" 
@@ -357,6 +419,16 @@ const TesteRapidoPage = () => {
         </div>
       )}
 
+      <DeviceTestReportDialog
+        open={reportOpen}
+        onOpenChange={(open) => {
+          setReportOpen(open);
+          if (!open) setReportSessionId(null);
+        }}
+        sessionId={reportSessionId}
+        title="Relatório do Teste Rápido"
+      />
+
       <div className="space-y-2">
         <h2 className="text-lg font-semibold">Checklist Manual</h2>
         <p className="text-sm text-muted-foreground">Realize um teste rápido localmente sem gerar link.</p>
@@ -365,6 +437,20 @@ const TesteRapidoPage = () => {
       <DeviceChecklist
         value={checklist}
         onChange={setChecklist} />
+
+      <Button
+        className="w-full h-11"
+        onClick={() => setLocalReportOpen(true)}
+      >
+        Baixar Relatório do Checklist
+      </Button>
+
+      <LocalDeviceTestReportDialog
+        open={localReportOpen}
+        onOpenChange={setLocalReportOpen}
+        results={checklistToTestResults(checklist)}
+        title="Relatório do Checklist Manual"
+      />
       
     </div>);
 };
