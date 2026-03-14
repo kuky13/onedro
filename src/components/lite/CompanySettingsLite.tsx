@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Building2, Save } from 'lucide-react';
+import { Building2, Save, Check } from 'lucide-react';
 import { useCompanyBranding } from '@/hooks/useCompanyBranding';
 import { LogoUploadZone } from '@/components/logo/LogoUploadZone';
 
@@ -14,12 +14,7 @@ interface CompanySettingsLiteProps {
 }
 
 export const CompanySettingsLite = ({ userId, profile }: CompanySettingsLiteProps) => {
-  const { 
-    companyInfo, 
-    loading, 
-    updateCompanyInfo, 
-    uploadLogo 
-  } = useCompanyBranding();
+  const { companyInfo, loading, updateCompanyInfo, uploadLogo } = useCompanyBranding();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -28,8 +23,8 @@ export const CompanySettingsLite = ({ userId, profile }: CompanySettingsLiteProp
     whatsapp_phone: '',
     email: ''
   });
-
   const [isSaving, setIsSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     if (companyInfo) {
@@ -41,7 +36,6 @@ export const CompanySettingsLite = ({ userId, profile }: CompanySettingsLiteProp
         email: companyInfo.email || ''
       });
     }
-    // Mantém userId/profile referenciados para futuras personalizações
     void userId;
     void profile;
   }, [companyInfo, userId, profile]);
@@ -50,6 +44,8 @@ export const CompanySettingsLite = ({ userId, profile }: CompanySettingsLiteProp
     try {
       setIsSaving(true);
       await updateCompanyInfo(formData);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
       console.error('Erro ao salvar:', error);
     } finally {
@@ -57,60 +53,37 @@ export const CompanySettingsLite = ({ userId, profile }: CompanySettingsLiteProp
     }
   };
 
-  const handleLogoUpload = (file: File) => {
-    return uploadLogo(file);
-  };
+  const handleLogoUpload = (file: File) => uploadLogo(file);
 
   const formatCNPJ = (value: string) => {
     const numeric = value.replace(/\D/g, '');
     if (numeric.length <= 14) {
-      return numeric.replace(
-        /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
-        '$1.$2.$3/$4-$5'
-      );
+      return numeric.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
     }
-    return numeric.substring(0, 14).replace(
-      /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
-      '$1.$2.$3/$4-$5'
-    );
-  };
-
-  const handleCNPJChange = (value: string) => {
-    const formatted = formatCNPJ(value);
-    setFormData(prev => ({ ...prev, cnpj: formatted }));
+    return numeric.substring(0, 14).replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
   };
 
   const formatPhone = (value: string) => {
     const numeric = value.replace(/\D/g, '');
     if (numeric.length <= 11) {
-      return numeric.replace(
-        /^(\d{2})(\d{5})(\d{4})$/,
-        '($1) $2-$3'
-      );
+      return numeric.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
     }
-    return numeric.substring(0, 11).replace(
-      /^(\d{2})(\d{5})(\d{4})$/,
-      '($1) $2-$3'
-    );
-  };
-
-  const handlePhoneChange = (value: string) => {
-    const formatted = formatPhone(value);
-    setFormData(prev => ({ ...prev, whatsapp_phone: formatted }));
+    return numeric.substring(0, 11).replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center text-lg">
-          <Building2 className="h-5 w-5 mr-2 text-primary" />
+    <Card className="rounded-2xl border-border/50">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Building2 className="h-4 w-4 text-primary" />
+          </div>
           Informações da Empresa
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Logo Section */}
-        <div className="space-y-2">
-          <Label>Logo da Empresa</Label>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">Logo da Empresa</Label>
           <LogoUploadZone
             currentLogoUrl={companyInfo?.logo_url || ''}
             onUpload={handleLogoUpload}
@@ -120,75 +93,52 @@ export const CompanySettingsLite = ({ userId, profile }: CompanySettingsLiteProp
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="name">Nome da Empresa</Label>
-          <Input
-            id="name"
-            type="text"
-            value={formData.name}
-            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-            placeholder="Nome da sua empresa"
-          />
-        </div>
+        {[
+          { id: 'name', label: 'Nome da Empresa', type: 'text', placeholder: 'Nome da sua empresa', value: formData.name, onChange: (v: string) => setFormData(p => ({ ...p, name: v })) },
+          { id: 'cnpj', label: 'CNPJ', type: 'text', placeholder: '00.000.000/0000-00', value: formData.cnpj, onChange: (v: string) => setFormData(p => ({ ...p, cnpj: formatCNPJ(v) })), maxLength: 18 },
+          { id: 'whatsapp_phone', label: 'WhatsApp', type: 'tel', placeholder: '(11) 99999-9999', value: formData.whatsapp_phone, onChange: (v: string) => setFormData(p => ({ ...p, whatsapp_phone: formatPhone(v) })), maxLength: 15 },
+          { id: 'email', label: 'Email', type: 'email', placeholder: 'contato@empresa.com', value: formData.email, onChange: (v: string) => setFormData(p => ({ ...p, email: v })) },
+        ].map((field) => (
+          <div key={field.id} className="space-y-1.5">
+            <Label htmlFor={field.id} className="text-xs text-muted-foreground">{field.label}</Label>
+            <Input
+              id={field.id}
+              type={field.type}
+              value={field.value}
+              onChange={(e) => field.onChange(e.target.value)}
+              placeholder={field.placeholder}
+              maxLength={field.maxLength}
+              className="rounded-xl"
+            />
+          </div>
+        ))}
 
-        <div className="space-y-2">
-          <Label htmlFor="cnpj">CNPJ</Label>
-          <Input
-            id="cnpj"
-            type="text"
-            value={formData.cnpj}
-            onChange={(e) => handleCNPJChange(e.target.value)}
-            placeholder="00.000.000/0000-00"
-            maxLength={18}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="address">Endereço</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="address" className="text-xs text-muted-foreground">Endereço</Label>
           <Textarea
             id="address"
             value={formData.address}
-            onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+            onChange={(e) => setFormData(p => ({ ...p, address: e.target.value }))}
             placeholder="Endereço completo da empresa"
             rows={3}
+            className="rounded-xl"
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="whatsapp_phone">WhatsApp</Label>
-          <Input
-            id="whatsapp_phone"
-            type="tel"
-            value={formData.whatsapp_phone}
-            onChange={(e) => handlePhoneChange(e.target.value)}
-            placeholder="(11) 99999-9999"
-            maxLength={15}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-            placeholder="contato@empresa.com"
-          />
-        </div>
-
-        <Button 
-          onClick={handleSave} 
+        <Button
+          onClick={handleSave}
           disabled={isSaving || loading}
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+          className="w-full rounded-xl"
           size="lg"
         >
           {isSaving ? (
             <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+          ) : success ? (
+            <Check className="h-4 w-4 mr-2" />
           ) : (
             <Save className="h-4 w-4 mr-2" />
           )}
-          {isSaving ? 'Salvando...' : 'Salvar Informações'}
+          {isSaving ? 'Salvando...' : success ? 'Salvo com sucesso!' : 'Salvar Informações'}
         </Button>
       </CardContent>
     </Card>
