@@ -209,12 +209,12 @@ function SettingsLiteStack({
 }: {
   userId: string;
   profile: any;
-  userName?: string | null;
-  userEmail?: string | null;
-  avatarUrl?: string | null;
+  userName?: string | null | undefined;
+  userEmail?: string | null | undefined;
+  avatarUrl?: string | null | undefined;
   items: SettingsItem[];
   appVersion: string;
-  onBack?: () => void;
+  onBack?: (() => void) | undefined;
 }) {
   const [stack, setStack] = useState<
     'home' | 'profile' | 'security' | 'company' | 'budget-warning' | 'cache-clear' | 'account-data'
