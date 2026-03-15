@@ -91,7 +91,7 @@ export function DiagnosticShareDialog({
     crypto.getRandomValues(bytes);
     let out = "";
     for (let i = 0; i < length; i++) {
-      out += alphabet[bytes[i] % alphabet.length];
+      out += alphabet[bytes[i]! % alphabet.length];
     }
     return out;
   };
@@ -305,7 +305,8 @@ export function DiagnosticShareDialog({
         query = query.eq("service_order_id", serviceOrderId);
       }
 
-      const { data: existingSessionRaw, error: fetchError } = await withTimeout(query.maybeSingle(), 8000);
+      const result = await withTimeout(query.maybeSingle() as unknown as Promise<{ data: any; error: any }>, 8000) as { data: any; error: any };
+      const { data: existingSessionRaw, error: fetchError } = result;
 
       if (fetchError) throw fetchError;
 
@@ -710,7 +711,7 @@ export function DiagnosticShareDialog({
       <DeviceTestReportDialog
         open={reportOpen}
         onOpenChange={setReportOpen}
-        sessionId={session?.id}
+        sessionId={session?.id ?? null}
         title="Relatório do Diagnóstico"
       />
     </>

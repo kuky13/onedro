@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -41,7 +41,7 @@ type SettingsItem = {
   icon: any;
   iconBgClassName: string;
   iconClassName: string;
-  href?: string;
+  href?: string | undefined;
 };
 
 function getInitials(name?: string | null, email?: string | null) {
@@ -65,8 +65,8 @@ function SettingsMotionPage({ children }: { children: React.ReactNode }) {
           }
         : {
             initial: { opacity: 0, x: 28 },
-            animate: { opacity: 1, x: 0, transition: { duration: 0.22, ease: 'easeOut' } },
-            exit: { opacity: 0, x: -28, transition: { duration: 0.18, ease: 'easeIn' } },
+            animate: { opacity: 1, x: 0, transition: { duration: 0.22, ease: 'easeOut' as const } },
+            exit: { opacity: 0, x: -28, transition: { duration: 0.18, ease: 'easeIn' as const } },
           },
     [reduceMotion]
   );
@@ -84,8 +84,8 @@ function SettingsTopBar({
   onBack,
 }: {
   title: string;
-  subtitle?: string;
-  onBack?: () => void;
+  subtitle?: string | undefined;
+  onBack?: (() => void) | undefined;
 }) {
   return (
     <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-sm border-b border-border/40">
@@ -110,12 +110,12 @@ function SettingsHome({
   userEmail,
   avatarUrl,
   items,
-  appVersion,
+  appVersion: _appVersion,
   onNavigate,
 }: {
-  userName?: string | null;
-  userEmail?: string | null;
-  avatarUrl?: string | null;
+  userName?: string | null | undefined;
+  userEmail?: string | null | undefined;
+  avatarUrl?: string | null | undefined;
   items: SettingsItem[];
   appVersion: string;
   onNavigate: (item: SettingsItem) => void;
@@ -209,12 +209,12 @@ function SettingsLiteStack({
 }: {
   userId: string;
   profile: any;
-  userName?: string | null;
-  userEmail?: string | null;
-  avatarUrl?: string | null;
+  userName?: string | null | undefined;
+  userEmail?: string | null | undefined;
+  avatarUrl?: string | null | undefined;
   items: SettingsItem[];
   appVersion: string;
-  onBack?: () => void;
+  onBack?: (() => void) | undefined;
 }) {
   const [stack, setStack] = useState<
     'home' | 'profile' | 'security' | 'company' | 'budget-warning' | 'cache-clear' | 'account-data'
@@ -297,9 +297,9 @@ function SettingsLiteRoute({
 }: {
   userId: string;
   profile: any;
-  userName?: string | null;
-  userEmail?: string | null;
-  avatarUrl?: string | null;
+  userName?: string | null | undefined;
+  userEmail?: string | null | undefined;
+  avatarUrl?: string | null | undefined;
   items: SettingsItem[];
   appVersion: string;
 }) {

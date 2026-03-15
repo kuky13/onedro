@@ -7,12 +7,17 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Separator } from '@/components/ui/separator';
-import { SettingsGlassCard, SettingsRow } from '@/components/lite/settings/SettingsLitePrimitives';
+import { SettingsGlassCard as SettingsGlassCardBase, SettingsRow } from '@/components/lite/settings/SettingsLitePrimitives';
 
-interface AccountDataSettingsLiteProps {
+// Wrapper to handle undefined className with exactOptionalPropertyTypes
+const SettingsGlassCard = ({ className, children }: { className?: string | undefined; children: React.ReactNode }) => (
+  <SettingsGlassCardBase className={className ?? ''} children={children} />
+);
+
+export interface AccountDataSettingsLiteProps {
   userId: string;
-  userEmail?: string;
-  className?: string;
+  userEmail?: string | undefined;
+  className?: string | undefined;
 }
 
 export const AccountDataSettingsLite = ({ userId, userEmail, className }: AccountDataSettingsLiteProps) => {

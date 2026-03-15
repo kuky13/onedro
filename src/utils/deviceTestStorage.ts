@@ -157,7 +157,7 @@ export const filterTestResultsForStorage = (results: TestResults, ctx: StorageCo
 
   const criticalFailures = Object.entries(filteredResults)
     .filter(([testId, r]) => r.status === "failed" && CRITICAL_TEST_IDS.has(testId))
-    .map(([test_id, r]) => ({ test_id, error: r.error, score: r.score }));
+    .map(([test_id, r]) => ({ test_id, ...(r.error != null ? { error: r.error } : {}), ...(r.score != null ? { score: r.score } : {}) }));
 
   const outliers: Array<{ test_id: string; metric: string; value: number; rule: string }> = [];
   for (const [test_id, r] of Object.entries(filteredResults)) {

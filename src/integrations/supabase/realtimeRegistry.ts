@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
-type Listener<T> = (payload: RealtimePostgresChangesPayload<T>) => void;
+type Listener<T extends { [key: string]: any }> = (payload: RealtimePostgresChangesPayload<T>) => void;
 
 type ChannelKeyParams = {
   schema: string;

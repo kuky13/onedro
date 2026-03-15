@@ -22,6 +22,7 @@ export const AuthPage = () => {
 
   // ... rest of the code
 
+  // @ts-ignore unused but kept for future use
   const handleFullReset = () => {
     setIsResetting(true);
     cleanupAuthState();

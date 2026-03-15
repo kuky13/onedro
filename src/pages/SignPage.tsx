@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getSecureItem, setSecureItem } from '@/utils/secureStorage';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -19,12 +20,22 @@ export const SignPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
+  // Check if terms were already accepted via the banner
+  useEffect(() => {
+    (async () => {
+      const accepted = await getSecureItem('termsConsentAccepted');
+      if (accepted) setTermsAccepted(true);
+    })();
+  }, []);
 
   const isFormValid = 
     formData.name.trim() && 
     formData.email.trim() && 
     formData.password.length >= 6 && 
-    formData.password === formData.confirmPassword;
+    formData.password === formData.confirmPassword &&
+    termsAccepted;
 
   const getPasswordStrength = (password: string) => {
     if (password.length < 6) return { text: 'Mínimo 6 caracteres', color: 'text-red-500' };
@@ -282,6 +293,30 @@ export const SignPage = () => {
                   <CheckCircle2 className="w-3 h-3" /> Senhas coincidem
                 </p>
               )}
+            </div>
+
+            {/* Terms acceptance checkbox */}
+            <div className="flex items-start gap-3 py-2">
+              <input
+                type="checkbox"
+                id="terms-accept"
+                checked={termsAccepted}
+                onChange={async (e) => {
+                  setTermsAccepted(e.target.checked);
+                  if (e.target.checked) {
+                    await setSecureItem('termsConsentAccepted', true, { encrypt: false });
+                    await setSecureItem('termsConsentDeclined', false, { encrypt: false });
+                  }
+                }}
+                className="mt-1 h-4 w-4 rounded border-border accent-primary cursor-pointer"
+              />
+              <label htmlFor="terms-accept" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                Li e aceito os{' '}
+                <Link to="/terms" className="text-primary hover:underline" target="_blank">Termos de Uso</Link>,{' '}
+                <Link to="/privacy" className="text-primary hover:underline" target="_blank">Política de Privacidade</Link>{' '}
+                e{' '}
+                <Link to="/cookies" className="text-primary hover:underline" target="_blank">Política de Cookies</Link>.
+              </label>
             </div>
 
             <Button

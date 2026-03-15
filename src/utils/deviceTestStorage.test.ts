@@ -43,7 +43,7 @@ describe("deviceTestStorage", () => {
     const out = filterTestResultsForStorage(results, { source: "quick_test" });
 
     expect(out.bytes_after).toBeLessThan(out.bytes_before);
-    expect(out.filteredResults.display_colors.details).toEqual({ passedCount: 10, totalColors: 10 });
+    expect(out.filteredResults.display_colors!.details).toEqual({ passedCount: 10, totalColors: 10 });
     expect((out.filteredResults.battery as any).details).toMatchObject({ level: 25, charging: false, estimatedWatts: "3W" });
     expect((out.filteredResults.camera_back as any).details).toEqual({ resolution: { width: 4032, height: 3024 } });
 

@@ -14,8 +14,9 @@ const COMPANY_INFO = {
   location: "Brasil",
   employees: "1"
 };
-const COMPANY_STORY = {
+const COMPANY_STORY: { title: string; content: string[] } = {
   title: "Nossa História",
+  content: [],
 };
 const CREATOR_INFO = {
   name: "André Ribeiro Lima",
