@@ -197,7 +197,7 @@ const AppContent = () => {
 
   const isPublicRoute = publicRoutePrefixes.some((prefix) => location.pathname === prefix || location.pathname.startsWith(prefix));
 
-  // Terms notification banner (non-blocking)
+  const showTermsBanner = !termsAccepted && !isLegalPage && termsAccepted !== null;
 
   if (authLoading && !isPublicRoute) {
     return <div className="min-h-screen flex items-center justify-center">
