@@ -219,10 +219,14 @@ const AppContent = () => {
         border: '1px solid hsl(var(--border))'
       }
     }} />
-    {/* IOSRedirectHandler removido — código morto */}
-    <Suspense fallback={null}><ChatwootWidget /></Suspense>
-
-    {/* Modal de aceite removido */}
+    {/* Terms notification banner (non-blocking) */}
+    {showTermsBanner && (
+      <TermsNotificationBanner
+        onAccept={handleAccept}
+        onDismiss={() => setTermsAccepted(null)}
+        declined={termsDeclined ?? false}
+      />
+    )}
 
     <Suspense fallback={null}>
       <SmartNavigation>

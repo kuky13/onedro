@@ -2,7 +2,7 @@ import { openWhatsApp } from '@/utils/whatsappUtils';
 import { useNavigate } from 'react-router-dom';
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Shield, MessageCircle, Lock, Mail, LogOut, KeyRound } from 'lucide-react';
+import { MessageCircle, Lock, Mail, LogOut, KeyRound } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Separator } from '@/components/ui/separator';
 import { SettingsGlassCard, SettingsRow } from '@/components/lite/settings/SettingsLitePrimitives';

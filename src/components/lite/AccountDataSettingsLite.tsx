@@ -9,10 +9,10 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { SettingsGlassCard, SettingsRow } from '@/components/lite/settings/SettingsLitePrimitives';
 
-interface AccountDataSettingsLiteProps {
+export interface AccountDataSettingsLiteProps {
   userId: string;
-  userEmail?: string;
-  className?: string;
+  userEmail?: string | undefined;
+  className?: string | undefined;
 }
 
 export const AccountDataSettingsLite = ({ userId, userEmail, className }: AccountDataSettingsLiteProps) => {

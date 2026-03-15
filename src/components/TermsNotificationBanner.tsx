@@ -35,7 +35,7 @@ export const TermsNotificationBanner = ({ onAccept, onDismiss, declined }: Terms
               <Link to="/cookies" className="text-primary hover:underline">Cookies</Link>.
             </p>
             {declined && (
-              <p className="text-xs text-amber-400 mt-1">
+              <p className="text-xs text-destructive mt-1">
                 Você recusou anteriormente. Aceite para poder criar sua conta.
               </p>
             )}
