@@ -65,8 +65,8 @@ function SettingsMotionPage({ children }: { children: React.ReactNode }) {
           }
         : {
             initial: { opacity: 0, x: 28 },
-            animate: { opacity: 1, x: 0, transition: { duration: 0.22, ease: 'easeOut' } },
-            exit: { opacity: 0, x: -28, transition: { duration: 0.18, ease: 'easeIn' } },
+            animate: { opacity: 1, x: 0, transition: { duration: 0.22, ease: 'easeOut' as const } },
+            exit: { opacity: 0, x: -28, transition: { duration: 0.18, ease: 'easeIn' as const } },
           },
     [reduceMotion]
   );
