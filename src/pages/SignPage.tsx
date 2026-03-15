@@ -315,7 +315,7 @@ export const SignPage = () => {
                 className="mt-1 h-4 w-4 rounded border-border accent-primary cursor-pointer"
               />
               <label htmlFor="terms-accept" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
-                Aocriar uma conta vc concorda que leu e aceita os{" "}
+                Ao criar uma conta vc concorda que leu e aceita os{" "}
                 <Link to="/terms" className="text-primary hover:underline" target="_blank">
                   Termos de Uso
                 </Link>
