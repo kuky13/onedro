@@ -30,13 +30,13 @@ const toAbsoluteUrl = (siteUrl: string, maybeRelativeUrl: string) => {
 
 const defaultMetaTags: MetaTagsConfig = {
   title: APP_CONFIG.name,
-  description: 'Sistema para assistências técnicas: orçamentos, ordens de serviço e loja online. Planos a partir de R$10/mês.',
+  description: 'Sistema para assistências técnicas: orçamentos, ordens de serviço e loja online.',
   ogTitle: APP_CONFIG.name,
-  ogDescription: 'Sistema para assistências técnicas: orçamentos, ordens de serviço e loja online. Planos a partir de R$10/mês.',
+  ogDescription: 'Sistema para assistências técnicas: orçamentos, ordens de serviço e loja online.',
   ogImage: toAbsoluteUrl(APP_CONFIG.urls.main, '/icons/icon-512x512.png'),
   ogUrl: `${normalizeSiteUrl(APP_CONFIG.urls.main)}/`,
   twitterTitle: APP_CONFIG.name,
-  twitterDescription: 'Sistema para assistências técnicas: orçamentos, ordens de serviço e loja online. Planos a partir de R$10/mês.',
+  twitterDescription: 'Sistema para assistências técnicas: orçamentos, ordens de serviço e loja online.',
   twitterImage: toAbsoluteUrl(APP_CONFIG.urls.main, '/icons/icon-512x512.png'),
   twitterUrl: `${normalizeSiteUrl(APP_CONFIG.urls.main)}/`,
   canonicalUrl: `${normalizeSiteUrl(APP_CONFIG.urls.main)}/`
