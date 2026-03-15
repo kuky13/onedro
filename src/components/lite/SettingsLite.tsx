@@ -84,8 +84,8 @@ function SettingsTopBar({
   onBack,
 }: {
   title: string;
-  subtitle?: string;
-  onBack?: () => void;
+  subtitle?: string | undefined;
+  onBack?: (() => void) | undefined;
 }) {
   return (
     <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-sm border-b border-border/40">
