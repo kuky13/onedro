@@ -295,6 +295,30 @@ export const SignPage = () => {
               )}
             </div>
 
+            {/* Terms acceptance checkbox */}
+            <div className="flex items-start gap-3 py-2">
+              <input
+                type="checkbox"
+                id="terms-accept"
+                checked={termsAccepted}
+                onChange={async (e) => {
+                  setTermsAccepted(e.target.checked);
+                  if (e.target.checked) {
+                    await setSecureItem('termsConsentAccepted', true, { encrypt: false });
+                    await setSecureItem('termsConsentDeclined', false, { encrypt: false });
+                  }
+                }}
+                className="mt-1 h-4 w-4 rounded border-border accent-primary cursor-pointer"
+              />
+              <label htmlFor="terms-accept" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                Li e aceito os{' '}
+                <Link to="/terms" className="text-primary hover:underline" target="_blank">Termos de Uso</Link>,{' '}
+                <Link to="/privacy" className="text-primary hover:underline" target="_blank">Política de Privacidade</Link>{' '}
+                e{' '}
+                <Link to="/cookies" className="text-primary hover:underline" target="_blank">Política de Cookies</Link>.
+              </label>
+            </div>
+
             <Button
               type="submit"
               className="w-full h-12 text-base font-semibold"
