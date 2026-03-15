@@ -196,38 +196,7 @@ const AppContent = () => {
 
   const isPublicRoute = publicRoutePrefixes.some((prefix) => location.pathname === prefix || location.pathname.startsWith(prefix));
 
-  if (!termsAccepted && !isLegalPage) {
-    return <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md rounded-2xl border border-border/60 bg-card/95 backdrop-blur-lg shadow-xl p-6">
-        <div className="flex items-start gap-3">
-          <Shield className="h-6 w-6 text-primary flex-shrink-0 mt-0.5" />
-          <div className="min-w-0">
-            <h1 className="text-base font-semibold leading-tight">
-              Para continuar, você precisa aceitar os termos
-            </h1>
-            <p className="text-sm text-muted-foreground mt-2">
-              Você só pode usar o site após aceitar os nossos{' '}
-              <Link to="/terms" className="text-primary hover:underline">Termos de Uso</Link>,{' '}
-              <Link to="/privacy" className="text-primary hover:underline">Política de Privacidade</Link>{' '}
-              e{' '}
-              <Link to="/cookies" className="text-primary hover:underline">Cookies</Link>.
-            </p>
-            {termsDeclined && <p className="text-sm text-muted-foreground mt-2">
-              Você recusou anteriormente. Para acessar, é necessário aceitar.
-            </p>}
-            <div className="flex flex-col sm:flex-row gap-2 mt-5">
-              <Button className="w-full" onClick={handleAccept}>
-                Aceitar e continuar
-              </Button>
-              <Button className="w-full" variant="outline" onClick={handleDecline}>
-                Recusar
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>;
-  }
+  // Terms notification banner (non-blocking)
 
   if (authLoading && !isPublicRoute) {
     return <div className="min-h-screen flex items-center justify-center">
