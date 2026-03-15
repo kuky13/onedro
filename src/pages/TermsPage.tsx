@@ -98,9 +98,9 @@ export const TermsPage = () => {
               </h2>
               <div className="space-y-3">
                 <div>
-                  <strong className="text-foreground">Sistema/Plataforma:</strong>
+                  <strong className="text-foreground">Ferramenta de Suporte:</strong>
                   <span className="text-muted-foreground ml-2">
-                    A plataforma de apoio técnico OneDrip e todos os seus componentes, funcionalidades e serviços relacionados.
+                    A interface digital OneDrip utilizada como meio para a prestação do suporte técnico, incluindo seus recursos e funcionalidades de apoio.
                   </span>
                 </div>
                 <div>
@@ -152,12 +152,12 @@ export const TermsPage = () => {
                 <div>
                   <h3 className="font-medium mb-2">3.2 Restrições Absolutas</h3>
                   <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
-                    <li>Não copiar, modificar ou distribuir o sistema</li>
+                    <li>Não copiar, modificar ou distribuir a ferramenta de suporte</li>
                     <li>Não fazer engenharia reversa ou tentar acessar o código-fonte</li>
-                    <li>Não sublicenciar ou transferir seus direitos de uso</li>
-                    <li>Não usar o sistema para fins ilegais ou não autorizados</li>
-                    <li>Não sobrecarregar ou interferir na operação do sistema</li>
-                    <li>Não comercializar sem autorização expressa por escrito</li>
+                    <li>Não transferir ou ceder seu acesso ao suporte técnico a terceiros</li>
+                    <li>Não usar a ferramenta de suporte para fins ilegais ou não autorizados</li>
+                    <li>Não sobrecarregar ou interferir na operação da ferramenta</li>
+                    <li>Não comercializar o acesso ao suporte técnico sem autorização expressa por escrito</li>
                   </ul>
                 </div>
               </div>
@@ -251,8 +251,8 @@ export const TermsPage = () => {
               </h2>
               <p className="text-muted-foreground mb-4">
                 Todos os direitos de propriedade intelectual relacionados à plataforma são de titularidade exclusiva de
-                André Ribeiro Lima (KukySolutions™). Este contrato concede apenas direitos de uso limitados conforme
-                especificado, incluindo mas não limitado a:
+                André Ribeiro Lima (KukySolutions™). Este contrato concede apenas o direito de acesso à ferramenta para
+                recebimento do suporte técnico, conforme especificado, incluindo mas não limitado a:
               </p>
               <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
                 <li>Código-fonte, algoritmos e arquitetura do sistema</li>
@@ -300,7 +300,8 @@ export const TermsPage = () => {
                 <div>
                   <h3 className="font-medium mb-2">9.1 Taxas e Pagamentos</h3>
                   <p className="text-muted-foreground">
-                    Os valores e condições de pagamento estão especificados no plano contratado. Os pagamentos são
+                    Os valores e condições de pagamento estão especificados no plano contratado. O pagamento refere-se à
+                    taxa de manutenção e suporte técnico contínuo, incluindo o acesso à ferramenta de apoio. Os pagamentos são
                     processados exclusivamente via <strong>AbacatePay</strong> (intermediador de pagamento), utilizando
                     <strong> PIX</strong> como método de pagamento. Pagamentos devem ser realizados nas datas acordadas.
                   </p>
