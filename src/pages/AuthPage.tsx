@@ -22,7 +22,7 @@ export const AuthPage = () => {
 
   // ... rest of the code
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // @ts-ignore unused but kept for future use
   const handleFullReset = () => {
     setIsResetting(true);
     cleanupAuthState();
