@@ -13,8 +13,74 @@
   },
   "rewrites": [
     {
+      "source": "/sitemaps/stores.xml",
+      "destination": "https://oghjlypdnmqecaavekyr.supabase.co/functions/v1/store-sitemap"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/auth(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive, nosnippet" }]
+    },
+    {
+      "source": "/dashboard(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive, nosnippet" }]
+    },
+    {
+      "source": "/service-orders(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive, nosnippet" }]
+    },
+    {
+      "source": "/settings(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive, nosnippet" }]
+    },
+    {
+      "source": "/supadmin(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive, nosnippet" }]
+    },
+    {
+      "source": "/admins(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive, nosnippet" }]
+    },
+    {
+      "source": "/worm(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive, nosnippet" }]
+    },
+    {
+      "source": "/reparos(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive, nosnippet" }]
+    },
+    {
+      "source": "/share(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive, nosnippet" }]
+    },
+    {
+      "source": "/testar(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive, nosnippet" }]
+    },
+    {
+      "source": "/status(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive, nosnippet" }]
+    },
+    {
+      "source": "/purchase-success(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive, nosnippet" }]
+    },
+    {
+      "source": "/reset-password(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive, nosnippet" }]
+    },
+    {
+      "source": "/reset-email(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive, nosnippet" }]
+    },
+    {
+      "source": "/verify(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive, nosnippet" }]
     }
   ]
 }

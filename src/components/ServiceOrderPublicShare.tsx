@@ -12,6 +12,7 @@ import { ptBR } from 'date-fns/locale';
 
 import { useServiceOrderRealTime } from '@/hooks/useServiceOrderRealTime';
 import { useDynamicMetaTags } from '@/hooks/useDynamicMetaTags';
+import { APP_CONFIG } from '@/config/app';
 import { DevicePasswordDisplay } from '@/components/service-orders/DevicePasswordDisplay';
 import { TestResultsDisplay } from '@/components/service-orders/TestResultsDisplay';
 import { SupabaseStorageService } from '@/services/supabaseStorageService';
@@ -168,7 +169,38 @@ export function ServiceOrderPublicShare() {
   };
   const { serviceOrder: realtimeServiceOrder } = useServiceOrderRealTime(realtimeOptions);
 
-  useDynamicMetaTags();
+  const { applyMetaTags } = useDynamicMetaTags();
+
+  useEffect(() => {
+    if (!serviceOrder) return;
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : APP_CONFIG.urls.main;
+    const path = typeof window !== 'undefined' ? window.location.pathname : '';
+    const canonicalUrl = `${origin}${path}`;
+    const baseTitle = `OS ${serviceOrder.formatted_id}`;
+    const companyName = (companyInfo as any)?.name || (companyInfo as any)?.company_name || '';
+    const fullTitle = companyName ? `${baseTitle} | ${companyName}` : `${baseTitle} | ${APP_CONFIG.name}`;
+
+    const deviceInfo = [serviceOrder.device_type, serviceOrder.device_model].filter(Boolean).join(' - ');
+    const description = deviceInfo
+      ? `Acompanhe o status da ordem de serviço ${serviceOrder.formatted_id} (${deviceInfo}).`
+      : `Acompanhe o status da ordem de serviço ${serviceOrder.formatted_id}.`;
+
+    applyMetaTags({
+      title: fullTitle,
+      description,
+      ogTitle: fullTitle,
+      ogDescription: description,
+      ogImage: `${APP_CONFIG.urls.main.replace(/\/+$/, '')}/icons/icon-512x512.png`,
+      ogUrl: canonicalUrl,
+      twitterTitle: fullTitle,
+      twitterDescription: description,
+      twitterImage: `${APP_CONFIG.urls.main.replace(/\/+$/, '')}/icons/icon-512x512.png`,
+      twitterUrl: canonicalUrl,
+      canonicalUrl,
+      robots: 'noindex, nofollow'
+    });
+  }, [applyMetaTags, companyInfo, serviceOrder]);
 
   useEffect(() => {
     if (!realtimeServiceOrder) return;

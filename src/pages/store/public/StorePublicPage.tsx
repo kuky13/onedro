@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useDynamicMetaTags } from "@/hooks/useDynamicMetaTags";
+import { APP_CONFIG } from "@/config/app";
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -111,6 +113,7 @@ export default function StorePublicPage() {
   const { slug } = useParams<{
     slug: string;
   }>();
+  const { applyMetaTags } = useDynamicMetaTags();
   const [store, setStore] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -214,6 +217,36 @@ export default function StorePublicPage() {
     };
     fetchStore();
   }, [slug]);
+
+  useEffect(() => {
+    if (!store || !slug) return;
+
+    const title = `${store.name || 'Loja'} | ${APP_CONFIG.name}`;
+    const description = `Loja online e serviços de assistência técnica em ${store.name || 'OneDrip'}. Faça seu orçamento e fale direto no WhatsApp.`;
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : APP_CONFIG.urls.main;
+    const canonicalUrl = `${origin}/loja/${encodeURIComponent(slug)}`;
+
+    const rawImage = store.logo_url || '/icons/icon-512x512.png';
+    const ogImage = typeof rawImage === 'string' && (rawImage.startsWith('http://') || rawImage.startsWith('https://'))
+      ? rawImage
+      : `${APP_CONFIG.urls.main.replace(/\/+$/, '')}${rawImage.startsWith('/') ? rawImage : `/${rawImage}`}`;
+
+    applyMetaTags({
+      title,
+      description,
+      ogTitle: title,
+      ogDescription: description,
+      ogImage,
+      ogUrl: canonicalUrl,
+      twitterTitle: title,
+      twitterDescription: description,
+      twitterImage: ogImage,
+      twitterUrl: canonicalUrl,
+      canonicalUrl,
+      robots: 'index, follow'
+    });
+  }, [applyMetaTags, store, slug]);
   const selectProduct = (product: ShopProduct) => {
     setFormData((prev) => ({
       ...prev,

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { isBotUserAgent, isSocialMediaBot } from '@/utils/botDetection';
+import { APP_CONFIG } from '@/config/app';
 
 interface MetaTagsConfig {
   title?: string;
@@ -8,44 +9,49 @@ interface MetaTagsConfig {
   ogTitle?: string;
   ogDescription?: string;
   ogImage?: string;
+  ogUrl?: string;
   twitterTitle?: string;
   twitterDescription?: string;
   twitterImage?: string;
+  twitterUrl?: string;
+  canonicalUrl?: string;
+  robots?: string;
 }
 
+const normalizeSiteUrl = (url: string) => url.replace(/\/+$/, '');
+
+const toAbsoluteUrl = (siteUrl: string, maybeRelativeUrl: string) => {
+  const normalizedSiteUrl = normalizeSiteUrl(siteUrl);
+  if (!maybeRelativeUrl) return maybeRelativeUrl;
+  if (maybeRelativeUrl.startsWith('http://') || maybeRelativeUrl.startsWith('https://')) return maybeRelativeUrl;
+  if (maybeRelativeUrl.startsWith('/')) return `${normalizedSiteUrl}${maybeRelativeUrl}`;
+  return `${normalizedSiteUrl}/${maybeRelativeUrl}`;
+};
+
 const defaultMetaTags: MetaTagsConfig = {
-  title: 'OneDrip',
-  description: 'Um Sistema completo para assistências técnicas gerenciarem orçamentos, clientes e relatórios de forma eficiente e organizada.',
-  ogTitle: 'OneDrip',
-  ogDescription: 'O melhor sistema de orçamentos para sua empresa',
-  ogImage: '/icons/icon-512x512.png',
-  twitterTitle: 'OneDrip',
-  twitterDescription: 'O melhor sistema de orçamentos para sua empresa',
-  twitterImage: '/icons/icon-512x512.png'
+  title: APP_CONFIG.name,
+  description: 'Sistema para assistências técnicas: orçamentos, ordens de serviço e loja online. Planos a partir de R$10/mês.',
+  ogTitle: APP_CONFIG.name,
+  ogDescription: 'Sistema para assistências técnicas: orçamentos, ordens de serviço e loja online. Planos a partir de R$10/mês.',
+  ogImage: toAbsoluteUrl(APP_CONFIG.urls.main, '/icons/icon-512x512.png'),
+  ogUrl: `${normalizeSiteUrl(APP_CONFIG.urls.main)}/`,
+  twitterTitle: APP_CONFIG.name,
+  twitterDescription: 'Sistema para assistências técnicas: orçamentos, ordens de serviço e loja online. Planos a partir de R$10/mês.',
+  twitterImage: toAbsoluteUrl(APP_CONFIG.urls.main, '/icons/icon-512x512.png'),
+  twitterUrl: `${normalizeSiteUrl(APP_CONFIG.urls.main)}/`,
+  canonicalUrl: `${normalizeSiteUrl(APP_CONFIG.urls.main)}/`
 };
 
-// Meta tags específicas para bots na rota de compartilhamento (prévia do WhatsApp) - VAZIO
-const shareOrderBotMetaTags: MetaTagsConfig = {
-  title: ' ',
-  description: ' ',
-  ogTitle: ' ',
-  ogDescription: ' ',
-  ogImage: '',
-  twitterTitle: ' ',
-  twitterDescription: ' ',
-  twitterImage: ''
-};
-
-// Meta tags para usuários reais (quando clicam no link)
-const shareOrderUserMetaTags: MetaTagsConfig = {
-  title: 'OneDrip',
-  description: 'O melhor sistema de orçamentos para sua empresa',
-  ogTitle: 'OneDrip',
-  ogDescription: 'O melhor sistema de orçamentos para sua empresa',
-  ogImage: '/icons/icon-512x512.png',
-  twitterTitle: 'OneDrip',
-  twitterDescription: 'O melhor sistema de orçamentos para sua empresa',
-  twitterImage: '/icons/icon-512x512.png'
+const shareOrderMetaTags: MetaTagsConfig = {
+  title: `${APP_CONFIG.name} | Ordem de serviço`,
+  description: 'Acompanhe o status da sua ordem de serviço.',
+  ogTitle: `${APP_CONFIG.name} | Ordem de serviço`,
+  ogDescription: 'Acompanhe o status da sua ordem de serviço.',
+  ogImage: toAbsoluteUrl(APP_CONFIG.urls.main, '/icons/icon-512x512.png'),
+  twitterTitle: `${APP_CONFIG.name} | Ordem de serviço`,
+  twitterDescription: 'Acompanhe o status da sua ordem de serviço.',
+  twitterImage: toAbsoluteUrl(APP_CONFIG.urls.main, '/icons/icon-512x512.png'),
+  robots: 'noindex, nofollow'
 };
 
 export function useDynamicMetaTags() {
@@ -67,17 +73,39 @@ export function useDynamicMetaTags() {
     element.setAttribute('content', value);
   };
 
+  const updateLinkTag = (selector: string, value: string) => {
+    let element = document.querySelector(selector) as HTMLLinkElement;
+    if (!element) {
+      element = document.createElement('link');
+      const relMatch = selector.match(/^link\[rel="([^"]+)"\]$/);
+      if (relMatch?.[1]) {
+        element.setAttribute('rel', relMatch[1]);
+      }
+      document.head.appendChild(element);
+    }
+    element.setAttribute('href', value);
+  };
+
   const updateTitle = (title: string) => {
     document.title = title;
   };
 
   const applyMetaTags = (config: MetaTagsConfig) => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : normalizeSiteUrl(APP_CONFIG.urls.main);
+    const resolvedCanonical = config.canonicalUrl ?? `${origin}${location.pathname}`;
+    const resolvedOgUrl = config.ogUrl ?? resolvedCanonical;
+    const resolvedTwitterUrl = config.twitterUrl ?? resolvedCanonical;
+
     if (config.title) {
       updateTitle(config.title);
     }
 
     if (config.description) {
       updateMetaTag('meta[name="description"]', 'name', config.description);
+    }
+
+    if (config.robots) {
+      updateMetaTag('meta[name="robots"]', 'name', config.robots);
     }
 
     if (config.ogTitle) {
@@ -92,16 +120,28 @@ export function useDynamicMetaTags() {
       updateMetaTag('meta[property="og:image"]', 'property', config.ogImage);
     }
 
+    if (resolvedOgUrl) {
+      updateMetaTag('meta[property="og:url"]', 'property', resolvedOgUrl);
+    }
+
     if (config.twitterTitle) {
-      updateMetaTag('meta[property="twitter:title"]', 'property', config.twitterTitle);
+      updateMetaTag('meta[name="twitter:title"]', 'name', config.twitterTitle);
     }
 
     if (config.twitterDescription) {
-      updateMetaTag('meta[property="twitter:description"]', 'property', config.twitterDescription);
+      updateMetaTag('meta[name="twitter:description"]', 'name', config.twitterDescription);
     }
 
     if (config.twitterImage) {
-      updateMetaTag('meta[property="twitter:image"]', 'property', config.twitterImage);
+      updateMetaTag('meta[name="twitter:image"]', 'name', config.twitterImage);
+    }
+
+    if (resolvedTwitterUrl) {
+      updateMetaTag('meta[name="twitter:url"]', 'name', resolvedTwitterUrl);
+    }
+
+    if (resolvedCanonical) {
+      updateLinkTag('link[rel="canonical"]', resolvedCanonical);
     }
   };
 
@@ -110,19 +150,20 @@ export function useDynamicMetaTags() {
     const isShareOrderRoute = location.pathname.startsWith('/share/service-order/');
     
     if (isShareOrderRoute) {
-      // Detecta se é um bot/crawler ou usuário real
-      const isBot = isBotUserAgent() || isSocialMediaBot();
-      
-      if (isBot) {
-        // Para bots (prévia do WhatsApp): meta tags vazias
-        applyMetaTags(shareOrderBotMetaTags);
-      } else {
-        // Para usuários reais: mostra "OneDrip"
-        applyMetaTags(shareOrderUserMetaTags);
-      }
+      applyMetaTags({
+        ...shareOrderMetaTags,
+        canonicalUrl: `${(typeof window !== 'undefined' ? window.location.origin : normalizeSiteUrl(APP_CONFIG.urls.main))}${location.pathname}`,
+        ogUrl: `${(typeof window !== 'undefined' ? window.location.origin : normalizeSiteUrl(APP_CONFIG.urls.main))}${location.pathname}`,
+        twitterUrl: `${(typeof window !== 'undefined' ? window.location.origin : normalizeSiteUrl(APP_CONFIG.urls.main))}${location.pathname}`
+      });
     } else {
       // Aplica meta tags padrão para outras rotas
-      applyMetaTags(defaultMetaTags);
+      applyMetaTags({
+        ...defaultMetaTags,
+        canonicalUrl: `${(typeof window !== 'undefined' ? window.location.origin : normalizeSiteUrl(APP_CONFIG.urls.main))}${location.pathname}`,
+        ogUrl: `${(typeof window !== 'undefined' ? window.location.origin : normalizeSiteUrl(APP_CONFIG.urls.main))}${location.pathname}`,
+        twitterUrl: `${(typeof window !== 'undefined' ? window.location.origin : normalizeSiteUrl(APP_CONFIG.urls.main))}${location.pathname}`
+      });
     }
 
     // Cleanup function para restaurar meta tags padrão quando sair da rota

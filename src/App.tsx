@@ -29,6 +29,7 @@ const VpsStatusBanner = lazyWithRetry(() => import("@/components/VpsStatusBanner
 import { useChunkLoadTelemetry } from "@/hooks/useChunkLoadTelemetry";
 import { setSecureItem, getSecureItem } from "@/utils/secureStorage";
 import { RootRedirect } from "./components/RootRedirect";
+import { useDynamicMetaTags } from "@/hooks/useDynamicMetaTags";
 
 // ── Lazy imports: todas as páginas internas ──
 const CheckoutPage = lazyWithRetry(() => import("./plans/components/CheckoutPage").then(m => ({ default: m.CheckoutPage })));
@@ -122,6 +123,8 @@ const AppContent = () => {
 
   // Telemetria de falhas de chunk (tela branca) + banner de recuperação.
   useChunkLoadTelemetry();
+
+  useDynamicMetaTags();
 
   const location = useLocation();
   const legalPages = ['/terms', '/privacy', '/cookies', '/consentimento'];
