@@ -871,6 +871,152 @@ export type Database = {
           },
         ]
       }
+      device_test_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          details: Json
+          id: string
+          session_id: string | null
+          source: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          session_id?: string | null
+          source?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          session_id?: string | null
+          source?: string | null
+        }
+        Relationships: []
+      }
+      device_test_critical_tests: {
+        Row: {
+          severity: string
+          test_id: string
+        }
+        Insert: {
+          severity?: string
+          test_id: string
+        }
+        Update: {
+          severity?: string
+          test_id?: string
+        }
+        Relationships: []
+      }
+      device_test_retention_policies: {
+        Row: {
+          retain_archive_days: number
+          retain_raw_days: number
+          rollup_keep_days: number
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          retain_archive_days?: number
+          retain_raw_days?: number
+          rollup_keep_days?: number
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          retain_archive_days?: number
+          retain_raw_days?: number
+          rollup_keep_days?: number
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      device_test_rollups_daily: {
+        Row: {
+          avg_score: number | null
+          created_at: string
+          created_by: string
+          critical_failures_count: number
+          day: string
+          failures_by_test: Json
+          outliers_count: number
+          source: string
+          total_completed: number
+        }
+        Insert: {
+          avg_score?: number | null
+          created_at?: string
+          created_by: string
+          critical_failures_count?: number
+          day: string
+          failures_by_test?: Json
+          outliers_count?: number
+          source: string
+          total_completed: number
+        }
+        Update: {
+          avg_score?: number | null
+          created_at?: string
+          created_by?: string
+          critical_failures_count?: number
+          day?: string
+          failures_by_test?: Json
+          outliers_count?: number
+          source?: string
+          total_completed?: number
+        }
+        Relationships: []
+      }
+      device_test_session_archives: {
+        Row: {
+          archived_at: string
+          created_by: string | null
+          raw_device_info: Json
+          raw_hash: string
+          raw_size_bytes: number
+          raw_test_results: Json
+          session_id: string
+          source: string
+        }
+        Insert: {
+          archived_at?: string
+          created_by?: string | null
+          raw_device_info: Json
+          raw_hash: string
+          raw_size_bytes: number
+          raw_test_results: Json
+          session_id: string
+          source: string
+        }
+        Update: {
+          archived_at?: string
+          created_by?: string | null
+          raw_device_info?: Json
+          raw_hash?: string
+          raw_size_bytes?: number
+          raw_test_results?: Json
+          session_id?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_test_session_archives_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "device_test_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       device_test_sessions: {
         Row: {
           completed_at: string | null
@@ -880,10 +1026,12 @@ export type Database = {
           expires_at: string | null
           id: string
           overall_score: number | null
+          raw_archived: boolean
           service_order_id: string | null
           share_token: string
           started_at: string | null
           status: string
+          summary: Json
           test_results: Json | null
           updated_at: string
         }
@@ -895,10 +1043,12 @@ export type Database = {
           expires_at?: string | null
           id?: string
           overall_score?: number | null
+          raw_archived?: boolean
           service_order_id?: string | null
           share_token: string
           started_at?: string | null
           status?: string
+          summary?: Json
           test_results?: Json | null
           updated_at?: string
         }
@@ -910,10 +1060,12 @@ export type Database = {
           expires_at?: string | null
           id?: string
           overall_score?: number | null
+          raw_archived?: boolean
           service_order_id?: string | null
           share_token?: string
           started_at?: string | null
           status?: string
+          summary?: Json
           test_results?: Json | null
           updated_at?: string
         }
@@ -5900,6 +6052,10 @@ export type Database = {
         Args: { p_name: string; p_role: string; p_user_id: string }
         Returns: boolean
       }
+      archive_device_test_sessions: {
+        Args: { p_max_rows?: number; p_source?: string }
+        Returns: number
+      }
       audit_rls_policies: {
         Args: never
         Returns: {
@@ -5912,6 +6068,10 @@ export type Database = {
       }
       auto_resolve_expired_alerts: { Args: never; Returns: number }
       backup_licenses_before_migration: { Args: never; Returns: Json }
+      build_device_test_summary: {
+        Args: { p_source?: string; p_test_results: Json }
+        Returns: Json
+      }
       calculate_audit_risk_score: {
         Args: {
           p_event_details: Json
@@ -6076,6 +6236,14 @@ export type Database = {
           p_vibrate?: number[]
         }
         Returns: string
+      }
+      create_quick_test_session: {
+        Args: { p_expires_days?: number; p_name: string }
+        Returns: {
+          expires_at: string
+          id: string
+          share_token: string
+        }[]
       }
       create_service_order: {
         Args: { p_description: string; p_priority?: string; p_title: string }
@@ -7086,6 +7254,7 @@ export type Database = {
         Returns: boolean
       }
       rollback_license_migration: { Args: never; Returns: Json }
+      rollup_device_tests_daily: { Args: { p_day?: string }; Returns: number }
       run_database_cleanup: {
         Args: never
         Returns: {
