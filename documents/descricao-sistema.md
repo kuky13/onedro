@@ -1,6 +1,6 @@
-# Descrição do Sistema (OneDrip)
+# Descrição do Serviço (OneDrip)
 
-O OneDrip é uma plataforma SaaS (web + PWA) voltada para assistências técnicas e lojas, unificando **Ordens de Serviço**, **orçamentos**, **comunicação com cliente**, **documentos (PDF)** e **rotinas administrativas**, com camadas de acesso por perfil (usuário, admin e superadmin).
+O OneDrip é uma prestação de serviço de suporte remoto para técnicos de assistência técnica, disponibilizando uma ferramenta de apoio (web + PWA) que unifica **Ordens de Serviço**, **orçamentos**, **comunicação com cliente**, **documentos (PDF)** e **rotinas administrativas**, com camadas de acesso por perfil (usuário, admin e superadmin).
 
 ## O que o sistema resolve
 
@@ -12,10 +12,10 @@ O OneDrip é uma plataforma SaaS (web + PWA) voltada para assistências técnica
 ## Principais módulos
 
 - **Ordens de Serviço (OS) / Reparos / Garantias**: criação e acompanhamento de OS, checklists, senhas do dispositivo, linha do tempo e compartilhamento público.
-- **Worm (Orçamentos)**: criação/edição/lista/lixeira de orçamentos, ações de PDF/WhatsApp, templates de PDF e utilitários de venda.
+- **Worm (Orçamentos)**: criação/edição/lista/lixeira de orçamentos, ações de PDF/WhatsApp, templates de PDF e utilitários de atendimento.
 - **Teste de Dispositivo**: suíte de testes no navegador (touch, câmera, áudio, bateria, sensores) com sessões compartilháveis e atualização em tempo real.
 - **Store (Loja/Catálogo)**: páginas públicas e área de gestão de produtos/serviços/orçamentos de loja.
-- **Admin / SuperAdmin**: administração do sistema, licenças, painéis operacionais e ferramentas internas.
+- **Admin / SuperAdmin**: administração da plataforma, acessos ao suporte, painéis operacionais e ferramentas internas.
 
 ## Arquitetura (alto nível)
 
@@ -32,7 +32,7 @@ O OneDrip é uma plataforma SaaS (web + PWA) voltada para assistências técnica
 
 ## Integrações
 
-- **Pagamentos**: o código atual possui fluxo ativo com **AbacatePay/PIX** (Edge Functions + registro de compra/licença). Pode existir nomenclatura/arquivos legados citando Mercado Pago.
+- **Pagamentos**: o código atual possui fluxo ativo com **AbacatePay/PIX** (Edge Functions + registro de contratação/acesso ao suporte). Pode existir nomenclatura/arquivos legados citando Mercado Pago.
 - **WhatsApp/CRM**: existem Edge Functions e componentes de integração para mensageria e atendimento.
 - **Storage**: envio de imagens e anexos via Supabase Storage (ex.: imagens de OS).
 
@@ -40,4 +40,3 @@ O OneDrip é uma plataforma SaaS (web + PWA) voltada para assistências técnica
 
 - Por ser PWA/SPA, o app depende do navegador para recursos de hardware (câmera, microfone, sensores) e pode ter restrições em iOS/Android.
 - Recursos em tempo real (WebSocket) podem oscilar em redes móveis; o sistema implementa estratégias de reconexão/fallback em pontos críticos.
-

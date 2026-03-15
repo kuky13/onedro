@@ -9,14 +9,13 @@ import { Link } from "react-router-dom";
 const COMPANY_INFO = {
   name: "KukySolutions",
   tagline: "Desenvolvendo ideias, Entregando soluções",
-  description: "Somos uma empresa especializada em desenvolvimento de software e soluções tecnológicas personalizadas. Nossa missão é transformar ideias em realidade digital, oferecendo produtos de alta qualidade que impulsionam o crescimento dos nossos clientes.",
+  description: "Somos uma empresa especializada em desenvolvimento de soluções tecnológicas personalizadas e suporte técnico. Nossa missão é transformar ideias em realidade, oferecendo serviços de alta qualidade que impulsionam o crescimento dos nossos clientes.",
   founded: "2023",
   location: "Brasil",
   employees: "1"
 };
 const COMPANY_STORY = {
   title: "Nossa História",
-  content: ["A KukySolutions foi criada por André Ribeiro Lima para implementar soluções que fazem a diferença na vida das pessoas e empresas.", "Fundada em 2023, começamos como uma pequena startup com grandes sonhos. Nosso primeiro projeto foi um sistema de gestão para pequenas empresas locais, que rapidamente ganhou reconhecimento pela sua simplicidade e eficiência.", "Ao longo dos anos, expandimos nossos serviços e hoje atendemos clientes de diversos segmentos, sempre mantendo nosso compromisso com a qualidade e inovação.", "Nossa jornada é marcada por parcerias sólidas, projetos desafiadores e a constante busca pela excelência em tudo que fazemos."]
 };
 const CREATOR_INFO = {
   name: "André Ribeiro Lima",

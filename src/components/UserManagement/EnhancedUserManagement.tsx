@@ -166,7 +166,7 @@ export const EnhancedUserManagement = () => {
   // Função para gerar CSV
   const generateCSV = (users: User[]) => {
     return [
-      ['Nome', 'Email', 'Função', 'Status', 'Código da Licença', 'Licença Expira', 'Licença Ativada', 'Orçamentos', 'Criado em', 'Último login'].join(','),
+      ['Nome', 'Email', 'Função', 'Status', 'Chave de Acesso ao Suporte', 'Acesso expira', 'Acesso ativado', 'Orçamentos', 'Criado em', 'Último login'].join(','),
       ...users.map(user => [
         user.name,
         user.email,
@@ -227,10 +227,10 @@ export const EnhancedUserManagement = () => {
     try {
       await navigator.clipboard.writeText(licenseCode);
       setCopiedLicense(licenseCode);
-      toast.success('Código da licença copiado!');
+      toast.success('Chave de acesso ao suporte copiada!');
       setTimeout(() => setCopiedLicense(null), 2000);
     } catch (error) {
-      toast.error('Erro ao copiar código da licença');
+      toast.error('Erro ao copiar chave de acesso ao suporte');
     }
   };
 
@@ -394,10 +394,10 @@ export const EnhancedUserManagement = () => {
                       variant="outline"
                       size="sm"
                       onClick={toggleLicenseVisibility}
-                      title={showLicenseCodes ? 'Ocultar códigos de licença' : 'Mostrar códigos de licença'}
+                      title={showLicenseCodes ? 'Ocultar chaves de acesso ao suporte' : 'Mostrar chaves de acesso ao suporte'}
                     >
                       {showLicenseCodes ? <EyeOff className="h-4 w-4 mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
-                      {showLicenseCodes ? 'Ocultar' : 'Mostrar'} Licenças
+                      {showLicenseCodes ? 'Ocultar' : 'Mostrar'} Acessos ao Suporte
                     </Button>
 
                     {/* Seletor de visualização */}
@@ -611,7 +611,7 @@ const UserTableView = ({
         <TableHead>Nome</TableHead>
         <TableHead>Função</TableHead>
         <TableHead>Status</TableHead>
-        {showLicenseCodes && <TableHead>Licença</TableHead>}
+        {showLicenseCodes && <TableHead>Acesso ao Suporte</TableHead>}
         <TableHead>Orçamentos</TableHead>
         <TableHead>Último login</TableHead>
         <TableHead className="text-right">Ações</TableHead>
@@ -655,7 +655,7 @@ const UserTableView = ({
                       size="sm"
                       onClick={() => copyLicenseCode(user.license_code!)}
                       className="h-6 w-6 p-0"
-                      title="Copiar código"
+                      title="Copiar chave"
                     >
                       {copiedLicense === user.license_code ? (
                         <span className="text-green-500 text-xs">✓</span>
@@ -670,7 +670,7 @@ const UserTableView = ({
                     )}
                   </div>
                 ) : (
-                  <span className="text-xs text-muted-foreground">Sem licença</span>
+                  <span className="text-xs text-muted-foreground">Sem acesso ao suporte</span>
                 )}
               </TableCell>
             )}

@@ -53,7 +53,7 @@ export const LicenseReportsPanel: React.FC = () => {
       console.error('Error fetching license stats:', error);
       showError({
         title: 'Erro ao Carregar',
-        description: 'Não foi possível carregar as estatísticas de licenças.'
+        description: 'Não foi possível carregar as estatísticas de acesso ao suporte.'
       });
     } finally {
       setIsLoading(false);
@@ -63,7 +63,7 @@ export const LicenseReportsPanel: React.FC = () => {
     if (bulkQuantity < 1 || bulkQuantity > 100) {
       showError({
         title: 'Quantidade Inválida',
-        description: 'A quantidade deve estar entre 1 e 100 licenças.'
+        description: 'A quantidade deve estar entre 1 e 100 acessos ao suporte.'
       });
       return;
     }
@@ -87,8 +87,8 @@ export const LicenseReportsPanel: React.FC = () => {
       const result = data as any;
       if (result?.success) {
         showSuccess({
-          title: 'Licenças Criadas!',
-          description: `${result.quantity} licenças criadas com sucesso.`
+          title: 'Acessos ao Suporte Criados!',
+          description: `${result.quantity} acessos ao suporte criados com sucesso.`
         });
         fetchLicenseStats(); // Atualizar estatísticas
       }
@@ -96,7 +96,7 @@ export const LicenseReportsPanel: React.FC = () => {
       console.error('Error creating bulk licenses:', error);
       showError({
         title: 'Erro ao Criar',
-        description: 'Não foi possível criar as licenças em lote.'
+        description: 'Não foi possível criar os acessos ao suporte em lote.'
       });
     } finally {
       setIsCreatingLicenses(false);
@@ -106,7 +106,7 @@ export const LicenseReportsPanel: React.FC = () => {
     if (!customCode.trim()) {
       showError({
         title: 'Código Inválido',
-        description: 'Por favor, insira um código para a licença.'
+        description: 'Por favor, insira uma chave para o acesso ao suporte.'
       });
       return;
     }
@@ -128,7 +128,7 @@ export const LicenseReportsPanel: React.FC = () => {
       if (existing) {
         showError({
           title: 'Código Duplicado',
-          description: 'Já existe uma licença com este código.'
+          description: 'Já existe um acesso ao suporte com esta chave.'
         });
         return;
       }
@@ -143,8 +143,8 @@ export const LicenseReportsPanel: React.FC = () => {
       }]);
       if (insertError) throw insertError;
       showSuccess({
-        title: 'Licença Criada!',
-        description: `Licença ${customCode} criada com sucesso.`
+        title: 'Acesso ao Suporte Criado!',
+        description: `Acesso ao suporte ${customCode} criado com sucesso.`
       });
       setCustomCode('');
       fetchLicenseStats();
@@ -152,7 +152,7 @@ export const LicenseReportsPanel: React.FC = () => {
       console.error('Error creating custom license:', error);
       showError({
         title: 'Erro ao Criar',
-        description: 'Não foi possível criar a licença personalizada.'
+        description: 'Não foi possível criar o acesso ao suporte personalizado.'
       });
     } finally {
       setIsCreatingCustom(false);
@@ -188,25 +188,25 @@ export const LicenseReportsPanel: React.FC = () => {
       </Card>;
   }
   const statCards = [{
-    title: 'Total de Licenças',
+    title: 'Total de Acessos ao Suporte',
     value: stats.total_licenses,
     icon: Key,
     color: 'text-blue-600',
     bgColor: 'bg-blue-100 dark:bg-blue-900'
   }, {
-    title: 'Licenças Ativas',
+    title: 'Acessos ao Suporte Ativos',
     value: stats.active_licenses,
     icon: CheckCircle,
     color: 'text-green-600',
     bgColor: 'bg-green-100 dark:bg-green-900'
   }, {
-    title: 'Licenças Usadas',
+    title: 'Acessos ao Suporte Usados',
     value: stats.used_licenses,
     icon: Users,
     color: 'text-purple-600',
     bgColor: 'bg-purple-100 dark:bg-purple-900'
   }, {
-    title: 'Licenças Disponíveis',
+    title: 'Acessos ao Suporte Disponíveis',
     value: stats.unused_licenses,
     icon: Plus,
     color: 'text-cyan-600',
@@ -218,7 +218,7 @@ export const LicenseReportsPanel: React.FC = () => {
     color: 'text-yellow-600',
     bgColor: 'bg-yellow-100 dark:bg-yellow-900'
   }, {
-    title: 'Licenças Expiradas',
+    title: 'Acessos ao Suporte Expirados',
     value: stats.expired_active,
     icon: AlertTriangle,
     color: 'text-red-600',
@@ -240,7 +240,7 @@ export const LicenseReportsPanel: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Licenças</h2>
+          <h2 className="text-2xl font-bold">Acesso ao Suporte</h2>
           
         </div>
         <Button onClick={fetchLicenseStats} variant="outline">
@@ -257,20 +257,20 @@ export const LicenseReportsPanel: React.FC = () => {
       {/* Custom License Creation */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Key className="h-5 w-5" />Criar Licença Personalizada
+          <CardTitle className="flex items-center gap-2"><Key className="h-5 w-5" />Criar Acesso ao Suporte Personalizado
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="custom-code">Código da Licença</Label>
+              <Label htmlFor="custom-code">Chave de Acesso ao Suporte</Label>
               <div className="flex gap-2">
                 <Input id="custom-code" value={customCode} onChange={e => setCustomCode(e.target.value)} placeholder="Insira o código desejado" />
                 <Button type="button" variant="outline" size="icon" onClick={generateRandomCode} title="Gerar código aleatório">
                   <Shuffle className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">Lembre-se de colocar 13 digitos para a licença ser valida.</p>
+              <p className="text-xs text-muted-foreground">Lembre-se de colocar 13 dígitos para a chave ser válida.</p>
             </div>
             
             <div className="space-y-2">
@@ -281,7 +281,7 @@ export const LicenseReportsPanel: React.FC = () => {
           </div>
 
           <Button onClick={createCustomLicense} disabled={isCreatingCustom} className="w-full md:w-auto">
-            {isCreatingCustom ? 'Criando...' : 'Criar Licença Personalizada'}
+            {isCreatingCustom ? 'Criando...' : 'Criar Acesso ao Suporte Personalizado'}
           </Button>
         </CardContent>
       </Card>
@@ -292,7 +292,7 @@ export const LicenseReportsPanel: React.FC = () => {
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-yellow-600" />
               <span className="font-medium text-yellow-800 dark:text-yellow-200">
-                Atenção: {stats.expiring_soon} licenças expiram em até 7 dias
+                Atenção: {stats.expiring_soon} acessos ao suporte expiram em até 7 dias
               </span>
             </div>
           </CardContent>
@@ -303,7 +303,7 @@ export const LicenseReportsPanel: React.FC = () => {
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-600" />
               <span className="font-medium text-red-800 dark:text-red-200">
-                Alerta: {stats.expired_active} licenças ativas estão expiradas
+                Alerta: {stats.expired_active} acessos ao suporte ativos estão expirados
               </span>
             </div>
           </CardContent>

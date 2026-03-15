@@ -101,15 +101,15 @@ export const AdminUserActions = ({
     },
     onSuccess: () => {
       showSuccess({
-        title: 'Licença renovada',
-        description: 'A licença do usuário foi renovada com sucesso.'
+        title: 'Acesso ao suporte renovado',
+        description: 'O acesso ao suporte do usuário foi renovado com sucesso.'
       });
       onSuccess?.();
     },
     onError: (error: any) => {
       showError({
-        title: 'Erro ao renovar licença',
-        description: error.message || 'Não foi possível renovar a licença.'
+        title: 'Erro ao renovar acesso ao suporte',
+        description: error.message || 'Não foi possível renovar o acesso ao suporte.'
       });
     }
   });
@@ -250,7 +250,7 @@ export const AdminUserActions = ({
           {expirationDate && <div className="p-3 rounded-lg bg-muted/50">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-sm text-muted-foreground">Licença expira em:</span>
+                  <span className="text-sm text-muted-foreground">Acesso ao suporte expira em:</span>
                   <p className="font-medium">
                     {isExpired ? 'Expirada' : `${daysUntilExpiry} dias`}
                   </p>

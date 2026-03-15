@@ -134,7 +134,7 @@ export const LicenseEditModal = ({ isOpen, onClose, license, onSuccess }: Licens
           if (!transferUserId) {
             showError({
               title: 'Erro',
-              description: 'Selecione um usuário para transferir a licença.'
+              description: 'Selecione um usuário para transferir o acesso ao suporte.'
             });
             return;
           }
@@ -145,7 +145,7 @@ export const LicenseEditModal = ({ isOpen, onClose, license, onSuccess }: Licens
           
           // Verificar se a função retornou um erro no JSON
           if (result?.data && typeof result.data === 'object' && 'success' in result.data && !(result.data as any).success) {
-            throw new Error((result.data as any).error || 'Erro ao transferir licença');
+            throw new Error((result.data as any).error || 'Erro ao transferir acesso ao suporte');
           }
           break;
       }
@@ -154,7 +154,7 @@ export const LicenseEditModal = ({ isOpen, onClose, license, onSuccess }: Licens
       
       showSuccess({
         title: 'Sucesso',
-        description: 'Licença atualizada com sucesso!'
+        description: 'Acesso ao suporte atualizado com sucesso!'
       });
       
       onSuccess();
@@ -162,7 +162,7 @@ export const LicenseEditModal = ({ isOpen, onClose, license, onSuccess }: Licens
     } catch (error: any) {
       showError({
         title: 'Erro',
-        description: error.message || 'Erro ao atualizar licença'
+        description: error.message || 'Erro ao atualizar acesso ao suporte'
       });
     } finally {
       setIsLoading(false);
@@ -184,7 +184,7 @@ export const LicenseEditModal = ({ isOpen, onClose, license, onSuccess }: Licens
             <Badge variant={license.is_active ? 'default' : 'secondary'}>
               {license.is_active ? 'Ativa' : 'Inativa'}
             </Badge>
-            Editar Licença - {license.user_name}
+            Editar Acesso ao Suporte - {license.user_name}
           </DialogTitle>
         </DialogHeader>
         
@@ -212,9 +212,9 @@ export const LicenseEditModal = ({ isOpen, onClose, license, onSuccess }: Licens
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="edit">Editar Licença</SelectItem>
+                <SelectItem value="edit">Editar Acesso ao Suporte</SelectItem>
                 <SelectItem value="extend">Estender Validade</SelectItem>
-                <SelectItem value="transfer">Transferir Licença</SelectItem>
+                <SelectItem value="transfer">Transferir Acesso ao Suporte</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -223,12 +223,12 @@ export const LicenseEditModal = ({ isOpen, onClose, license, onSuccess }: Licens
           {formData.action_type === 'edit' && (
             <>
               <div className="space-y-2">
-                <Label>Código da Licença</Label>
+                <Label>Chave de Acesso ao Suporte</Label>
                 <div className="flex gap-2">
                   <Input
                     value={formData.license_code}
                     onChange={(e) => setFormData(prev => ({ ...prev, license_code: e.target.value }))}
-                    placeholder="Código da licença"
+                    placeholder="Chave de acesso ao suporte"
                     readOnly
                   />
                   <Button type="button" variant="outline" onClick={generateNewLicenseCode}>
@@ -380,7 +380,7 @@ export const LicenseEditModal = ({ isOpen, onClose, license, onSuccess }: Licens
                 <div className="flex items-center gap-2 p-2 bg-yellow-50 dark:bg-yellow-950 rounded border border-yellow-200 dark:border-yellow-800">
                   <AlertTriangle className="h-4 w-4 text-yellow-600" />
                   <span className="text-sm text-yellow-700 dark:text-yellow-300">
-                    Esta ação transferirá a licença permanentemente para o usuário selecionado.
+                    Esta ação transferirá o acesso ao suporte permanentemente para o usuário selecionado.
                   </span>
                 </div>
               )}

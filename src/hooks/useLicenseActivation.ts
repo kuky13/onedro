@@ -151,7 +151,7 @@ export function useLicenseActivation(): UseLicenseActivationReturn {
         console.error('Erro na ativação da licença:', rpcError);
         const result = {
           success: false,
-          message: rpcError.message || 'Erro ao ativar licença',
+          message: rpcError.message || 'Erro ao ativar acesso ao suporte',
           error_code: 'RPC_ERROR'
         };
         showError({
@@ -171,7 +171,7 @@ export function useLicenseActivation(): UseLicenseActivationReturn {
       if (payload?.success === true) {
         const result: LicenseActivationResult = {
           success: true,
-          message: payload.message || 'Licença ativada com sucesso',
+          message: payload.message || 'Acesso ao suporte ativado com sucesso',
           license_code: payload.license_code,
           activated_at: payload.activated_at,
           expires_at: payload.expires_at,
@@ -179,7 +179,7 @@ export function useLicenseActivation(): UseLicenseActivationReturn {
         };
 
         showSuccess({
-          title: 'Licença Ativada!',
+          title: 'Acesso ao Suporte Ativado!',
           description: `${result.message}${result.days_granted ? ` (${result.days_granted} dias)` : ''}`
         });
 
@@ -188,7 +188,7 @@ export function useLicenseActivation(): UseLicenseActivationReturn {
 
       const result = {
         success: false,
-        message: payload?.error || 'Falha na ativação da licença',
+        message: payload?.error || 'Falha na ativação do acesso ao suporte',
         error_code: payload?.error_code || 'ACTIVATION_FAILED'
       };
 

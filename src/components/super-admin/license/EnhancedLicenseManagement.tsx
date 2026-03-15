@@ -205,7 +205,7 @@ export function EnhancedLicenseManagement() {
       const { error } = await (supabase as any).rpc("admin_create_custom_license", params);
 
       if (error) throw error;
-      toast.success("Licença criada com sucesso");
+      toast.success("Acesso ao suporte criado com sucesso");
       setCreateUserId("");
       setCreateDays("");
       setCreateNotes("");
@@ -215,7 +215,7 @@ export function EnhancedLicenseManagement() {
       setCreateName("");
       await reload({ search: search, status: statusFilter as any });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao criar licença";
+      const message = err instanceof Error ? err.message : "Erro ao criar acesso ao suporte";
       toast.error(message);
     } finally {
       setCreating(false);
@@ -248,11 +248,11 @@ export function EnhancedLicenseManagement() {
       if (editName.trim()) params.p_license_name = editName.trim();
       const { error } = await (supabase as any).rpc("admin_update_license_full", params);
       if (error) throw error;
-      toast.success("Licença atualizada com sucesso");
+      toast.success("Acesso ao suporte atualizado com sucesso");
       setSelected(null);
       await reload({ search, status: statusFilter as any });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao atualizar licença";
+      const message = err instanceof Error ? err.message : "Erro ao atualizar acesso ao suporte";
       toast.error(message);
     } finally {
       setUpdating(false);
@@ -260,7 +260,7 @@ export function EnhancedLicenseManagement() {
   };
 
   const handleDelete = async (license: AdminLicense) => {
-    const reason = window.prompt("Motivo para apagar esta licença? (opcional)") ?? "";
+    const reason = window.prompt("Motivo para apagar este acesso ao suporte? (opcional)") ?? "";
     setDeletingId(license.id);
     try {
       const params: { p_license_id: string; p_reason?: string } = { p_license_id: license.id };
@@ -270,13 +270,13 @@ export function EnhancedLicenseManagement() {
 
       if (error) throw error;
       if (!data) {
-        toast.error("Não foi possível apagar a licença");
+        toast.error("Não foi possível apagar o acesso ao suporte");
       } else {
-        toast.success("Licença apagada com sucesso");
+        toast.success("Acesso ao suporte apagado com sucesso");
         await reload({ search, status: statusFilter as any });
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao apagar licença";
+      const message = err instanceof Error ? err.message : "Erro ao apagar acesso ao suporte";
       toast.error(message);
     } finally {
       setDeletingId(null);
@@ -291,9 +291,9 @@ export function EnhancedLicenseManagement() {
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
             <Key className="h-6 w-6 text-primary" />
           </div>
-          <h1 className="text-xl lg:text-3xl font-bold tracking-tight">Licenças</h1>
+          <h1 className="text-xl lg:text-3xl font-bold tracking-tight">Acessos ao Suporte</h1>
           <p className="text-sm lg:text-base text-muted-foreground">
-            Crie, edite e acompanhe licenças de forma centralizada.
+            Crie, edite e acompanhe acessos ao suporte de forma centralizada.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -346,15 +346,15 @@ export function EnhancedLicenseManagement() {
       <Card className="bg-card/60 backdrop-blur-sm border-border/60">
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle>Licenças existentes</CardTitle>
-            <CardDescription>Busque e gerencie as licenças cadastradas.</CardDescription>
+            <CardTitle>Acessos ao suporte existentes</CardTitle>
+            <CardDescription>Busque e gerencie os acessos ao suporte cadastrados.</CardDescription>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 className="pl-9 w-full sm:w-72"
-                placeholder="Buscar por código, nome ou notas"
+                placeholder="Buscar por chave, nome ou notas"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -384,11 +384,11 @@ export function EnhancedLicenseManagement() {
 
           {loading ? (
             <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Carregando licenças...
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Carregando acessos ao suporte...
             </div>
           ) : licenses.length === 0 ? (
             <div className="py-10 text-center text-sm text-muted-foreground">
-              Nenhuma licença encontrada com os filtros atuais.
+              Nenhum acesso ao suporte encontrado com os filtros atuais.
             </div>
           ) : (
             <>
@@ -425,7 +425,7 @@ export function EnhancedLicenseManagement() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onSelect={() => void copyToClipboard(license.code, "Código")}
                               >
-                                Copiar código
+                                Copiar chave
                               </DropdownMenuItem>
                               {owner?.email ? (
                                 <DropdownMenuItem onSelect={() => void copyToClipboard(owner.email, "E-mail")}
@@ -500,7 +500,7 @@ export function EnhancedLicenseManagement() {
                 <Table>
                   <TableHeader className="sticky top-0 bg-background/80 backdrop-blur-sm">
                     <TableRow>
-                      <TableHead>Licença</TableHead>
+                      <TableHead>Acesso ao Suporte</TableHead>
                       <TableHead>Código</TableHead>
                       <TableHead>Dono</TableHead>
                       <TableHead>Status</TableHead>
@@ -561,7 +561,7 @@ export function EnhancedLicenseManagement() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onSelect={() => void copyToClipboard(license.code, "Código")}>
-                                  Copiar código
+                                  Copiar chave
                                 </DropdownMenuItem>
                                 {owner?.email ? (
                                   <DropdownMenuItem onSelect={() => void copyToClipboard(owner.email, "E-mail")}>
@@ -599,13 +599,13 @@ export function EnhancedLicenseManagement() {
       {/* Create */}
       <Card id="create-license" className="bg-card/60 backdrop-blur-sm border-border/60">
         <CardHeader>
-          <CardTitle>Criar licença personalizada</CardTitle>
-          <CardDescription>Gere uma nova licença com dias, tipo e usuário opcionais.</CardDescription>
+          <CardTitle>Criar acesso ao suporte personalizado</CardTitle>
+          <CardDescription>Gere um novo acesso ao suporte com dias, tipo e usuário opcionais.</CardDescription>
         </CardHeader>
         <CardContent>
           <form className="grid gap-4 md:grid-cols-4 items-start" onSubmit={handleCreate}>
             <div className="space-y-1 md:col-span-2">
-              <label className="text-xs font-medium text-muted-foreground">Código da licença</label>
+              <label className="text-xs font-medium text-muted-foreground">Chave de acesso ao suporte</label>
               <div className="flex gap-2">
                 <Input
                   className="flex-1"
@@ -623,11 +623,11 @@ export function EnhancedLicenseManagement() {
             </div>
 
             <div className="space-y-1 md:col-span-2">
-              <label className="text-xs font-medium text-muted-foreground">Nome da licença</label>
+              <label className="text-xs font-medium text-muted-foreground">Nome do acesso ao suporte</label>
               <Input
                 value={createName}
                 onChange={(e) => setCreateName(e.target.value)}
-                placeholder="Ex: Licença Anual Premium"
+                placeholder="Ex: Plano de Suporte Anual Premium"
               />
             </div>
 
@@ -668,7 +668,7 @@ export function EnhancedLicenseManagement() {
               <Textarea
                 value={createNotes}
                 onChange={(e) => setCreateNotes(e.target.value)}
-                placeholder="Observações internas sobre esta licença"
+                placeholder="Observações internas sobre este acesso ao suporte"
                 rows={2}
               />
             </div>
@@ -676,11 +676,11 @@ export function EnhancedLicenseManagement() {
             <div className="flex flex-col gap-3 md:col-span-4 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-2">
                 <Switch checked={createActive} onCheckedChange={setCreateActive} />
-                <span className="text-xs text-muted-foreground">Ativar licença imediatamente</span>
+                <span className="text-xs text-muted-foreground">Ativar acesso ao suporte imediatamente</span>
               </div>
               <Button type="submit" disabled={creating}>
                 {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                Criar licença
+                Criar acesso ao suporte
               </Button>
             </div>
           </form>
@@ -691,7 +691,7 @@ export function EnhancedLicenseManagement() {
       <Sheet open={!!selected} onOpenChange={(open: boolean) => !open && setSelected(null)}>
         <SheetContent className="w-full sm:max-w-xl">
           <SheetHeader>
-            <SheetTitle>Editar licença</SheetTitle>
+            <SheetTitle>Editar acesso ao suporte</SheetTitle>
             <SheetDescription>
               Atualize status, expiração, tipo, notas e usuário vinculado.
             </SheetDescription>
@@ -741,8 +741,8 @@ export function EnhancedLicenseManagement() {
 
               <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/40 p-3">
                 <div className="space-y-0.5">
-                  <div className="text-sm font-medium">Licença ativa</div>
-                  <div className="text-xs text-muted-foreground">Controla se a licença está habilitada.</div>
+                  <div className="text-sm font-medium">Acesso ao suporte ativo</div>
+                  <div className="text-xs text-muted-foreground">Controla se o acesso ao suporte está habilitado.</div>
                 </div>
                 <Switch checked={editActive} onCheckedChange={setEditActive} />
               </div>

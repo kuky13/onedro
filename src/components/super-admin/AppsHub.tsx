@@ -93,7 +93,7 @@ const appRoutes: AppRoute[] = [
     requiresAuth: true
   },
 
-  // Autenticação e Licenças
+  // Autenticação e Acesso ao Suporte
   {
     path: '/auth',
     name: 'Autenticação',
@@ -117,16 +117,16 @@ const appRoutes: AppRoute[] = [
   },
   {
     path: '/licenca',
-    name: 'Licenças',
-    description: 'Gerenciar licenças',
+    name: 'Acesso ao Suporte',
+    description: 'Gerenciar acesso ao suporte',
     icon: Key,
     category: 'Autenticação',
     requiresAuth: true
   },
   {
     path: '/verify-licenca',
-    name: 'Verificar Licença',
-    description: 'Verificar status da licença',
+    name: 'Verificar Acesso ao Suporte',
+    description: 'Verificar status do acesso ao suporte',
     icon: Key,
     category: 'Autenticação'
   },
@@ -357,8 +357,8 @@ const appRoutes: AppRoute[] = [
   },
   {
     path: '/supadmin/licenca',
-    name: 'Licenças (Super Admin)',
-    description: 'Gerenciar licenças dos usuários',
+    name: 'Acessos ao Suporte (Super Admin)',
+    description: 'Gerenciar acessos ao suporte dos usuários',
     icon: Key,
     category: 'Super Admin',
     isAdmin: true

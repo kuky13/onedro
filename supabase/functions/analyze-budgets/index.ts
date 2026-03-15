@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
 Para cada orçamento, identifique:
 - brand: A marca real do dispositivo (Apple, Samsung, Xiaomi, Motorola, LG, Huawei, etc). Use o device_type e device_model para identificar. Ex: "iPhone 13" → "Apple", "Galaxy A12" → "Samsung", "Redmi Note 11" → "Xiaomi", "Moto G10" → "Motorola". Se device_type já for a marca, use-o.
 - model: O modelo limpo/normalizado (ex: "iPhone 13 Pro Max", "Galaxy S23 Ultra")
-- service_category: Categoria do serviço baseado em issue/custom_services/context. Categorias possíveis: "Troca de Tela", "Troca de Bateria", "Troca de Câmera", "Conector de Carga", "Alto-Falante", "Reparo de Placa", "Software/Sistema", "Botões", "Carcaça/Vidro Traseiro", "Outro"
+- service_category: Categoria do serviço baseado em issue/custom_services/context. Categorias possíveis: "Troca de Tela", "Troca de Bateria", "Troca de Câmera", "Conector de Carga", "Alto-Falante", "Reparo de Placa", "Configuração de Sistema", "Botões", "Carcaça/Vidro Traseiro", "Outro"
 - service_name: Nome descritivo do serviço (ex: "Troca de Tela Original", "Troca de Bateria Compatível")
 - cash_price_reais: Preço à vista em reais (converta de centavos dividindo por 100). Use cash_price se disponível, senão total_price.
 - credit_card_total_reais: Preço TOTAL no cartão de crédito em reais. Calcule: (installment_price / 100) * installments. Este é o valor que o cliente paga no total se parcelar. Se installment_price não existir, use 0.

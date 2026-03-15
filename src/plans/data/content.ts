@@ -8,12 +8,12 @@ export const PLANS_CONTENT = {
   // SEÇÃO PRINCIPAL (HERO)
   logo: "/lovable-uploads/logoo.png",
   titulo_principal: "Organize sua assistência. Ganhe tempo. Venda mais.",
-  subtitulo_principal: "Sistema feito por quem entende assistência técnica. Sem complicação, sem promessa vazia.",
+  subtitulo_principal: "Ferramenta de suporte feita por quem entende assistência técnica. Sem complicação, sem promessa vazia.",
 
   // DADOS DOS PLANOS (MENSAL E ANUAL)
   planos: {
     mensal: {
-      nome: "Plano Mensal",
+      nome: "Plano de Suporte Mensal",
       descricao: "Ideal para quem está começando ou quer testar",
       perfil_indicado: "Técnico iniciante ou assistência pequena",
       preco: 10.0,
@@ -32,6 +32,7 @@ export const PLANS_CONTENT = {
         "Loja online integrada",
         "Cálculos automáticos de preço",
         "Suporte via WhatsApp",
+        "Suporte técnico contínuo e atualizações da ferramenta",
         "Backup automático na nuvem",
       ],
 
@@ -39,7 +40,7 @@ export const PLANS_CONTENT = {
       diferencial_pratico: "Comece a organizar seus orçamentos hoje mesmo",
     },
     anual: {
-      nome: "Plano Anual",
+      nome: "Plano de Suporte Anual",
       descricao: "Para assistências que querem economizar",
       perfil_indicado: "Assistência em crescimento ou estruturada",
       preco: 10.0,
@@ -58,6 +59,7 @@ export const PLANS_CONTENT = {
         "Loja online integrada",
         "Cálculos automáticos de preço",
         "Suporte via WhatsApp",
+        "Suporte técnico contínuo e atualizações da ferramenta",
         "Backup automático na nuvem",
       ],
 
@@ -71,7 +73,7 @@ export const PLANS_CONTENT = {
     botao_texto: "Começar Agora",
     mostrar_suporte: true,
     texto_suporte: "Suporte brasileiro via WhatsApp",
-    informacoes_extras: "Cancele quando quiser • Pagamento via Mercado pago",
+    informacoes_extras: "Cancele quando quiser • Pagamento via PIX (AbacatePay)",
   },
 
   // SEÇÃO DE VANTAGENS/BENEFÍCIOS - Focado em problemas reais de assistências

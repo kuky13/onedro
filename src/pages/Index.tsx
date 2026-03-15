@@ -533,6 +533,9 @@ const Index = () => {
               <p className="text-xs lg:text-sm text-muted-foreground">
                 © 2026 Desenvolvendo ideias, Entregando soluções
               </p>
+              <p className="text-[10px] lg:text-xs text-muted-foreground/70 mt-1">
+                OneDrip é uma prestação de serviço de suporte remoto para técnicos de assistência técnica
+              </p>
               <p className="text-[10px] lg:text-xs text-muted-foreground/70">
                 CNPJ: 64.797.431/0001-03
               </p>

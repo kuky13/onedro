@@ -85,13 +85,13 @@ export const AdminLicenseManagerEnhanced = () => {
         queryKey: ['admin-licenses']
       });
       showSuccess({
-        title: 'Licença Criada!',
-        description: 'Nova licença foi gerada com sucesso.'
+        title: 'Acesso ao Suporte Criado!',
+        description: 'Novo acesso ao suporte foi gerado com sucesso.'
       });
     },
     onError: (error: any) => {
       showError({
-        title: 'Erro ao criar licença',
+        title: 'Erro ao criar acesso ao suporte',
         description: error.message
       });
     }
@@ -119,13 +119,13 @@ export const AdminLicenseManagerEnhanced = () => {
         queryKey: ['admin-licenses']
       });
       showSuccess({
-        title: 'Licença Renovada!',
-        description: `Licença foi estendida por ${renewDays} dias.`
+        title: 'Acesso ao Suporte Renovado!',
+        description: `Acesso ao suporte foi estendido por ${renewDays} dias.`
       });
     },
     onError: (error: any) => {
       showError({
-        title: 'Erro ao renovar licença',
+        title: 'Erro ao renovar acesso ao suporte',
         description: error.message
       });
     }
@@ -144,8 +144,8 @@ export const AdminLicenseManagerEnhanced = () => {
         queryKey: ['admin-licenses']
       });
       showSuccess({
-        title: 'Licença Desvinculada!',
-        description: 'Licença foi desvinculada do usuário.'
+        title: 'Acesso ao Suporte Desvinculado!',
+        description: 'Acesso ao suporte foi desvinculado do usuário.'
       });
     },
     onError: (error: any) => {
@@ -172,7 +172,7 @@ export const AdminLicenseManagerEnhanced = () => {
       });
       showSuccess({
         title: 'Status Alterado!',
-        description: `Licença ${data.is_active ? 'ativada' : 'desativada'} com sucesso.`
+        description: `Acesso ao suporte ${data.is_active ? 'ativado' : 'desativado'} com sucesso.`
       });
     },
     onError: (error: any) => {
@@ -226,8 +226,8 @@ export const AdminLicenseManagerEnhanced = () => {
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         <div>
-          <h2 className="text-2xl font-bold">Gerenciamento de Licenças</h2>
-          <p className="text-muted-foreground">Gerencie licenças, usuários e visualize relatórios</p>
+          <h2 className="text-2xl font-bold">Gerenciamento de Acesso ao Suporte</h2>
+          <p className="text-muted-foreground">Gerencie acessos ao suporte, usuários e visualize relatórios</p>
         </div>
         
         
@@ -238,7 +238,7 @@ export const AdminLicenseManagerEnhanced = () => {
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="licenses">
             <Key className="mr-2 h-4 w-4" />
-            Licenças
+            Acessos ao Suporte
           </TabsTrigger>
           <TabsTrigger value="users">
             <Users className="mr-2 h-4 w-4" />
@@ -266,7 +266,7 @@ export const AdminLicenseManagerEnhanced = () => {
               <label className="text-sm font-medium">Buscar</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Código, usuário ou email..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
+                <Input placeholder="Chave, usuário ou email..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
               </div>
             </div>
 
@@ -297,7 +297,7 @@ export const AdminLicenseManagerEnhanced = () => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Licenças ({filteredLicenses?.length || 0})</CardTitle>
+            <CardTitle>Acessos ao Suporte ({filteredLicenses?.length || 0})</CardTitle>
             <Button variant="outline" size="sm" onClick={() => queryClient.invalidateQueries({
                 queryKey: ['admin-licenses']
               })} className="flex items-center space-x-2">
@@ -309,10 +309,10 @@ export const AdminLicenseManagerEnhanced = () => {
         <CardContent>
           {isLoading ? <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-2 text-muted-foreground">Carregando licenças...</p>
+              <p className="mt-2 text-muted-foreground">Carregando acessos ao suporte...</p>
             </div> : queryError ? <div className="text-center py-8">
               <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-              <p className="text-destructive font-medium">Erro ao carregar licenças</p>
+              <p className="text-destructive font-medium">Erro ao carregar acessos ao suporte</p>
               <p className="text-sm text-muted-foreground mt-1">{typeof queryError === 'string' ? queryError : queryError?.message || 'Erro desconhecido'}</p>
               <Button variant="outline" onClick={() => queryClient.invalidateQueries({
                 queryKey: ['admin-licenses']
@@ -321,10 +321,10 @@ export const AdminLicenseManagerEnhanced = () => {
               </Button>
             </div> : !licenses?.length ? <div className="text-center py-8 text-muted-foreground">
               <Key className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhuma licença cadastrada no sistema</p>
+              <p>Nenhum acesso ao suporte cadastrado no sistema</p>
             </div> : !filteredLicenses?.length ? <div className="text-center py-8 text-muted-foreground">
               <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhuma licença encontrada com os filtros aplicados</p>
+              <p>Nenhum acesso ao suporte encontrado com os filtros aplicados</p>
             </div> : <div className="space-y-4">
               {filteredLicenses.map(license => {
                 const hasUser = license.user_id && license.user_name;
@@ -338,7 +338,7 @@ export const AdminLicenseManagerEnhanced = () => {
                           navigator.clipboard.writeText(license.code);
                           showSuccess({
                             title: 'Copiado!',
-                            description: 'Código da licença copiado para a área de transferência.'
+                            description: 'Chave de acesso ao suporte copiada para a área de transferência.'
                           });
                         }} className="h-6 w-6 p-0">
                              <Copy className="h-3 w-3" />

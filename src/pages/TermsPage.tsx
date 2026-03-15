@@ -56,7 +56,7 @@ export const TermsPage = () => {
               </div>
             </div>
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              Termos de Uso e Licença de Software
+              Termos de Uso e Prestação de Serviço de Suporte Técnico
             </CardTitle>
             <p className="text-muted-foreground mt-2">OneDrip - Última atualização de contrato: 13 de março de 2026</p>
             <p className="text-sm text-muted-foreground mt-1">
@@ -68,11 +68,11 @@ export const TermsPage = () => {
             {/* Aviso Importante */}
             <section className="bg-destructive/10 border border-destructive/30 p-4 rounded-lg">
               <p className="text-sm text-destructive font-medium text-center">
-                IMPORTANTE: LEIA CUIDADOSAMENTE ESTES TERMOS ANTES DE INSTALAR OU USAR ESTE SITE/SOFTWARE.
+                IMPORTANTE: LEIA CUIDADOSAMENTE ESTES TERMOS ANTES DE ACESSAR OU UTILIZAR ESTA PLATAFORMA.
               </p>
               <p className="text-xs text-muted-foreground text-center mt-2">
-                Ao instalar, copiar ou usar de qualquer forma este software, você concorda em ficar vinculado aos termos
-                e condições desta licença. Se você não concordar com estes termos, não instale nem use o site.
+                Ao acessar e utilizar o OneDrip, você concorda em ficar vinculado aos termos e condições deste contrato.
+                Se você não concordar com estes termos, não utilize a plataforma.
               </p>
             </section>
 
@@ -83,9 +83,10 @@ export const TermsPage = () => {
                 1. Aceitação dos Termos
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                Ao acessar e utilizar o sistema OneDrip, desenvolvido por André Ribeiro Lima (KukySolutions™), você
-                concorda em cumprir e estar vinculado a estes Termos de Uso. Se você não concordar com qualquer parte
-                destes termos, não deve utilizar nossos serviços.
+                Ao acessar e utilizar o OneDrip, você concorda em cumprir e estar vinculado a estes Termos de Uso.
+                O OneDrip é uma prestação de serviço de suporte remoto para técnicos de assistência técnica, com acesso a
+                uma ferramenta de apoio técnico. Se você não concordar com qualquer parte destes termos, não deve
+                utilizar nossos serviços.
               </p>
             </section>
 
@@ -99,25 +100,25 @@ export const TermsPage = () => {
                 <div>
                   <strong className="text-foreground">Sistema/Plataforma:</strong>
                   <span className="text-muted-foreground ml-2">
-                    O software OneDrip e todos os seus componentes, funcionalidades e serviços relacionados.
+                    A plataforma de apoio técnico OneDrip e todos os seus componentes, funcionalidades e serviços relacionados.
                   </span>
                 </div>
                 <div>
-                  <strong className="text-foreground">Usuário/Licenciado:</strong>
+                  <strong className="text-foreground">Usuário/Assinante:</strong>
                   <span className="text-muted-foreground ml-2">
-                    Pessoa física ou jurídica que utiliza o sistema mediante licença válida.
+                    Pessoa física ou jurídica que utiliza a plataforma mediante assinatura ativa.
                   </span>
                 </div>
                 <div>
                   <strong className="text-foreground">Proprietário/Prestador:</strong>
                   <span className="text-muted-foreground ml-2">
-                    André Ribeiro Lima (KukySolutions™), desenvolvedor e proprietário do sistema.
+                    André Ribeiro Lima (KukySolutions™), responsável pela prestação do serviço e pela plataforma.
                   </span>
                 </div>
                 <div>
-                  <strong className="text-foreground">Cliente Autorizado:</strong>
+                  <strong className="text-foreground">Cliente/Assinante:</strong>
                   <span className="text-muted-foreground ml-2">
-                    Usuário que adquiriu licença válida para uso do software.
+                    Usuário que contratou o plano de suporte e mantém a assinatura ativa.
                   </span>
                 </div>
                 <div>
@@ -129,23 +130,22 @@ export const TermsPage = () => {
               </div>
             </section>
 
-            {/* 3. Concessão de Licença */}
+            {/* 3. Prestação do Serviço e Condições de Acesso */}
             <section>
               <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <Shield className="h-5 w-5 text-primary" />
-                3. Concessão de Licença
+                3. Prestação do Serviço e Condições de Acesso
               </h2>
               <div className="space-y-4">
                 <p className="text-muted-foreground">
-                  A KukySolutions™ concede a você uma licença de uso limitada, não exclusiva e pessoal para utilizar o
-                  software OneDrip de acordo com os termos desta licença.
+                  A KukySolutions™ presta o serviço de suporte técnico e disponibiliza acesso à plataforma OneDrip,
+                  de forma limitada, não exclusiva e pessoal, conforme os termos deste contrato.
                 </p>
                 <div>
-                  <h3 className="font-medium mb-2">3.1 Condições da Licença</h3>
+                  <h3 className="font-medium mb-2">3.1 Condições do Serviço</h3>
                   <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
-                    <li>Licença pessoal, não exclusiva e intransferível</li>
+                    <li>Acesso pessoal, não exclusivo e intransferível</li>
                     <li>Limitada ao território brasileiro</li>
-                    <li>O uso comercial requer licenciamento específico</li>
                     <li>Válida enquanto mantida a assinatura ativa</li>
                   </ul>
                 </div>
@@ -171,12 +171,12 @@ export const TermsPage = () => {
               </h2>
               <p className="text-muted-foreground mb-4">Como usuário do sistema, você se compromete a:</p>
               <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
-                <li>Utilizar o Software conforme sua finalidade original</li>
+                <li>Utilizar a plataforma conforme sua finalidade original</li>
                 <li>Fornecer informações verdadeiras e atualizadas</li>
                 <li>Manter a confidencialidade de suas credenciais de acesso</li>
                 <li>Respeitar todos os direitos de propriedade intelectual</li>
                 <li>Manter a integridade dos dados e funcionalidades do sistema</li>
-                <li>Utilizar o Software de forma ética e responsável</li>
+                <li>Utilizar a plataforma de forma ética e responsável</li>
                 <li>Preservar todas as informações de identificação e propriedade</li>
                 <li>Reportar problemas de segurança ou uso indevido</li>
               </ul>
@@ -228,7 +228,7 @@ export const TermsPage = () => {
                 <div>
                   <h3 className="font-medium mb-2">6.1 Coleta de Dados</h3>
                   <p className="text-muted-foreground">
-                    O Software pode coletar informações técnicas sobre dispositivos analisados e dados de uso para
+                    A plataforma pode coletar informações técnicas sobre dispositivos analisados e dados de uso para
                     melhorar o serviço. Informações pessoais de clientes não são coletadas sem consentimento.
                   </p>
                 </div>
@@ -236,7 +236,7 @@ export const TermsPage = () => {
                   <h3 className="font-medium mb-2">6.2 Proteção de Dados do Cliente</h3>
                   <p className="text-muted-foreground">
                     Você concorda em manter a confidencialidade de todos os dados de clientes acessados através do
-                    Software e não divulgá-los sem autorização. O tratamento de dados pessoais segue as diretrizes da
+                    serviço/plataforma e não divulgá-los sem autorização. O tratamento de dados pessoais segue as diretrizes da
                     Lei Geral de Proteção de Dados (LGPD).
                   </p>
                 </div>
@@ -250,8 +250,8 @@ export const TermsPage = () => {
                 7. Propriedade Intelectual
               </h2>
               <p className="text-muted-foreground mb-4">
-                Todos os direitos de propriedade intelectual relacionados ao Software são de titularidade exclusiva de
-                André Ribeiro Lima (KukySolutions™). Esta licença concede apenas direitos de uso limitados conforme
+                Todos os direitos de propriedade intelectual relacionados à plataforma são de titularidade exclusiva de
+                André Ribeiro Lima (KukySolutions™). Este contrato concede apenas direitos de uso limitados conforme
                 especificado, incluindo mas não limitado a:
               </p>
               <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
@@ -329,14 +329,14 @@ export const TermsPage = () => {
                 10. Política de Reembolso
               </h2>
               <p className="text-muted-foreground mb-4">
-                Esta Política de Reembolso faz parte dos Termos de Uso do nosso site. Ao contratar nossos serviços ou
-                adquirir nossos produtos, o usuário declara estar ciente e de acordo com as condições abaixo.
+                Esta Política de Reembolso faz parte dos Termos de Uso do nosso site. Ao contratar nossos serviços, o
+                usuário declara estar ciente e de acordo com as condições abaixo.
               </p>
               <div className="space-y-4">
                 <div>
                   <h3 className="font-medium mb-2">10.1 Direito de Arrependimento</h3>
                   <p className="text-muted-foreground mb-2">
-                    Conforme o artigo 49 do Código de Defesa do Consumidor, em compras realizadas pela internet o
+                    Conforme o artigo 49 do Código de Defesa do Consumidor, em contratações realizadas pela internet o
                     usuário pode desistir da contratação no prazo de até 7 (sete) dias corridos, a contar da data da
                     aquisição.
                   </p>
@@ -391,7 +391,7 @@ export const TermsPage = () => {
               </h2>
               <div className="bg-muted/30 p-4 rounded-lg">
                 <p className="text-muted-foreground text-sm uppercase font-medium">
-                  O SOFTWARE É FORNECIDO "COMO ESTÁ", SEM GARANTIAS DE QUALQUER TIPO, EXPRESSAS OU IMPLÍCITAS,
+                  A PLATAFORMA É FORNECIDA "COMO ESTÁ", SEM GARANTIAS DE QUALQUER TIPO, EXPRESSAS OU IMPLÍCITAS,
                   INCLUINDO, MAS NÃO SE LIMITANDO A, GARANTIAS DE COMERCIALIZAÇÃO, ADEQUAÇÃO A UM PROPÓSITO ESPECÍFICO E
                   NÃO VIOLAÇÃO.
                 </p>
@@ -408,7 +408,7 @@ export const TermsPage = () => {
                 <div className="bg-muted/30 p-4 rounded-lg">
                   <p className="text-muted-foreground text-sm uppercase font-medium">
                     EM NENHUMA CIRCUNSTÂNCIA A KUKYSOLUTIONS™ SERÁ RESPONSÁVEL POR DANOS DIRETOS, INDIRETOS,
-                    INCIDENTAIS, ESPECIAIS OU CONSEQUENCIAIS RESULTANTES DO USO OU INCAPACIDADE DE USAR O SOFTWARE.
+                    INCIDENTAIS, ESPECIAIS OU CONSEQUENCIAIS RESULTANTES DO USO OU INCAPACIDADE DE USAR A PLATAFORMA.
                   </p>
                 </div>
                 <div>
@@ -428,18 +428,18 @@ export const TermsPage = () => {
                 13. Rescisão
               </h2>
               <div className="space-y-4">
-                <p className="text-muted-foreground">Esta licença é efetiva até ser rescindida.</p>
+              <p className="text-muted-foreground">Estas condições são efetivas até serem rescindidas.</p>
                 <div>
                   <h3 className="font-medium mb-2">13.1 Rescisão pelo Usuário</h3>
                   <p className="text-muted-foreground">
-                    Você pode rescindi-la a qualquer momento cessando o uso do Software, observando o prazo de aviso
+                    Você pode rescindir a qualquer momento cessando o uso da plataforma, observando o prazo de aviso
                     prévio especificado no contrato.
                   </p>
                 </div>
                 <div>
                   <h3 className="font-medium mb-2">13.2 Rescisão pelo Prestador</h3>
                   <p className="text-muted-foreground">
-                    A KukySolutions™ pode rescindir esta licença imediatamente em caso de violação dos termos,
+                    A KukySolutions™ pode rescindir este contrato imediatamente em caso de violação dos termos,
                     inadimplência ou uso inadequado do sistema.
                   </p>
                 </div>
@@ -460,7 +460,7 @@ export const TermsPage = () => {
                 14. Legislação Aplicável e Foro
               </h2>
               <p className="text-muted-foreground">
-                Esta licença é regida pelas leis brasileiras. Qualquer disputa será resolvida nos tribunais competentes
+                Este contrato é regido pelas leis brasileiras. Qualquer disputa será resolvida nos tribunais competentes
                 do Brasil, especificamente no foro da Comarca de Goiânia/GO, com renúncia expressa a qualquer outro
                 foro, por mais privilegiado que seja.
               </p>
@@ -488,8 +488,8 @@ export const TermsPage = () => {
               </h2>
               <div className="bg-primary/10 p-4 rounded-lg border border-primary/20">
                 <p className="text-muted-foreground">
-                  Ao clicar em "Aceito" ou "Concordo", ou ao instalar/usar o Software, você confirma que leu,
-                  compreendeu e concorda em ficar vinculado a todos os termos desta licença.
+                  Ao clicar em "Aceito" ou "Concordo", ou ao acessar/usar a plataforma, você confirma que leu,
+                  compreendeu e concorda em ficar vinculado a todos os termos deste contrato.
                 </p>
               </div>
             </section>
@@ -497,7 +497,7 @@ export const TermsPage = () => {
             {/* 17. Contato */}
             <section className="bg-muted/50 p-6 rounded-lg">
               <h2 className="text-xl font-semibold mb-4">17. Contato</h2>
-              <p className="text-muted-foreground mb-4">Para questões sobre esta licença ou o Software:</p>
+              <p className="text-muted-foreground mb-4">Para questões sobre estes termos ou sobre o serviço de suporte:</p>
               <div className="space-y-2">
                 <p className="text-muted-foreground">
                   <strong>Responsável:</strong> André Ribeiro Lima (KukySolutions™)

@@ -57,7 +57,7 @@ serve(async (req) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Código da Sua Licença OneDrip</title>
+  <title>Chave de Acesso ao Suporte OneDrip</title>
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
@@ -67,10 +67,10 @@ serve(async (req) => {
   <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
     <p style="font-size: 16px;">Olá, <strong>${name}</strong>!</p>
     
-    <p style="font-size: 16px;">Seu pagamento foi aprovado com sucesso! Sua licença do <strong>OneDrip</strong> está pronta para ser ativada.</p>
+    <p style="font-size: 16px;">Seu pagamento foi aprovado com sucesso! Seu acesso ao suporte do <strong>OneDrip</strong> está pronto para ser ativado.</p>
     
     <div style="background: white; border: 2px solid #667eea; border-radius: 8px; padding: 20px; margin: 30px 0; text-align: center;">
-      <p style="margin: 0 0 10px 0; font-size: 14px; color: #666;">Seu código de licença:</p>
+      <p style="margin: 0 0 10px 0; font-size: 14px; color: #666;">Sua chave de acesso ao suporte:</p>
       <p style="margin: 0; font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #667eea; font-family: monospace;">${licenseCode}</p>
       <p style="margin: 15px 0 0 0; font-size: 14px; color: #666;">Válida por <strong>${daysContracted} dias</strong></p>
     </div>
@@ -80,14 +80,14 @@ serve(async (req) => {
         <strong>🔒 CONFIDENCIAL - NÃO COMPARTILHE!</strong>
       </p>
       <p style="margin: 10px 0 0 0; font-size: 13px; color: #721c24;">
-        Este código é pessoal e intransferível. <strong>NUNCA compartilhe</strong> com outras pessoas. 
-        Cada licença pode ser ativada apenas <strong>1 vez</strong>. Se você compartilhar, outra pessoa poderá usar sua licença e você perderá o acesso.
+        Esta chave é pessoal e intransferível. <strong>NUNCA compartilhe</strong> com outras pessoas. 
+        Cada chave pode ser ativada apenas <strong>1 vez</strong>. Se você compartilhar, outra pessoa poderá usar sua chave e você perderá o acesso ao suporte.
       </p>
     </div>
     
     <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
       <p style="margin: 0; font-size: 14px; color: #856404;">
-        <strong>⚠️ Importante:</strong> Guarde este email com segurança! Você precisará do código para ativar sua conta.
+        <strong>⚠️ Importante:</strong> Guarde este email com segurança! Você precisará da chave para ativar seu acesso ao suporte.
       </p>
     </div>
     
@@ -97,20 +97,20 @@ serve(async (req) => {
       </p>
       <ol style="margin: 0; padding-left: 20px; color: #0c5460; font-size: 14px;">
         <li>Crie uma conta no OneDrip (se ainda não tiver)</li>
-        <li>Use este código para ativar sua licença</li>
-        <li>Comece a usar o sistema imediatamente!</li>
+        <li>Use esta chave para ativar seu acesso ao suporte</li>
+        <li>Comece a usar a plataforma imediatamente!</li>
       </ol>
     </div>
     
     <div style="text-align: center; margin: 30px 0;">
       <a href="${siteUrl}/auth" style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
-        Criar Conta e Ativar Licença
+        Criar Conta e Ativar Acesso ao Suporte
       </a>
     </div>
     
     <div style="border-top: 1px solid #ddd; padding-top: 20px; margin-top: 30px;">
       <p style="font-size: 14px; color: #666; margin: 0 0 10px 0;">
-        <strong>Perdeu o código ou precisa de ajuda?</strong>
+        <strong>Perdeu a chave ou precisa de ajuda?</strong>
       </p>
       <p style="font-size: 14px; color: #666; margin: 0;">
         Entre em contato conosco através do nosso <a href="${supportUrl}" style="color: #667eea;">centro de suporte</a>.
@@ -134,7 +134,7 @@ serve(async (req) => {
     `;
 
     // Enviar email via Resend
-    const subject = `🎉 Seu código de licença OneDrip - ${licenseCode}`;
+    const subject = `🎉 Sua chave de acesso ao suporte OneDrip - ${licenseCode}`;
     
     logStep("Enviando email via Resend", { to: email });
     

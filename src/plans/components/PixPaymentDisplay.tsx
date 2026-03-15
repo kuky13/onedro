@@ -131,7 +131,7 @@ export const PixPaymentDisplay = ({
       // Verificar limite de tentativas
       if (retryCount >= MAX_RETRIES) {
         setPaymentStatus('error');
-        setErrorMessage('Tempo limite atingido. O pagamento pode ter sido aprovado, mas houve um problema ao gerar a licença. Entre em contato com o suporte.');
+        setErrorMessage('Tempo limite atingido. O pagamento pode ter sido aprovado, mas houve um problema ao gerar a chave de acesso ao suporte. Entre em contato com o suporte.');
         clearInterval(interval);
         return;
       }
@@ -150,7 +150,7 @@ export const PixPaymentDisplay = ({
             // Salvar automaticamente
             saveLicenseLocally(result.license_code);
             toast.success('Pagamento aprovado!', {
-              description: 'Sua licença foi gerada com sucesso!'
+              description: 'Seu acesso ao suporte foi ativado com sucesso!'
             });
             if (onPaymentApproved) {
               onPaymentApproved();
@@ -179,7 +179,7 @@ export const PixPaymentDisplay = ({
             <CheckCircle className="h-8 w-8 text-green-600" />
           </div>
           <CardTitle className="text-2xl text-green-700">Pagamento Aprovado!</CardTitle>
-          <p className="text-muted-foreground">Sua licença profissional foi gerada com sucesso</p>
+          <p className="text-muted-foreground">Seu acesso ao suporte foi ativado com sucesso</p>
         </CardHeader>
         <CardContent className="space-y-6 pt-4">
           <div className="bg-card border border-border rounded-xl p-6 relative overflow-hidden">
@@ -188,7 +188,7 @@ export const PixPaymentDisplay = ({
                 SALVO NO DISPOSITIVO
               </div>}
 
-            <p className="text-sm text-center text-muted-foreground mb-2">Seu Código de Licença Profissional:</p>
+            <p className="text-sm text-center text-muted-foreground mb-2">Sua Chave de Acesso ao Suporte:</p>
             <div className="flex flex-col items-center gap-3">
               <code className="text-2xl sm:text-3xl font-mono font-bold text-primary tracking-wider break-all text-center">
                 {licenseCode}
@@ -205,7 +205,7 @@ export const PixPaymentDisplay = ({
               <div className="flex items-start gap-2">
                 <Shield className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 <p>
-                  <strong>IMPORTANTE:</strong> Não compartilhe este código. Ele é único e intransferível.
+                  <strong>IMPORTANTE:</strong> Não compartilhe esta chave. Ela é única e intransferível.
                 </p>
               </div>
             </div>
@@ -215,7 +215,7 @@ export const PixPaymentDisplay = ({
                 <Mail className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 <p>
                   Enviamos um email para <strong>{customerData?.email || 'seu email cadastrado'}</strong> com o
-                  <strong> código da sua licença</strong> e um <strong>recibo do pagamento</strong> com todos os detalhes.
+                  <strong> sua chave de acesso ao suporte</strong> e um <strong>recibo do pagamento</strong> com todos os detalhes.
                 </p>
               </div>
             </div>
@@ -246,7 +246,7 @@ export const PixPaymentDisplay = ({
             {paymentStatus === 'approved' && !licenseCode && <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center text-center p-4">
                 <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 animate-spin mb-2" />
                 <p className="text-xs sm:text-sm font-bold text-green-600">Pagamento Recebido!</p>
-                <p className="text-xs text-muted-foreground">Gerando sua licença...</p>
+                <p className="text-xs text-muted-foreground">Ativando seu acesso ao suporte...</p>
               </div>}
 
             {/* Verifica se qrCodeBase64 é uma string válida e se começa com data:image, caso contrário tenta adicionar o prefixo */}
@@ -328,7 +328,7 @@ export const PixPaymentDisplay = ({
           {paymentStatus === 'approved' && !licenseCode && <>
               <Loader2 className="h-4 w-4 animate-spin text-green-500" />
               <span className="text-sm text-green-600 font-medium">
-                Confirmando licença... ({retryCount}/{MAX_RETRIES})
+                Confirmando acesso ao suporte... ({retryCount}/{MAX_RETRIES})
               </span>
             </>}
           {paymentStatus === 'pending' && <span className="text-sm text-muted-foreground">Aguardando pagamento...</span>}
@@ -343,7 +343,7 @@ export const PixPaymentDisplay = ({
         {/* Instruções */}
         <div className="text-xs text-muted-foreground space-y-1 pt-2 border-t border-border">
           <p>• O pagamento é processado automaticamente</p>
-          <p>• Após o pagamento, sua licença aparecerá aqui nesta tela</p>
+          <p>• Após o pagamento, sua chave de acesso ao suporte aparecerá aqui nesta tela</p>
           
           <p>• Em caso de dúvidas, entre em contato com o suporte</p>
         </div>

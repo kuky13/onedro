@@ -43,7 +43,7 @@ export default function VerifyLicensePage() {
   const getStatusConfig = () => {
     if (isLoading) return {
       icon: <RefreshCw className="h-5 w-5 text-primary animate-spin" />,
-      title: 'Verificando licença...',
+      title: 'Verificando acesso ao suporte...',
       description: 'Aguarde enquanto verificamos o status.',
       accentClass: 'border-primary/20',
       iconBg: 'bg-primary/10',
@@ -51,32 +51,32 @@ export default function VerifyLicensePage() {
     };
     if (!licenseData?.has_license) return {
       icon: <XCircle className="h-5 w-5 text-destructive" />,
-      title: 'Sem Licença',
-      description: 'Você não possui uma licença ativa no momento.',
+      title: 'Sem Acesso ao Suporte',
+      description: 'Você não possui acesso ao suporte ativo no momento.',
       accentClass: 'border-destructive/30',
       iconBg: 'bg-destructive/10',
       titleColor: 'text-destructive',
     };
     if (licenseData.is_valid) return {
       icon: <Shield className="h-5 w-5 text-primary" />,
-      title: 'Licença Ativa',
-      description: licenseData.message || 'Sua licença está válida e funcionando.',
+      title: 'Acesso ao Suporte Ativo',
+      description: licenseData.message || 'Seu acesso ao suporte está ativo e funcionando.',
       accentClass: 'border-primary/20',
       iconBg: 'bg-primary/10',
       titleColor: 'text-primary',
     };
     if (licenseData.status === 'expirada') return {
       icon: <Clock className="h-5 w-5 text-destructive" />,
-      title: 'Licença Expirada',
-      description: 'Sua licença expirou. Renove para continuar usando.',
+      title: 'Acesso ao Suporte Expirado',
+      description: 'Seu acesso ao suporte expirou. Renove para continuar usando.',
       accentClass: 'border-destructive/30',
       iconBg: 'bg-destructive/10',
       titleColor: 'text-destructive',
     };
     return {
       icon: <AlertTriangle className="h-5 w-5 text-yellow-500" />,
-      title: 'Licença Inativa',
-      description: 'Sua licença está desativada. Entre em contato com o suporte.',
+      title: 'Acesso ao Suporte Inativo',
+      description: 'Seu acesso ao suporte está desativado. Entre em contato com o suporte.',
       accentClass: 'border-yellow-500/30',
       iconBg: 'bg-yellow-500/10',
       titleColor: 'text-yellow-600',
@@ -89,7 +89,7 @@ export default function VerifyLicensePage() {
       setCopiedLicense(true);
       showSuccess({
         title: 'Copiado!',
-        description: 'Código da licença copiado para a área de transferência.'
+        description: 'Chave de acesso ao suporte copiada para a área de transferência.'
       });
       setTimeout(() => setCopiedLicense(false), 2000);
     }
@@ -97,9 +97,9 @@ export default function VerifyLicensePage() {
 
   const handleWhatsAppContact = () => {
     const licenseCode = licenseData?.license_code || 'Não informado';
-    let message = `Olá! Preciso de ajuda com minha licença do OneDrip.\n\nMeu email: ${user?.email || 'Não informado'}`;
+    let message = `Olá! Preciso de ajuda com meu acesso ao suporte do OneDrip.\n\nMeu email: ${user?.email || 'Não informado'}`;
     if (licenseData?.license_code) {
-      message += `\n\nCódigo da licença atual: ${licenseCode}`;
+      message += `\n\nChave de acesso ao suporte atual: ${licenseCode}`;
     }
     const whatsappUrl = `https://wa.me/5564996028022?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
@@ -107,10 +107,10 @@ export default function VerifyLicensePage() {
 
   const handleEmailContact = () => {
     const licenseCode = licenseData?.license_code || 'Não informado';
-    const subject = 'Suporte - Licença OneDrip';
-    let body = `Olá!\n\nPreciso de ajuda com minha licença do OneDrip.\n\nMeu email: ${user?.email || 'Não informado'}`;
+    const subject = 'Suporte - Acesso ao Suporte OneDrip';
+    let body = `Olá!\n\nPreciso de ajuda com meu acesso ao suporte do OneDrip.\n\nMeu email: ${user?.email || 'Não informado'}`;
     if (licenseData?.license_code) {
-      body += `\n\nCódigo da licença atual: ${licenseCode}`;
+      body += `\n\nChave de acesso ao suporte atual: ${licenseCode}`;
     }
     const mailtoUrl = `mailto:suporte@onedrip.email?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.open(mailtoUrl, '_blank');
@@ -124,7 +124,7 @@ export default function VerifyLicensePage() {
             <AlertTriangle className="h-6 w-6 text-yellow-500" />
           </div>
           <h2 className="text-xl font-semibold text-foreground">Faça Login para Verificar</h2>
-          <p className="text-sm text-muted-foreground">Para verificar o status da sua licença, você precisa estar logado no sistema.</p>
+          <p className="text-sm text-muted-foreground">Para verificar o status do seu acesso ao suporte, você precisa estar logado no sistema.</p>
           <div className="space-y-2">
             <button
               onClick={() => navigate('/auth')}
@@ -161,10 +161,10 @@ export default function VerifyLicensePage() {
             </button>
           </div>
           <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
-            Verificação de Licença
+            Verificação de Acesso ao Suporte
           </h1>
           <p className="text-muted-foreground text-sm lg:text-base">
-            Informações completas sobre sua licença do sistema
+            Informações completas sobre seu acesso ao suporte
           </p>
         </div>
 
@@ -191,14 +191,14 @@ export default function VerifyLicensePage() {
               <div className="rounded-2xl border border-border/50 bg-card p-5 space-y-3">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <Key className="h-4 w-4 text-muted-foreground" />
-                  Detalhes da Licença
+                  Detalhes do Acesso ao Suporte
                 </h3>
 
                 {/* Código da Licença */}
                 {licenseData.license_code && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Key className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span>Código:</span>
+                    <span>Chave:</span>
                     <div className="flex-1 bg-muted/20 rounded-xl px-2.5 py-1.5 flex items-center justify-between gap-2">
                       <span className="font-mono text-[11px] text-foreground">
                         {showLicenseCode ? licenseData.license_code : '••••••••••••'}
@@ -279,11 +279,11 @@ export default function VerifyLicensePage() {
                   <AlertTriangle className="h-4 w-4 text-yellow-500" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-foreground">Licença Inativa</h4>
+                  <h4 className="text-sm font-semibold text-foreground">Acesso ao Suporte Inativo</h4>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {licenseData.requires_renewal
-                      ? 'Sua licença expirou e precisa ser renovada.'
-                      : 'Sua licença está desativada. Entre em contato com o suporte para reativá-la.'}
+                      ? 'Seu acesso ao suporte expirou e precisa ser renovado.'
+                      : 'Seu acesso ao suporte está desativado. Entre em contato com o suporte para reativá-lo.'}
                   </p>
                 </div>
               </div>
@@ -295,9 +295,9 @@ export default function VerifyLicensePage() {
                   <XCircle className="h-4 w-4 text-yellow-500" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-foreground">Nenhuma Licença Encontrada</h4>
+                  <h4 className="text-sm font-semibold text-foreground">Nenhum Acesso ao Suporte Encontrado</h4>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Você não possui uma licença ativa. Entre em contato com o suporte para adquirir uma.
+                    Você não possui acesso ao suporte ativo. Entre em contato com o suporte para assinar um plano.
                   </p>
                 </div>
               </div>
@@ -390,7 +390,7 @@ export default function VerifyLicensePage() {
               <div>
                 <h4 className="text-xs font-semibold text-foreground">Precisa de ajuda?</h4>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                  Entre em contato via WhatsApp para suporte técnico ou renovação de licença.
+                  Entre em contato via WhatsApp para suporte técnico ou renovação do acesso ao suporte.
                 </p>
               </div>
             </div>

@@ -50,7 +50,7 @@ export const LicensePage = () => {
     if (!licenseCode.trim()) {
       showError({
         title: 'Código Obrigatório',
-        description: 'Por favor, insira um código de licença válido.'
+        description: 'Por favor, insira uma chave de acesso ao suporte válida.'
       });
       return;
     }
@@ -87,17 +87,17 @@ export const LicensePage = () => {
       const result = data as any;
       if (result?.success) {
         showSuccess({
-          title: 'Licença Ativada!',
-          description: result.message || 'Sua licença foi ativada com sucesso.'
+          title: 'Acesso ao Suporte Ativado!',
+          description: result.message || 'Seu acesso ao suporte foi ativado com sucesso.'
         });
 
         // Revalidar licença e redirecionar automaticamente
         await revalidateAfterActivation();
       } else {
         const errorMessages = {
-          'invalid_code': 'Código de licença inválido. Verifique e tente novamente.',
-          'already_used': 'Esta licença já está sendo utilizada por outro usuário.',
-          'expired': 'Esta licença está expirada. Entre em contato com o suporte.'
+          'invalid_code': 'Chave de acesso ao suporte inválida. Verifique e tente novamente.',
+          'already_used': 'Esta chave de acesso ao suporte já está sendo utilizada por outro usuário.',
+          'expired': 'Esta chave de acesso ao suporte está expirada. Entre em contato com o suporte.'
         };
         showError({
           title: 'Erro na Ativação',
@@ -108,7 +108,7 @@ export const LicensePage = () => {
       console.error('Error activating license:', error);
       showError({
         title: 'Erro Inesperado',
-        description: 'Ocorreu um erro ao ativar a licença. Tente novamente.'
+        description: 'Ocorreu um erro ao ativar o acesso ao suporte. Tente novamente.'
       });
     } finally {
       setIsActivating(false);
@@ -131,12 +131,12 @@ export const LicensePage = () => {
     const expiredDays = calculateExpiredDays();
     const licenseCode = licenseStatus?.license_code || 'Não informado';
     
-    let message = `Olá! Preciso de ajuda com minha licença do OneDrip.\n\nMeu email: ${user?.email || 'Não informado'}`;
+    let message = `Olá! Preciso de ajuda com meu acesso ao suporte do OneDrip.\n\nMeu email: ${user?.email || 'Não informado'}`;
     
     if (licenseStatus?.has_license && !licenseStatus?.is_valid && expiredDays > 0) {
-      message += `\n\nMinha licença (${licenseCode}) está expirada há ${expiredDays} dias. Gostaria de renová-la.`;
+      message += `\n\nMinha chave de acesso ao suporte (${licenseCode}) está expirada há ${expiredDays} dias. Gostaria de renová-la.`;
     } else if (licenseStatus?.license_code) {
-      message += `\n\nCódigo da licença atual: ${licenseCode}`;
+      message += `\n\nChave de acesso ao suporte atual: ${licenseCode}`;
     }
     
     const whatsappUrl = `https://wa.me/5564996028022?text=${encodeURIComponent(message)}`;
@@ -146,14 +146,14 @@ export const LicensePage = () => {
     const expiredDays = calculateExpiredDays();
     const licenseCode = licenseStatus?.license_code || 'Não informado';
     
-    let subject = 'Suporte - Licença OneDrip';
-    let body = `Olá!\n\nPreciso de ajuda com minha licença do OneDrip.\n\nMeu email: ${user?.email || 'Não informado'}`;
+    let subject = 'Suporte - Acesso ao Suporte OneDrip';
+    let body = `Olá!\n\nPreciso de ajuda com meu acesso ao suporte do OneDrip.\n\nMeu email: ${user?.email || 'Não informado'}`;
     
     if (licenseStatus?.has_license && !licenseStatus?.is_valid && expiredDays > 0) {
-      subject = 'Renovação de Licença - OneDrip';
-      body += `\n\nMinha licença (${licenseCode}) está expirada há ${expiredDays} dias. Gostaria de renová-la.`;
+      subject = 'Renovação de Acesso ao Suporte - OneDrip';
+      body += `\n\nMinha chave de acesso ao suporte (${licenseCode}) está expirada há ${expiredDays} dias. Gostaria de renová-la.`;
     } else if (licenseStatus?.license_code) {
-      body += `\n\nCódigo da licença atual: ${licenseCode}`;
+      body += `\n\nChave de acesso ao suporte atual: ${licenseCode}`;
     }
     
     const mailtoUrl = `mailto:contato@onedrip.com.br?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -167,19 +167,19 @@ export const LicensePage = () => {
             <Shield className="h-8 w-8 text-blue-600" />
           </div>
           <h1 className="text-3xl font-bold text-foreground">
-            {isExpired ? 'Licença Expirada' : 'Ativação de Licença'}
+            {isExpired ? 'Acesso ao Suporte Expirado' : 'Ativação de Acesso ao Suporte'}
           </h1>
           <p className="text-muted-foreground">
             {isExpired 
-              ? `Sua licença expirou há ${calculateExpiredDays()} dias. Entre em contato pelo WhatsApp para renovar ou ative um novo código abaixo.` 
-              : 'Ative sua licença para ter acesso completo ao OneDrip'
+              ? `Seu acesso ao suporte expirou há ${calculateExpiredDays()} dias. Entre em contato pelo WhatsApp para renovar ou ative uma nova chave abaixo.` 
+              : 'Ative seu acesso ao suporte para ter acesso completo ao OneDrip'
             }
           </p>
           
           {/* Informações da Licença Atual - apenas se o usuário tiver licença */}
           {licenseStatus?.has_license && licenseStatus?.license_code && (
             <div className="mt-4 p-4 bg-muted/50 rounded-lg border">
-              <h3 className="text-sm font-medium text-foreground mb-2">Licença Atual:</h3>
+              <h3 className="text-sm font-medium text-foreground mb-2">Acesso ao Suporte Atual:</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-center items-center gap-2">
                   <span className="text-muted-foreground">Código:</span>
@@ -214,15 +214,15 @@ export const LicensePage = () => {
             <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
               <Key className="h-6 w-6 text-primary" />
             </div>
-            <CardTitle className="text-xl">Ativar Licença</CardTitle>
+            <CardTitle className="text-xl">Ativar Acesso ao Suporte</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Digite seu código de licença para ativar sua conta
+              Digite sua chave de acesso ao suporte para ativar sua conta
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="license-code" className="text-sm font-medium text-foreground">
-                Código da Licença
+                Chave de Acesso ao Suporte
               </label>
               <Input id="license-code" type="text" placeholder="ABC123XYZ4567" value={licenseCode} onChange={e => setLicenseCode(e.target.value.replace(/[^A-Z0-9]/gi, '').toUpperCase().slice(0, 13))} className="font-mono text-center tracking-wider" maxLength={13} />
               <p className="text-xs text-muted-foreground text-center">
@@ -231,7 +231,7 @@ export const LicensePage = () => {
             </div>
 
             <Button onClick={handleActivateLicense} disabled={isActivating || licenseCode.length !== 13} className="w-full">
-              {isActivating ? 'Ativando...' : 'Ativar Licença'}
+              {isActivating ? 'Ativando...' : 'Ativar Acesso ao Suporte'}
             </Button>
 
             <Button 
@@ -240,18 +240,18 @@ export const LicensePage = () => {
               className="w-full"
             >
               <Search className="mr-2 h-4 w-4" />
-              Licença
+              Verificação de Acesso ao Suporte
             </Button>
 
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription className="text-sm">
-                <strong>Benefícios da Licença:</strong>
+                <strong>Benefícios do Plano de Suporte:</strong>
                 <ul className="mt-2 space-y-1 text-xs">
-                  <li>• Acesso completo ao sistema por 30 dias</li>
-                  <li>• Suporte técnico via WhatsApp</li>
+                  <li>• Acesso completo à plataforma de apoio técnico por 30 dias</li>
+                  <li>• Suporte técnico contínuo via WhatsApp</li>
                   <li>• Todas as funcionalidades liberadas</li>
-                  <li>• Atualizações automáticas</li>
+                  <li>• Atualizações da ferramenta incluídas</li>
                 </ul>
               </AlertDescription>
             </Alert>
@@ -320,9 +320,9 @@ export const LicensePage = () => {
               <AlertDescription className="text-sm">
                 <strong>
                   {isExpired 
-                    ? `Sua licença expirou há ${calculateExpiredDays()} dias!` 
-                    : 'Precisa de uma licença?'}
-                </strong> Entre em contato via WhatsApp para {isExpired ? 'renovar' : 'adquirir'} sua licença.
+                    ? `Seu acesso ao suporte expirou há ${calculateExpiredDays()} dias!` 
+                    : 'Precisa assinar suporte e acesso?'}
+                </strong> Entre em contato via WhatsApp para {isExpired ? 'renovar' : 'assinar'} seu plano de suporte.
               </AlertDescription>
             </Alert>
 
@@ -334,7 +334,7 @@ export const LicensePage = () => {
               Ver Planos Disponíveis
             </Button>
             <p className="text-xs text-center text-muted-foreground">
-              Confira nossos planos e adquira acesso completo ao OneDrip
+              Confira nossos planos e assine suporte e acesso ao OneDrip
             </p>
           </CardContent>
         </Card>

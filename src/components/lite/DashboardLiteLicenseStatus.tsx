@@ -36,16 +36,16 @@ export const DashboardLiteLicenseStatus = () => {
       showPlans: true, showActivate: false, showSubscribe: true,
     };
     if (needsActivation) return {
-      title: 'Licença Precisa ser Ativada',
-      description: 'Ative sua licença para ter acesso completo.',
+      title: 'Acesso ao Suporte Precisa ser Ativado',
+      description: 'Ative seu acesso ao suporte para ter acesso completo.',
       icon: <Key className="h-5 w-5 text-yellow-500" />,
       accentClass: 'border-yellow-500/30',
       iconBg: 'bg-yellow-500/10',
       showPlans: false, showActivate: true, showSubscribe: false,
     };
     if (isExpired) return {
-      title: 'Licença Expirada',
-      description: 'Renove agora para continuar usando o sistema.',
+      title: 'Acesso ao Suporte Expirado',
+      description: 'Renove agora para continuar usando a plataforma.',
       icon: <HeartCrack className="h-5 w-5 text-destructive" />,
       accentClass: 'border-destructive/30',
       iconBg: 'bg-destructive/10',
@@ -60,7 +60,7 @@ export const DashboardLiteLicenseStatus = () => {
       showPlans: true, showActivate: false, showSubscribe: false,
     };
     if (remainingDays <= 10) return {
-      title: 'Licença Expirando',
+      title: 'Acesso ao Suporte Expirando',
       description: `Expira em ${remainingDays} dias. Renove a qualquer momento.`,
       icon: <AlertTriangle className="h-5 w-5 text-yellow-500" />,
       accentClass: 'border-yellow-500/30',
@@ -68,7 +68,7 @@ export const DashboardLiteLicenseStatus = () => {
       showPlans: true, showActivate: false, showSubscribe: false,
     };
     return {
-      title: 'Licença Ativa',
+      title: 'Acesso ao Suporte Ativo',
       description: `Expira em ${remainingDays} dias.`,
       icon: <Shield className="h-5 w-5 text-primary" />,
       accentClass: 'border-primary/20',
@@ -171,7 +171,7 @@ export const DashboardLiteLicenseStatus = () => {
           className="flex-1 border border-border/60 bg-background hover:bg-muted/50 text-foreground py-2.5 px-4 rounded-xl text-xs font-medium flex items-center justify-center gap-2 transition-colors"
         >
           <Search className="h-3.5 w-3.5" />
-          Licença
+          Acesso ao Suporte
         </button>
       </div>
 
@@ -181,7 +181,7 @@ export const DashboardLiteLicenseStatus = () => {
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2.5 px-4 rounded-xl text-xs font-medium flex items-center justify-center gap-2 transition-colors"
         >
           <Key className="h-3.5 w-3.5" />
-          Ativar Licença
+          Ativar Acesso ao Suporte
         </button>
       )}
 

@@ -74,7 +74,7 @@ export function useTrialLicense(): UseTrialLicenseReturn {
           days_remaining: d.days_remaining || null,
           is_expired: d.is_expired || false,
           can_create_trial: d.can_create_trial || false,
-          message: d.message || 'Status da licença de teste'
+          message: d.message || 'Status do acesso de teste'
         };
 
         setTrialStatus(status);
@@ -89,7 +89,7 @@ export function useTrialLicense(): UseTrialLicenseReturn {
           days_remaining: null,
           is_expired: false,
           can_create_trial: true,
-          message: 'Nenhuma licença de teste encontrada'
+          message: 'Nenhum acesso de teste encontrado'
         });
       }
     } catch (err: any) {
@@ -115,8 +115,8 @@ export function useTrialLicense(): UseTrialLicenseReturn {
 
     if (trialStatus?.has_trial) {
       showInfo({
-        title: 'Licença de Teste Existente',
-        description: 'Você já possui uma licença de teste'
+        title: 'Acesso de Teste Existente',
+        description: 'Você já possui um acesso de teste'
       });
       return false;
     }
@@ -137,15 +137,15 @@ export function useTrialLicense(): UseTrialLicenseReturn {
       const d: any = data as any;
       if (d && d.success) {
         showSuccess({
-          title: 'Licença de Teste Criada!',
-          description: `Sua licença de teste de 7 dias foi ativada. Código: ${d.license_code}`
+          title: 'Acesso de Teste Criado!',
+          description: `Seu acesso de teste de 7 dias foi ativado. Chave: ${d.license_code}`
         });
 
         // Atualizar status
         await fetchTrialStatus();
         return true;
       } else {
-        const errorMessage = d?.error || 'Falha ao criar licença de teste';
+        const errorMessage = d?.error || 'Falha ao criar acesso de teste';
         showError({
           title: 'Erro na Criação',
           description: errorMessage

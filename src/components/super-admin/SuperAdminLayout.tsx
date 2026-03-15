@@ -35,10 +35,10 @@ const navigationItems = [{
   icon: CreditCard,
   description: 'Planos e preços'
 }, {
-  name: 'Licenças',
+  name: 'Acessos ao Suporte',
   href: '/supadmin/licenca',
   icon: Key,
-  description: 'Licenças dos usuários'
+  description: 'Acessos ao suporte dos usuários'
 }, {
   name: 'Cupons',
   href: '/supadmin/coupons',

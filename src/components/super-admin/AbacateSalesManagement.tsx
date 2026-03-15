@@ -118,7 +118,7 @@ export function AbacateSalesManagement() {
             <div className="relative flex-1 sm:w-64">
               
               <Input
-                placeholder="Buscar por nome, email, licença, ID..."
+                placeholder="Buscar por nome, email, acesso ao suporte, ID..."
                 className="pl-9"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)} />
@@ -177,7 +177,7 @@ export function AbacateSalesManagement() {
                              {sale.license_code}
                            </code> :
 
-                    <span className="text-xs text-muted-foreground italic">Sem licença</span>
+                    <span className="text-xs text-muted-foreground italic">Sem acesso ao suporte</span>
                     }
                        </div>
                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setSelectedSale(sale)}>
@@ -198,7 +198,7 @@ export function AbacateSalesManagement() {
                     <TableHead>Cliente</TableHead>
                     <TableHead>Valor</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Licença</TableHead>
+                    <TableHead>Acesso ao Suporte</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -342,14 +342,14 @@ export function AbacateSalesManagement() {
                 </div>
               </div>
 
-              {/* Dados da Licença */}
+              {/* Dados do Acesso ao Suporte */}
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold flex items-center gap-2 text-primary">
-                  <Key className="h-4 w-4" /> Dados da Licença
+                  <Key className="h-4 w-4" /> Dados do Acesso ao Suporte
                 </h3>
                 <div className="bg-muted/40 p-4 rounded-md border flex flex-col md:flex-row gap-4 justify-between items-center">
                    <div className="text-center md:text-left">
-                     <span className="text-xs text-muted-foreground block mb-1">Código da Licença</span>
+                     <span className="text-xs text-muted-foreground block mb-1">Chave de Acesso ao Suporte</span>
                      <code className="bg-background px-3 py-1.5 rounded border font-mono text-lg font-bold tracking-widest">
                        {selectedSale.license_code || 'AGUARDANDO GERAÇÃO'}
                      </code>

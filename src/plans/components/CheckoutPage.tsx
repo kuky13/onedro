@@ -70,7 +70,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         replace: true
       });
       toast.error('Login necessário', {
-        description: 'Você precisa estar logado para realizar uma compra.'
+        description: 'Você precisa estar logado para assinar suporte e acesso.'
       });
     }
   }, [user, authLoading, navigate, location.pathname]);
@@ -195,6 +195,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     try {
       toast.info('Gerando QR Code PIX (AbacatePay)...');
 
+      const gatewayItemDescription = 'Prestação de serviço de suporte técnico e configuração de sistemas';
+
       // 1. Criar purchase_registration antes do PIX
       const { data: registration, error: regError } = await supabase
         .from('purchase_registrations')
@@ -222,7 +224,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       // 2. Gerar PIX com purchaseRegistrationId
       const pixPayment = await createAbacatePayPix({
         amount: Math.round(finalPrice * 100),
-        description: planData.nome,
+        description: gatewayItemDescription,
         customerName: contactData.name,
         customerEmail: contactData.email,
         customerPhone: contactData.phone,
@@ -257,9 +259,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     setIsLoading(true);
     try {
       toast.info('Criando assinatura (AbacatePay)...');
+
+      const gatewayItemDescription = 'Prestação de serviço de suporte técnico e configuração de sistemas';
       const billing = await createAbacatePayBilling({
         amount: Math.round(finalPrice * 100),
-        description: `Assinatura ${planData.nome}`,
+        description: gatewayItemDescription,
         customerName: contactData.name,
         customerEmail: contactData.email,
         customerPhone: contactData.phone,
@@ -300,7 +304,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           <Button variant="ghost" size="sm" onClick={() => step === 'info' ? navigate('/plans') : setStep('info')} className="text-muted-foreground hover:text-foreground -ml-2 p-2">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <span className="text-sm font-medium text-foreground">Finalizar Compra</span>
+          <span className="text-sm font-medium text-foreground">Finalizar Assinatura</span>
           <div className="w-9" />
         </div>
       </header>
@@ -342,7 +346,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                   {isTrial ? <Clock className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" /> : isExpired ? <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" /> : <Shield className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />}
                   <div>
                     <p className="font-medium text-foreground">
-                      {isTrial ? `Teste ativo (${daysUntilExpiry} dias restantes)` : hasValidLicense && !isExpired ? `Licença ativa (${daysUntilExpiry} dias)` : isExpired ? 'Licença expirada' : 'Sem licença'}
+                      {isTrial ? `Teste ativo (${daysUntilExpiry} dias restantes)` : hasValidLicense && !isExpired ? `Acesso ao suporte ativo (${daysUntilExpiry} dias)` : isExpired ? 'Acesso ao suporte expirado' : 'Sem acesso ao suporte'}
                     </p>
                     {purchaseMode === 'one_time' && <p className="text-xs text-muted-foreground mt-0.5">
                       +{daysToAdd} dias serão adicionados
@@ -503,7 +507,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         {/* Links Legais */}
         <div className="mt-8 pt-6 border-t border-border/50">
           <p className="text-xs text-muted-foreground text-center mb-3">
-            Ao prosseguir com a compra, você concorda com nossos termos:
+            Ao prosseguir com a contratação, você concorda com nossos termos:
           </p>
           <div className="flex flex-wrap justify-center gap-3 text-xs text-muted-foreground">
             <button onClick={() => navigate('/terms')} className="hover:text-primary transition-colors underline-offset-2 hover:underline">

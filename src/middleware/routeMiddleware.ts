@@ -291,7 +291,7 @@ class RouteMiddleware {
               state.user.id,
               path,
               '/verify-licenca',
-              'Licença inativa'
+              'Acesso ao suporte inativo'
             );
           } catch (error) {
             console.warn('⚠️ [RouteMiddleware] Falha ao registrar redirecionamento:', error);
@@ -300,7 +300,7 @@ class RouteMiddleware {
           return {
             canAccess: false,
             redirectTo: '/verify-licenca',
-            reason: 'Licença inativa - verifique sua liçença',
+            reason: 'Acesso ao suporte inativo - verifique seu acesso ao suporte',
             licenseStatus: 'inactive'
           };
         }
@@ -314,7 +314,7 @@ class RouteMiddleware {
               state.user.id,
               path,
               '/verify-licenca',
-              'Licença expirada'
+              'Acesso ao suporte expirado'
             );
           } catch (error) {
             console.warn('⚠️ [RouteMiddleware] Falha ao registrar redirecionamento:', error);
@@ -323,7 +323,7 @@ class RouteMiddleware {
           return {
             canAccess: false,
             redirectTo: '/verify-licenca',
-            reason: 'Licença expirada - redirecionando para verificação',
+            reason: 'Acesso ao suporte expirado - redirecionando para verificação',
             licenseStatus: 'expired'
           };
         }
@@ -337,7 +337,7 @@ class RouteMiddleware {
               state.user.id,
               path,
               this.config.redirects.invalidLicense,
-              'Nenhuma licença encontrada'
+              'Nenhum acesso ao suporte encontrado'
             );
           } catch (error) {
             console.warn('⚠️ [RouteMiddleware] Falha ao registrar redirecionamento:', error);
@@ -346,7 +346,7 @@ class RouteMiddleware {
           return {
             canAccess: false,
             redirectTo: this.config.redirects.invalidLicense,
-            reason: 'Nenhuma licença encontrada',
+            reason: 'Nenhum acesso ao suporte encontrado',
             licenseStatus: 'not_found'
           };
         }
@@ -354,7 +354,7 @@ class RouteMiddleware {
         return {
           canAccess: false,
           redirectTo: this.config.redirects.invalidLicense,
-          reason: 'Licença inválida ou expirada'
+          reason: 'Acesso ao suporte inválido ou expirado'
         };
       }
     }

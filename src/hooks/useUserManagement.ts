@@ -97,14 +97,14 @@ export const useUserManagement = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['admin-users-with-licenses'] });
       showSuccess({
-        title: 'Licença Renovada!',
-        description: `A licença do usuário foi estendida por ${variables.days} dias.`,
+        title: 'Acesso ao Suporte Renovado!',
+        description: `O acesso ao suporte do usuário foi estendido por ${variables.days} dias.`,
       });
       setUserToRenew(null);
     },
     onError: (error: any) => {
       showError({
-        title: 'Erro ao renovar licença',
+        title: 'Erro ao renovar acesso ao suporte',
         description: error.message || 'Ocorreu um erro inesperado.',
       });
     },

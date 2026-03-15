@@ -30,6 +30,8 @@ serve(async (req) => {
       purchaseRegistrationId
     } = await req.json();
 
+    const gatewayItemDescription = "Prestação de serviço de suporte técnico e configuração de sistemas";
+
     const requiredEnv = ["SUPABASE_URL", "SUPABASE_ANON_KEY", "ABACATEPAY_API_TOKEN"];
     for (const key of requiredEnv) {
       if (!Deno.env.get(key)) {
@@ -78,7 +80,7 @@ serve(async (req) => {
       endpoint = `${ABACATEPAY_API_URL}/pixQrCode/create`;
       payload = {
         amount,
-        description: description || "Pagamento via PIX",
+        description: gatewayItemDescription,
         // Only include customer if defined
         ...(customer ? { customer } : {}),
         metadata: {
@@ -94,10 +96,10 @@ serve(async (req) => {
         products: [
           {
             externalId: purchaseRegistrationId || "prod-default",
-            name: description || "Produto",
+            name: gatewayItemDescription,
             quantity: 1,
             price: amount,
-            description: description
+            description: gatewayItemDescription
           }
         ],
         returnUrl: returnUrl || `${req.headers.get("origin")}/plans`,

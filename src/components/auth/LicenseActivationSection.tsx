@@ -52,7 +52,7 @@ export const LicenseActivationSection = ({ onLicenseActivated }: LicenseActivati
         } catch (error: any) {
           console.warn('Erro ao obter preview da licença:', error);
           setPreviewDays(null);
-          setPreviewError(error?.message || 'Erro ao verificar licença');
+          setPreviewError(error?.message || 'Erro ao verificar acesso ao suporte');
         } finally {
           setIsPreviewLoading(false);
         }
@@ -76,8 +76,8 @@ export const LicenseActivationSection = ({ onLicenseActivated }: LicenseActivati
       const result = await activateLicense(licenseCode);
       if (result && result.success) {
         showSuccess({
-          title: 'Licença Ativada!',
-          description: result.message || 'Sua licença foi ativada com sucesso. Redirecionando...'
+          title: 'Acesso ao Suporte Ativado!',
+          description: result.message || 'Seu acesso ao suporte foi ativado com sucesso. Redirecionando...'
         });
         setTimeout(() => {
           onLicenseActivated();
@@ -95,8 +95,8 @@ export const LicenseActivationSection = ({ onLicenseActivated }: LicenseActivati
       if (result === true || (result && typeof result === 'object')) {
         const licenseCode = (result && typeof result === 'object' && 'license_code' in result) ? (result as any).license_code : 'N/A';
         showSuccess({
-          title: 'Licença de Teste Criada!',
-          description: `Você recebeu 7 dias de acesso gratuito. Código: ${licenseCode}`
+          title: 'Acesso de Teste Criado!',
+          description: `Você recebeu 7 dias de acesso gratuito. Chave: ${licenseCode}`
         });
         setTimeout(() => {
           onLicenseActivated();
@@ -111,7 +111,7 @@ export const LicenseActivationSection = ({ onLicenseActivated }: LicenseActivati
   const getLicenseTypeInfo = (code: string) => {
     if (code.startsWith('TRIAL')) {
       return {
-        type: 'Licença de Teste',
+        type: 'Chave de Teste',
         description: 'Acesso gratuito por 7 dias',
         color: 'text-blue-600',
         bgColor: 'bg-blue-50',
@@ -121,7 +121,7 @@ export const LicenseActivationSection = ({ onLicenseActivated }: LicenseActivati
     } else if (code.length === 13 && /^[0-9]{6}[A-Z0-9]{7}$/.test(code)) {
       const daysFromCode = parseInt(code.substring(0, 6));
       return {
-        type: 'Licença Premium',
+        type: 'Chave Premium',
         description: `Formato novo - ${daysFromCode} dias codificados`,
         color: 'text-green-600',
         bgColor: 'bg-green-50',
@@ -130,7 +130,7 @@ export const LicenseActivationSection = ({ onLicenseActivated }: LicenseActivati
       };
     } else {
       return {
-        type: 'Licença Legada',
+        type: 'Chave Legada',
         description: 'Formato anterior - 30 dias padrão',
         color: 'text-orange-600',
         bgColor: 'bg-orange-50',
@@ -150,9 +150,9 @@ export const LicenseActivationSection = ({ onLicenseActivated }: LicenseActivati
             <Key className="h-5 w-5 text-amber-600" />
           </div>
           <div>
-            <CardTitle className="text-lg text-amber-800">Ative sua Licença</CardTitle>
+            <CardTitle className="text-lg text-amber-800">Ative seu Acesso ao Suporte</CardTitle>
             <p className="text-sm text-amber-700 mt-1">
-              Para acessar o sistema, você precisa ativar uma licença válida
+              Para acessar a plataforma, você precisa ativar uma chave de acesso ao suporte válida
             </p>
           </div>
         </div>
@@ -161,7 +161,7 @@ export const LicenseActivationSection = ({ onLicenseActivated }: LicenseActivati
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <label htmlFor="license-code" className="text-sm font-medium text-amber-800">
-            Código da Licença
+            Chave de Acesso ao Suporte
           </label>
           <Input
             id="license-code"
@@ -182,7 +182,7 @@ export const LicenseActivationSection = ({ onLicenseActivated }: LicenseActivati
           <Alert className="border-gray-200 bg-gray-50">
             <Loader2 className="h-4 w-4 text-gray-600 animate-spin" />
             <AlertDescription className="text-gray-800">
-              Verificando licença...
+              Verificando acesso ao suporte...
             </AlertDescription>
           </Alert>
         )}
@@ -202,18 +202,18 @@ export const LicenseActivationSection = ({ onLicenseActivated }: LicenseActivati
             <AlertDescription className="text-green-800">
               <div className="flex items-center justify-between">
                 <span>
-                  <strong>Preview:</strong> Esta licença concederá <strong>{previewDays} dias</strong> de acesso
+                  <strong>Preview:</strong> Esta chave concederá <strong>{previewDays} dias</strong> de acesso
                 </span>
                 <Calendar className="h-4 w-4 text-green-600" />
               </div>
               {previewDays === 7 && licenseCode.startsWith('TRIAL') && (
                 <p className="text-xs mt-1 text-green-700">
-                  ✨ Licença de teste - perfeita para experimentar o sistema!
+                  ✨ Acesso de teste - perfeito para experimentar a plataforma!
                 </p>
               )}
               {previewDays > 30 && (
                 <p className="text-xs mt-1 text-green-700">
-                  🎉 Licença premium com acesso estendido!
+                  🎉 Chave premium com acesso estendido!
                 </p>
               )}
             </AlertDescription>
@@ -250,12 +250,12 @@ export const LicenseActivationSection = ({ onLicenseActivated }: LicenseActivati
           {isActivating ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Ativando Licença...
+              Ativando acesso ao suporte...
             </>
           ) : (
             <>
               <Key className="h-4 w-4 mr-2" />
-              Ativar Licença
+              Ativar Acesso ao Suporte
             </>
           )}
         </Button>
@@ -271,12 +271,12 @@ export const LicenseActivationSection = ({ onLicenseActivated }: LicenseActivati
             {isCreatingTrial ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Criando Licença de Teste...
+                Criando acesso de teste...
               </>
             ) : (
               <>
                 <Gift className="h-4 w-4 mr-2" />
-                Criar Licença de Teste (7 dias grátis)
+                Criar Acesso de Teste (7 dias grátis)
               </>
             )}
           </Button>

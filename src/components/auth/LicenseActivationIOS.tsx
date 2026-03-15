@@ -73,8 +73,8 @@ export const LicenseActivationIOS = ({
       const result = await activateLicense(licenseCode);
       if (result && result.success) {
         showSuccess({
-          title: 'Licença Ativada!',
-          description: result.message || 'Sua licença foi ativada com sucesso.'
+          title: 'Acesso ao Suporte Ativado!',
+          description: result.message || 'Seu acesso ao suporte foi ativado com sucesso.'
         });
         setTimeout(() => {
           onLicenseActivated();
@@ -92,8 +92,8 @@ export const LicenseActivationIOS = ({
       if (result === true || (result && typeof result === 'object')) {
         const licenseCode = (result && typeof result === 'object' && 'license_code' in result) ? (result as any).license_code : 'N/A';
         showSuccess({
-          title: 'Licença de Teste Criada!',
-          description: `Você recebeu 7 dias de acesso gratuito. Código: ${licenseCode}`
+          title: 'Acesso de Teste Criado!',
+          description: `Você recebeu 7 dias de acesso gratuito. Chave: ${licenseCode}`
         });
         setTimeout(() => {
           onLicenseActivated();
@@ -108,7 +108,7 @@ export const LicenseActivationIOS = ({
   const getLicenseTypeInfo = (code: string) => {
     if (code.startsWith('TRIAL')) {
       return {
-        type: 'Licença de Teste',
+        type: 'Chave de Teste',
         description: 'Acesso gratuito por 7 dias',
         color: 'text-blue-600',
         bgColor: 'bg-blue-50',
@@ -116,16 +116,16 @@ export const LicenseActivationIOS = ({
       };
     } else if (code.length === 13 && /^[0-9]{6}[A-Z0-9]{7}$/.test(code)) {
       return {
-        type: 'Licença Nova',
-        description: 'Formato de licença atualizado',
+        type: 'Chave Nova',
+        description: 'Formato de chave atualizado',
         color: 'text-green-600',
         bgColor: 'bg-green-50',
         borderColor: 'border-green-200'
       };
     } else {
       return {
-        type: 'Licença Legada',
-        description: 'Formato de licença anterior (30 dias)',
+        type: 'Chave Legada',
+        description: 'Formato de chave anterior (30 dias)',
         color: 'text-orange-600',
         bgColor: 'bg-orange-50',
         borderColor: 'border-orange-200'
@@ -143,9 +143,9 @@ export const LicenseActivationIOS = ({
             <Key className="h-5 w-5 text-amber-600" />
           </div>
           <div>
-            <CardTitle className="text-lg text-amber-800">Ative sua Licença</CardTitle>
+            <CardTitle className="text-lg text-amber-800">Ative seu Acesso ao Suporte</CardTitle>
             <p className="text-sm text-amber-700 mt-1">
-              Para acessar o sistema, você precisa ativar uma licença válida
+              Para acessar a plataforma, você precisa ativar uma chave de acesso ao suporte válida
             </p>
           </div>
         </div>
@@ -154,7 +154,7 @@ export const LicenseActivationIOS = ({
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <label htmlFor="license-code" className="text-sm font-medium text-amber-800">
-            Código da Licença
+            Chave de Acesso ao Suporte
           </label>
           <Input
             id="license-code"
@@ -175,7 +175,7 @@ export const LicenseActivationIOS = ({
           <Alert className="border-gray-200 bg-gray-50">
             <Loader2 className="h-4 w-4 text-gray-600 animate-spin" />
             <AlertDescription className="text-gray-800">
-              Verificando licença...
+              Verificando acesso ao suporte...
             </AlertDescription>
           </Alert>
         )}
@@ -184,7 +184,7 @@ export const LicenseActivationIOS = ({
           <Alert className="border-green-200 bg-green-50">
             <Clock className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800">
-              <strong>Preview:</strong> Esta licença concederá {previewDays} dias de acesso ao sistema
+              <strong>Preview:</strong> Esta chave concederá {previewDays} dias de acesso à plataforma
             </AlertDescription>
           </Alert>
         )}
@@ -214,10 +214,10 @@ export const LicenseActivationIOS = ({
           {isActivating ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Ativando Licença...
+              Ativando acesso ao suporte...
             </>
           ) : (
-            'Ativar Licença'
+            'Ativar Acesso ao Suporte'
           )}
         </Button>
 
@@ -232,12 +232,12 @@ export const LicenseActivationIOS = ({
             {isCreatingTrial ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Criando Licença de Teste...
+                Criando acesso de teste...
               </>
             ) : (
               <>
                 <Gift className="h-4 w-4 mr-2" />
-                Criar Licença de Teste (7 dias grátis)
+                Criar Acesso de Teste (7 dias grátis)
               </>
             )}
           </Button>
@@ -249,7 +249,7 @@ export const LicenseActivationIOS = ({
           className="w-full border-amber-300 text-amber-700 hover:bg-amber-50"
         >
           <Search className="h-4 w-4 mr-2" />
-          Verificar Licença
+          Verificar Acesso ao Suporte
         </Button>
       </CardContent>
     </Card>

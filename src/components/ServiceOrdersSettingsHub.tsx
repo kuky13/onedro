@@ -266,10 +266,10 @@ export function ServiceOrdersSettingsHub() {
                         </div>
 
                         <div className="space-y-1">
-                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Licença</p>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Acesso ao Suporte</p>
                           <div className="text-foreground font-medium space-y-1">
                             {licenseLoading ? (
-                              <span className="text-muted-foreground">Verificando licença...</span>
+                              <span className="text-muted-foreground">Verificando acesso ao suporte...</span>
                             ) : licenseStatus?.license_code ? (
                               <>
                                 <div className="flex items-center gap-1">
@@ -281,7 +281,7 @@ export function ServiceOrdersSettingsHub() {
                                     onClick={() => setShowLicenseCode(!showLicenseCode)}
                                     className="ml-2 w-7 h-7 flex items-center justify-center hover:bg-muted/50 rounded-lg transition-colors"
                                     title={showLicenseCode ? 'Ocultar código' : 'Mostrar código'}
-                                    aria-label={showLicenseCode ? 'Ocultar código da licença' : 'Mostrar código da licença'}
+                                    aria-label={showLicenseCode ? 'Ocultar chave de acesso ao suporte' : 'Mostrar chave de acesso ao suporte'}
                                   >
                                     {showLicenseCode ? (
                                       <EyeOff className="h-3.5 w-3.5 text-primary" />
@@ -292,14 +292,14 @@ export function ServiceOrdersSettingsHub() {
                                 </div>
                                 <p className="text-xs text-muted-foreground">
                                   {isExpired
-                                    ? 'Licença expirada'
+                                    ? 'Acesso ao suporte expirado'
                                     : daysUntilExpiry !== null
                                       ? `Expira em ${daysUntilExpiry} dias`
                                       : 'Verificando...'}
                                 </p>
                               </>
                             ) : (
-                              <span className="text-muted-foreground">Sem licença ativa</span>
+                              <span className="text-muted-foreground">Sem acesso ao suporte ativo</span>
                             )}
                           </div>
                         </div>

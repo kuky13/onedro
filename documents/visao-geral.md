@@ -1,19 +1,19 @@
-# 🌍 Visão Geral do Sistema (OneDrip / Cookie2026)
+# 🌍 Visão Geral do Serviço (OneDrip / Cookie2026)
 
-Este documento explica de forma simplificada a proposta principal, os módulos que compõem o sistema e a arquitetura geral da plataforma.
+Este documento explica de forma simplificada a proposta principal, os módulos que compõem a plataforma e a arquitetura geral do serviço.
 
 ---
 
 ## 📌 1. O que é este projeto?
 
 > [!NOTE] 
-> O sistema é uma **plataforma multifuncional SaaS** (Software as a Service) voltada para o gerenciamento de serviços, lojas e manutenções.
+> O OneDrip é uma **prestação de serviço de suporte remoto** para técnicos de assistência técnica, com acesso a uma ferramenta de apoio (web + PWA).
 
-Ele foi construído para ajudar prestadores de serviços, assistências técnicas e lojistas a organizarem suas **Ordens de Serviço (OS)**, orçamentos, garantias, e até **vitrines online** (lojas públicas), tudo através de uma interface web progressiva (PWA - funciona no navegador e como aplicativo).
+Ele foi construído para ajudar prestadores de serviços e assistências técnicas a organizarem suas **Ordens de Serviço (OS)**, orçamentos, garantias, e até catálogos online, tudo através de uma interface web progressiva (PWA - funciona no navegador e como aplicativo).
 
 ---
 
-## 🧩 2. Principais Módulos do Sistema
+## 🧩 2. Principais Módulos da Plataforma
 
 ### 🔄 Orçamentos & Ordens de Serviço (OS)
 *   **Módulo de Reparos/Garantias** (`/reparos`, `/service-orders`): 
@@ -28,9 +28,9 @@ Ele foi construído para ajudar prestadores de serviços, assistências técnica
     *   Aceitação eletrônica de termos.
     *   Integração nativa com IA nas propostas.
 
-### 🛒 Sistema de Lojas Virtuais (Stores)
-*   O sistema abriga a possibilidade dos usuários criarem as suas próprias páginas de venda ou catálogos de serviços (acessível via `/loja/[slug-da-loja]`). 
-*   Tem controles de carrinho de compras, faturamento e integração de pagamentos (fluxo atual no código: **AbacatePay/PIX**; pode haver referências legadas a Mercado Pago) para checkout (`/store`).
+### 🛒 Catálogo/Loja (Stores)
+*   A plataforma permite que usuários criem páginas públicas de catálogo de serviços e itens (acessível via `/loja/[slug-da-loja]`). 
+*   Possui controles de carrinho e integração de pagamentos (fluxo atual no código: **AbacatePay/PIX**; pode haver referências legadas a Mercado Pago) para checkout (`/store`).
 
 ### 🤖 Inteligência Artificial (IA) & Chat
 *   **Painel IA**: Para interagir com uma Inteligência Artificial focada em triagem e negociações de valores por WhatsApp, auxiliando ao lojista de forma automatizada.
@@ -42,7 +42,7 @@ Ele foi construído para ajudar prestadores de serviços, assistências técnica
 
 *   **Usuários Comuns/Clientes**: Veem a parte pública, landing page e seu próprio dashboard "Lite".
 *   **Admin da Loja**: Controla uma loja virtual e sua assistência técnica (`/dashboard`, `/settings`, `/admin`).
-*   **SuperAdmin / "Deus"**: Controla licenças SaaS, usuários bloqueados, atualizações gerais da plataforma e funções de telemetria geral (`/supadmin`).
+*   **SuperAdmin / "Deus"**: Controla acessos ao suporte, usuários bloqueados, atualizações gerais da plataforma e funções de telemetria geral (`/supadmin`).
 
 ---
 
@@ -58,7 +58,7 @@ O projeto usa stacks muito modernas do ecossistema JS/TS:
 
 ## 🚀 4. O Fluxo do Usuário Perfeito
 
-1.  O usuário entra em `/landing` ou acessa os planos do sistema SaaS.
-2.  Faz o pagamento (fluxo atual no código: AbacatePay/PIX), com webhook em nuvem que avisa o sistema para gerar uma licença (`/verify-licenca`).
+1.  O usuário entra em `/landing` ou acessa os planos de suporte.
+2.  Faz o pagamento (fluxo atual no código: AbacatePay/PIX), com webhook em nuvem que avisa o sistema para gerar uma chave de acesso ao suporte (`/verify-licenca`).
 3.  Uma vez logado, ele usa módulos baseados em PWA *offline-first* (onde alguns dados são cacheados e funcionam com má conectividade).
 4.  O cliente emite orçamentos/OS que enviam gatilhos pelo lado do servidor (Edge Functions) para o WhatsApp usando bibliotecas externas (Waha, Evolution API, ou Z-API).

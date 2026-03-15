@@ -123,7 +123,7 @@ export function AIAnalysisTab({ storeId, onApplied }: AIAnalysisTabProps) {
     "Conector de Carga": "bg-orange-500/10 text-orange-700 border-orange-200",
     "Alto-Falante": "bg-yellow-500/10 text-yellow-700 border-yellow-200",
     "Reparo de Placa": "bg-red-500/10 text-red-700 border-red-200",
-    "Software/Sistema": "bg-cyan-500/10 text-cyan-700 border-cyan-200",
+    "Plataforma/Ferramenta": "bg-cyan-500/10 text-cyan-700 border-cyan-200",
     "Carcaça/Vidro Traseiro": "bg-pink-500/10 text-pink-700 border-pink-200"
   };
 

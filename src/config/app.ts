@@ -13,8 +13,8 @@ export const APP_CONFIG = {
   name: 'OneDrip',
   fullName: 'OneDrip',
   shortName: 'OneDrip',
-  description: 'O melhor sistema de orçamentos para sua empresa. Gerencie orçamentos de forma profissional e eficiente.',
-  tagline: 'Sistema de Gestão Profissional',
+  description: 'Plataforma de apoio técnico para assistências. Organize orçamentos e ordens de serviço com suporte contínuo.',
+  tagline: 'Plataforma de Apoio Técnico',
   subtitle: 'Plataforma completa para assistências técnicas modernas',
   
   // Assets
@@ -39,10 +39,10 @@ export const APP_CONFIG = {
   // Informações para PWA e compartilhamento
   pwa: {
     installTitle: 'Instalar OneDrip como App',
-    installDescription: 'Acesse rapidamente o sistema direto da sua tela inicial',
+    installDescription: 'Acesse rapidamente a plataforma direto da sua tela inicial',
     shareTitle: 'OneDrip',
 
-    shareText: 'O melhor sistema de orçamentos para sua empresa'
+    shareText: 'Plataforma de apoio técnico para assistências'
   },
   
   // Informações da empresa
@@ -57,7 +57,7 @@ export const APP_CONFIG = {
     heroTitle: 'Transforme sua Assistência Técnica',
     heroSubtitle: 'Venha usar a OneDrip para gerenciar seus negócios de forma mais eficiente.',
     benefitsTitle: 'Vantagens do OneDrip',
-    benefitsSubtitle: 'Descubra os benefícios de usar nosso sistema',
+    benefitsSubtitle: 'Descubra os benefícios de usar nossa plataforma de apoio técnico',
     testimonialsTitle: 'O que nossos clientes dizem',
     testimonialsSubtitle: 'Depoimentos reais de quem já usa o OneDrip',
     faqTitle: 'Perguntas Frequentes',

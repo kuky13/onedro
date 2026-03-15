@@ -65,7 +65,7 @@ function generateSemanticSearchTerms(searchTerm: string): string[] {
     'bateria': ['bateria', 'baterias', 'pilha', 'energia', 'autonomia', 'carga'],
     'camera': ['camera', 'cameras', 'câmera', 'lente', 'fotografia', 'traseira', 'selfie', 'frontal'],
     'carregador': ['carregador', 'carregadores', 'cabo', 'conector', 'porta', 'usb', 'entrada', 'carga'],
-    'sistema': ['sistema', 'software', 'android', 'ios', 'atualização', 'atualizacao', 'restauração', 'restauracao'],
+    'sistema': ['sistema', 'ferramenta', 'android', 'ios', 'atualização', 'atualizacao', 'restauração', 'restauracao'],
     'altofalante': ['alto-falante', 'altofalante', 'audio', 'som', 'speaker'],
     'microfone': ['microfone', 'mic', 'audio'],
     'placa': ['placa', 'módulo', 'ci', 'chip', 'placa-mãe'],

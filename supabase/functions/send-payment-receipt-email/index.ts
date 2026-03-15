@@ -118,13 +118,13 @@ serve(async (req) => {
 
     const licenseBlock = licenseCode
       ? `<p style="margin: 4px 0; font-size: 14px; color: #333;">
-           <strong>Código da licença:</strong> <span style="font-family: monospace;">${licenseCode}</span>
+           <strong>Chave de acesso ao suporte:</strong> <span style="font-family: monospace;">${licenseCode}</span>
          </p>
          <p style="margin: 4px 0; font-size: 13px; color: #666;">
-           ${isRenewal ? "Renovação da sua licença atual" : "Nova licença gerada para sua conta"}
+           ${isRenewal ? "Renovação do seu acesso ao suporte" : "Nova chave de acesso ao suporte gerada para sua conta"}
          </p>`
       : `<p style="margin: 4px 0; font-size: 14px; color: #333;">
-           <strong>Licença:</strong> Será vinculada/gerada automaticamente na sua conta após o processamento.
+           <strong>Acesso ao suporte:</strong> Será vinculado/gerado automaticamente na sua conta após o processamento.
          </p>`;
 
     const emailHtml = `
@@ -138,12 +138,12 @@ serve(async (req) => {
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 640px; margin: 0 auto; padding: 24px; background-color: #f4f4f4;">
   <div style="background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%); padding: 24px 20px; text-align: center; border-radius: 12px 12px 0 0; color: #fff;">
     <h1 style="margin: 0 0 8px 0; font-size: 22px;">Recibo de Pagamento</h1>
-    <p style="margin: 0; font-size: 14px; opacity: 0.9;">OneDrip - Sistema para Técnicos de Celular</p>
+    <p style="margin: 0; font-size: 14px; opacity: 0.9;">OneDrip - Prestação de serviço de suporte técnico</p>
   </div>
 
   <div style="background-color: #ffffff; padding: 24px 20px 28px 20px; border-radius: 0 0 12px 12px; box-shadow: 0 8px 20px rgba(15,23,42,0.15);">
     <p style="font-size: 15px; margin: 0 0 12px 0;">Olá, <strong>${name}</strong>!</p>
-    <p style="font-size: 14px; margin: 0 0 16px 0;">Recebemos o seu pagamento e aqui está o comprovante completo da sua compra.</p>
+    <p style="font-size: 14px; margin: 0 0 16px 0;">Recebemos o seu pagamento e aqui está o comprovante completo da sua contratação.</p>
 
     <div style="background-color: #ecfdf5; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;">
       <p style="margin: 0 0 4px 0; font-size: 14px; color: #166534;"><strong>${statusLabel}</strong></p>
@@ -160,7 +160,7 @@ serve(async (req) => {
       <p style="margin: 4px 0; font-size: 13px; color: #6b7280;"><strong>ID do pagamento (Abacate Pay):</strong> ${paymentId}</p>
     </div>
 
-    <h2 style="font-size: 16px; margin: 0 0 8px 0; color: #111827;">Dados da Licença</h2>
+    <h2 style="font-size: 16px; margin: 0 0 8px 0; color: #111827;">Dados do Plano de Suporte</h2>
     <div style="background-color: #f9fafb; border-radius: 8px; padding: 12px 14px; margin-bottom: 18px; border: 1px solid #e5e7eb;">
       <p style="margin: 4px 0; font-size: 14px;"><strong>Plano:</strong> ${planTypeText} (${daysContracted} dias)</p>
       ${licenseBlock}
@@ -174,7 +174,7 @@ serve(async (req) => {
 
     <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 10px 12px; border-radius: 6px; margin: 18px 0 10px 0;">
       <p style="margin: 0; font-size: 13px; color: #92400e;">
-        <strong>Guarde este recibo.</strong> Recomendamos salvar este email, pois ele contém todas as informações da sua compra.
+        <strong>Guarde este recibo.</strong> Recomendamos salvar este email, pois ele contém todas as informações da sua contratação.
       </p>
     </div>
 
@@ -224,7 +224,7 @@ serve(async (req) => {
     if (adminEmail) {
       logStep("Enviando notificação administrativa", { to: adminEmail });
 
-      const adminSubject = `[ADMIN] Nova compra - ${name} - ${currency} ${amount.toFixed(2)} (${receiptCode})`;
+      const adminSubject = `[ADMIN] Nova contratação - ${name} - ${currency} ${amount.toFixed(2)} (${receiptCode})`;
       
       const adminEmailHtml = `
 <!DOCTYPE html>
@@ -232,11 +232,11 @@ serve(async (req) => {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Notificação Administrativa - Nova Compra</title>
+  <title>Notificação Administrativa - Nova Contratação</title>
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 640px; margin: 0 auto; padding: 24px; background-color: #f4f4f4;">
   <div style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); padding: 24px 20px; text-align: center; border-radius: 12px 12px 0 0; color: #fff;">
-    <h1 style="margin: 0 0 8px 0; font-size: 22px;">🔔 Nova Compra Realizada</h1>
+    <h1 style="margin: 0 0 8px 0; font-size: 22px;">🔔 Nova Contratação Realizada</h1>
     <p style="margin: 0; font-size: 14px; opacity: 0.9;">Notificação Administrativa - OneDrip</p>
   </div>
 
@@ -270,13 +270,13 @@ serve(async (req) => {
       <p style="margin: 4px 0; font-size: 13px; color: #6b7280;"><strong>Código do recibo:</strong> ${receiptCode}</p>
     </div>
 
-    <h2 style="font-size: 16px; margin: 0 0 8px 0; color: #111827;">Dados da Licença</h2>
+    <h2 style="font-size: 16px; margin: 0 0 8px 0; color: #111827;">Dados do Plano de Suporte</h2>
     <div style="background-color: #f9fafb; border-radius: 8px; padding: 12px 14px; margin-bottom: 18px; border: 1px solid #e5e7eb;">
       <p style="margin: 4px 0; font-size: 14px;"><strong>Plano:</strong> ${planTypeText} (${daysContracted} dias)</p>
       ${licenseCode 
-        ? `<p style="margin: 4px 0; font-size: 14px;"><strong>Código:</strong> <span style="font-family: monospace;">${licenseCode}</span></p>
-           <p style="margin: 4px 0; font-size: 13px; color: #666;">${isRenewal ? "Renovação" : "Nova licença"}</p>` 
-        : `<p style="margin: 4px 0; font-size: 14px;"><strong>Licença:</strong> Será vinculada automaticamente</p>`
+        ? `<p style="margin: 4px 0; font-size: 14px;"><strong>Chave:</strong> <span style="font-family: monospace;">${licenseCode}</span></p>
+           <p style="margin: 4px 0; font-size: 13px; color: #666;">${isRenewal ? "Renovação do acesso ao suporte" : "Nova chave de acesso ao suporte"}</p>` 
+        : `<p style="margin: 4px 0; font-size: 14px;"><strong>Acesso ao suporte:</strong> Será vinculado automaticamente</p>`
       }
     </div>
 

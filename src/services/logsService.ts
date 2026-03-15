@@ -276,7 +276,7 @@ class LogsService {
       'user_profile_updated': 'Perfil Atualizado',
       'user_deleted': 'Usuário Deletado',
       'user_created': 'Usuário Criado',
-      'user_license_renewed': 'Licença Renovada',
+      'user_license_renewed': 'Acesso ao Suporte Renovado',
       'logs_cleanup': 'Limpeza de Logs',
       
       // Budget deletion audit
@@ -285,7 +285,7 @@ class LogsService {
       'budget_deleted_batch': 'Exclusão em Lote',
       
       // License validation audit
-      'license_validation': 'Validação de Licença',
+      'license_validation': 'Validação de Acesso ao Suporte',
       
       // File upload audit
       'file_upload_success': 'Upload Bem-sucedido',
@@ -303,7 +303,7 @@ class LogsService {
     const tableLabels: { [key: string]: string } = {
       'admin_logs': 'Logs Administrativos',
       'budget_deletion_audit': 'Auditoria de Orçamentos',
-      'license_validation_audit': 'Auditoria de Licenças',
+      'license_validation_audit': 'Auditoria de Acessos ao Suporte',
       'file_upload_audit': 'Auditoria de Arquivos'
     };
 

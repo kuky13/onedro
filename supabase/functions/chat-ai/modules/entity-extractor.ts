@@ -47,7 +47,7 @@ const REPAIR_KEYWORDS = [
   'touch', 'display', 'lcd', 'troca', 'reparo', 'conserto',
   'substituição', 'substituicao', 'manutenção', 'manutencao',
   'vidro', 'placa', 'conector', 'carcaça', 'carcaca', 'alto falante',
-  'sensor', 'flex', 'cabo', 'chip', 'software', 'firmware'
+  'sensor', 'flex', 'cabo', 'chip', 'sistema', 'firmware'
 ];
 
 /**

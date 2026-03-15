@@ -199,7 +199,7 @@ export const PurchaseSuccessPage = () => {
     if (license?.code) {
       navigator.clipboard.writeText(license.code);
       toast.success('Código copiado!', {
-        description: 'O código da licença foi copiado para a área de transferência.'
+        description: 'A chave de acesso ao suporte foi copiada para a área de transferência.'
       });
     }
   };
@@ -262,16 +262,16 @@ export const PurchaseSuccessPage = () => {
                   <Loader2 className="h-12 w-12 animate-spin text-primary" />
                   <div className="text-center space-y-2">
                     <p className="text-foreground font-medium">Processando seu pagamento...</p>
-                    <p className="text-sm text-muted-foreground">Aguarde enquanto geramos sua licença</p>
+                    <p className="text-sm text-muted-foreground">Aguarde enquanto ativamos seu acesso ao suporte</p>
                   </div>
                 </div>
               ) : license ? (
                 <>
-                  {/* Código da Licença */}
+                  {/* Chave de Acesso */}
                   <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-background border-2 border-primary/30 rounded-xl p-6 space-y-4">
                     <div className="flex items-center gap-2 text-primary mb-2">
                       <Key className="h-5 w-5" />
-                      <h3 className="font-bold text-lg">Sua Licença está Pronta!</h3>
+                      <h3 className="font-bold text-lg">Seu Acesso ao Suporte está Pronto!</h3>
                     </div>
                     
                     <div className="bg-background/80 backdrop-blur-sm rounded-lg p-4 space-y-3 relative overflow-hidden">
@@ -280,7 +280,7 @@ export const PurchaseSuccessPage = () => {
                         Salvo no dispositivo
                       </div>
                       <div className="flex items-center justify-between pt-2">
-                        <span className="text-sm text-muted-foreground">Código da Licença:</span>
+                        <span className="text-sm text-muted-foreground">Chave de Acesso ao Suporte:</span>
                         <Button
                           onClick={copyLicenseCode}
                           variant="ghost"
@@ -296,7 +296,7 @@ export const PurchaseSuccessPage = () => {
                       </div>
                       <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
                         <Shield className="h-3 w-3" />
-                        Não compartilhe este código com ninguém
+                        Não compartilhe esta chave com ninguém
                       </p>
                     </div>
 
@@ -318,10 +318,10 @@ export const PurchaseSuccessPage = () => {
                       <AlertTriangle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
                         <p className="font-semibold text-blue-900 dark:text-blue-100 text-sm mb-1">
-                          Crie uma conta e use este código para ativar sua licença
+                          Crie uma conta e use esta chave para ativar seu acesso ao suporte
                         </p>
                         <p className="text-xs text-blue-700 dark:text-blue-300">
-                          Esta licença pode ser ativada apenas <strong>1 vez</strong> quando o pagamento for aprovado.
+                          Esta chave pode ser ativada apenas <strong>1 vez</strong> quando o pagamento for aprovado.
                         </p>
                       </div>
                     </div>
@@ -351,16 +351,16 @@ export const PurchaseSuccessPage = () => {
                   ) : (
                     <Link to="/auth">
                       <Button className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl" size="lg">
-                        Criar Conta e Ativar Licença
+                        Criar Conta e Ativar Acesso ao Suporte
                       </Button>
                     </Link>
                   )}
                 </>
               ) : showLoginMessage ? (
                 <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-                  <h3 className="font-semibold text-foreground mb-3 text-center">Faça Login para Ver sua Licença</h3>
+                  <h3 className="font-semibold text-foreground mb-3 text-center">Faça Login para Ver seu Acesso ao Suporte</h3>
                   <p className="text-sm text-muted-foreground mb-4 text-center">
-                    Sua compra foi processada com sucesso! Faça login ou crie sua conta para visualizar o código da sua licença.
+                    Sua contratação foi processada com sucesso! Faça login ou crie sua conta para visualizar sua chave de acesso ao suporte.
                   </p>
                   <Link to="/auth">
                     <Button className="w-full" variant="outline">
@@ -373,7 +373,7 @@ export const PurchaseSuccessPage = () => {
                   <div className="bg-gradient-to-br from-amber-500/20 via-amber-400/10 to-background border-2 border-amber-500/30 rounded-xl p-6 space-y-3">
                     <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 mb-2">
                       <Key className="h-5 w-5" />
-                      <h3 className="font-bold text-lg">Licença em Processamento</h3>
+                      <h3 className="font-bold text-lg">Acesso ao Suporte em Processamento</h3>
                     </div>
                     
                     <div className="space-y-2">
@@ -381,7 +381,7 @@ export const PurchaseSuccessPage = () => {
                         🎉 Pagamento confirmado com sucesso!
                       </p>
                       <p className="text-muted-foreground text-sm text-center">
-                        Sua licença será fornecida em breve. Estamos processando seu pedido e você receberá o código de ativação nos próximos minutos.
+                        Sua chave de acesso ao suporte será fornecida em breve. Estamos processando seu pedido e você receberá a chave de ativação nos próximos minutos.
                       </p>
                     </div>
                   </div>
@@ -391,7 +391,7 @@ export const PurchaseSuccessPage = () => {
                     <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
                       <li>Entre em contato conosco via WhatsApp</li>
                       <li>Informe seu pedido e aguarde a confirmação</li>
-                      <li>Receba sua licença e credenciais de acesso</li>
+                      <li>Receba sua chave de acesso ao suporte e credenciais de acesso</li>
                       <li>Comece a usar o {name} imediatamente!</li>
                     </ol>
                   </div>
@@ -409,7 +409,7 @@ export const PurchaseSuccessPage = () => {
                   <strong>WhatsApp:</strong> {whatsapp || '(11) 9 9999-9922'}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Entre em contato para receber sua licença • Suporte disponível de segunda a sábado, das 8h às 18h
+                  Entre em contato para receber sua chave de acesso ao suporte • Suporte disponível de segunda a sábado, das 8h às 18h
                 </p>
               </div>
 
