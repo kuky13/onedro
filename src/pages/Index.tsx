@@ -141,7 +141,7 @@ const DEPOIMENTOS = [
   {
     nome: "Maria",
     cargo: "Atendente de assistência",
-    rating: 4.2,
+    rating: 4.0,
     texto: "Consigo achar qualquer Orçamento em segundos. Organizou completamente minha rotina.",
   },
   {

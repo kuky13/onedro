@@ -8,7 +8,8 @@ export const PLANS_CONTENT = {
   // SEÇÃO PRINCIPAL (HERO)
   logo: "/lovable-uploads/logoo.png",
   titulo_principal: "Organize sua assistência. Ganhe tempo. Venda mais.",
-  subtitulo_principal: "Ferramenta de suporte feita por quem entende assistência técnica. Sem complicação, sem promessa vazia.",
+  subtitulo_principal:
+    "Ferramenta de suporte feita por quem entende assistência técnica. Sem complicação, sem promessa vazia.",
 
   // DADOS DOS PLANOS (MENSAL E ANUAL)
   planos: {
@@ -128,13 +129,13 @@ export const PLANS_CONTENT = {
         cargo: "Proprietário - Oliveira Imports",
         texto:
           "Antes eu perdia clientes por causa do orçamento e Agora faço em 2 min e envio para o cliente um PDF e uma mensagem no Whatsapp.",
-        nota: 5,
+        nota: 4,
       },
       {
         nome: "Maria",
         cargo: "Atendente de assistência",
         texto: "Consigo achar qualquer Orçamento em segundos. Organizou completamente minha rotina.",
-        nota: 5,
+        nota: 4,
       },
       {
         nome: "André",
