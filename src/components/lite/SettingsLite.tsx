@@ -110,7 +110,7 @@ function SettingsHome({
   userEmail,
   avatarUrl,
   items,
-  appVersion,
+  appVersion: _appVersion,
   onNavigate,
 }: {
   userName?: string | null | undefined;

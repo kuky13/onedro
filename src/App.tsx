@@ -219,6 +219,8 @@ const AppContent = () => {
         border: '1px solid hsl(var(--border))'
       }
     }} />
+    {/* IOSRedirectHandler removido — código morto */}
+    <Suspense fallback={null}><ChatwootWidget /></Suspense>
     {/* Terms notification banner (non-blocking) */}
     {showTermsBanner && (
       <TermsNotificationBanner

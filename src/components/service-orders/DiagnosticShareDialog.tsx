@@ -710,7 +710,7 @@ export function DiagnosticShareDialog({
       <DeviceTestReportDialog
         open={reportOpen}
         onOpenChange={setReportOpen}
-        sessionId={session?.id}
+        sessionId={session?.id ?? null}
         title="Relatório do Diagnóstico"
       />
     </>
