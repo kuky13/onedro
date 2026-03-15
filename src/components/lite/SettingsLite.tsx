@@ -41,7 +41,7 @@ type SettingsItem = {
   icon: any;
   iconBgClassName: string;
   iconClassName: string;
-  href?: string;
+  href?: string | undefined;
 };
 
 function getInitials(name?: string | null, email?: string | null) {
