@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { Shield } from "lucide-react";
+import { TermsNotificationBanner } from "@/components/TermsNotificationBanner";
 import { Button } from "@/components/ui/button";
 import { ReloadMonitor } from "@/components/ReloadMonitor";
 import { lazyWithRetry } from "@/utils/lazyWithRetry";
