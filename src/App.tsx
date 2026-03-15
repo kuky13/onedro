@@ -156,19 +156,9 @@ const AppContent = () => {
     await setSecureItem('termsConsentDeclined', true, {
       encrypt: false
     });
-    sessionStorage.setItem('termsDeclineReloadOnce', '1');
-    window.location.reload();
+    // Just hide the banner temporarily
+    setTermsAccepted(null);
   };
-
-  useEffect(() => {
-    if (termsAccepted) return;
-    if (!termsDeclined) return;
-    if (isLegalPage) return;
-    const key = 'termsDeclineReloadOnce';
-    if (sessionStorage.getItem(key)) return;
-    sessionStorage.setItem(key, '1');
-    window.location.reload();
-  }, [isLegalPage, termsAccepted, termsDeclined]);
 
   // License verification removed - handled directly in components
 
