@@ -20,12 +20,22 @@ export const SignPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
+  // Check if terms were already accepted via the banner
+  useEffect(() => {
+    (async () => {
+      const accepted = await getSecureItem('termsConsentAccepted');
+      if (accepted) setTermsAccepted(true);
+    })();
+  }, []);
 
   const isFormValid = 
     formData.name.trim() && 
     formData.email.trim() && 
     formData.password.length >= 6 && 
-    formData.password === formData.confirmPassword;
+    formData.password === formData.confirmPassword &&
+    termsAccepted;
 
   const getPasswordStrength = (password: string) => {
     if (password.length < 6) return { text: 'Mínimo 6 caracteres', color: 'text-red-500' };
