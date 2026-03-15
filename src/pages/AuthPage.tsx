@@ -22,7 +22,8 @@ export const AuthPage = () => {
 
   // ... rest of the code
 
-  const handleFullReset = React.useCallback(() => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleFullReset = () => {
     setIsResetting(true);
     cleanupAuthState();
     showSuccess({
