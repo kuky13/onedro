@@ -113,9 +113,9 @@ function SettingsHome({
   appVersion,
   onNavigate,
 }: {
-  userName?: string | null;
-  userEmail?: string | null;
-  avatarUrl?: string | null;
+  userName?: string | null | undefined;
+  userEmail?: string | null | undefined;
+  avatarUrl?: string | null | undefined;
   items: SettingsItem[];
   appVersion: string;
   onNavigate: (item: SettingsItem) => void;
