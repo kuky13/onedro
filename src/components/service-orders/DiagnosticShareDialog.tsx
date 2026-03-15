@@ -91,7 +91,7 @@ export function DiagnosticShareDialog({
     crypto.getRandomValues(bytes);
     let out = "";
     for (let i = 0; i < length; i++) {
-      out += alphabet[bytes[i] % alphabet.length];
+      out += alphabet[bytes[i]! % alphabet.length];
     }
     return out;
   };
