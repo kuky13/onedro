@@ -22,7 +22,7 @@ export const AuthPage = () => {
 
   // ... rest of the code
 
-  const handleFullReset = () => {
+  const handleFullReset = React.useCallback(() => {
     setIsResetting(true);
     cleanupAuthState();
     showSuccess({

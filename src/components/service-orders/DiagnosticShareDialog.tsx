@@ -305,7 +305,8 @@ export function DiagnosticShareDialog({
         query = query.eq("service_order_id", serviceOrderId);
       }
 
-      const { data: existingSessionRaw, error: fetchError } = await withTimeout(query.maybeSingle(), 8000) as { data: any; error: any };
+      const result = await withTimeout(query.maybeSingle() as unknown as Promise<{ data: any; error: any }>, 8000) as { data: any; error: any };
+      const { data: existingSessionRaw, error: fetchError } = result;
 
       if (fetchError) throw fetchError;
 
