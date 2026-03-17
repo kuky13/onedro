@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, AlertCircle, Trash2, ExternalLink, Calendar, Copy, Check, Clock, Smartphone, LinkIcon } from 'lucide-react';
+import { ArrowLeft, Plus, AlertCircle, Trash2, ExternalLink, Calendar, Copy, Check, Clock, Smartphone, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DeviceChecklist, DeviceChecklistData } from '@/components/service-orders/DeviceChecklist';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -263,7 +263,7 @@ const TesteRapidoPage = () => {
                         {createdTest.token.split('').slice(0, 4).map((d, idx) => (
                           <div
                             key={`${d}-${idx}`}
-                            className="h-14 w-14 rounded-xl border border-border bg-surface flex items-center justify-center font-mono text-2xl font-bold text-primary"
+                            className="h-14 w-14 rounded-xl border border-border bg-card flex items-center justify-center font-mono text-2xl font-bold text-primary"
                           >
                             {d}
                           </div>
@@ -332,7 +332,7 @@ const TesteRapidoPage = () => {
         {quickTests.length > 0 && (
           <section className="space-y-3">
             <div className="flex items-center gap-2">
-              <LinkIcon className="h-4 w-4 text-muted-foreground" />
+              <Link2 className="h-4 w-4 text-muted-foreground" />
               <h2 className="text-sm font-semibold text-foreground">Links Ativos</h2>
               <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                 {quickTests.length}/5
@@ -345,7 +345,7 @@ const TesteRapidoPage = () => {
                 return (
                   <div
                     key={test.id}
-                    className="bg-surface border border-border rounded-xl p-4 space-y-3"
+                    className="bg-card border border-border rounded-xl p-4 space-y-3"
                   >
                     {/* Top row: name + status */}
                     <div className="flex items-start justify-between gap-2">
@@ -429,7 +429,7 @@ const TesteRapidoPage = () => {
         {quickTests.length === 0 && (
           <div className="flex flex-col items-center justify-center py-10 text-center gap-3">
             <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-muted/40 border border-border/40">
-              <LinkIcon className="h-6 w-6 text-muted-foreground" />
+              <Link2 className="h-6 w-6 text-muted-foreground" />
             </div>
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">Nenhum link criado ainda</p>
