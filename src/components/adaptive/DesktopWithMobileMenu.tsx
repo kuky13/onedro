@@ -48,7 +48,7 @@ export const DesktopWithMobileMenu = ({
             <div className="flex-1" />
             <div className="flex items-center gap-4 transition-opacity duration-75">
               <NotificationIndicator size="default" className="mr-2" />
-              <div className={cn("flex items-center gap-2 px-4 py-2", "bg-primary/10 text-primary rounded-full", "border border-primary/20 shadow-sm", "hover:bg-primary/15 hover:border-primary/30", "transition-all duration-100")}>
+              <div className={cn("flex items-center gap-2 px-4 py-2", "bg-primary/10 text-primary rounded-full", "border border-primary/20 shadow-sm", "hover:bg-primary/15 hover:border-primary/50", "transition-all duration-100")}>
                 <div>
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                 </div>

@@ -76,7 +76,7 @@ export const DashboardLiteQuickAccessEnhanced = ({
                 whileTap={{ scale: 0.97 }}
                 onClick={() => handleActionClick(action)}
                 disabled={isLoadingDownload}
-                className="flex flex-col items-center justify-center gap-3 h-28 rounded-2xl border border-border/50 bg-card hover:border-primary/30 hover:shadow-md transition-all duration-200 group"
+                className="flex flex-col items-center justify-center gap-3 h-28 rounded-2xl border border-border/50 bg-card hover:bg-primary/5 hover:border-primary/50 hover:shadow-md transition-all duration-200 group"
               >
                 <div className={`w-11 h-11 rounded-xl ${action.bgClass} flex items-center justify-center group-hover:scale-105 transition-transform`}>
                   {isLoadingDownload ? (

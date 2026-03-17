@@ -51,9 +51,7 @@ export const AppSidebar = ({
     >
       <SidebarHeader className="border-b border-border/40 p-4">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-xs font-bold text-primary-foreground">OB</span>
-          </div>
+          <img src="/lovable-uploads/logoo.png" alt="OneDrip" className="w-8 h-8 rounded-lg" />
           {state !== 'collapsed' && (
             <div>
               <h2 className="font-semibold text-sm">OneDrip</h2>

@@ -284,7 +284,7 @@ export const WormWhatsAppSelector: React.FC<WormWhatsAppSelectorProps> = ({ budg
           <Button 
             onClick={handleCopyMessage}
             disabled={!!isProcessing || !previewMessage}
-            className={`w-full justify-between h-14 px-4 transition-all duration-300 ${isActionCompleted('copy') ? 'bg-success/10 border-success/30 text-success' : 'hover:border-primary/30'}`}
+            className={`w-full justify-between h-14 px-4 transition-all duration-300 ${isActionCompleted('copy') ? 'bg-success/10 border-success/30 text-success' : 'hover:border-primary/50'}`}
             variant="outline"
           >
             <div className="flex items-center gap-3">

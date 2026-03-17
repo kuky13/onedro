@@ -451,7 +451,7 @@ export default function ChatPage() {
                     <h1 className="text-sm font-semibold text-foreground">Drippy</h1>
                     
                   </div>
-                  <p className="text-[10px] text-primary/70 font-medium">Online • IA Assistente</p>
+                  <p className="text-[10px] text-primary font-medium">Online • IA Assistente</p>
                 </div>
               </div>
             </div>
@@ -613,7 +613,7 @@ export default function ChatPage() {
               setInput('');
               handleSend(s.text);
             }}
-            className="text-xs px-3.5 py-2 rounded-full border border-border/30 bg-card/60 hover:bg-primary/10 hover:border-primary/30 text-foreground/70 hover:text-foreground transition-all duration-200">
+            className="text-xs px-3.5 py-2 rounded-full border border-border/30 bg-card/60 hover:bg-primary/10 hover:border-primary/50 text-foreground/70 hover:text-foreground transition-all duration-200">
             
                 {s.label}
               </button>

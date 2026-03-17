@@ -376,7 +376,7 @@ const RepairsStatus = () => {
               <button
                 key={closing.id}
                 onClick={() => setSelectedClosing(closing)}
-                className="w-full text-left rounded-2xl bg-muted/30 backdrop-blur-sm border border-border/40 p-4 hover:bg-muted/50 hover:border-primary/30 transition-all active:scale-[0.98] group"
+                className="w-full text-left rounded-2xl bg-muted/30 backdrop-blur-sm border border-border/40 p-4 hover:bg-muted/50 hover:bg-primary/5 hover:border-primary/50 transition-all active:scale-[0.98] group"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">

@@ -144,7 +144,7 @@ export function BrandsTab({ storeId, brands, onRefresh, onSelectBrand }: BrandsT
           {filteredBrands.map(brand => (
             <Card
               key={brand.id}
-              className={`p-4 transition-all cursor-pointer hover:shadow-md hover:border-primary/30 ${
+              className={`p-4 transition-all cursor-pointer hover:shadow-md hover:bg-primary/5 hover:border-primary/50 ${
                 editingId === brand.id ? 'border-primary ring-1 ring-primary/20' : ''
               }`}
             >
