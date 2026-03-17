@@ -287,7 +287,7 @@ export const DrippySearchBar = ({ className = "" }: DrippySearchBarProps) => {
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className={`relative ${className}`}>
         <button
           onClick={() => navigate('/chat')}
-          className="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 hover:from-primary/10 hover:via-primary/15 hover:to-primary/10 border border-border/50 hover:border-primary/30 transition-all duration-300 p-4 text-left">
+          className="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 hover:from-primary/10 hover:via-primary/15 hover:to-primary/10 border border-border/50 hover:border-primary/50 transition-all duration-300 p-4 text-left">
 
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">

@@ -225,7 +225,7 @@ export function ModelsTab({
               {filteredDevices.map(device => (
                 <Card
                   key={device.id}
-                  className={`p-4 transition-all cursor-pointer hover:shadow-md hover:border-primary/30 ${
+                  className={`p-4 transition-all cursor-pointer hover:shadow-md hover:bg-primary/5 hover:border-primary/50 ${
                     editingId === device.id ? 'hidden' : ''
                   }`}
                   onClick={() => onSelectDevice(device)}

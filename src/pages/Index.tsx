@@ -390,7 +390,7 @@ const Index = () => {
               return (
                 <div
                   key={idx}
-                  className="bg-background rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-border/50 hover:border-primary/30 transition-colors"
+                  className="bg-background rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-border/50 hover:bg-primary/5 hover:border-primary/50 transition-colors"
                 >
                   <div className="w-9 h-9 lg:w-14 lg:h-14 rounded-lg lg:rounded-xl bg-primary/10 flex items-center justify-center mb-2 lg:mb-4">
                     <Icon className="h-4 w-4 lg:h-7 lg:w-7 text-primary" />
@@ -417,7 +417,7 @@ const Index = () => {
               return (
                 <div
                   key={idx}
-                  className="flex items-start gap-3 lg:gap-4 p-4 lg:p-6 bg-muted/20 rounded-xl lg:rounded-2xl border border-border/30 hover:border-primary/30 transition-colors"
+                  className="flex items-start gap-3 lg:gap-4 p-4 lg:p-6 bg-muted/20 rounded-xl lg:rounded-2xl border border-border/30 hover:bg-primary/5 hover:border-primary/50 transition-colors"
                 >
                   <div className="w-10 h-10 lg:w-14 lg:h-14 rounded-lg lg:rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Icon className="h-5 w-5 lg:h-7 lg:w-7 text-primary" />

@@ -178,7 +178,7 @@ const KukySolutions = () => {
                 Principais Conquistas
               </h4>
               <div className="grid sm:grid-cols-2 gap-3">
-                {CREATOR_INFO.achievements.map((achievement, index) => <div key={index} className="flex items-start gap-3 p-4 bg-background rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
+                {CREATOR_INFO.achievements.map((achievement, index) => <div key={index} className="flex items-start gap-3 p-4 bg-background rounded-xl border border-border/50 hover:bg-primary/5 hover:border-primary/50 transition-colors">
                     <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                     <span className="text-sm text-muted-foreground">{achievement}</span>
                   </div>)}
@@ -193,7 +193,7 @@ const KukySolutions = () => {
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
             {/* Missão */}
-            <div className="bg-muted/20 rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-border/30 hover:border-primary/30 transition-colors">
+            <div className="bg-muted/20 rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-border/30 hover:bg-primary/5 hover:border-primary/50 transition-colors">
               <div className="flex items-center gap-3 mb-3 lg:mb-4">
                 <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-primary/10 flex items-center justify-center">
                   <Target className="h-5 w-5 lg:h-6 lg:w-6 text-primary" />
@@ -206,7 +206,7 @@ const KukySolutions = () => {
             </div>
 
             {/* Visão */}
-            <div className="bg-muted/20 rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-border/30 hover:border-primary/30 transition-colors">
+            <div className="bg-muted/20 rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-border/30 hover:bg-primary/5 hover:border-primary/50 transition-colors">
               <div className="flex items-center gap-3 mb-3 lg:mb-4">
                 <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-primary/10 flex items-center justify-center">
                   <Eye className="h-5 w-5 lg:h-6 lg:w-6 text-primary" />
@@ -228,7 +228,7 @@ const KukySolutions = () => {
               <h3 className="text-lg lg:text-2xl font-bold text-foreground">Nossos Valores</h3>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-              {MISSION_VISION.values.map((value, index) => <div key={index} className="flex items-center gap-2 p-3 bg-background rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
+              {MISSION_VISION.values.map((value, index) => <div key={index} className="flex items-center gap-2 p-3 bg-background rounded-xl border border-border/50 hover:bg-primary/5 hover:border-primary/50 transition-colors">
                   <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
                   <span className="text-sm font-medium text-foreground">{value}</span>
                 </div>)}
@@ -249,7 +249,7 @@ const KukySolutions = () => {
 
           {/* Info de Contato */}
           <div className="grid sm:grid-cols-2 gap-3 lg:gap-4 mb-6 lg:mb-8">
-            <div className="flex items-start gap-3 p-4 bg-background rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
+            <div className="flex items-start gap-3 p-4 bg-background rounded-xl border border-border/50 hover:bg-primary/5 hover:border-primary/50 transition-colors">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <Mail className="h-5 w-5 text-primary" />
               </div>
@@ -259,7 +259,7 @@ const KukySolutions = () => {
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-4 bg-background rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
+            <div className="flex items-start gap-3 p-4 bg-background rounded-xl border border-border/50 hover:bg-primary/5 hover:border-primary/50 transition-colors">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <Phone className="h-5 w-5 text-primary" />
               </div>
@@ -269,7 +269,7 @@ const KukySolutions = () => {
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-4 bg-background rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
+            <div className="flex items-start gap-3 p-4 bg-background rounded-xl border border-border/50 hover:bg-primary/5 hover:border-primary/50 transition-colors">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <MapPin className="h-5 w-5 text-primary" />
               </div>
@@ -279,7 +279,7 @@ const KukySolutions = () => {
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-4 bg-background rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
+            <div className="flex items-start gap-3 p-4 bg-background rounded-xl border border-border/50 hover:bg-primary/5 hover:border-primary/50 transition-colors">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <Globe className="h-5 w-5 text-primary" />
               </div>
@@ -291,7 +291,7 @@ const KukySolutions = () => {
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-4 bg-background rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
+            <div className="flex items-start gap-3 p-4 bg-background rounded-xl border border-border/50 hover:bg-primary/5 hover:border-primary/50 transition-colors">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <Shield className="h-5 w-5 text-primary" />
               </div>
