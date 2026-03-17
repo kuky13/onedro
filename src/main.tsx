@@ -55,43 +55,30 @@ try {
   const err = error instanceof Error ? error : new Error(String(error));
   console.error('❌ Erro ao inicializar aplicação:', err);
 
-  // Mostrar erro na tela
+  // Mostrar erro na tela usando DOM seguro (sem innerHTML para evitar XSS)
   const rootElement = document.getElementById('root');
   if (rootElement) {
-    rootElement.innerHTML = `
-      <div style="
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        background-color: #121212;
-        color: white;
-        font-family: Arial, sans-serif;
-        padding: 20px;
-        text-align: center;
-      ">
-        <h1 style="color: #ff4444; margin-bottom: 20px;">❌ Erro ao carregar aplicação</h1>
-        <p style="margin-bottom: 10px;">Detalhes do erro:</p>
-        <pre style="
-          background-color: #333;
-          padding: 15px;
-          border-radius: 5px;
-          max-width: 80%;
-          overflow: auto;
-          white-space: pre-wrap;
-        ">${err.message}\n\n${err.stack || ''}</pre>
-        <button onclick="window.location.reload()" style="
-          margin-top: 20px;
-          padding: 10px 20px;
-          background-color: #fec832;
-          color: black;
-          border: none;
-          border-radius: 5px;
-          cursor: pointer;
-          font-size: 16px;
-        ">Recarregar Página</button>
-      </div>
-    `;
+    const container = document.createElement('div');
+    container.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background-color:#121212;color:white;font-family:Arial,sans-serif;padding:20px;text-align:center;';
+
+    const heading = document.createElement('h1');
+    heading.textContent = '❌ Erro ao carregar aplicação';
+    heading.style.cssText = 'color:#ff4444;margin-bottom:20px;';
+
+    const label = document.createElement('p');
+    label.textContent = 'Detalhes do erro:';
+    label.style.marginBottom = '10px';
+
+    const pre = document.createElement('pre');
+    pre.textContent = `${err.message}\n\n${err.stack || ''}`;
+    pre.style.cssText = 'background-color:#333;padding:15px;border-radius:5px;max-width:80%;overflow:auto;white-space:pre-wrap;';
+
+    const btn = document.createElement('button');
+    btn.textContent = 'Recarregar Página';
+    btn.style.cssText = 'margin-top:20px;padding:10px 20px;background-color:#fec832;color:black;border:none;border-radius:5px;cursor:pointer;font-size:16px;';
+    btn.addEventListener('click', () => window.location.reload());
+
+    container.append(heading, label, pre, btn);
+    rootElement.replaceChildren(container);
   }
 }

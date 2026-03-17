@@ -14,6 +14,7 @@ import {
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useToast } from "@/hooks/useToast";
 import { useAuth } from "@/hooks/useAuth";
+import { isOAuthRedirectSafe } from "@/utils/secureNavigation";
 
 export const ConsentimentoPage = () => {
   const navigate = useNavigate();
@@ -28,13 +29,18 @@ export const ConsentimentoPage = () => {
   const scope = searchParams.get("scope") || "profile email";
   const state = searchParams.get("state");
 
-  // Simulação de detalhes do app (em um cenário real viria de uma tabela 'oauth_clients')
+  // Clientes OAuth registrados — em produção deve vir de uma tabela 'oauth_clients' no banco
+  const KNOWN_OAUTH_CLIENTS: Record<string, { name: string; website: string }> = {
+    "onedrip-app": { name: "OneDrip App", website: "https://onedrip.com.br" },
+  };
+
+  const knownClient = KNOWN_OAUTH_CLIENTS[clientId];
   const appDetails = {
-    name: clientId === "App Desconhecido" ? "Aplicação de Terceiros" : clientId,
+    name: knownClient?.name ?? (clientId === "App Desconhecido" ? "Aplicação de Terceiros" : clientId),
     icon: <div className="p-3 rounded-2xl bg-primary/10 mb-4"><ShieldCheck className="h-10 w-10 text-primary" /></div>,
-    verified: true,
+    verified: !!knownClient,
     description: "Esta aplicação solicita permissão para acessar seus dados básicos e integrar-se com o ecossistema OneDrip.",
-    website: "https://onedrip.com.br"
+    website: knownClient?.website ?? "#",
   };
 
   const scopesList = scope.split(" ").map(s => {
@@ -63,12 +69,13 @@ export const ConsentimentoPage = () => {
 
       // Simulação de sucesso
       setTimeout(() => {
-        if (redirectUri) {
+        if (redirectUri && isOAuthRedirectSafe(redirectUri)) {
           const url = new URL(redirectUri);
           url.searchParams.set("code", "auth_code_simulated_" + Math.random().toString(36).substring(7));
           if (state) url.searchParams.set("state", state);
           window.location.href = url.toString();
         } else {
+          if (redirectUri) console.warn("[OAuth] redirect_uri bloqueado (origem não permitida):", redirectUri);
           navigate("/dashboard");
         }
       }, 1500);
@@ -84,12 +91,13 @@ export const ConsentimentoPage = () => {
   };
 
   const handleCancel = () => {
-    if (redirectUri) {
+    if (redirectUri && isOAuthRedirectSafe(redirectUri)) {
       const url = new URL(redirectUri);
       url.searchParams.set("error", "access_denied");
       if (state) url.searchParams.set("state", state);
       window.location.href = url.toString();
     } else {
+      if (redirectUri) console.warn("[OAuth] redirect_uri bloqueado no cancelamento (origem não permitida):", redirectUri);
       navigate(-1);
     }
   };
@@ -134,8 +142,17 @@ export const ConsentimentoPage = () => {
                 Autorizar {appDetails.name}
               </CardTitle>
               <div className="flex items-center justify-center gap-1.5 mt-2 text-sm text-muted-foreground">
-                <Shield className="h-3.5 w-3.5 text-green-500" />
-                <span>Aplicação Verificada pela KukySolutions™</span>
+                {appDetails.verified ? (
+                  <>
+                    <Shield className="h-3.5 w-3.5 text-green-500" />
+                    <span>Aplicação Verificada pela KukySolutions™</span>
+                  </>
+                ) : (
+                  <>
+                    <Shield className="h-3.5 w-3.5 text-yellow-500" />
+                    <span className="text-yellow-600 dark:text-yellow-400">⚠ Aplicação não verificada</span>
+                  </>
+                )}
               </div>
             </CardHeader>
 

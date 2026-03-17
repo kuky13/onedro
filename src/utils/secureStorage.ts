@@ -3,8 +3,11 @@
  * Sistema OneDrip Blueberry - Segurança 2026
  */
 
-// Chave base para criptografia (em produção, deve vir de variável de ambiente)
-const ENCRYPTION_KEY = import.meta.env.VITE_ENCRYPTION_KEY || 'onedrip-blueberry-2026-secure-key';
+// Chave base para criptografia — obrigatória via variável de ambiente
+const ENCRYPTION_KEY: string = import.meta.env.VITE_ENCRYPTION_KEY;
+if (!ENCRYPTION_KEY) {
+  throw new Error('[SecureStorage] VITE_ENCRYPTION_KEY não definida. Adicione-a ao arquivo .env antes de iniciar a aplicação.');
+}
 
 /**
  * Gera uma chave de criptografia baseada na chave base e um salt

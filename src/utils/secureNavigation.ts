@@ -22,6 +22,13 @@ const ALLOWED_EXTERNAL_DOMAINS = [
   'web.whatsapp.com'
 ];
 
+// Origens permitidas para redirect_uri em fluxos OAuth
+const ALLOWED_OAUTH_REDIRECT_ORIGINS: string[] = [
+  'https://onedrip.com.br',
+  'https://www.onedrip.com.br',
+  ...(import.meta.env.DEV ? ['http://localhost:5173', 'http://localhost:3000'] : []),
+];
+
 /**
  * Valida se uma URL é segura para redirecionamento
  * @param url - URL a ser validada
@@ -175,6 +182,22 @@ export const buildSafeWhatsAppUrl = (phoneNumber: string, message?: string): str
   }
 
   return isUrlSafe(url) ? url : null;
+};
+
+/**
+ * Valida se uma URL é segura para ser usada como redirect_uri em fluxos OAuth.
+ * Apenas origens explicitamente registradas em ALLOWED_OAUTH_REDIRECT_ORIGINS são aceitas.
+ * @param url - redirect_uri a ser validado
+ * @returns true se a origem for permitida, false caso contrário
+ */
+export const isOAuthRedirectSafe = (url: string): boolean => {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    const { origin } = new URL(url);
+    return ALLOWED_OAUTH_REDIRECT_ORIGINS.includes(origin);
+  } catch {
+    return false;
+  }
 };
 
 /**
