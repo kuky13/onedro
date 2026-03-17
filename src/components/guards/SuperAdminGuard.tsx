@@ -12,13 +12,11 @@ export function SuperAdminGuard({ children }: SuperAdminGuardProps) {
   const { user, loading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
-  const [debugInfo, setDebugInfo] = useState<string>('');
 
   useEffect(() => {
     async function checkAdminStatus() {
       if (!user) {
         console.log('🔒 SuperAdminGuard: Usuário não autenticado');
-        setDebugInfo('Usuário não autenticado');
         setIsAdmin(false);
         setLoading(false);
         return;
@@ -36,29 +34,23 @@ export function SuperAdminGuard({ children }: SuperAdminGuardProps) {
 
         if (error) {
           console.error('❌ SuperAdminGuard: Erro ao verificar perfil do usuário:', error);
-          setDebugInfo(`Erro ao verificar perfil: ${error.message}`);
           setIsAdmin(false);
         } else if (!profile) {
           console.log('❌ SuperAdminGuard: Perfil não encontrado para o usuário');
-          setDebugInfo('Perfil não encontrado');
           setIsAdmin(false);
         } else {
-          console.log('📋 SuperAdminGuard: Perfil encontrado:', profile);
           const hasAdminRole = profile.role === 'admin';
-          
+
           if (hasAdminRole) {
             console.log('✅ SuperAdminGuard: Usuário tem role admin');
-            setDebugInfo('Usuário autorizado como admin');
             setIsAdmin(true);
           } else {
-            console.log('❌ SuperAdminGuard: Usuário não tem role admin. Role atual:', profile.role);
-            setDebugInfo(`Role insuficiente: ${profile.role}`);
+            console.log('❌ SuperAdminGuard: Usuário não tem role admin');
             setIsAdmin(false);
           }
         }
       } catch (error) {
         console.error('❌ SuperAdminGuard: Erro inesperado ao verificar status de admin:', error);
-        setDebugInfo(`Erro inesperado: ${error}`);
         setIsAdmin(false);
       } finally {
         setLoading(false);
@@ -77,9 +69,6 @@ export function SuperAdminGuard({ children }: SuperAdminGuardProps) {
         <div className="flex flex-col items-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
           <p className="text-gray-600 text-center">Procurando cookies...</p>
-          {debugInfo && (
-            <p className="text-sm text-gray-500">Debug: {debugInfo}</p>
-          )}
         </div>
       </div>
     );
@@ -94,7 +83,6 @@ export function SuperAdminGuard({ children }: SuperAdminGuardProps) {
   // Redirecionar se não for admin
   if (!isAdmin) {
     console.log('🔄 SuperAdminGuard: Redirecionando para unauthorized - acesso negado');
-    console.log('🔍 SuperAdminGuard: Debug info:', debugInfo);
     return <Navigate to="/unauthorized" replace />;
   }
 
