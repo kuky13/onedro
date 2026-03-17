@@ -1,7 +1,6 @@
 /**
  * CONTENT SECURITY POLICY AVANÇADO
- * Implementa CSP rigoroso sem 'unsafe-inline' ou 'unsafe-eval'
- * Sistema de nonces dinâmicos e hash de scripts
+ * Implementa CSP rigoroso com nonces dinâmicos e hash de scripts
  */
 
 import React from 'react';
@@ -152,9 +151,7 @@ class SecureCSPManager {
     
     const basePolicy: Record<string, string> = {
       'default-src': "'self'",
-      'script-src': this.config.strictMode 
-        ? (`'self' 'unsafe-eval' 'nonce-${this.currentNonce}' ${hashes}${devExtraScriptSrc}`).trim()
-        : (`'self' 'unsafe-eval' 'nonce-${this.currentNonce}' ${hashes} ${devExtraScriptSrc}`).trim(),
+      'script-src': (`'self' 'nonce-${this.currentNonce}' ${hashes}${devExtraScriptSrc}`).trim(),
       'style-src': this.config.strictMode
         ? `'self' 'unsafe-inline' https://fonts.googleapis.com` // unsafe-inline required for React styled-components/emotion
         : `'self' 'unsafe-inline' https://fonts.googleapis.com`,
@@ -175,7 +172,6 @@ class SecureCSPManager {
 
     // Adicionar diretivas específicas para desenvolvimento
     if (this.config.developmentMode) {
-      basePolicy['script-src'] += " 'unsafe-eval'";
       basePolicy['connect-src'] += " ws://localhost:* http://localhost:*";
     }
 
