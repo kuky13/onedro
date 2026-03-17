@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { List, Settings, Users, Wrench, MoreHorizontal, Hammer, Store, Timer } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { PWAInstallModalSimple } from '@/components/ui/PWAInstallModalSimple';
 import { usePWASimple } from '@/hooks/usePWASimple';
@@ -61,38 +60,24 @@ export const DashboardLiteQuickAccessEnhanced = ({
         <h3 className="text-lg font-semibold text-foreground">Acesso Rápido</h3>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {availableActions.map((action, index) => {
+          {availableActions.map((action) => {
             const Icon = action.icon;
             const isLoadingDownload = action.id === 'download-app' && isInstalling;
-            const delayValue = index * 0.04;
 
             return (
-              <motion.button
+              <button
                 key={action.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: delayValue }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
                 onClick={() => handleActionClick(action)}
                 disabled={isLoadingDownload}
-                className="flex flex-col items-center justify-center gap-3 h-28 rounded-2xl border border-border/50 bg-card hover:bg-primary/5 hover:border-primary/50 hover:shadow-md transition-all duration-200 group"
+                className="flex flex-col items-center justify-center gap-3 h-28 rounded-2xl border border-border/50 bg-card hover:bg-primary/5 hover:border-primary/50 transition-colors duration-150 group"
               >
-                <div className={`w-11 h-11 rounded-xl ${action.bgClass} flex items-center justify-center group-hover:scale-105 transition-transform`}>
-                  {isLoadingDownload ? (
-                    <motion.div
-                      className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full"
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                    />
-                  ) : (
-                    <Icon className={`h-5 w-5 ${action.colorClass}`} />
-                  )}
+                <div className={`w-11 h-11 rounded-xl ${action.bgClass} flex items-center justify-center`}>
+                  <Icon className={`h-5 w-5 ${action.colorClass}`} />
                 </div>
                 <span className="text-xs font-medium text-foreground text-center leading-tight px-1">
                   {isLoadingDownload ? 'Instalando...' : action.label}
                 </span>
-              </motion.button>
+              </button>
             );
           })}
         </div>
