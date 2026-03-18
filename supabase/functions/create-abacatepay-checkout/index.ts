@@ -133,19 +133,36 @@ serve(async (req) => {
     const data = await response.json();
     console.log("AbacatePay Response:", JSON.stringify(data));
 
-    // Update database logic (simplified for now, mimicking existing logic)
-    if (isAuthenticated && purchaseRegistrationId) {
-       // Update purchase_registration with AbacatePay ID (using mercadopago_payment_id col for compatibility)
-       
+    // Update database: always save the AbacatePay payment ID regardless of auth status
+    // This is critical so the webhook can find the purchase_registration later
+    if (purchaseRegistrationId) {
        const abacateId = data.data.id;
-       
-       try {
-         await supabaseAdmin.from("purchase_registrations").update({
+
+       // Fetch current metadata to merge (avoid overwriting existing fields)
+       const { data: existingReg } = await supabaseAdmin
+         .from("purchase_registrations")
+         .select("metadata")
+         .eq("id", purchaseRegistrationId)
+         .maybeSingle();
+
+       const mergedMetadata = {
+         ...(existingReg?.metadata || {}),
+         abacatepay_id: abacateId,
+       };
+
+       const { error: dbError } = await supabaseAdmin
+         .from("purchase_registrations")
+         .update({
            mercadopago_payment_id: abacateId,
-         }).eq("id", purchaseRegistrationId);
-       } catch (dbError) {
-         console.error("Database Update Error (Non-critical):", dbError);
+           metadata: mergedMetadata,
+         })
+         .eq("id", purchaseRegistrationId);
+
+       if (dbError) {
+         console.error("Database Update Error:", dbError);
          // Continue even if DB update fails, as we return the QR code
+       } else {
+         console.log("Purchase registration updated with AbacatePay ID:", abacateId);
        }
     }
 

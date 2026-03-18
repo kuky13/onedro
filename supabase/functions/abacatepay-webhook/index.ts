@@ -279,31 +279,44 @@ serve(async (req) => {
     if (status === "PAID" && paymentId) {
        logStep("Processing Payment", { paymentId, amount: paidAmount });
 
-       // Find Purchase Registration
-       // We search by abacatepay_id in metadata OR mercadopago_payment_id (if we used that hack)
-       // Or we can search by ID if we stored it.
-       
-       // Try finding by metadata->>abacatepay_id
-       let { data: purchaseReg } = await supabaseAdmin
-         .from("purchase_registrations")
-         .select("*")
-         .eq("metadata->>abacatepay_id", paymentId)
-         .maybeSingle();
+       // Find Purchase Registration - 3-layer lookup for robustness
+       let purchaseReg: any = null;
 
+       // Priority 1: lookup by purchaseRegistrationId passed in AbacatePay metadata (most reliable)
+       const metaPurchaseId = dataObj.metadata?.purchaseRegistrationId
+         || dataObj.checkout?.metadata?.purchaseRegistrationId
+         || dataObj.transparent?.metadata?.purchaseRegistrationId;
+
+       if (metaPurchaseId) {
+         const { data: regById } = await supabaseAdmin
+           .from("purchase_registrations")
+           .select("*")
+           .eq("id", metaPurchaseId)
+           .maybeSingle();
+         purchaseReg = regById;
+         if (purchaseReg) logStep("Found purchase registration by metadata ID", metaPurchaseId);
+       }
+
+       // Priority 2: lookup by mercadopago_payment_id column
        if (!purchaseReg) {
-          // Try finding by ID if we passed purchaseRegistrationId in metadata
-          // In create-checkout, we passed: metadata: { purchaseRegistrationId }
-          // So we should look at event.data.metadata.purchaseRegistrationId
-          const metaPurchaseId = dataObj.metadata?.purchaseRegistrationId || dataObj.checkout?.metadata?.purchaseRegistrationId;
-          
-          if (metaPurchaseId) {
-             const { data: regById } = await supabaseAdmin
-               .from("purchase_registrations")
-               .select("*")
-               .eq("id", metaPurchaseId)
-               .maybeSingle();
-             purchaseReg = regById;
-          }
+         const { data: regByPaymentId } = await supabaseAdmin
+           .from("purchase_registrations")
+           .select("*")
+           .eq("mercadopago_payment_id", paymentId)
+           .maybeSingle();
+         purchaseReg = regByPaymentId;
+         if (purchaseReg) logStep("Found purchase registration by mercadopago_payment_id", paymentId);
+       }
+
+       // Priority 3: lookup by metadata JSONB field
+       if (!purchaseReg) {
+         const { data: regByMeta } = await supabaseAdmin
+           .from("purchase_registrations")
+           .select("*")
+           .eq("metadata->>abacatepay_id", paymentId)
+           .maybeSingle();
+         purchaseReg = regByMeta;
+         if (purchaseReg) logStep("Found purchase registration by metadata.abacatepay_id", paymentId);
        }
 
        if (purchaseReg) {
@@ -482,7 +495,8 @@ serve(async (req) => {
            } catch (e) { console.error("WhatsApp Notifications Error", e); }
 
        } else {
-          logStep("Purchase Registration not found", { paymentId });
+          logStep("Purchase Registration not found - license NOT created", { paymentId, metaPurchaseId });
+          console.error(`[ABACATE-WEBHOOK] CRITICAL: Could not find purchase_registration for paymentId=${paymentId} metaPurchaseId=${metaPurchaseId}. License was NOT created.`);
        }
     }
 
