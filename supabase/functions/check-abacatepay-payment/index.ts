@@ -208,12 +208,24 @@ serve(async (req) => {
     let customerData = null;
 
     if (status === "PAID") {
-      // 1. Find the Purchase Registration
-      const { data: purchaseReg } = await supabaseAdmin
+      // 1. Find the Purchase Registration - two sequential queries to avoid broken JSONB OR syntax
+      let purchaseReg: any = null;
+
+      const { data: regByPaymentId } = await supabaseAdmin
         .from("purchase_registrations")
         .select("*")
-        .or(`metadata->>abacatepay_id.eq.${paymentId},mercadopago_payment_id.eq.${paymentId}`)
+        .eq("mercadopago_payment_id", paymentId)
         .maybeSingle();
+      purchaseReg = regByPaymentId;
+
+      if (!purchaseReg) {
+        const { data: regByMeta } = await supabaseAdmin
+          .from("purchase_registrations")
+          .select("*")
+          .eq("metadata->>abacatepay_id", paymentId)
+          .maybeSingle();
+        purchaseReg = regByMeta;
+      }
 
       if (purchaseReg) {
         customerData = {
