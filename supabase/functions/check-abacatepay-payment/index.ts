@@ -261,8 +261,9 @@ serve(async (req) => {
                isRenewal = true;
                const newExpiresAt = calculateSmartExpiration(existingLicense.expires_at, daysToAdd, now);
                licenseCode = existingLicense.code;
-               
-               await supabaseAdmin.from("licenses").update({
+
+               // Update — check error explicitly
+               const { error: updateError } = await supabaseAdmin.from("licenses").update({
                   expires_at: newExpiresAt,
                   is_active: true,
                   updated_at: now.toISOString(),
@@ -273,11 +274,16 @@ serve(async (req) => {
                      renewal_payment_id: paymentId
                   }
                }).eq("id", existingLicense.id);
+               if (updateError) {
+                  console.error("CRITICAL: Failed to update license for renewal:", updateError);
+                  throw new Error(`License renewal update failed: ${updateError.message}`);
+               }
             } else {
                licenseCode = await generateUniqueLicenseCode(supabaseAdmin, planType, daysToAdd);
                const newExpiresAt = calculateSmartExpiration(null, daysToAdd, now);
-               
-               await supabaseAdmin.from("licenses").insert({
+
+               // Insert — check error explicitly
+               const { error: insertError } = await supabaseAdmin.from("licenses").insert({
                   code: licenseCode,
                   is_active: true,
                   activated_at: now.toISOString(),
@@ -290,9 +296,15 @@ serve(async (req) => {
                      plan_type: planType
                   }
                });
+               if (insertError) {
+                  console.error("CRITICAL: Failed to insert license:", insertError);
+                  throw new Error(`License insert failed: ${insertError.message}`);
+               }
             }
 
-            // Update Purchase Registration
+            console.log("License saved successfully:", licenseCode);
+
+            // Update Purchase Registration — only reached if license was actually saved
             await supabaseAdmin.from("purchase_registrations").update({
                status: "completed",
                license_code: licenseCode,

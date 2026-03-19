@@ -385,9 +385,9 @@ serve(async (req) => {
              isRenewal = true;
              const newExpiresAt = calculateSmartExpiration(existingLicense.expires_at, daysToAdd, now);
              licenseCode = existingLicense.code; // Keep same code usually
-             
-             // Update
-             await supabaseAdmin.from("licenses").update({
+
+             // Update — check error explicitly
+             const { error: updateError } = await supabaseAdmin.from("licenses").update({
                 expires_at: newExpiresAt,
                 is_active: true,
                 updated_at: now.toISOString(),
@@ -398,12 +398,16 @@ serve(async (req) => {
                    renewal_payment_id: paymentId
                 }
              }).eq("id", existingLicense.id);
+             if (updateError) {
+                logStep("CRITICAL: Failed to update license for renewal", updateError);
+                throw new Error(`License renewal update failed: ${updateError.message}`);
+             }
           } else {
-             // Create new
+             // Create new — check error explicitly
              licenseCode = await generateUniqueLicenseCode(supabaseAdmin, planType, daysToAdd);
              const newExpiresAt = calculateSmartExpiration(null, daysToAdd, now);
-             
-             await supabaseAdmin.from("licenses").insert({
+
+             const { error: insertError } = await supabaseAdmin.from("licenses").insert({
                 code: licenseCode,
                 is_active: true,
                 activated_at: now.toISOString(),
@@ -416,9 +420,15 @@ serve(async (req) => {
                    plan_type: planType
                 }
              });
+             if (insertError) {
+                logStep("CRITICAL: Failed to insert license", insertError);
+                throw new Error(`License insert failed: ${insertError.message}`);
+             }
           }
-          
-          // 4. Update Purchase Reg with License
+
+          logStep("License saved successfully", { licenseCode, isRenewal });
+
+          // 4. Update Purchase Reg with License — only reached if license was actually saved
           await supabaseAdmin.from("purchase_registrations").update({
              license_code: licenseCode
           }).eq("id", purchaseReg.id);
