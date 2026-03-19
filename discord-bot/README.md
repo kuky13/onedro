@@ -1,113 +1,140 @@
 # 🤖 Drippy — Bot do Discord (OneDrip)
 
-Bot do Discord da Drippy, assistente virtual da OneDrip, powered by Claude AI.
+Bot do Discord da Drippy, assistente virtual da OneDrip, powered by **Google Gemini** (gratuito).
 
 ## Funcionalidades
 
 - Responde em **DMs** diretas ao bot
 - Responde a **@menções** em qualquer canal do servidor
-- Responde automaticamente em **canais de suporte** configurados (sem precisar de @mention)
+- Responde automaticamente em **canais de suporte** configurados
 - Histórico de conversa por usuário (últimas 10 trocas)
 - Sistema de humor adaptativo (Drippy fica mais fria se o usuário for grosseiro)
 - Base de conhecimento técnica sobre assistência técnica de celulares
 
-### Comandos especiais (sem barra, só digitando)
+### Comandos
 
 | Comando | Descrição |
 |---------|-----------|
-| `!drippy reset` | Limpa o histórico da conversa (útil quando quer mudar de assunto) |
+| `!drippy reset` | Limpa o histórico da conversa |
 | `!drippy humor` | Mostra o humor atual da Drippy com você |
 
 ---
 
-## Configuração
+## Passo a passo completo para rodar na VPS
 
-### 1. Criar o bot no Discord
+### Parte 1 — Pegar a chave do Gemini (grátis)
 
-1. Acesse [discord.com/developers/applications](https://discord.com/developers/applications)
-2. Clique em **New Application** → dê o nome "Drippy" (ou qualquer outro)
-3. Vá em **Bot** → clique em **Add Bot**
-4. Em **Privileged Gateway Intents**, ative:
-   - ✅ **Message Content Intent** (obrigatório)
-5. Copie o **Token** (guarde com segurança)
+1. Acesse **https://aistudio.google.com/apikey**
+2. Faça login com sua conta Google
+3. Clique em **"Create API Key"**
+4. Copie a chave (formato: `AIzaSy...`)
+5. Guarde com segurança
 
-### 2. Convidar o bot para o servidor
+### Parte 2 — Criar o bot no Discord
 
-Na aba **OAuth2 → URL Generator**:
-- Scopes: `bot`
-- Bot Permissions: `Send Messages`, `Read Messages/View Channels`, `Read Message History`
-- Copie a URL gerada e acesse no navegador para convidar
+1. Acesse **https://discord.com/developers/applications**
+2. Clique em **"New Application"** → nome: `Drippy`
+3. Na aba **"Bot"**:
+   - Clique em **"Add Bot"**
+   - Em **"Privileged Gateway Intents"**, ative:
+     - ✅ **MESSAGE CONTENT INTENT** (obrigatório!)
+   - Copie o **Token** do bot
+4. Na aba **"OAuth2" → "URL Generator"**:
+   - Scopes: marque `bot`
+   - Bot Permissions: marque `Send Messages`, `Read Messages/View Channels`, `Read Message History`
+   - Copie a **URL gerada** e abra no navegador para convidar o bot ao seu servidor
 
-### 3. Obter a chave da API da Anthropic
+### Parte 3 — Instalar na VPS
 
-Acesse [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys) e crie uma chave.
-
----
-
-## Deploy na VPS
-
-### Requisitos
-
-- Node.js 18+ (`node --version`)
-- npm
-- PM2 (`npm install -g pm2`)
-
-### Passo a passo
+Conecte na sua VPS via SSH e execute:
 
 ```bash
-# 1. Copiar o projeto para a VPS (de onde estiver o código)
-scp -r ./discord-bot usuario@ip-da-vps:/opt/drippy-discord
-# ou clonar do GitHub se você pushar o projeto
+# 1. Instalar Node.js 18+ (se não tiver)
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
 
-# 2. Na VPS, entrar na pasta
-cd /opt/drippy-discord
+# 2. Instalar PM2 (gerenciador de processo)
+sudo npm install -g pm2
 
-# 3. Instalar dependências
+# 3. Clonar o projeto (ou copiar a pasta discord-bot)
+git clone https://github.com/kuky13/onedro.git /opt/onedro
+cd /opt/onedro/discord-bot
+
+# 4. Instalar dependências
 npm install
 
-# 4. Criar o arquivo .env baseado no exemplo
+# 5. Criar o arquivo .env
 cp .env.example .env
 nano .env
-# Preencha DISCORD_TOKEN e ANTHROPIC_API_KEY
-
-# 5. Criar pasta de logs
-mkdir -p logs
-
-# 6. Iniciar com PM2
-pm2 start ecosystem.config.js
-
-# 7. Verificar se está rodando
-pm2 status
-pm2 logs drippy-discord
-
-# 8. Configurar PM2 para reiniciar automaticamente ao ligar a VPS
-pm2 save
-pm2 startup
-# Execute o comando que o PM2 mostrar (ex: sudo env PATH=... pm2 startup systemd ...)
 ```
 
-### Comandos úteis no servidor
+No `nano`, preencha:
+```
+DISCORD_TOKEN=seu_token_do_discord
+GEMINI_API_KEY=sua_chave_do_gemini
+```
+Salve com `Ctrl+O`, `Enter`, `Ctrl+X`.
 
 ```bash
-pm2 status                    # Ver status do bot
-pm2 logs drippy-discord       # Ver logs em tempo real
-pm2 restart drippy-discord    # Reiniciar o bot
-pm2 stop drippy-discord       # Parar o bot
-pm2 delete drippy-discord     # Remover da lista do PM2
+# 6. Criar pasta de logs
+mkdir -p logs
+
+# 7. Iniciar o bot com PM2
+pm2 start ecosystem.config.js
+
+# 8. Verificar se está rodando
+pm2 status
+
+# 9. Ver os logs (feedback visual em tempo real)
+pm2 logs drippy-discord
+
+# 10. Configurar para iniciar automaticamente quando a VPS ligar/reiniciar
+pm2 save
+pm2 startup
+# ↑ Execute o comando que o PM2 mostrar (começa com "sudo env PATH=...")
 ```
 
-### Configurar canal de suporte (opcional)
+### Parte 4 — Monitorar o bot
 
-Para que a Drippy responda automaticamente em um canal específico sem precisar de @mention:
+```bash
+# Ver status com informações detalhadas
+pm2 status
 
-1. No Discord, ative **Modo Desenvolvedor**: Configurações → Avançado → Modo Desenvolvedor
+# Ver logs em tempo real (Ctrl+C para sair)
+pm2 logs drippy-discord
+
+# Ver métricas de CPU/memória em tempo real
+pm2 monit
+
+# Dashboard web (opcional — acessar via navegador)
+pm2 plus
+# ↑ Cria um dashboard em https://app.pm2.io (grátis para 1 servidor)
+
+# Ver últimos erros
+pm2 logs drippy-discord --err --lines 50
+
+# Reiniciar o bot
+pm2 restart drippy-discord
+
+# Parar o bot
+pm2 stop drippy-discord
+```
+
+### Parte 5 — Configurar canal de suporte (opcional)
+
+Para a Drippy responder automaticamente em um canal sem precisar de @mention:
+
+1. No Discord: **Configurações** → **Avançado** → ative **Modo Desenvolvedor**
 2. Clique com o botão direito no canal → **Copiar ID do canal**
-3. No arquivo `.env`, adicione:
+3. Edite o `.env`:
+   ```bash
+   nano /opt/onedro/discord-bot/.env
    ```
-   SUPPORT_CHANNEL_IDS=ID_DO_CANAL
+   Adicione a linha:
    ```
-4. Para múltiplos canais: `SUPPORT_CHANNEL_IDS=ID1,ID2,ID3`
-5. Reinicie o bot: `pm2 restart drippy-discord`
+   SUPPORT_CHANNEL_IDS=id_do_canal_aqui
+   ```
+4. Reinicie: `pm2 restart drippy-discord`
 
 ---
 
@@ -117,22 +144,19 @@ Para que a Drippy responda automaticamente em um canal específico sem precisar 
 discord-bot/
 ├── src/
 │   ├── index.js          # Bot principal (Discord.js)
-│   ├── drippy.js         # Integração Claude API + histórico + mood
-│   └── systemPrompt.js   # Personalidade da Drippy para Discord
-├── .env.example          # Modelo de variáveis de ambiente
+│   ├── drippy.js         # Integração Gemini API + histórico + mood
+│   └── systemPrompt.js   # Personalidade da Drippy
+├── .env.example          # Modelo de variáveis
 ├── .gitignore
-├── ecosystem.config.js   # Configuração PM2
+├── ecosystem.config.js   # Config PM2
 ├── package.json
 └── README.md
 ```
 
----
+## Custos
 
-## Custos estimados
+- **Gemini API**: **GRÁTIS** (tier free: 15 requisições/min, 1 milhão de tokens/min)
+- **VPS**: O que você já paga
+- **Discord Bot**: Grátis
 
-O bot usa a API da Anthropic (Claude). Custo aproximado por conversa (10 mensagens):
-
-- Modelo claude-sonnet-4-6: ~$0.003–$0.01 por conversa
-- Para um servidor pequeno com 50 conversas/dia: ~$0.15–$0.50/dia
-
-Monitore o uso em [console.anthropic.com](https://console.anthropic.com).
+Para monitorar uso do Gemini: https://aistudio.google.com/apikey (mostra consumo)

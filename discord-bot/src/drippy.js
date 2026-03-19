@@ -1,15 +1,15 @@
-const Anthropic = require("@anthropic-ai/sdk");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { buildSystemPrompt } = require("./systemPrompt");
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Histórico de conversa por usuário: userId -> [{role, content}]
+// Histórico de conversa por usuário: userId -> [{role, parts}]
 const conversationHistory = new Map();
 
 // Mood por usuário: userId -> number (0-100)
 const userMoods = new Map();
 
-const MAX_HISTORY_MESSAGES = 20; // 10 trocas (user + assistant)
+const MAX_HISTORY_MESSAGES = 20; // 10 trocas (user + model)
 const MOOD_DECREASE_RUDE = 15;
 const MOOD_INCREASE_NICE = 5;
 const MOOD_DEFAULT = 100;
@@ -43,9 +43,10 @@ function getHistory(userId) {
   return conversationHistory.get(userId) || [];
 }
 
-function addToHistory(userId, role, content) {
+function addToHistory(userId, role, text) {
   const history = getHistory(userId);
-  history.push({ role, content });
+  // Gemini usa "user" e "model" como roles
+  history.push({ role, parts: [{ text }] });
 
   // Manter apenas as últimas MAX_HISTORY_MESSAGES mensagens
   if (history.length > MAX_HISTORY_MESSAGES) {
@@ -63,32 +64,29 @@ function clearHistory(userId) {
 async function askDrippy(userId, userMessage) {
   const mood = adjustMood(userId, userMessage);
 
-  addToHistory(userId, "user", userMessage);
-
+  // Buscar histórico ANTES de adicionar a mensagem atual
   const history = getHistory(userId);
-  // O último item é a mensagem que acabamos de adicionar — enviamos todo o histórico
-  const messages = history.map((m) => ({ role: m.role, content: m.content }));
+
+  // Criar modelo com system prompt baseado no mood atual
+  const model = genAI.getGenerativeModel({
+    model: process.env.GEMINI_MODEL || "gemini-2.0-flash",
+    systemInstruction: buildSystemPrompt(mood),
+  });
+
+  // Iniciar chat com histórico existente
+  const chat = model.startChat({ history });
 
   try {
-    const response = await anthropic.messages.create({
-      model: process.env.CLAUDE_MODEL || "claude-sonnet-4-6",
-      max_tokens: 1024,
-      system: buildSystemPrompt(mood),
-      messages,
-    });
+    const result = await chat.sendMessage(userMessage);
+    const reply = result.response.text();
 
-    const reply = response.content[0]?.text || "Desculpa, tive um problema ao processar sua mensagem.";
-
-    addToHistory(userId, "assistant", reply);
+    // Adicionar ambos ao histórico local
+    addToHistory(userId, "user", userMessage);
+    addToHistory(userId, "model", reply);
 
     return { reply, mood };
   } catch (error) {
-    console.error("[Drippy] Erro ao chamar Claude API:", error.message);
-    // Remover a mensagem do usuário do histórico se a API falhou
-    const hist = getHistory(userId);
-    if (hist.length > 0 && hist[hist.length - 1].role === "user") {
-      hist.pop();
-    }
+    console.error("[Drippy] Erro ao chamar Gemini API:", error.message);
     throw error;
   }
 }

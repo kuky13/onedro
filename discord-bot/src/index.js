@@ -11,7 +11,7 @@ const {
 const { askDrippy, clearHistory, getUserMood } = require("./drippy");
 
 // ─── Validação de variáveis de ambiente ───────────────────────────────────────
-const required = ["DISCORD_TOKEN", "ANTHROPIC_API_KEY"];
+const required = ["DISCORD_TOKEN", "GEMINI_API_KEY"];
 for (const key of required) {
   if (!process.env[key]) {
     console.error(`[ERRO] Variável de ambiente obrigatória não definida: ${key}`);
