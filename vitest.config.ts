@@ -10,8 +10,15 @@ export default defineConfig({
     },
   },
   test: {
-    environment: "node",
+    environment: "jsdom",
     globals: true,
+    setupFiles: [],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      include: ['src/services/**/*.ts', 'src/utils/**/*.ts', 'src/hooks/**/*.ts'],
+      exclude: ['**/*.test.ts', '**/*.d.ts'],
+    },
   },
 });
 

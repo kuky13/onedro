@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { ResetAppButton } from '@/components/ResetAppButton';
+import { Sentry } from '@/lib/sentry';
 interface Props {
   children?: ReactNode;
   fallback?: ReactNode;
@@ -23,6 +24,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
+    Sentry.captureException(error, { extra: { componentStack: errorInfo.componentStack } });
   }
   private handleRetry = () => {
     this.setState({

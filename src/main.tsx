@@ -2,6 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { initSentry } from './lib/sentry';
+
+// Inicializar Sentry antes de renderizar a aplicação
+initSentry();
 
 // Console/Debug: manter silencioso por padrão.
 // Para habilitar o console ASCII no preview, use ?debugConsole=1

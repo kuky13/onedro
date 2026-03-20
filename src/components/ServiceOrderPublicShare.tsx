@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { AlertCircle, CheckCircle, Phone, Building2, Package, Wrench, Truck, Archive, Calendar, ExternalLink, MapPin, FileCheck, Package2, Smartphone, Hash, Image, Clock, CreditCard, X, ChevronLeft, ChevronRight, Shield, Mail, Globe, FileText } from 'lucide-react';
+import { AlertCircle, Building2, Calendar, ExternalLink, MapPin, Smartphone, Hash, Image, Clock, CreditCard, X, ChevronLeft, ChevronRight, Mail, Globe, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -20,115 +20,7 @@ import { ServiceOrderImage } from '@/types/imageUpload';
 import { ServiceOrderData } from '@/types/serviceOrder';
 import { CompanyInfo } from '@/types/company';
 import { cn } from '@/lib/utils';
-const statusConfig = {
-  opened: {
-    label: 'Aberto',
-    color: '#EF4444',
-    icon: Package,
-    description: 'Ordem de serviço criada e aguardando início do atendimento',
-    step: 1
-  },
-  pending_approval: {
-    label: 'Aguardando Aprovação',
-    color: '#6366F1',
-    icon: FileCheck,
-    description: 'Aguardando aprovação do cliente para prosseguir com o reparo',
-    step: 1
-  },
-  in_progress: {
-    label: 'Reparo',
-    color: '#F59E0B',
-    icon: Wrench,
-    description: 'Técnico trabalhando no reparo do equipamento',
-    step: 2
-  },
-  waiting_parts: {
-    label: 'Aguardando Peças',
-    color: '#8B5CF6',
-    icon: Package,
-    description: 'Aguardando chegada de peças para continuar o reparo',
-    step: 2
-  },
-  waiting_client: {
-    label: 'Aguardando Cliente',
-    color: '#F97316',
-    icon: Phone,
-    description: 'Aguardando contato ou decisão do cliente',
-    step: 2
-  },
-  under_warranty: {
-    label: 'Em Garantia',
-    color: '#10B981',
-    icon: Shield,
-    description: 'Equipamento em processo de garantia',
-    step: 2
-  },
-  ready_for_pickup: {
-    label: 'Pronto para Retirada',
-    color: '#06B6D4',
-    icon: Package2,
-    description: 'Reparo finalizado, equipamento pronto para retirada',
-    step: 3
-  },
-  completed: {
-    label: 'Concluído',
-    color: '#10B981',
-    icon: CheckCircle,
-    description: 'Reparo finalizado, equipamento pronto para retirada',
-    step: 3
-  },
-  delivered: {
-    label: 'Entregue',
-    color: '#fec832',
-    icon: Truck,
-    description: 'Equipamento entregue ao cliente',
-    step: 4
-  },
-  cancelled: {
-    label: 'Cancelado',
-    color: '#EF4444',
-    icon: AlertCircle,
-    description: 'Ordem de serviço cancelada',
-    step: 0
-  },
-  archived: {
-    label: 'Arquivado',
-    color: '#6B7280',
-    icon: Archive,
-    description: 'Ordem de serviço arquivada',
-    step: 5
-  }
-};
-function getStatusInfo(status: string) {
-  return statusConfig[status as keyof typeof statusConfig] || {
-    label: status,
-    color: '#6B7280',
-    icon: AlertCircle,
-    description: 'Status desconhecido',
-    step: 0
-  };
-}
-function getPaymentStatusInfo(isPaid: boolean) {
-  if (isPaid) {
-    return {
-      label: 'Pago',
-      color: '#10B981',
-      icon: CheckCircle,
-      description: 'Pagamento confirmado'
-    };
-  } else {
-    return {
-      label: 'Pendente',
-      color: '#F59E0B',
-      icon: AlertCircle,
-      description: 'Aguardando pagamento'
-    };
-  }
-}
-// Detect if token is a formatted_id (e.g., OS0001) or a legacy share token
-function isFormattedId(token: string): boolean {
-  return /^OS\d+$/i.test(token);
-}
+import { statusConfig, getStatusInfo, getPaymentStatusInfo, isFormattedId } from './service-orders/publicShare/statusConfig';
 
 export function ServiceOrderPublicShare() {
   const params = useParams<{ shareToken: string }>();
