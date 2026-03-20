@@ -1,155 +1,23 @@
 import jsPDF from 'jspdf';
-import { getCachedCompanyData, CompanyDataForPDF } from '../hooks/useCompanyDataLoader';
+import { CompanyDataForPDF } from '../hooks/useCompanyDataLoader';
 
-export interface BudgetData {
-  id: string;
-  device_model: string;
-  part_quality: string;
-  total_price: number;
-  installment_price?: number;
-  installment_count?: number;
-  created_at: string;
-  validity_date?: string;
-  warranty_months?: number;
-  notes?: string;
-  includes_delivery?: boolean;
-  includes_screen_protector?: boolean;
-  custom_services?: string;
-  sequential_number?: number;
-  // Adicionado: lista de serviços/peças para renderização dinâmica
-  parts?: BudgetPartData[];
-}
+// Tipos movidos para ./pdf/types.ts
+export type { BudgetData, BudgetPartData, CompanyData } from './pdf/types';
+import type { BudgetData, BudgetPartData, CompanyData, RGB } from './pdf/types';
 
-// Definição dos dados de peça/serviço para o PDF
-export interface BudgetPartData {
-  name: string;
-  part_type?: string;
-  quantity: number;
-  price: number; // preço base em reais
-  cash_price?: number; // preço à vista, se diferente
-  installment_price?: number; // preço total parcelado
-  installment_count?: number; // número de parcelas
-  warranty_months?: number; // garantia específica
-}
+// Utilitários movidos para módulos especializados
+export { loadImage } from './pdf/imageLoader';
+export {
+  validateCompanyData,
+  updateCompanyDataCache,
+  getLocalCompanyCache,
+  hasValidCompanyDataForPDF,
+} from './pdf/companyDataUtils';
 
-export interface CompanyData {
-  shop_name?: string;
-  address?: string;
-  contact_phone?: string;
-  logo_url?: string;
-  email?: string;
-  cnpj?: string;
-}
+// Importações internas para uso neste arquivo
+import { loadImage } from './pdf/imageLoader';
+import { validateCompanyData, getLocalCompanyCache } from './pdf/companyDataUtils';
 
-type RGB = [number, number, number];
-
-const loadImage = (url: string, retries: number = 3, timeout: number = 10000): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    let attempts = 0;
-
-    const tryLoad = () => {
-      attempts++;
-      // Loading logo attempt
-
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-
-      // Timeout para evitar travamento
-      const timeoutId = setTimeout(() => {
-        // Logo loading timeout
-        img.src = ''; // Cancela o carregamento
-        if (attempts < retries) {
-          setTimeout(tryLoad, 1000); // Retry após 1 segundo
-        } else {
-          reject(new Error(`Timeout ao carregar imagem após ${retries} tentativas`));
-        }
-      }, timeout);
-
-      img.crossOrigin = 'anonymous';
-      img.onload = function () {
-        clearTimeout(timeoutId);
-        try {
-          canvas.width = 72;
-          canvas.height = 72;
-          ctx?.drawImage(img, 0, 0, 72, 72);
-          const dataURL = canvas.toDataURL('image/jpeg', 1.0);
-          // Logo loaded successfully
-          resolve(dataURL);
-        } catch (error) {
-          console.error(`[PDF] Erro ao processar imagem:`, error);
-          if (attempts < retries) {
-            setTimeout(tryLoad, 1000);
-          } else {
-            reject(error);
-          }
-        }
-      };
-
-      img.onerror = function () {
-        clearTimeout(timeoutId);
-        // Logo loading error
-        if (attempts < retries) {
-          setTimeout(tryLoad, 1000); // Retry após 1 segundo
-        } else {
-          reject(new Error(`Falha ao carregar imagem após ${retries} tentativas`));
-        }
-      };
-
-      img.src = url;
-    };
-
-    tryLoad();
-  });
-};
-
-// Função para validar e normalizar dados da empresa com cache inteligente
-const validateCompanyData = (companyData?: CompanyData): CompanyDataForPDF => {
-  // Company data received
-
-  // Primeiro, tentar usar o cache local sincronizado
-  const localCache = getLocalCompanyCache();
-  let fallbackData: CompanyDataForPDF | null = null;
-
-  if (localCache?.hasData) {
-    console.log('[PDF Utils] Usando cache local sincronizado');
-    fallbackData = localCache.data;
-  } else {
-    // Fallback para o cache do hook
-    const cachedData = getCachedCompanyData();
-    if (cachedData?.hasData) {
-      console.log('[PDF Utils] Usando cache do hook como fallback');
-      try {
-        // Simular o comportamento do hook para obter dados formatados
-        const shopData = cachedData.shopProfile;
-        const companyInfo = cachedData.companyInfo;
-
-        fallbackData = {
-          shop_name: shopData?.shop_name || companyInfo?.name || 'Minha Empresa',
-          address: shopData?.address || companyInfo?.address || '',
-          contact_phone: shopData?.contact_phone || companyInfo?.whatsapp_phone || '',
-          logo_url: shopData?.logo_url || companyInfo?.logo_url || '',
-          email: companyInfo?.email || '',
-          cnpj: shopData?.cnpj || ''
-        };
-      } catch (error) {
-        console.warn('Erro ao processar dados do cache:', error);
-      }
-    }
-  }
-
-  const validated: CompanyDataForPDF = {
-    shop_name: companyData?.shop_name || fallbackData?.shop_name || 'Minha Loja',
-    address: companyData?.address || fallbackData?.address || '',
-    contact_phone: companyData?.contact_phone || fallbackData?.contact_phone || '',
-    logo_url: companyData?.logo_url || fallbackData?.logo_url || '',
-    email: companyData?.email || fallbackData?.email || '',
-    cnpj: companyData?.cnpj || fallbackData?.cnpj || ''
-  };
-
-  console.log('[PDF Utils] Dados validados:', { shop_name: validated.shop_name, hasLocalCache: !!localCache, hasFallback: !!fallbackData });
-  return validated;
-};
 
 export const generateBudgetPDF = async (budget: BudgetData, companyData?: CompanyData, serviceTemplate?: string): Promise<Blob> => {
   // Starting PDF generation
@@ -863,35 +731,8 @@ export const saveBudgetPDF = async (budget: BudgetData, companyData?: CompanyDat
   }
 };
 
-// Função utilitária para verificar se temos dados suficientes para PDF
-export const hasValidCompanyDataForPDF = (): boolean => {
-  const cachedData = getCachedCompanyData();
-  if (cachedData?.hasData) {
-    const shopData = cachedData.shopProfile;
-    const companyInfo = cachedData.companyInfo;
-    const shopName = shopData?.shop_name || companyInfo?.name;
-    return !!(shopName && shopName !== 'Minha Empresa' && shopName !== 'Minha Loja');
-  }
-  return false;
-};
-
-// Cache local para sincronização com useCompanyDataLoader
-let localCompanyCache: { data: CompanyDataForPDF; hasData: boolean; timestamp: number } | null = null;
-
-// Função para atualizar o cache local (chamada pelo useCompanyDataLoader)
-export const updateCompanyDataCache = (data: CompanyDataForPDF, hasData: boolean) => {
-  localCompanyCache = {
-    data,
-    hasData,
-    timestamp: Date.now()
-  };
-  console.log('[PDF Utils] Cache atualizado:', { hasData, shopName: data.shop_name });
-};
-
-// Função para obter dados do cache local
-export const getLocalCompanyCache = () => {
-  return localCompanyCache;
-};
+// Funções de cache/validação movidas para ./pdf/companyDataUtils.ts
+// Re-exportadas no topo deste arquivo
 
 export default generateBudgetPDF;
 
