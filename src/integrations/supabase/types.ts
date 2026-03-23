@@ -7063,6 +7063,7 @@ export type Database = {
           state: string
         }[]
       }
+      get_user_id_by_email: { Args: { user_email: string }; Returns: string }
       get_user_license_details: { Args: { p_user_id: string }; Returns: Json }
       get_user_license_status: { Args: { p_user_id: string }; Returns: Json }
       get_user_notifications: {
