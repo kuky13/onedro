@@ -56,7 +56,7 @@ export const DataPrivacyTab = ({ userId, userEmail }: DataPrivacyTabProps) => {
       toast.info(`Iniciando exportação de ${type}...`);
 
       let dataToExport: any = {};
-      let fileName = `onedrip-export-${type}-${new Date().toISOString().split('T')[0]}`;
+      const fileName = `onedrip-export-${type}-${new Date().toISOString().split('T')[0]}`;
 
       if (type === 'budgets' || type === 'all') {
         const { data } = await supabase.from('budgets').select('*').eq('owner_id', userId);

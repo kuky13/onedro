@@ -182,7 +182,7 @@ function mergeAndRankBudgets(results: any[][], entities?: ExtractedEntities): an
     40,  // repair/service
   ];
 
-  let channelIdx = 0;
+  const channelIdx = 0;
 
   // Reconstruct channel index based on which entity arrays have items
   const channelOrder: number[] = [];

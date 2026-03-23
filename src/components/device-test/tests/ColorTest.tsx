@@ -29,6 +29,22 @@ export function ColorTest({ onPass, onFail }: ColorTestProps) {
   const isLastColor = currentIndex >= COLORS.length - 1;
   const isLightColor = currentColor?.name === "Branco";
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        setIsFullscreen(false);
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      if (hideControlsTimeout.current) {
+        clearTimeout(hideControlsTimeout.current);
+      }
+    };
+  }, []);
+
   if (!currentColor) return null;
 
   const enterFullscreen = async () => {
@@ -98,22 +114,6 @@ export function ColorTest({ onPass, onFail }: ColorTestProps) {
       scheduleHideControls();
     }
   };
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      if (!document.fullscreenElement) {
-        setIsFullscreen(false);
-      }
-    };
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      if (hideControlsTimeout.current) {
-        clearTimeout(hideControlsTimeout.current);
-      }
-    };
-  }, []);
 
   return (
     <div ref={fullscreenRef} className="flex-1 flex flex-col">

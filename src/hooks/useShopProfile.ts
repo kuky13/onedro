@@ -198,30 +198,18 @@ export const useShopProfile = () => {
 
       // Removing logo
 
-      try {
-        // Extrair o caminho do arquivo da URL
-        const urlParts = shopProfile.logo_url.split('/');
-        const fileName = `${user.id}/${urlParts[urlParts.length - 1]}`;
-        // Removing file
+      // Extrair o caminho do arquivo da URL
+      const urlParts = shopProfile.logo_url.split('/');
+      const fileName = `${user.id}/${urlParts[urlParts.length - 1]}`;
 
-        // Remover do storage
-        const { error } = await supabase.storage
-          .from('company-logos')
-          .remove([fileName]);
+      // Remover do storage (não falha se não conseguir)
+      await supabase.storage.from('company-logos').remove([fileName]);
 
-        if (error) {
-          // Não falhar se não conseguir remover do storage
-          // Continuing despite storage error
-        }
-
-        // Atualizar o perfil removendo a URL da logo
-        await createOrUpdateMutation.mutateAsync({ 
-          ...shopProfile,
-          logo_url: null 
-        });
-      } catch (_error) {
-        throw _error;
-      }
+      // Atualizar o perfil removendo a URL da logo
+      await createOrUpdateMutation.mutateAsync({
+        ...shopProfile,
+        logo_url: null
+      });
     },
     onSuccess: () => {
       showSuccess({

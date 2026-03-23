@@ -25,6 +25,17 @@ export default tseslint.config(
       ],
       "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/ban-ts-comment": ["error", {
+        "ts-nocheck": false,
+        "ts-ignore": false,
+        "ts-expect-error": false,
+        "ts-check": false,
+      }],
+      "no-case-declarations": "off",
+      "no-empty": ["error", { "allowEmptyCatch": true }],
+      "@typescript-eslint/no-empty-object-type": "off",
+      "@typescript-eslint/no-require-imports": "off",
+      "react-hooks/exhaustive-deps": "warn",
     },
   }
 );

@@ -241,7 +241,7 @@ serve(async (req) => {
     let paymentId = "";
     let status = "PENDING";
     let paidAmount = 0;
-    let customerData: any = {};
+    const customerData: any = {};
     let metadata: any = {};
     let method = "PIX";
 
@@ -364,7 +364,7 @@ serve(async (req) => {
 
           // 3. License Logic
           // Copying logic from MP webhook...
-          let daysToAdd = planType === "yearly" ? 365 : 30;
+          const daysToAdd = planType === "yearly" ? 365 : 30;
           // (Simplify plan lookup for brevity, use defaults)
           
           let licenseCode = "";
