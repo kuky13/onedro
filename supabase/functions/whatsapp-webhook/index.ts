@@ -114,10 +114,49 @@ serve(async (req) => {
       }
     }
 
+    // Fallback final: single-tenant — se só existe 1 config ativa, usar ela
+    if (!instData) {
+      const { data: singleActive } = await supabase
+        .from("whatsapp_zapi_settings")
+        .select("owner_id, waha_session, evolution_instance_name")
+        .eq("is_active", true)
+        .limit(2);
+
+      if (singleActive && singleActive.length === 1) {
+        const cfg = singleActive[0];
+        instData = {
+          user_id: cfg.owner_id,
+          ai_enabled: true,
+          instance_name: cfg.waha_session || cfg.evolution_instance_name || instanceName,
+        };
+        console.log(`[whatsapp-webhook] Single-tenant fallback: owner=${cfg.owner_id} instance=${instData.instance_name}`);
+      }
+    }
+
     if (!instData) {
       console.log(`[whatsapp-webhook] Instance not found for '${instanceName}' (event=${event ?? "n/a"})`);
+      console.log(`[whatsapp-webhook] Tried: whatsapp_instances (name+id), whatsapp_zapi_settings (session/evo match + single-tenant)`);
       if (instErr) console.log("[whatsapp-webhook] instance lookup error:", instErr);
       return new Response("Instance not found", { status: 200, headers: corsHeaders });
+    }
+
+    // Auto-provisionar instância quando veio do fallback (evita fallback em toda requisição)
+    if (instData && !initialInstData) {
+      supabase
+        .from("whatsapp_instances")
+        .upsert(
+          {
+            user_id: instData.user_id,
+            instance_name: instanceName,
+            status: "connected",
+            ai_enabled: instData.ai_enabled,
+          },
+          { onConflict: "user_id,instance_name" }
+        )
+        .then(({ error: provErr }) => {
+          if (provErr) console.log("[whatsapp-webhook] auto-provision error:", provErr);
+          else console.log(`[whatsapp-webhook] Auto-provisioned instance '${instanceName}' for user ${instData!.user_id}`);
+        });
     }
 
     // Use canonical instance name from DB for broadcasting
