@@ -1080,6 +1080,19 @@ serve(async (req: Request) => {
       const allowedMessageEvents = new Set(["messages.upsert", "message", "message.any"]);
 
       if (!allowedMessageEvents.has(eventTypeNormalized)) {
+        try {
+          await supabase.from("whatsapp_zapi_logs").insert({
+            owner_id: currentOwnerId,
+            from_phone: normalizedForLogInitial?.from || null,
+            chat_id: normalizedForLogInitial?.chatId || null,
+            is_group: normalizedForLogInitial?.isGroup ?? false,
+            raw_message: rawBody.substring(0, 3000),
+            status: "ignored_event_type",
+            error_message: `Evento não suportado: ${eventType}. Normalizdo: ${eventTypeNormalized}`,
+          });
+        } catch (logErr) {
+          console.error("Falha ao registrar log ignored_event_type:", logErr);
+        }
         return new Response(JSON.stringify({ ok: false, reason: "ignored_event_type", event: eventType }), {
           status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -1098,6 +1111,20 @@ serve(async (req: Request) => {
         // Só processa mensagens recebidas (fromMe = false).
         // Se `status` existir e não for um status de entrega/servidor, ignoramos.
         if (fromMe || (typeof status === "string" && !allowedDeliveryStatuses.has(status))) {
+          const ignoredStatus = fromMe ? "ignored_from_me" : "ignored_status";
+          try {
+            await supabase.from("whatsapp_zapi_logs").insert({
+              owner_id: currentOwnerId,
+              from_phone: normalizedForLogInitial?.from || null,
+              chat_id: normalizedForLogInitial?.chatId || null,
+              is_group: normalizedForLogInitial?.isGroup ?? false,
+              raw_message: rawBody.substring(0, 3000),
+              status: ignoredStatus,
+              error_message: `Mensagem ignorada. fromMe=${fromMe}, status=${status}`,
+            });
+          } catch (logErr) {
+            console.error("Falha ao registrar log ignored_status/from_me:", logErr);
+          }
           return new Response(JSON.stringify({ ok: false, reason: "ignored_status", status, fromMe }), {
             status: 200,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
