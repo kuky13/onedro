@@ -27,7 +27,7 @@ export interface CategoryItem {
 }
 
 export interface QuickAccessItem {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string | undefined }>;
   label: string;
   path: string;
   color: string;

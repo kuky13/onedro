@@ -1,9 +1,8 @@
 import jsPDF from 'jspdf';
-import { CompanyDataForPDF } from '../hooks/useCompanyDataLoader';
 
 // Tipos movidos para ./pdf/types.ts
 export type { BudgetData, BudgetPartData, CompanyData } from './pdf/types';
-import type { BudgetData, BudgetPartData, CompanyData, RGB } from './pdf/types';
+import type { BudgetData, CompanyData, RGB } from './pdf/types';
 
 // Utilitários movidos para módulos especializados
 export { loadImage } from './pdf/imageLoader';
@@ -16,7 +15,7 @@ export {
 
 // Importações internas para uso neste arquivo
 import { loadImage } from './pdf/imageLoader';
-import { validateCompanyData, getLocalCompanyCache } from './pdf/companyDataUtils';
+import { validateCompanyData, getLocalCompanyCache as getCachedCompanyData } from './pdf/companyDataUtils';
 
 
 export const generateBudgetPDF = async (budget: BudgetData, companyData?: CompanyData, serviceTemplate?: string): Promise<Blob> => {

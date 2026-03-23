@@ -20,7 +20,7 @@ import { ServiceOrderImage } from '@/types/imageUpload';
 import { ServiceOrderData } from '@/types/serviceOrder';
 import { CompanyInfo } from '@/types/company';
 import { cn } from '@/lib/utils';
-import { statusConfig, getStatusInfo, getPaymentStatusInfo, isFormattedId } from './service-orders/publicShare/statusConfig';
+import { getStatusInfo, getPaymentStatusInfo, isFormattedId } from './service-orders/publicShare/statusConfig';
 
 export function ServiceOrderPublicShare() {
   const params = useParams<{ shareToken: string }>();
