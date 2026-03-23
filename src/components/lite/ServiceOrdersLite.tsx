@@ -94,7 +94,7 @@ export const ServiceOrdersLite = ({ userId, onBack }: ServiceOrdersLiteProps) =>
     realTimeStatus.refresh();
   };
 
-
+  const [visibleCount, setVisibleCount] = useState(10);
 
   if (isLoading) {
     return (
@@ -144,8 +144,6 @@ export const ServiceOrdersLite = ({ userId, onBack }: ServiceOrdersLiteProps) =>
     );
   }
 
-  const [visibleCount, setVisibleCount] = useState(10);
-  
   const handleLoadMore = () => {
     setVisibleCount(prev => prev + 10);
   };

@@ -219,9 +219,6 @@ export const useShopProfile = () => {
           ...shopProfile,
           logo_url: null 
         });
-      } catch (_error) {
-        throw _error;
-      }
     },
     onSuccess: () => {
       showSuccess({

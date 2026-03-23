@@ -74,11 +74,12 @@ serve(async (req) => {
       return new Response("No instance", { status: 200, headers: corsHeaders });
     }
 
-    let { data: instData, error: instErr } = await supabase
+    const { data: initialInstData, error: instErr } = await supabase
       .from("whatsapp_instances")
       .select("user_id, ai_enabled, instance_name")
       .eq("instance_name", instanceName)
       .single();
+    let instData = initialInstData ?? null;
 
     // Fallback: Tentar buscar pelo instance_id se não achar pelo nome
     if (!instData) {
