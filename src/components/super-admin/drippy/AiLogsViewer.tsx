@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,13 +27,58 @@ interface AILog {
   metadata: any;
 }
 
+interface WhatsAppPipelineLog {
+  id: string;
+  created_at: string;
+  status: string;
+  error_message: string | null;
+  raw_message: string | null;
+  from_phone: string | null;
+  chat_id: string | null;
+}
+
+interface InteractionLog {
+  id: string;
+  created_at: string;
+  provider: string;
+  model: string;
+  source: string;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  duration_ms: number | null;
+  status: string;
+  error_message: string | null;
+  summary: string | null;
+}
+
+type StatusFilter = 'all' | 'success' | 'processing' | 'ignored' | 'error';
+
+const SUCCESS_STATUSES = new Set(['success', 'processed', 'budget_created', 'budget_replaced', 'reply_sent']);
+const PROCESSING_STATUSES = new Set(['received_raw', 'processing', 'pending']);
+
+function getStatusBucket(status: string): Exclude<StatusFilter, 'all'> {
+  if (SUCCESS_STATUSES.has(status)) return 'success';
+  if (PROCESSING_STATUSES.has(status)) return 'processing';
+  if (status.startsWith('ignored') || status.startsWith('blocked') || status === 'not_allowed_sender') return 'ignored';
+  return 'error';
+}
+
+function buildSummary(log: WhatsAppPipelineLog) {
+  const raw = (log.raw_message || '').replace(/\s+/g, ' ').trim();
+  if (raw) return raw;
+  if (log.error_message) return log.error_message;
+  return log.from_phone || log.chat_id || null;
+}
+
 export function AiLogsViewer() {
+  const { user } = useAuth();
   const [filterProvider, setFilterProvider] = useState<string>('all');
   const [filterSource, setFilterSource] = useState<string>('all');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<StatusFilter>('all');
 
   const { data: logs, isLoading, refetch, isFetching } = useQuery({
-    queryKey: ['ai-logs', filterProvider, filterSource, filterStatus],
+    queryKey: ['ai-logs', user?.id, filterProvider, filterSource, filterStatus],
+    enabled: Boolean(user?.id),
     queryFn: async () => {
       let query = supabase
         .from('ai_request_logs')
@@ -42,21 +88,57 @@ export function AiLogsViewer() {
 
       if (filterProvider !== 'all') query = query.eq('provider', filterProvider);
       if (filterSource !== 'all') query = query.eq('source', filterSource);
-      if (filterStatus !== 'all') query = query.eq('status', filterStatus);
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as AILog[];
+      const shouldLoadWhatsappPipeline = filterSource === 'all' || filterSource === 'whatsapp';
+
+      const [aiResult, whatsappResult] = await Promise.all([
+        query,
+        shouldLoadWhatsappPipeline
+          ? supabase
+              .from('whatsapp_zapi_logs')
+              .select('id, created_at, status, error_message, raw_message, from_phone, chat_id')
+              .eq('owner_id', user!.id)
+              .order('created_at', { ascending: false })
+              .limit(100)
+          : Promise.resolve({ data: [], error: null }),
+      ]);
+
+      if (aiResult.error) throw aiResult.error;
+      if (whatsappResult.error) throw whatsappResult.error;
+
+      const aiLogs: InteractionLog[] = (aiResult.data as AILog[]).map((log) => ({
+        ...log,
+        summary: log.error_message,
+      }));
+
+      const whatsappLogs: InteractionLog[] = ((whatsappResult.data ?? []) as WhatsAppPipelineLog[]).map((log) => ({
+        id: `whatsapp-${log.id}`,
+        created_at: log.created_at,
+        provider: 'pipeline',
+        model: log.from_phone || log.chat_id || 'whatsapp',
+        source: 'whatsapp',
+        input_tokens: null,
+        output_tokens: null,
+        duration_ms: null,
+        status: log.status,
+        error_message: log.error_message,
+        summary: buildSummary(log),
+      }));
+
+      return [...aiLogs, ...whatsappLogs]
+        .filter((log) => filterStatus === 'all' || getStatusBucket(log.status) === filterStatus)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 150);
     },
     refetchInterval: 30000,
   });
 
   // Stats
   const totalLogs = logs?.length || 0;
-  const successCount = logs?.filter(l => l.status === 'success').length || 0;
-  const errorCount = logs?.filter(l => l.status === 'error').length || 0;
+  const successCount = logs?.filter((l) => getStatusBucket(l.status) === 'success').length || 0;
+  const errorCount = logs?.filter((l) => getStatusBucket(l.status) === 'error').length || 0;
   const avgDuration = logs?.length
-    ? Math.round(logs.filter(l => l.duration_ms).reduce((a, b) => a + (b.duration_ms || 0), 0) / logs.filter(l => l.duration_ms).length)
+    ? Math.round(logs.filter((l) => l.duration_ms).reduce((a, b) => a + (b.duration_ms || 0), 0) / logs.filter((l) => l.duration_ms).length)
     : 0;
 
   const providerStats = logs?.reduce((acc, log) => {
@@ -149,8 +231,8 @@ export function AiLogsViewer() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Logs de Requisições IA</CardTitle>
-              <CardDescription>Últimas 100 requisições para provedores de IA</CardDescription>
+              <CardTitle>Logs de Interação IA</CardTitle>
+              <CardDescription>Histórico de mensagens do WhatsApp processadas, ignoradas e chamadas reais da IA</CardDescription>
             </div>
             <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
               <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
@@ -187,13 +269,15 @@ export function AiLogsViewer() {
               </SelectContent>
             </Select>
 
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as StatusFilter)}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="success">Sucesso</SelectItem>
+                  <SelectItem value="processing">Processando</SelectItem>
+                  <SelectItem value="ignored">Ignorados</SelectItem>
                 <SelectItem value="error">Erro</SelectItem>
               </SelectContent>
             </Select>
@@ -218,6 +302,7 @@ export function AiLogsViewer() {
                     <TableHead>Provider</TableHead>
                     <TableHead>Modelo</TableHead>
                     <TableHead>Source</TableHead>
+                      <TableHead>Mensagem / detalhe</TableHead>
                     <TableHead>Tokens (in/out)</TableHead>
                     <TableHead>Duração</TableHead>
                     <TableHead>Status</TableHead>
@@ -236,6 +321,9 @@ export function AiLogsViewer() {
                           {log.source}
                         </Badge>
                       </TableCell>
+                      <TableCell className="text-xs max-w-[260px] truncate" title={log.summary || ''}>
+                        {log.summary || '-'}
+                      </TableCell>
                       <TableCell className="text-xs font-mono">
                         {log.input_tokens || '-'} / {log.output_tokens || '-'}
                       </TableCell>
@@ -243,15 +331,13 @@ export function AiLogsViewer() {
                         {log.duration_ms ? `${log.duration_ms}ms` : '-'}
                       </TableCell>
                       <TableCell>
-                        {log.status === 'success' ? (
-                          <Badge variant="secondary" className="bg-green-500/10 text-green-700 dark:text-green-400 text-xs">
-                            OK
-                          </Badge>
-                        ) : (
-                          <Badge variant="destructive" className="text-xs" title={log.error_message || ''}>
-                            Erro
-                          </Badge>
-                        )}
+                        <Badge
+                          variant={getStatusBucket(log.status) === 'error' ? 'destructive' : 'secondary'}
+                          className="text-xs"
+                          title={log.error_message || ''}
+                        >
+                          {log.status}
+                        </Badge>
                       </TableCell>
                     </TableRow>
                   ))}
