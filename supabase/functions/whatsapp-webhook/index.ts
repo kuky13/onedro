@@ -122,7 +122,11 @@ serve(async (req) => {
     // Use canonical instance name from DB for broadcasting
     const broadcastInstanceName = instData.instance_name;
 
-    const isMessageEvent = event === "MESSAGES_UPSERT" || event === "messages.upsert";
+    const isMessageEvent =
+      event === "MESSAGES_UPSERT" ||
+      event === "messages.upsert" ||
+      event === "message" ||
+      event === "message.any";
     const isTestEvent = event === "test_webhook";
 
     let message: any = null;
