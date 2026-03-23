@@ -1,4 +1,4 @@
-import React from 'react';
+import {} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,7 @@ import {
   ExternalLink, MessageCircle, History, ThumbsUp, ThumbsDown, Zap, Video,
   ArrowRight, AlertCircle
 } from 'lucide-react';
-import { helpSections, faqItems, helpCategories, quickAccessItems } from './help-center/helpCenterData';
+import { helpSections, helpCategories, quickAccessItems } from './help-center/helpCenterData';
 import { useHelpCenter } from '@/hooks/useHelpCenter';
 
 const HelpCenterPage = () => {

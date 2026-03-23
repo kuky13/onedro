@@ -52,8 +52,9 @@ export function useSiteSettings() {
       .then(({ data, error }) => {
         if (!error) setUserRole(data);
         setIsCheckingRole(false);
+        return undefined;
       })
-      .catch(() => setIsCheckingRole(false));
+      .then(undefined, () => setIsCheckingRole(false));
   }, []);
 
   const { data: settings, isLoading, error: queryError } = useQuery({

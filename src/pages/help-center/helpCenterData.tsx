@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Calculator, ClipboardList, Trash2, Settings, MessageCircle, Crown, Home,
   Wrench, ShieldCheck, Smartphone, Download, Headphones, Lock,
-  BookOpen, HelpCircle
+  BookOpen
 } from 'lucide-react';
 
 export interface HelpSection {
@@ -27,7 +27,7 @@ export interface CategoryItem {
 }
 
 export interface QuickAccessItem {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string | undefined }>;
   label: string;
   path: string;
   color: string;
