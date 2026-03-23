@@ -137,6 +137,17 @@ serve(async (req) => {
       console.log(`[whatsapp-webhook] Instance not found for '${instanceName}' (event=${event ?? "n/a"})`);
       console.log(`[whatsapp-webhook] Tried: whatsapp_instances (name+id), whatsapp_zapi_settings (session/evo match + single-tenant)`);
       if (instErr) console.log("[whatsapp-webhook] instance lookup error:", instErr);
+
+      // Still log the event for audit visibility
+      await supabase.from("whatsapp_webhook_events").insert({
+        source: "whatsapp-webhook",
+        event_type: event ?? "unknown",
+        phone_number: null,
+        status: "owner_not_resolved",
+        error_message: `Instance '${instanceName}' not found in any table`,
+        received_at: new Date().toISOString(),
+      });
+
       return new Response("Instance not found", { status: 200, headers: corsHeaders });
     }
 
