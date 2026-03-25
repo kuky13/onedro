@@ -8,11 +8,13 @@ import { requestMediaDownload, type MediaDownloadFormat } from "@/services/api/m
 import { cn } from "@/lib/utils";
 
 const QUALITY_OPTIONS = [
-  { value: "best", label: "Melhor qualidade" },
-  { value: "1080", label: "1080p" },
-  { value: "720", label: "720p" },
-  { value: "480", label: "480p" },
-  { value: "360", label: "360p" },
+  { value: "best", label: "Melhor" },
+  { value: "1080p", label: "1080p" },
+  { value: "720p", label: "720p" },
+  { value: "480p", label: "480p" },
+  { value: "360p", label: "360p" },
+  { value: "240p", label: "240p" },
+  { value: "144p", label: "144p" },
 ];
 
 const PLATFORMS = [
