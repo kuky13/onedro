@@ -7,9 +7,9 @@ api.kuky.help {
     reverse_proxy api:3000
 }
 
-# Evolution API (WhatsApp)
-evo.kuky.help {
-    reverse_proxy evolution:8080
+# Seu WAHA Original
+waha2.kuky.help {
+    reverse_proxy waha:3000
 }
 
 # === NOVOS PAINÉIS ===

@@ -4,7 +4,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getBudgetGroupConfirmation, getBudgetUpdateConfirmation } from "../_shared/ai-messages.ts";
 import { getAIConfig, callAIProvider, logAIRequest } from "../_shared/ai-provider.ts";
-import { resolveEvolutionConfig } from "../_shared/evolution-config.ts";
 
 // Tipos internos simples para normalizar o payload da Z-API
 
@@ -50,6 +49,70 @@ interface ParsedBudgetFromAi {
   options?: WhatsAppOption[] | null;
   extras?: WhatsAppExtras | null;
   annotations?: string | null;
+}
+
+function hexFromBytes(bytes: Uint8Array): string {
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let out = 0;
+  for (let i = 0; i < a.length; i++) out |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return out === 0;
+}
+
+async function computeHmacSha512Hex(secret: string, data: string): Promise<string> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-512" }, false, [
+    "sign",
+  ]);
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(data));
+  return hexFromBytes(new Uint8Array(sig));
+}
+
+function looksLikeWahaWebhook(body: any): boolean {
+  if (!body || typeof body !== "object") return false;
+  return "payload" in body || "session" in body;
+}
+
+function findSignatureFromHeaders(headers: Headers): { key: string; value: string } | null {
+  const candidates = [
+    "x-webhook-hmac",
+    "x-waha-hmac",
+    "x-hub-signature-512",
+    "x-hub-signature",
+    "x-signature",
+    "x-webhook-signature",
+    "x-webhook-signature-512",
+    "x-waha-signature",
+  ];
+
+  for (const key of candidates) {
+    const v = headers.get(key) || headers.get(key.toUpperCase());
+    if (v) return { key, value: v };
+  }
+
+  // Fallback resiliente: qualquer header com "hmac" ou "signature" no nome
+  for (const [k, v] of headers.entries()) {
+    const lk = k.toLowerCase();
+    if ((lk.includes("hmac") || lk.includes("signature")) && typeof v === "string" && v.trim()) {
+      return { key: k, value: v };
+    }
+  }
+
+  return null;
+}
+
+function listSignatureHeaderKeys(headers: Headers): string[] {
+  const keys: string[] = [];
+  for (const [k] of headers.entries()) {
+    const lk = k.toLowerCase();
+    if (lk.includes("hmac") || lk.includes("signature") || lk.includes("webhook")) keys.push(k);
+  }
+  return keys.sort();
 }
 
 // Helper para limpar JIDs/identificadores do WhatsApp em um telefone numérico
@@ -282,24 +345,24 @@ function normalizeZapiPayload(body: any): NormalizedMessage {
   };
 }
 
-// Normalizador para payloads legados (formato antigo com campo "payload")
-function getLegacyId(id: any): string | null {
+// Normalizador para payloads vindos do WAHA (WhatsApp HTTP API)
+function getWahaId(id: any): string | null {
   if (!id) return null;
   if (typeof id === "string") return id;
   if (typeof id === "object" && typeof id._serialized === "string") return id._serialized;
   return null;
 }
 
-function normalizeLegacyPayload(body: any): NormalizedMessage {
+function normalizeWahaPayload(body: any): NormalizedMessage {
   const payload = body?.payload ?? body ?? {};
 
-  // Estrutura legada baseada no engine WEBJS
+  // Estrutura comum do WAHA baseada no engine WEBJS
   const chat = payload.chat ?? payload.chatInfo ?? {};
 
-  const fromId = getLegacyId(payload.from);
+  const fromId = getWahaId(payload.from);
 
   const chatId: string | null =
-    getLegacyId(chat.id) || getLegacyId(payload.chatId) || getLegacyId(payload.remoteJid) || fromId || null;
+    getWahaId(chat.id) || getWahaId(payload.chatId) || getWahaId(payload.remoteJid) || fromId || null;
 
   const isGroup =
     typeof (chat as any).isGroup === "boolean"
@@ -310,9 +373,9 @@ function normalizeLegacyPayload(body: any): NormalizedMessage {
 
   let rawSender = "";
   if (isGroup) {
-    rawSender = payload.author || payload.participant || getLegacyId(payload.sender?.id) || fromId || payload.user || "";
+    rawSender = payload.author || payload.participant || getWahaId(payload.sender?.id) || fromId || payload.user || "";
   } else {
-    rawSender = fromId || getLegacyId(payload.sender?.id) || payload.phone || payload.chatId || "";
+    rawSender = fromId || getWahaId(payload.sender?.id) || payload.phone || payload.chatId || "";
   }
 
   const from = sanitizeWhatsAppJidToPhone(rawSender);
@@ -502,139 +565,115 @@ async function sendWhatsAppResponse(
   normalized: NormalizedMessage,
   text: string,
 ): Promise<
-  | { ok: true; provider: "evolution"; sent_to: string }
+  | { ok: true; provider: "waha"; sent_to: string }
   | { ok: false; reason: string; errors?: Record<string, unknown>; sent_to?: string }
 > {
+  const wahaBaseUrlRaw = Deno.env.get("WAHA_BASE_URL") || Deno.env.get("WAHA_URL");
+  const wahaApiKey = Deno.env.get("WAHA_API_KEY");
+  const wahaDefaultSession = Deno.env.get("WAHA_SESSION") || "default";
+
   const chatId = normalized.chatId || normalized.from;
   if (!chatId) {
+    const reason = "missing_chat_id";
     console.error("[WHATSAPP-RESPONSE] Sem chatId para responder.");
-    return { ok: false, reason: "missing_chat_id" };
+    return { ok: false, reason };
   }
 
-  // Extrair apenas dígitos do número para enviar via Evolution API
-  const number = chatId.split("@")[0].replace(/\D/g, "");
+  // Se o chatId não tiver sufixo e for Evolution, vamos tentar garantir que tenha
+  const finalChatId = chatId;
+  // No WAHA tentamos alguns formatos de chatId mais abaixo (com e sem sufixo)
 
-  console.log(`[WHATSAPP-RESPONSE] Respondendo para ${number}. Mensagem: "${text}"`);
+  console.log(`[WHATSAPP-RESPONSE] Respondendo para ${finalChatId}. Mensagem: "${text}"`);
 
-  // Resolver instância: tentar do payload, depois do DB
-  const instanceName =
-    normalized.raw?.instanceName ||
-    normalized.raw?.instance ||
-    normalized.raw?.session ||
-    normalized.raw?.sessionName ||
-    null;
-
-  // Resolver config da Evolution API
-  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
-
-  const { data: userCfg } = await supabase
-    .from("user_evolution_config")
-    .select("api_url, api_key")
-    .limit(1)
-    .maybeSingle();
-
-  const { data: globalCfg } = await supabase
-    .from("evolution_config")
-    .select("api_url, global_api_key")
-    .maybeSingle();
-
-  const { apiUrl: evoUrl, apiKey: evoKey } = resolveEvolutionConfig({
-    userApiUrl: userCfg?.api_url,
-    userApiKey: userCfg?.api_key,
-    globalApiUrl: globalCfg?.api_url,
-    globalApiKey: globalCfg?.global_api_key,
-  });
-
-  if (!evoUrl || !evoKey) {
-    return {
-      ok: false,
-      reason: "evolution_not_configured",
-      errors: { evolution: { reason: "missing_evolution_api_url_or_key" } },
-      sent_to: number,
-    };
-  }
-
-  // Resolver instanceName se não veio no payload
-  let resolvedInstance = instanceName;
-  if (!resolvedInstance) {
-    const { data: settings } = await supabase
-      .from("whatsapp_zapi_settings")
-      .select("evolution_instance_name")
-      .eq("is_active", true)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    resolvedInstance = settings?.evolution_instance_name?.trim() || null;
-  }
-
-  if (!resolvedInstance) {
-    // Último fallback: buscar qualquer instância ativa em whatsapp_instances
-    const { data: inst } = await supabase
-      .from("whatsapp_instances")
-      .select("instance_name")
-      .eq("status", "open")
-      .order("connected_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    resolvedInstance = inst?.instance_name || null;
-  }
-
-  if (!resolvedInstance) {
-    return {
-      ok: false,
-      reason: "missing_instance_name",
-      errors: { evolution: { reason: "no_active_instance_found" } },
-      sent_to: number,
-    };
-  }
-
-  const base = evoUrl.replace(/\/$/, "");
   const errors: Record<string, unknown> = {};
 
-  // Tentar enviar via Evolution API (com fallback de paths)
-  const pathCandidates = [
-    `${base}/message/sendText/${resolvedInstance}`,
-    `${base}/api/message/sendText/${resolvedInstance}`,
-  ];
+  // 0. Tentar WAHA (preferencial)
+  if (wahaBaseUrlRaw && wahaApiKey) {
+    const baseUrl = wahaBaseUrlRaw.endsWith("/") ? wahaBaseUrlRaw.slice(0, -1) : wahaBaseUrlRaw;
 
-  for (const url of pathCandidates) {
-    try {
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: evoKey,
-          Authorization: `Bearer ${evoKey}`,
-        },
-        body: JSON.stringify({ number, text, delay: 1000 }),
-      });
+    // Sessão pode vir do payload (webhook) ou do envio manual; fallback: secret WAHA_SESSION
+    const rawSession =
+      normalized.raw?.session ||
+      normalized.raw?.sessionName ||
+      normalized.raw?.instance ||
+      normalized.raw?.instanceName ||
+      wahaDefaultSession;
 
-      if (resp.ok) {
-        console.log(`[WHATSAPP-RESPONSE] Sucesso via Evolution para ${number} (instance=${resolvedInstance})`);
-        return { ok: true, provider: "evolution", sent_to: number };
+    const session = typeof rawSession === "string" && rawSession.trim() ? rawSession.trim() : wahaDefaultSession;
+
+    const buildChatCandidates = (id: string) => {
+      const candidates: string[] = [];
+      if (id) candidates.push(id);
+      if (id && !id.includes("@")) {
+        // WAHA costuma aceitar IDs com sufixo; tentamos alguns formatos comuns.
+        candidates.push(`${id}@c.us`);
+        candidates.push(`${id}@s.whatsapp.net`);
       }
+      return Array.from(new Set(candidates));
+    };
 
-      const errTxt = await resp.text();
-      errors[url] = { status: resp.status, body: errTxt };
-      console.error("[WHATSAPP-RESPONSE] Erro Evolution:", resp.status, url);
+    const chatCandidates = buildChatCandidates(finalChatId);
 
-      // Se for 404, tenta próximo path
-      if (resp.status === 404) continue;
+    // Endpoints comuns do WAHA (varia por versão/config)
+    // 1) /api/{session}/sendText
+    // 2) /api/sessions/{session}/sendText
+    // 3) /api/sendText?session={session}
+    const urlCandidates = [
+      `${baseUrl}/api/${encodeURIComponent(session)}/sendText`,
+      `${baseUrl}/api/sessions/${encodeURIComponent(session)}/sendText`,
+      `${baseUrl}/api/sendText?session=${encodeURIComponent(session)}`,
+    ];
 
-      // Outros erros: não adianta tentar outro path
-      break;
-    } catch (e) {
-      errors[url] = { body: String(e) };
-      console.error("[WHATSAPP-RESPONSE] Exceção Evolution:", url, e);
+    let lastWahaErr: { status?: number; body?: string; url?: string } | null = null;
+    for (const chatIdCandidate of chatCandidates) {
+      for (const url of urlCandidates) {
+        try {
+          // Algumas versões do WAHA exigem o campo `session` no body (especialmente em /api/sendText)
+          const body = url.includes("/api/sendText")
+            ? { session, chatId: chatIdCandidate, text }
+            : { chatId: chatIdCandidate, text };
+
+          const resp = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Api-Key": wahaApiKey,
+            },
+            body: JSON.stringify(body),
+          });
+
+          if (resp.ok) {
+            console.log(`[WHATSAPP-RESPONSE] Sucesso via WAHA para ${chatIdCandidate}`);
+            return { ok: true, provider: "waha", sent_to: chatIdCandidate };
+          }
+
+          const errTxt = await resp.text();
+          lastWahaErr = { status: resp.status, body: errTxt, url };
+          console.error("[WHATSAPP-RESPONSE] Erro WAHA:", resp.status, url);
+        } catch (e) {
+          lastWahaErr = { body: String(e), url };
+          console.error("[WHATSAPP-RESPONSE] Exceção WAHA:", url, e);
+        }
+      }
     }
+
+    if (lastWahaErr) errors.waha = lastWahaErr;
+  } else {
+    // Sem WAHA configurado = não enviamos nada (sem fallback)
+    return {
+      ok: false,
+      reason: "waha_not_configured",
+      errors: {
+        waha: {
+          reason: "missing_WAHA_BASE_URL_or_WAHA_API_KEY",
+        },
+      },
+      sent_to: finalChatId,
+    };
   }
 
-  console.warn("[WHATSAPP-RESPONSE] Falha ao enviar via Evolution API.");
-  return { ok: false, reason: "evolution_failed", errors, sent_to: number };
+  console.warn("[WHATSAPP-RESPONSE] Falha ao enviar via WAHA.");
+  return { ok: false, reason: "waha_failed", errors, sent_to: finalChatId };
 }
 
 // Função de alto nível que decide qual normalizador usar
@@ -648,13 +687,14 @@ function normalizeIncomingPayload(body: any): NormalizedMessage {
     console.warn("Falha ao tentar normalizar como Evolution:", e);
   }
 
-  // 2) Formato legado (payload com campo "payload")
+  // 2) WAHA
   try {
     if (body && typeof body === "object" && "payload" in body) {
-      return normalizeLegacyPayload(body);
+      // Payload típico do WAHA
+      return normalizeWahaPayload(body);
     }
   } catch (e) {
-    console.warn("Falha ao normalizar payload legado, caindo para Z-API:", e);
+    console.warn("Falha ao tentar normalizar como WAHA, caindo para Z-API:", e);
   }
 
   // 3) Fallback para o normalizador antigo da Z-API
@@ -803,6 +843,7 @@ serve(async (req: Request) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // Precisamos do corpo *raw* para validar assinatura HMAC (WAHA)
     const rawBody = await req.text();
     let body: any;
     try {
@@ -849,7 +890,7 @@ serve(async (req: Request) => {
     // Carregar configurações ativas (com todos os campos)
     const { data: activeConfig, error: configError } = await supabase
       .from("whatsapp_zapi_settings")
-      .select("owner_id, allowed_numbers, allowed_groups, evolution_instance_name")
+      .select("owner_id, allowed_numbers, allowed_groups, evolution_instance_name, waha_session")
       .eq("is_active", true)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -863,6 +904,7 @@ serve(async (req: Request) => {
     try {
       const normalizedForLog = normalizeIncomingPayload(body);
       const eventName = body?.event || body?.event_type || "unknown";
+      const isWahaAttempt = looksLikeWahaWebhook(body);
 
       console.log(`[WHATSAPP-DEBUG] Processando Webhook. Evento: ${eventName}. Chat: ${normalizedForLog.chatId}.`);
 
@@ -873,15 +915,15 @@ serve(async (req: Request) => {
         is_group: normalizedForLog.isGroup ?? false,
         raw_message: normalizedForLog.content || (eventName !== "unknown" ? `Evento: ${eventName}` : "Sem texto"),
         status: "processing",
-        error_message: `Iniciando processamento. Evento: ${eventName}. From: ${normalizedForLog.from}`,
+        error_message: `Iniciando processamento. Evento: ${eventName}. Provedor: ${isWahaAttempt ? "WAHA" : "Outro"}. From: ${normalizedForLog.from}`,
       });
     } catch (logErr) {
       console.error("Falha ao registrar log de processamento:", logErr);
     }
 
-    // --- FILTROS DE EVENTOS ---
-    // Ignorar eventos de sistema não relevantes
-    {
+    // --- FILTROS DE EVENTOS DO WAHA ---
+    const isWaha = looksLikeWahaWebhook(body);
+    if (isWaha) {
       const eventName = body?.event || body?.event_type || "unknown";
       const ignoredEvents = [
         "presence.update",
@@ -895,15 +937,79 @@ serve(async (req: Request) => {
       ];
 
       if (ignoredEvents.includes(eventName)) {
-        console.log(`[WHATSAPP-DEBUG] Ignorando evento de sistema: ${eventName}`);
+        console.log(`[WHATSAPP-DEBUG] Ignorando evento de sistema WAHA após log: ${eventName}`);
         return new Response(JSON.stringify({ ok: true, reason: "ignored_system_event" }), {
           status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+
+      // --- Validação de assinatura (WAHA) ---
+      try {
+        const secret = Deno.env.get("WAHA_WEBHOOK_SECRET") || "";
+        const foundSig = findSignatureFromHeaders(req.headers);
+        const providedSigRaw = foundSig?.value || "";
+
+        if (!secret) {
+          console.warn("[WAHA-WEBHOOK] WAHA_WEBHOOK_SECRET não configurado");
+        }
+
+        let signatureValid = false;
+        if (!providedSigRaw) {
+          const url = new URL(req.url);
+          const tokenProvided =
+            (req.headers.get("x-webhook-token") || req.headers.get("X-Webhook-Token") || "").trim() ||
+            (url.searchParams.get("token") || "").trim();
+          const tokenExpected = (Deno.env.get("WAHA_WEBHOOK_TOKEN") || "").trim();
+
+          if (tokenExpected && tokenProvided && safeEqual(tokenProvided, tokenExpected)) {
+            signatureValid = true;
+          } else {
+            await supabase.from("whatsapp_zapi_logs").insert({
+              owner_id: currentOwnerId,
+              status: "debug_sig_skip",
+              from_phone: normalizedForLogInitial?.from || "unknown",
+              error_message: "Assinatura ausente, pulando para debug.",
+            });
+            signatureValid = true;
+          }
+        } else {
+          try {
+            const provided = providedSigRaw
+              .replace(/^sha512=/i, "")
+              .replace(/^sha256=/i, "")
+              .trim()
+              .toLowerCase();
+            const computed = (await computeHmacSha512Hex(secret, rawBody)).toLowerCase();
+            signatureValid = safeEqual(provided, computed);
+
+            if (!signatureValid) {
+              await supabase.from("whatsapp_zapi_logs").insert({
+                owner_id: currentOwnerId,
+                status: "debug_sig_invalid",
+                from_phone: normalizedForLogInitial?.from || "unknown",
+                error_message: `Assinatura inválida (${provided.substring(0, 6)}), pulando para debug.`,
+              });
+              signatureValid = true;
+            }
+          } catch (hmacErr) {
+            console.error("Erro ao calcular HMAC:", hmacErr);
+            const hmacErrMsg = hmacErr instanceof Error ? hmacErr.message : String(hmacErr);
+            await supabase.from("whatsapp_zapi_logs").insert({
+              owner_id: currentOwnerId,
+              status: "debug_sig_error",
+              from_phone: normalizedForLogInitial?.from || "unknown",
+              error_message: `Erro no HMAC: ${hmacErrMsg}. Pulando para debug.`,
+            });
+            signatureValid = true;
+          }
+        }
+      } catch (sigOuterErr) {
+        console.error("Erro externo na assinatura:", sigOuterErr);
+      }
     }
 
-    // Processar apenas eventos de nova mensagem
+    // Processar apenas eventos de nova mensagem da Evolution
     if (body && typeof body === "object" && "event" in body) {
       const eventType = (body as any).event;
 
@@ -918,12 +1024,14 @@ serve(async (req: Request) => {
         }
 
         // Preferência:
-        // 1) instance_name enviado no body
-        // 2) evolution_instance_name salvo em whatsapp_zapi_settings
+        // 1) instance_name enviado no body (aqui significa *sessão WAHA*)
+        // 2) waha_session salvo em whatsapp_zapi_settings
+        // 3) evolution_instance_name (compat/legado)
         let resolvedInstanceName: string | undefined = instance_name?.trim() || undefined;
 
         if (!resolvedInstanceName) {
-          resolvedInstanceName = activeConfig?.evolution_instance_name?.trim() || undefined;
+          resolvedInstanceName =
+            activeConfig?.waha_session?.trim() || activeConfig?.evolution_instance_name?.trim() || undefined;
         }
 
         if (!resolvedInstanceName) {
@@ -961,7 +1069,8 @@ serve(async (req: Request) => {
         });
       }
 
-      // Evolution v2 envia como `messages.upsert` ou `MESSAGES_UPSERT`.
+      // WAHA costuma usar `message` e `message.any`.
+      // Evolution v2 pode vir como `messages.upsert` ou `MESSAGES_UPSERT`.
       const eventTypeNormalized = String(eventType || "")
         .toLowerCase()
         .trim()

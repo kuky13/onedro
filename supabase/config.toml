@@ -57,6 +57,12 @@ verify_jwt = true
 [functions.validate-license]
 verify_jwt = false
 
+[functions.waha-list-groups]
+verify_jwt = true
+
+[functions.waha-proxy]
+verify_jwt = true
+
 [functions.whatsapp-admin-cleanup]
 verify_jwt = true
 
