@@ -14,20 +14,17 @@ services:
       - PORT=3000
       - ALLOWED_ORIGINS=*
 
-  # WAHA (WhatsApp HTTP API)
-  waha:
-    image: devlikeapro/waha:latest
-    container_name: waha-api
+  # Evolution API (WhatsApp)
+  evolution:
+    image: atrevoltadigital/evolution-api:latest
+    container_name: evolution-api
     restart: unless-stopped
     environment:
-      - WHATSAPP_DEFAULT_ENGINE=WEBJS
-      - WAHA_PRINT_QR=False
-      - WAHA_API_KEY=Vladivostok@134
-      - WAHA_DASHBOARD_ENABLED=True
-      - WAHA_DASHBOARD_USERNAME=kuky.png@gmail.com
-      - WAHA_DASHBOARD_PASSWORD=Vladivostok@134
+      - SERVER_PORT=8080
+      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY:-changeme}
+      - LOG_LEVEL=warn
     volumes:
-      - waha_data:/app/.waha
+      - evolution_data:/evolution/data
 
   # Caddy (Servidor Web + SSL Automático)
   caddy:
@@ -43,9 +40,9 @@ services:
       - caddy_config:/config
     depends_on:
       - api
-      - waha
+      - evolution
 
 volumes:
   caddy_data:
   caddy_config:
-  waha_data:
+  evolution_data:

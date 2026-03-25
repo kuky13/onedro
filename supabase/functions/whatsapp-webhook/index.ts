@@ -91,7 +91,7 @@ serve(async (req) => {
       instData = instById ?? null;
     }
 
-    // Fallback adicional para o fluxo WAHA/SuperAdmin que usa whatsapp_zapi_settings
+    // Fallback adicional: buscar em whatsapp_zapi_settings
     if (!instData) {
       const { data: activeSettings, error: settingsErr } = await supabase
         .from("whatsapp_zapi_settings")
