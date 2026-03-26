@@ -97,7 +97,7 @@ export async function requestMediaDownload(payload: MediaDownloadRequest): Promi
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 120_000); // 120s for video processing
+    const timeoutId = setTimeout(() => controller.abort(), 180_000); // 180s for video processing
 
     try {
       // API_BASE_URL is now .../api, so we append /download
