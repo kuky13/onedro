@@ -3,7 +3,7 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const fs = require('fs');
-const { execSync, spawn } = require('child_process');
+const { spawn } = require('child_process');
 
 const DOWNLOADS_DIR = path.join(__dirname, '../../downloads');
 
