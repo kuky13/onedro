@@ -1,34 +1,66 @@
 
 
-## Análise do Estado Atual
+## Problema
 
-Após inspecionar os 3 arquivos, identifiquei que **2 das 4 correções solicitadas já estão aplicadas**:
+O `qualityMap` exige `[ext=mp4]` e `[ext=m4a]` nos seletores de formato. Muitos vídeos do YouTube (especialmente Shorts) só disponibilizam formatos WebM/Opus, então o yt-dlp falha com "Requested format is not available".
 
-1. **Edge Function (`media-download-proxy`)** — Já retorna `status: 200` na linha 151. Correção 2 já aplicada.
-2. **VPS (`download.js`)** — Não contém `--remote-components ejs:github`. O array de args está limpo (linhas 60-66). Bug A da Correção 3 não existe no código atual.
+## Correção
 
-### O que realmente precisa ser corrigido:
+Alterar o `qualityMap` para usar fallbacks flexíveis — tentar mp4/m4a primeiro, mas aceitar qualquer formato se não houver. Adicionar `--merge-output-format mp4` nos args para garantir que a saída final seja sempre .mp4 independente do formato de origem.
 
-**Correção 1 — `src/services/api/mediaDownloads.ts`**
+### Arquivo: `vps-api/src/routes/download.js`
 
-**Bug A — `normalizeDownloadUrl`**: A implementação atual usa `API_BASE_URL.replace(/\/api\/?$/, "")` que funciona, mas é frágil. Trocar por `new URL(API_BASE_URL).origin` é mais robusto e à prova de mudanças futuras no path.
+**1. Substituir o `qualityMap` (linhas 42-53) por versão com fallbacks:**
 
-**Bug B — Fallback 5xx**: O catch final (linhas 180-189) só faz fallback para erros de rede. Precisa incluir erros HTTP 5xx para que o edge proxy seja usado quando a VPS retorna 500/502/503/504.
+```javascript
+const qualityMap = {
+  'best': 'bestvideo+bestaudio/best',
+  '4320p': 'bestvideo[height<=4320]+bestaudio/best[height<=4320]/best',
+  '2160p': 'bestvideo[height<=2160]+bestaudio/best[height<=2160]/best',
+  '1440p': 'bestvideo[height<=1440]+bestaudio/best[height<=1440]/best',
+  '1080p': 'bestvideo[height<=1080]+bestaudio/best[height<=1080]/best',
+  '720p': 'bestvideo[height<=720]+bestaudio/best[height<=720]/best',
+  '480p': 'bestvideo[height<=480]+bestaudio/best[height<=480]/best',
+  '360p': 'bestvideo[height<=360]+bestaudio/best[height<=360]/best',
+  '240p': 'bestvideo[height<=240]+bestaudio/best[height<=240]/best',
+  '144p': 'bestvideo[height<=144]+bestaudio/best[height<=144]/best'
+};
+```
 
-**Correção 2 — `vps-api/src/routes/download.js`**
+**2. Adicionar `--merge-output-format mp4` nos args (linha 60-66):**
 
-**Timeout do yt-dlp**: O processo `spawn` não tem timeout (linhas 75-138). Se o yt-dlp travar, a requisição fica pendente para sempre. Adicionar kill timer de 5 minutos.
+```javascript
+const args = [
+  '-f', formatArg,
+  '-o', outputPath,
+  '--no-playlist',
+  '--no-warnings',
+  '--quiet',
+  '--merge-output-format', 'mp4'
+];
+```
 
-### Plano de implementação
+Isso remove a restrição `[ext=mp4]`/`[ext=m4a]` e garante que o ffmpeg converta o resultado final para mp4.
 
-1. **Atualizar `normalizeDownloadUrl`** em `mediaDownloads.ts` — usar `new URL(API_BASE_URL).origin`
-2. **Expandir fallback** no catch final de `requestMediaDownload` — incluir mensagens com "500", "502", "503", "504"
-3. **Adicionar timeout de 5 min** ao spawn do yt-dlp em `download.js` com `SIGKILL` e resposta 504
-4. **Deploy** da edge function `media-download-proxy` (sem mudanças nela, mas redeploy para garantir versão mais recente)
+**3. Para mp3, manter sem `--merge-output-format`** — o bloco `if (format === 'mp3')` na linha 68 já adiciona `-x --audio-format mp3`, que sobrescreve o merge format.
 
-### Detalhes técnicos
+Ajuste: mover o `--merge-output-format` para fora do array inicial e adicioná-lo condicionalmente:
 
-- `API_BASE_URL` = `https://api.kuky.help/api` — `new URL(...).origin` retorna `https://api.kuky.help` corretamente
-- O timeout no VPS usa variável `finished` para evitar respostas duplicadas ao cliente
-- O fallback 5xx verifica a mensagem de erro por substrings dos códigos HTTP
+```javascript
+const args = [
+  '-f', formatArg,
+  '-o', outputPath,
+  '--no-playlist',
+  '--no-warnings',
+  '--quiet'
+];
+
+if (format === 'mp3') {
+  args.push('-x', '--audio-format', 'mp3');
+} else {
+  args.push('--merge-output-format', 'mp4');
+}
+```
+
+Após aplicar, será necessário atualizar o arquivo na VPS e rodar `pm2 restart all`.
 
