@@ -97,7 +97,7 @@ export async function requestMediaDownload(payload: MediaDownloadRequest): Promi
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 120_000); // 120s for video processing
+    const timeoutId = setTimeout(() => controller.abort(), 180_000); // 180s for video processing
 
     try {
       // API_BASE_URL is now .../api, so we append /download
@@ -144,6 +144,10 @@ export async function requestMediaDownload(payload: MediaDownloadRequest): Promi
       clearTimeout(timeoutId);
       if (e.name === 'AbortError') {
         throw new Error('A VPS está processando sua solicitação, por favor aguarde um momento ou tente novamente.');
+      }
+      const errMsg = String(e?.message ?? '');
+      if (errMsg.toLowerCase().includes('requested format is not available')) {
+        throw new Error('O formato/qualidade selecionado não está disponível para este vídeo. Tente usar a qualidade "Melhor" ou outro formato.');
       }
       throw e;
     }
