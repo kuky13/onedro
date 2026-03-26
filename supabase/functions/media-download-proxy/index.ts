@@ -7,6 +7,43 @@ type Payload = {
   quality: string;
 };
 
+const extractYouTubeId = (u: URL) => {
+  const parts = u.pathname.split("/").filter(Boolean);
+
+  if (u.hostname === "youtu.be") {
+    return parts[0] || "";
+  }
+
+  if (u.pathname === "/watch") {
+    return u.searchParams.get("v") || "";
+  }
+
+  if (["shorts", "embed", "live"].includes(parts[0] || "")) {
+    return parts[1] || "";
+  }
+
+  return "";
+};
+
+const normalizeMediaUrl = (value: string) => {
+  try {
+    const u = new URL(value.trim());
+    const hostname = u.hostname.toLowerCase();
+
+    if (hostname === "youtu.be" || hostname.endsWith("youtube.com")) {
+      const videoId = extractYouTubeId(u);
+      if (videoId) {
+        return `https://www.youtube.com/watch?v=${videoId}`;
+      }
+    }
+
+    u.searchParams.delete("si");
+    return u.toString();
+  } catch {
+    return value.trim();
+  }
+};
+
 const isValidHttpUrl = (value: string) => {
   try {
     const u = new URL(value);
@@ -31,7 +68,8 @@ serve(async (req) => {
   try {
     const body = (await req.json()) as Partial<Payload>;
 
-    const url = typeof body.url === "string" ? body.url.trim() : "";
+    const rawUrl = typeof body.url === "string" ? body.url.trim() : "";
+    const url = normalizeMediaUrl(rawUrl);
     const format = body.format === "mp3" ? "mp3" : "mp4";
     const quality = typeof body.quality === "string" && body.quality.trim() ? body.quality.trim() : "best";
 
@@ -89,9 +127,28 @@ serve(async (req) => {
       }
     }
 
-    // Repassa o status HTTP, mas garante CORS.
+    const upstreamFailed = !upstream.ok;
+    const rawMessage = String(data?.message || data?.error || "").toLowerCase();
+
+    if (upstreamFailed) {
+      data = {
+        success: false,
+        ...data,
+        message:
+          data?.message ||
+          (rawMessage === "download failed" ? "Falha ao processar download na VPS" : undefined) ||
+          "Falha ao processar download",
+        details:
+          data?.details ||
+          (rawMessage === "download failed"
+            ? `A VPS retornou erro ao processar a mídia. URL enviada: ${url}${url !== rawUrl ? ` (normalizada de ${rawUrl})` : ""}`
+            : undefined),
+        upstreamStatus: upstream.status,
+      };
+    }
+
     return new Response(JSON.stringify(data), {
-      status: upstream.status,
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {
