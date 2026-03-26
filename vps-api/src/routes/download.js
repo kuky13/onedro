@@ -72,7 +72,7 @@ router.post('/download', async (req, res) => {
     args.push(url);
 
     // Executar yt-dlp
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const proc = spawn('yt-dlp', args);
       let stderr = '';
       let finished = false;
@@ -111,10 +111,11 @@ router.post('/download', async (req, res) => {
           : outputPath;
 
         if (!fs.existsSync(finalPath)) {
-          return res.status(500).json({
+          res.status(500).json({
             success: false,
             error: 'Arquivo não foi gerado'
           });
+          return resolve();
         }
 
         const stats = fs.statSync(finalPath);
@@ -128,6 +129,7 @@ router.post('/download', async (req, res) => {
           size: stats.size,
           fileSize: stats.size
         });
+        resolve();
 
         // Agendar limpeza do arquivo após 1 hora
         setTimeout(() => {
@@ -152,7 +154,6 @@ router.post('/download', async (req, res) => {
           details: err.message
         });
         resolve();
-        });
       });
     });
 
