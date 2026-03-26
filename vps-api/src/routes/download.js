@@ -67,6 +67,8 @@ router.post('/download', async (req, res) => {
 
     if (format === 'mp3') {
       args.push('-x', '--audio-format', 'mp3');
+    } else {
+      args.push('--merge-output-format', 'mp4');
     }
 
     args.push(url);
