@@ -47,6 +47,21 @@ export function classifyDownloadError(params: {
     };
   }
 
+  // Formato indisponível
+  if (includesAny(msg, ["requested format is not available", "formato/qualidade selecionado"])) {
+    return {
+      title: "Qualidade indisponível",
+      userMessage:
+        "O formato ou qualidade selecionado não está disponível para este vídeo. Tente usar a qualidade \"Melhor\" ou troque o formato.",
+      technicalDetails: raw,
+      suggestedActions: [
+        "Selecione a qualidade \"Melhor\"",
+        "Tente outro formato (MP4 ou MP3)",
+        "Tente outro vídeo/link",
+      ],
+    };
+  }
+
   // Rate limiting
   if (includesAny(msg, ["429", "too many requests"])) {
     return {

@@ -145,6 +145,10 @@ export async function requestMediaDownload(payload: MediaDownloadRequest): Promi
       if (e.name === 'AbortError') {
         throw new Error('A VPS está processando sua solicitação, por favor aguarde um momento ou tente novamente.');
       }
+      const errMsg = String(e?.message ?? '');
+      if (errMsg.toLowerCase().includes('requested format is not available')) {
+        throw new Error('O formato/qualidade selecionado não está disponível para este vídeo. Tente usar a qualidade "Melhor" ou outro formato.');
+      }
       throw e;
     }
   };
