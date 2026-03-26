@@ -75,19 +75,34 @@ router.post('/download', async (req, res) => {
     return new Promise((resolve, reject) => {
       const proc = spawn('yt-dlp', args);
       let stderr = '';
+      let finished = false;
+
+      const killTimer = setTimeout(() => {
+        if (!finished) {
+          proc.kill('SIGKILL');
+          res.status(504).json({
+            success: false,
+            error: 'Tempo limite excedido ao processar o vídeo (5 min)',
+          });
+          resolve();
+        }
+      }, 5 * 60 * 1000);
 
       proc.stderr.on('data', (data) => {
         stderr += data.toString();
       });
 
       proc.on('close', (code) => {
+        finished = true;
+        clearTimeout(killTimer);
         if (code !== 0) {
           console.error('yt-dlp error:', stderr);
-          return res.status(500).json({
+          res.status(500).json({
             success: false,
             error: 'Falha ao processar o vídeo',
             details: stderr.slice(0, 500)
           });
+          return resolve();
         }
 
         // Verificar se arquivo foi criado
@@ -128,11 +143,15 @@ router.post('/download', async (req, res) => {
       });
 
       proc.on('error', (err) => {
+        finished = true;
+        clearTimeout(killTimer);
         console.error('Spawn error:', err);
         res.status(500).json({
           success: false,
           error: 'yt-dlp não está instalado ou não foi encontrado',
           details: err.message
+        });
+        resolve();
         });
       });
     });

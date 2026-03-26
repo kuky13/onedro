@@ -60,9 +60,8 @@ export type MediaDownloadResponse = z.infer<typeof MediaDownloadResponseSchema>;
 const normalizeDownloadUrl = (downloadUrl: string) => {
   if (!downloadUrl) return downloadUrl;
   if (downloadUrl.startsWith("/")) {
-    // API_BASE_URL ends with /api, but static files are served at the root domain
-    const baseOrigin = API_BASE_URL.replace(/\/api\/?$/, "");
-    return `${baseOrigin}${downloadUrl}`;
+    const origin = new URL(API_BASE_URL).origin;
+    return `${origin}${downloadUrl}`;
   }
   return downloadUrl;
 };
@@ -180,9 +179,10 @@ export async function requestMediaDownload(payload: MediaDownloadRequest): Promi
   try {
     return await callViaDirectFetch();
   } catch (e: any) {
-    // Se for erro de rede/CORS no browser, costuma chegar como TypeError: Failed to fetch.
     const msg = String(e?.message ?? e);
-    if (msg.toLowerCase().includes("failed to fetch") || msg.toLowerCase().includes("networkerror")) {
+    const isNetworkIssue = msg.toLowerCase().includes("failed to fetch") || msg.toLowerCase().includes("networkerror");
+    const isServerError = msg.includes("500") || msg.includes("502") || msg.includes("503") || msg.includes("504");
+    if (isNetworkIssue || isServerError) {
       return await callViaEdgeProxy();
     }
     throw e;
