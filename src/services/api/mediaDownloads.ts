@@ -11,6 +11,38 @@ export type MediaDownloadRequest = {
   quality: string;
 };
 
+const normalizeInputUrl = (value: string) => {
+  const input = value.trim();
+  if (!input) return input;
+
+  try {
+    const url = new URL(input);
+    const hostname = url.hostname.toLowerCase();
+    const segments = url.pathname.split("/").filter(Boolean);
+
+    let videoId = "";
+
+    if (hostname === "youtu.be") {
+      videoId = segments[0] || "";
+    } else if (hostname.endsWith("youtube.com")) {
+      if (url.pathname === "/watch") {
+        videoId = url.searchParams.get("v") || "";
+      } else if (["shorts", "embed", "live"].includes(segments[0] || "")) {
+        videoId = segments[1] || "";
+      }
+    }
+
+    if (videoId) {
+      return `https://www.youtube.com/watch?v=${videoId}`;
+    }
+
+    url.searchParams.delete("si");
+    return url.toString();
+  } catch {
+    return input;
+  }
+};
+
 const MediaDownloadResponseSchema = z.object({
   success: z.boolean().optional(),
   downloadUrl: z.string().optional(),
@@ -50,6 +82,11 @@ export async function requestMediaDownload(payload: MediaDownloadRequest): Promi
   filename: string;
   size?: number;
 }> {
+  const normalizedPayload = {
+    ...payload,
+    url: normalizeInputUrl(payload.url),
+  };
+
   const callViaDirectFetch = async () => {
     // Refresh token proactively if near expiry
     const { data: sessionData } = await supabase.auth.getSession();
@@ -72,7 +109,7 @@ export async function requestMediaDownload(payload: MediaDownloadRequest): Promi
           Accept: "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(normalizedPayload),
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
@@ -115,7 +152,7 @@ export async function requestMediaDownload(payload: MediaDownloadRequest): Promi
 
   const callViaEdgeProxy = async () => {
     const { data, error } = await supabase.functions.invoke("media-download-proxy", {
-      body: payload,
+      body: normalizedPayload,
     });
     if (error) throw new Error(error.message || "Falha no proxy de download");
 
