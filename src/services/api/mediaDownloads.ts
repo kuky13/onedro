@@ -60,9 +60,8 @@ export type MediaDownloadResponse = z.infer<typeof MediaDownloadResponseSchema>;
 const normalizeDownloadUrl = (downloadUrl: string) => {
   if (!downloadUrl) return downloadUrl;
   if (downloadUrl.startsWith("/")) {
-    // API_BASE_URL ends with /api, but static files are served at the root domain
-    const baseOrigin = API_BASE_URL.replace(/\/api\/?$/, "");
-    return `${baseOrigin}${downloadUrl}`;
+    const origin = new URL(API_BASE_URL).origin;
+    return `${origin}${downloadUrl}`;
   }
   return downloadUrl;
 };
