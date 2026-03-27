@@ -101,11 +101,20 @@ serve(async (req) => {
       }
 
       // Check connection status (if connected, mark as active)
-      const statusUrl = `${baseUrl}/instance/connectionState/${instanceName}`;
-      const statusRes = await fetch(statusUrl, {
-        method: "GET",
-        headers: { apikey: evolutionApiKey },
-      });
+      // Try Evolution GO endpoint first, then v2
+      let statusRes: Response;
+      const statusCandidates = [
+        { url: `${baseUrl}/instance/status?instanceName=${instanceName}`, method: "GET" },
+        { url: `${baseUrl}/instance/status`, method: "GET" },
+        { url: `${baseUrl}/instance/connectionState/${instanceName}`, method: "GET" },
+      ];
+      statusRes = await fetch(statusCandidates[0].url, { method: "GET", headers: { apikey: evolutionApiKey } });
+      if (!statusRes.ok) {
+        statusRes = await fetch(statusCandidates[1].url, { method: "GET", headers: { apikey: evolutionApiKey } });
+      }
+      if (!statusRes.ok) {
+        statusRes = await fetch(statusCandidates[2].url, { method: "GET", headers: { apikey: evolutionApiKey } });
+      }
 
       if (statusRes.ok) {
         const statusData = await statusRes.json();
