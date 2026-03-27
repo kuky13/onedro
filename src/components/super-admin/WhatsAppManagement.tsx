@@ -518,7 +518,7 @@ export function WhatsAppManagement() {
         </div>
         <h1 className="text-xl lg:text-3xl font-bold tracking-tight">WhatsApp & Notificações</h1>
         <p className="text-sm lg:text-base text-muted-foreground">
-          Gerencie integrações, orçamentos e notificações automáticas via WAHA.
+          Gerencie integrações, orçamentos e notificações automáticas via Evolution GO.
         </p>
       </div>
 
