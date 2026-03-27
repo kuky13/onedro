@@ -130,22 +130,23 @@ export function WhatsAppManagement() {
     isLoading: messagesLoading,
     refetch: refetchMessages
   } = useQuery<any[]>({
-    queryKey: ['superadmin-whatsapp-waha-messages', selectedChatId, evolutionInstanceName],
+    queryKey: ['superadmin-whatsapp-evo-messages', selectedChatId, evolutionInstanceName],
     queryFn: async () => {
       const {
         data,
         error
-      } = await supabase.functions.invoke('waha-proxy', {
+      } = await supabase.functions.invoke('whatsapp-proxy', {
         body: {
           action: 'get_messages',
           payload: {
-            chatId: selectedChatId,
-            session: evolutionInstanceName || undefined
+            remoteJid: selectedChatId,
+            instanceName: evolutionInstanceName || undefined
           }
         }
       });
       if (error) throw error;
-      return Array.isArray(data) ? data : [];
+      const msgs = data?.messages || data;
+      return Array.isArray(msgs) ? msgs : [];
     },
     enabled: isAuthenticated && !!selectedChatId && !!evolutionInstanceName,
     refetchInterval: 5000 // Polling a cada 5 segundos para o "ao vivo"
