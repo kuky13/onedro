@@ -479,6 +479,30 @@ serve(async (req) => {
         }
         break;
 
+      case 'get_groups':
+        try {
+          console.log(`[whatsapp-proxy] get_groups for ${payload.instanceName}`);
+          const groupsData = await callEvo(`group/fetchAllGroups/${payload.instanceName}`, 'POST', {}).catch(async () => {
+            // Fallback: buscar chats e filtrar por @g.us
+            const allChats = await callEvo(`chat/findChats/${payload.instanceName}`, 'POST', {});
+            const chatsArray = Array.isArray(allChats) ? allChats : (allChats?.data || allChats?.chats || []);
+            return chatsArray.filter((c: any) => {
+              const id = c.id || c.remoteJid || '';
+              return typeof id === 'string' && id.includes('@g.us');
+            });
+          });
+          const groupsArr = Array.isArray(groupsData) ? groupsData : (groupsData?.data || groupsData?.groups || []);
+          result = groupsArr.map((g: any) => ({
+            id: g.id || g.jid || g.remoteJid || '',
+            name: g.subject || g.name || 'Grupo sem nome',
+            groupId: g.id || g.jid || g.remoteJid || '',
+          }));
+        } catch (e) {
+          console.error(`[whatsapp-proxy] Error in get_groups:`, e);
+          result = [];
+        }
+        break;
+
       case 'send_message':
         result = await callEvo(`message/sendText/${payload.instanceName}`, 'POST', {
           number: payload.to,

@@ -714,7 +714,7 @@ export function WhatsAppManagement() {
 
               {/* Webhook Info */}
               <div className="pt-4 border-t space-y-2">
-                <Label>Webhook URL (WAHA)</Label>
+                <Label>Webhook URL (Evolution GO)</Label>
                 <div className="p-2 bg-muted rounded text-[10px] font-mono break-all">{webhookUrl}</div>
               </div>
 
