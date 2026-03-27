@@ -159,12 +159,20 @@ serve(async (req) => {
         }
       }
 
-      // Not connected yet: fetch a fresh QR code for the same instance
-      const qrUrl = `${baseUrl}/instance/connect/${instanceName}`;
-      const qrRes = await fetch(qrUrl, {
-        method: "GET",
-        headers: { apikey: evolutionApiKey },
+      // Not connected: fetch a fresh QR code
+      // Evolution GO: POST /instance/connect with body
+      // Evolution v2: GET /instance/connect/{instanceName}
+      let qrRes = await fetch(`${baseUrl}/instance/connect`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: evolutionApiKey },
+        body: JSON.stringify({ instanceName }),
       });
+      if (!qrRes.ok) {
+        qrRes = await fetch(`${baseUrl}/instance/connect/${instanceName}`, {
+          method: "GET",
+          headers: { apikey: evolutionApiKey },
+        });
+      }
 
       if (qrRes.ok) {
         const qrData = await qrRes.json();
