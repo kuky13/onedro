@@ -101,11 +101,20 @@ serve(async (req) => {
       }
 
       // Check connection status (if connected, mark as active)
-      const statusUrl = `${baseUrl}/instance/connectionState/${instanceName}`;
-      const statusRes = await fetch(statusUrl, {
-        method: "GET",
-        headers: { apikey: evolutionApiKey },
-      });
+      // Try Evolution GO endpoint first, then v2
+      let statusRes: Response;
+      const statusCandidates = [
+        { url: `${baseUrl}/instance/status?instanceName=${instanceName}`, method: "GET" },
+        { url: `${baseUrl}/instance/status`, method: "GET" },
+        { url: `${baseUrl}/instance/connectionState/${instanceName}`, method: "GET" },
+      ];
+      statusRes = await fetch(statusCandidates[0].url, { method: "GET", headers: { apikey: evolutionApiKey } });
+      if (!statusRes.ok) {
+        statusRes = await fetch(statusCandidates[1].url, { method: "GET", headers: { apikey: evolutionApiKey } });
+      }
+      if (!statusRes.ok) {
+        statusRes = await fetch(statusCandidates[2].url, { method: "GET", headers: { apikey: evolutionApiKey } });
+      }
 
       if (statusRes.ok) {
         const statusData = await statusRes.json();
@@ -150,12 +159,20 @@ serve(async (req) => {
         }
       }
 
-      // Not connected yet: fetch a fresh QR code for the same instance
-      const qrUrl = `${baseUrl}/instance/connect/${instanceName}`;
-      const qrRes = await fetch(qrUrl, {
-        method: "GET",
-        headers: { apikey: evolutionApiKey },
+      // Not connected: fetch a fresh QR code
+      // Evolution GO: POST /instance/connect with body
+      // Evolution v2: GET /instance/connect/{instanceName}
+      let qrRes = await fetch(`${baseUrl}/instance/connect`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: evolutionApiKey },
+        body: JSON.stringify({ instanceName }),
       });
+      if (!qrRes.ok) {
+        qrRes = await fetch(`${baseUrl}/instance/connect/${instanceName}`, {
+          method: "GET",
+          headers: { apikey: evolutionApiKey },
+        });
+      }
 
       if (qrRes.ok) {
         const qrData = await qrRes.json();
@@ -266,7 +283,11 @@ serve(async (req) => {
       const errTxt = await createRes.text();
       console.warn("[whatsapp-qr-connect] Create instance not OK, trying connect:", createRes.status, errTxt);
 
-      const connectUrl = `${baseUrl}/instance/connect/${instanceName}`;
+      // Try Evolution GO (POST) first, then v2 (GET)
+      const connectCandidates = [
+        { url: `${baseUrl}/instance/connect`, method: "POST", body: JSON.stringify({ instanceName }) },
+        { url: `${baseUrl}/instance/connect/${instanceName}`, method: "GET", body: undefined as string | undefined },
+      ];
 
       let qrCode: string | null = null;
       let lastConnectStatus: number | null = null;
@@ -274,21 +295,25 @@ serve(async (req) => {
 
       // Retry because QR can take a moment to become available
       for (let i = 0; i < 20 && !qrCode; i++) {
-        const qrRes = await fetch(connectUrl, {
-          method: "GET",
-          headers: { apikey: evolutionApiKey },
-        });
+        for (const candidate of connectCandidates) {
+          const qrRes = await fetch(candidate.url, {
+            method: candidate.method,
+            headers: { "Content-Type": "application/json", apikey: evolutionApiKey },
+            ...(candidate.body ? { body: candidate.body } : {}),
+          });
 
-        lastConnectStatus = qrRes.status;
-        lastConnectBody = await qrRes.text();
+          lastConnectStatus = qrRes.status;
+          lastConnectBody = await qrRes.text();
 
-        if (qrRes.ok) {
-          try {
-            const qrData = JSON.parse(lastConnectBody);
-            qrCode = qrData?.qrcode?.base64 ?? qrData?.code ?? qrData?.base64 ?? null;
-          } catch {
-            // ignore
+          if (qrRes.ok) {
+            try {
+              const qrData = JSON.parse(lastConnectBody);
+              qrCode = qrData?.qrcode?.base64 ?? qrData?.code ?? qrData?.base64 ?? null;
+            } catch {
+              // ignore
+            }
           }
+          if (qrCode) break;
         }
 
         if (!qrCode) await new Promise((r) => setTimeout(r, 1000));

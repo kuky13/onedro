@@ -18,8 +18,6 @@ serve(async (req) => {
     if (!authHeader) throw new Error("Acesso negado: Sem autorização");
 
     const token = authHeader.replace("Bearer ", "");
-    // NOTE: em alguns builds do Deno/esm.sh, o tipo exposto para auth não inclui getUser(jwt),
-    // mas o método existe em runtime. Fazemos cast para manter compatibilidade.
     const {
       data: { user },
       error: authError,
@@ -53,83 +51,78 @@ serve(async (req) => {
       );
     }
 
-    const callEvo = async (path: string, method: string, body: any = null) => {
-      if (!evoUrl || evoKeys.length === 0) {
-        throw new Error("Configuração da Evolution não encontrada (api_url ou global_api_key)");
-      }
+    console.log(`[whatsapp-proxy] Base URL resolved: ${evoUrl}`);
 
+    // ── Helper: call Evolution API with multi-key + multi-base fallback ──
+    const callEvo = async (path: string, method: string, body: any = null) => {
       const base = evoUrl.replace(/\/$/, "");
       const cleanedPath = String(path).replace(/^\//, "");
 
-      // Alguns servidores expõem a API atrás de /api, /v1 ou /v2.
-      // Tentamos automaticamente esses prefixos para evitar 404 "Not Found".
-      const baseCandidates = [
-        base,
-        `${base}/api`,
-        `${base}/v1`,
-        `${base}/v2`,
-      ];
+      const url = `${base}/${cleanedPath}`;
+      console.log(`[whatsapp-proxy] Calling Evolution: ${method} ${url}`);
 
       let lastErr: unknown = null;
 
-      for (const baseCandidate of baseCandidates) {
-        const url = `${baseCandidate}/${cleanedPath}`;
-        console.log(`[whatsapp-proxy] Calling Evolution: ${method} ${url}`);
+      for (const evoKey of evoKeys) {
+        const options: any = {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            apikey: evoKey,
+            Authorization: `Bearer ${evoKey}`,
+            "x-api-key": evoKey,
+          },
+        };
 
-        for (const evoKey of evoKeys) {
-          const options: any = {
-            method,
-            headers: {
-              "Content-Type": "application/json",
-              // Evolution deployments variam: alguns esperam `apikey`, outros Bearer.
-              // Enviamos os 3 formatos para maximizar compatibilidade.
-              apikey: evoKey,
-              Authorization: `Bearer ${evoKey}`,
-              "x-api-key": evoKey,
-            },
-          };
-
-          if (method !== 'GET' && method !== 'DELETE' && body) {
-            options.body = JSON.stringify(body);
-          }
-
-          const res = await fetch(url, options);
-          const contentType = res.headers.get("content-type");
-
-          // Se não for JSON, isso não é problema de chave. Abortamos cedo.
-          if (!contentType || !contentType.includes("application/json")) {
-            const text = await res.text();
-            console.error(`[whatsapp-proxy] Non-JSON response from Evolution (${res.status}):`, text);
-            throw new Error(`A VPS retornou um erro não-JSON (${res.status}). Verifique se a Evolution API está rodando.`);
-          }
-
-          const data = await res.json();
-
-          if (res.ok) {
-            console.log(`[whatsapp-proxy] Evolution Success:`, JSON.stringify(data).substring(0, 200) + "...");
-            return data;
-          }
-
-          // 401/Unauthorized: tenta próxima chave (fallback global, etc.)
-          const msg = String((data as any)?.message || (data as any)?.error || "");
-          const isUnauthorized = res.status === 401 || msg.toLowerCase().includes("unauthorized");
-          console.error(`[whatsapp-proxy] Evolution Error (${res.status}) with a key:`, data);
-
-          lastErr = new Error(msg || `Erro ${res.status} na Evolution API`);
-
-          // Se for unauthorized, tenta próxima chave (mesmo base)
-          if (isUnauthorized) continue;
-
-          // Se for 404, tenta o próximo baseCandidate (ex: /api)
-          if (res.status === 404 || msg.toLowerCase().includes('not found')) {
-            break;
-          }
-
-          throw lastErr;
+        if (method !== 'GET' && method !== 'DELETE' && body) {
+          options.body = JSON.stringify(body);
         }
+
+        const res = await fetch(url, options);
+        const contentType = res.headers.get("content-type");
+
+        if (!contentType || !contentType.includes("application/json")) {
+          const text = await res.text();
+          console.error(`[whatsapp-proxy] Non-JSON response (${res.status}): ${text.substring(0, 200)}`);
+          // For 404 on non-JSON, let caller handle fallback
+          if (res.status === 404) {
+            throw new Error(`404 Not Found: ${url}`);
+          }
+          throw new Error(`Non-JSON response (${res.status}) from Evolution`);
+        }
+
+        const data = await res.json();
+
+        if (res.ok) {
+          console.log(`[whatsapp-proxy] Success: ${method} ${url} -> ${JSON.stringify(data).substring(0, 200)}`);
+          return data;
+        }
+
+        const msg = String((data as any)?.message || (data as any)?.error || "");
+        const isUnauthorized = res.status === 401 || msg.toLowerCase().includes("unauthorized");
+        console.error(`[whatsapp-proxy] Error (${res.status}):`, msg);
+
+        lastErr = new Error(msg || `Erro ${res.status} na Evolution API`);
+
+        if (isUnauthorized) continue; // try next key
+        throw lastErr;
       }
 
       throw lastErr ?? new Error("Unauthorized na Evolution API");
+    };
+
+    // ── Helper: try multiple endpoint candidates sequentially ──
+    const tryEndpoints = async (candidates: Array<{ path: string; method: string; body?: any }>) => {
+      let lastErr: unknown = null;
+      for (const c of candidates) {
+        try {
+          return await callEvo(c.path, c.method, c.body ?? null);
+        } catch (e: any) {
+          console.log(`[whatsapp-proxy] Endpoint ${c.method} ${c.path} failed: ${e?.message}`);
+          lastErr = e;
+        }
+      }
+      throw lastErr ?? new Error("All endpoint candidates failed");
     };
 
     let result: any = {};
@@ -140,12 +133,9 @@ serve(async (req) => {
         result = { instances: instances || [] };
         break;
 
-      case 'create_instance':
+      case 'create_instance': {
         const instanceName = `onedrip_${user.id.substring(0, 4)}_${Math.random().toString(36).substring(2, 7)}`;
 
-        // Evolution API v2 exige o campo "integration" e é case-sensitive.
-        // Valores aceitos (docs): "WHATSAPP-BAILEYS" | "WHATSAPP-BUSINESS".
-        // Normaliza valores comuns vindos do frontend para evitar 400 "Invalid integration".
         const allowedIntegrations = new Set(["WHATSAPP-BAILEYS", "WHATSAPP-BUSINESS"]);
         const rawIntegration = payload?.integration;
         const normalizedIntegration = typeof rawIntegration === "string"
@@ -155,116 +145,95 @@ serve(async (req) => {
           ? normalizedIntegration
           : "WHATSAPP-BAILEYS";
 
-
         console.log("[whatsapp-proxy] create_instance", { instanceName, integration });
-        const evoRes = await callEvo('instance/create', 'POST', {
-          instanceName,
-          integration,
-          qrcode: true,
-          // Otimização para evitar crash de 'init queries' do Baileys
-          // Desativamos o que não é essencial para o chat funcionar
-          config: {
-            read_messages: true,
-            read_status: false, // Evita carregar status de todos os contatos no boot
-            sync_full_history: false, // Carrega apenas o necessário
-            reject_call: false,
-            groups_ignore: false
-          },
-          webhook: {
-            url: `${supabaseUrl}/functions/v1/whatsapp-webhook`,
-            enabled: true,
-            byEvents: true,
-            events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "MESSAGES_DELETE", "SEND_MESSAGE", "CONNECTION_UPDATE", "PRESENCE_UPDATE"],
-          },
-        });
 
+        // Try Evolution GO format first, then v2
+        const evoRes = await tryEndpoints([
+          // Evolution GO: POST /instance/create with body
+          { path: 'instance/create', method: 'POST', body: {
+            instanceName, integration, qrcode: true,
+            webhook: {
+              url: `${supabaseUrl}/functions/v1/whatsapp-webhook`,
+              enabled: true, byEvents: true,
+              events: ["MESSAGES_UPSERT", "CONNECTION_UPDATE", "QRCODE_UPDATED"],
+            },
+          }},
+        ]);
 
         const { data: newInst } = await supabase.from('whatsapp_instances').insert({
           user_id: user.id,
           instance_name: instanceName,
-          instance_id: evoRes.instance?.instanceId || "n/a",
+          instance_id: evoRes.instance?.instanceId || evoRes?.id || "n/a",
           status: 'created',
           ai_enabled: true
         }).select().single();
 
         result = { instance: newInst, evolution: evoRes };
         break;
+      }
 
       case 'connect_instance':
-        result = await callEvo(`instance/connect/${payload.instanceName}`, 'GET');
+        // Evolution GO: POST /instance/connect (body: { instanceName })
+        // Evolution v2: GET /instance/connect/{instanceName}
+        result = await tryEndpoints([
+          { path: 'instance/connect', method: 'POST', body: { instanceName: payload.instanceName } },
+          { path: `instance/connect/${payload.instanceName}`, method: 'GET' },
+        ]);
         break;
 
-      case 'get_status':
-        const state = await callEvo(`instance/connectionState/${payload.instanceName}`, 'GET');
-        const status = state?.instance?.state || 'disconnected';
+      case 'get_status': {
+        // Evolution GO: GET /instance/status (query param or header for instance)
+        // Evolution v2: GET /instance/connectionState/{instanceName}
+        const state = await tryEndpoints([
+          { path: `instance/status?instanceName=${payload.instanceName}`, method: 'GET' },
+          { path: 'instance/status', method: 'GET' },
+          { path: `instance/connectionState/${payload.instanceName}`, method: 'GET' },
+        ]);
+        const status = state?.instance?.state || state?.state || state?.status || 'disconnected';
         await supabase.from('whatsapp_instances').update({ status }).eq('instance_name', payload.instanceName);
         result = { status, state };
         break;
+      }
 
       case 'delete_instance':
-        await callEvo(`instance/delete/${payload.instanceName}`, 'DELETE');
+        // Evolution GO: DELETE /instance/delete/{instanceId}
+        // Evolution v2: DELETE /instance/delete/{instanceName}
+        await tryEndpoints([
+          { path: `instance/delete/${payload.instanceName}`, method: 'DELETE' },
+        ]);
         await supabase.from('whatsapp_instances').delete().eq('instance_name', payload.instanceName);
         result = { success: true };
         break;
 
       case 'logout_instance':
-        await callEvo(`instance/logout/${payload.instanceName}`, 'DELETE');
+        // Evolution GO: DELETE /instance/logout (body with instanceName?)
+        // Evolution v2: DELETE /instance/logout/{instanceName}
+        try {
+          await tryEndpoints([
+            { path: 'instance/logout', method: 'DELETE', body: { instanceName: payload.instanceName } },
+            { path: `instance/logout/${payload.instanceName}`, method: 'DELETE' },
+          ]);
+        } catch { /* ignore */ }
         await supabase.from('whatsapp_instances').update({ status: 'disconnected' }).eq('instance_name', payload.instanceName);
         result = { success: true };
         break;
 
-      case 'set_webhook':
+      case 'set_webhook': {
         console.log(`[whatsapp-proxy] Setting webhook for ${payload.instanceName}`);
-
-        // IMPORTANTE:
-        // - Webhook é server-to-server (Evolution -> Supabase Function).
-        // - Não deve depender de JWT do usuário.
-        // - Com verify_jwt=false no supabase/config.toml, não precisamos anexar apikey/querystring.
         const webhookUrl = `${supabaseUrl}/functions/v1/whatsapp-webhook`;
-
-        // Evolution costuma usar nomes em "dot-case" (ex: messages.upsert).
-        // Alguns setups antigos usam UPPERCASE (ex: MESSAGES_UPSERT).
-        // Para máxima compatibilidade, registramos ambos.
         const events = [
-          "messages.upsert",
-          "messages.update",
-          "messages.delete",
-          "send.message",
-          "connection.update",
-          "presence.update",
-          "qrcode.updated",
-
-          "MESSAGES_UPSERT",
-          "MESSAGES_UPDATE",
-          "MESSAGES_DELETE",
-          "SEND_MESSAGE",
-          "CONNECTION_UPDATE",
-          "PRESENCE_UPDATE",
-          "QRCODE_UPDATED",
+          "messages.upsert", "messages.update", "connection.update", "qrcode.updated",
+          "MESSAGES_UPSERT", "MESSAGES_UPDATE", "CONNECTION_UPDATE", "QRCODE_UPDATED",
         ];
 
         const errors: string[] = [];
-
-        // Alguns deploys da Evolution mudam o path do webhook (v2 vs forks/custom).
-        // Fazemos tentativa em múltiplos endpoints prováveis para maximizar compatibilidade.
         const candidatePaths = [
-          // caminhos "clássicos" (forks)
           `webhook/set/${payload.instanceName}`,
-          `webhook/set/${payload.instanceName}/`,
           `webhook/${payload.instanceName}`,
-          `webhook/${payload.instanceName}/set`,
-
-          // variações comuns em painéis/routers
           `instance/webhook/${payload.instanceName}`,
-          `instance/webhook/set/${payload.instanceName}`,
-          `instance/setWebhook/${payload.instanceName}`,
-          `instance/set-webhook/${payload.instanceName}`,
         ];
-
         const bodies = [
-          // formato novo
           { webhook: { url: webhookUrl, enabled: true, byEvents: true, events } },
-          // formato antigo
           { url: webhookUrl, enabled: true, byEvents: true, events },
         ];
 
@@ -282,195 +251,145 @@ serve(async (req) => {
         }
 
         return new Response(
-          JSON.stringify({
-            success: false,
-            error: "VPS_REJECTED",
-            webhookUrl,
-            details: errors.slice(0, 8).join(" | ") + (errors.length > 8 ? ` | +${errors.length - 8} erros` : ""),
-          }),
+          JSON.stringify({ success: false, error: "VPS_REJECTED", webhookUrl, details: errors.slice(0, 6).join(" | ") }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
+      }
 
-
-      case 'diagnose_instance':
-        // Busca informações completas para debug
+      case 'diagnose_instance': {
         const [connState, webhookConfig, hostInfo] = await Promise.allSettled([
-            callEvo(`instance/connectionState/${payload.instanceName}`, 'GET'),
-            callEvo(`webhook/find/${payload.instanceName}`, 'GET'),
-            callEvo(`instance/fetchInstances`, 'GET') // Para ver se a instância existe na lista global
+          tryEndpoints([
+            { path: `instance/status?instanceName=${payload.instanceName}`, method: 'GET' },
+            { path: 'instance/status', method: 'GET' },
+            { path: `instance/connectionState/${payload.instanceName}`, method: 'GET' },
+          ]),
+          callEvo(`webhook/find/${payload.instanceName}`, 'GET').catch(() => null),
+          tryEndpoints([
+            { path: 'instance/all', method: 'GET' },
+            { path: 'instance/fetchInstances', method: 'GET' },
+          ]).catch(() => []),
         ]);
 
-        const findInGlobal = (hostInfo.status === 'fulfilled' && Array.isArray(hostInfo.value)) 
-            ? hostInfo.value.find((i: any) => i.name === payload.instanceName || i.instance?.instanceName === payload.instanceName)
-            : null;
+        const findInGlobal = (hostInfo.status === 'fulfilled' && Array.isArray(hostInfo.value))
+          ? hostInfo.value.find((i: any) => i.name === payload.instanceName || i.instance?.instanceName === payload.instanceName || i.instanceName === payload.instanceName)
+          : null;
 
         result = {
-            connection: connState.status === 'fulfilled' ? connState.value : { error: connState.reason },
-            webhook: webhookConfig.status === 'fulfilled' ? webhookConfig.value : { error: webhookConfig.reason },
-            globalInfo: findInGlobal,
-            targetUrl: evoUrl, // Retorna a URL que estamos tentando acessar (segurança: mascarar key se necessário)
-            timestamp: new Date().toISOString()
+          connection: connState.status === 'fulfilled' ? connState.value : { error: (connState as any).reason?.message },
+          webhook: webhookConfig.status === 'fulfilled' ? webhookConfig.value : { error: (webhookConfig as any).reason?.message },
+          globalInfo: findInGlobal,
+          targetUrl: evoUrl,
+          timestamp: new Date().toISOString()
         };
         break;
+      }
 
-      case 'test_webhook':
+      case 'test_webhook': {
         try {
-            console.log(`[whatsapp-proxy] Triggering TEST webhook for ${payload.instanceName}`);
-            const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-            
-            const testPayload = {
-                event: "test_webhook",
-                instance: payload.instanceName,
-                data: { message: "Teste de sinal manual", timestamp: Date.now() }
-            };
-            
-            const webhookRes = await fetch(`${supabaseUrl}/functions/v1/whatsapp-webhook`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'apikey': serviceKey,
-                    'Authorization': `Bearer ${serviceKey}`
-                },
-                body: JSON.stringify(testPayload)
-            });
-            
-            const resText = await webhookRes.text();
-            console.log(`[whatsapp-proxy] Webhook Test Response (${webhookRes.status}):`, resText);
+          console.log(`[whatsapp-proxy] Triggering TEST webhook for ${payload.instanceName}`);
+          const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-            result = { 
-                success: webhookRes.ok, 
-                status: webhookRes.status,
-                statusText: webhookRes.statusText,
-                details: resText
-            };
+          const testPayload = {
+            event: "test_webhook",
+            instance: payload.instanceName,
+            data: { message: "Teste de sinal manual", timestamp: Date.now() }
+          };
+
+          const webhookRes = await fetch(`${supabaseUrl}/functions/v1/whatsapp-webhook`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': serviceKey,
+              'Authorization': `Bearer ${serviceKey}`
+            },
+            body: JSON.stringify(testPayload)
+          });
+
+          const resText = await webhookRes.text();
+          result = { success: webhookRes.ok, status: webhookRes.status, details: resText };
         } catch (e) {
-            console.error("[whatsapp-proxy] Fatal error in test_webhook fetch:", e);
-            result = { success: false, error: String(e), status: 500 };
+          result = { success: false, error: String(e), status: 500 };
         }
         break;
+      }
 
-      case 'get_chats':
+      case 'get_chats': {
         try {
           console.log(`[whatsapp-proxy] get_chats for ${payload.instanceName}`);
-          // 1) Tenta buscar conversas (chats ativos)
-          // Alguns deploys usam POST com path /:instanceName; outros esperam body com instanceName.
-          const chats = await callEvo(`chat/findChats/${payload.instanceName}`, 'POST', {}).catch(async () => {
-            return await callEvo(`chat/findChats`, 'POST', { instanceName: payload.instanceName });
-          });
 
-          // 2) Tenta buscar contatos (para pegar nomes reais mesmo de quem não tem chat ativo)
-          const contacts = await callEvo(`chat/findContacts/${payload.instanceName}`, 'POST', {}).catch(async () => {
-            return await callEvo(`chat/findContacts`, 'POST', { instanceName: payload.instanceName });
-          }).catch(() => []);
-          
-          // 3. Mesclar dados para garantir que temos o melhor nome possível
-          const chatsArr = (Array.isArray(chats) ? chats : ((chats as any)?.data || (chats as any)?.chats || []));
-          const contactsArr = (Array.isArray(contacts) ? contacts : ((contacts as any)?.data || (contacts as any)?.contacts || []));
+          // Evolution GO: GET /user/contacts
+          // Evolution v2: POST /chat/findChats/{instanceName}
+          const chats = await tryEndpoints([
+            { path: `user/contacts?instanceName=${payload.instanceName}`, method: 'GET' },
+            { path: 'user/contacts', method: 'GET' },
+            { path: `chat/findChats/${payload.instanceName}`, method: 'POST', body: {} },
+            { path: 'chat/findChats', method: 'POST', body: { instanceName: payload.instanceName } },
+          ]).catch(() => []);
 
-          const merged = chatsArr.map((chat: any) => {
-            const contact = contactsArr
-              .find((con: any) => (con.id || con.remoteJid) === (chat.id || chat.remoteJid));
-            
-            return {
-              ...chat,
-              verifiedName: contact?.verifiedName || chat.verifiedName,
-              pushName: contact?.pushName || chat.pushName,
-              name: contact?.name || chat.name || contact?.pushName || chat.pushName
-            };
-          });
+          const chatsArr = Array.isArray(chats) ? chats : ((chats as any)?.data || (chats as any)?.chats || (chats as any)?.contacts || []);
 
-          // Se não veio nada nos chats, retorna os contatos como fallback
-          result = merged.length > 0 ? merged : contactsArr;
+          result = chatsArr.map((chat: any) => ({
+            ...chat,
+            name: chat.name || chat.pushName || chat.verifiedName || chat.subject || '',
+          }));
         } catch (e) {
           console.error(`[whatsapp-proxy] Error in get_chats:`, e);
           result = [];
         }
         break;
+      }
 
-      case 'get_messages':
+      case 'get_messages': {
         try {
           const jid = payload.remoteJid;
           const cleanNumber = jid.split('@')[0];
-          console.log(`[whatsapp-proxy] Ultra-Fetch for ${jid} in ${payload.instanceName}`);
-
-          // ESTRATÉGIA HÍBRIDA ROBUSTA:
-          // Executamos Local (Rápido) e Remoto (Lento mas Atualizado) em paralelo.
-          // Isso garante que se o banco local estiver desatualizado (o que parece ser o caso),
-          // a busca remota trará as mensagens novas.
+          console.log(`[whatsapp-proxy] get_messages for ${jid} in ${payload.instanceName}`);
 
           const [localRes, remoteRes] = await Promise.allSettled([
-            // 1. Banco Local (Evolution Store)
             callEvo(`chat/findMessages/${payload.instanceName}`, 'POST', {
-                where: { key: { remoteJid: jid } },
-                options: { limit: 30 }
+              where: { key: { remoteJid: jid } },
+              options: { limit: 30 }
             }),
-            // 2. Busca Remota (Direto do Celular)
             callEvo(`chat/fetchMessages/${payload.instanceName}`, 'POST', {
-                number: cleanNumber,
-                limit: 30 // Pegamos apenas as 30 mais recentes do celular para ser rápido
+              number: cleanNumber,
+              limit: 30
             })
           ]);
 
-           // Normalizador: algumas rotas retornam { messages: { records: [] } }, outras retornam [] direto.
-           const toArray = (v: any): any[] => {
-             if (!v) return [];
-             if (Array.isArray(v)) return v;
-             // common envelopes
-             if (Array.isArray(v.records)) return v.records;
-             if (Array.isArray(v.messages)) return v.messages;
-             if (Array.isArray(v.data)) return v.data;
-             if (Array.isArray(v?.messages?.records)) return v.messages.records;
-             if (Array.isArray(v?.messages?.data)) return v.messages.data;
-             if (Array.isArray(v?.data?.records)) return v.data.records;
-             return [];
-           };
+          const toArray = (v: any): any[] => {
+            if (!v) return [];
+            if (Array.isArray(v)) return v;
+            if (Array.isArray(v.records)) return v.records;
+            if (Array.isArray(v.messages)) return v.messages;
+            if (Array.isArray(v.data)) return v.data;
+            if (Array.isArray(v?.messages?.records)) return v.messages.records;
+            return [];
+          };
 
-           const localMessages = localRes.status === 'fulfilled'
-             ? toArray(localRes.value?.messages ?? localRes.value?.data ?? localRes.value)
-             : [];
-           const remoteMessages = remoteRes.status === 'fulfilled'
-             ? toArray(remoteRes.value?.messages ?? remoteRes.value?.data ?? remoteRes.value)
-             : [];
+          const localMessages = localRes.status === 'fulfilled'
+            ? toArray(localRes.value?.messages ?? localRes.value?.data ?? localRes.value)
+            : [];
+          const remoteMessages = remoteRes.status === 'fulfilled'
+            ? toArray(remoteRes.value?.messages ?? remoteRes.value?.data ?? remoteRes.value)
+            : [];
 
-           console.log(`[whatsapp-proxy] Results: Local=${localMessages.length}, Remote=${remoteMessages.length}`);
-
-           // 3. Mesclar e Deduplicar
-           const allMessages: any[] = [...localMessages, ...remoteMessages];
-          const uniqueMessages = [];
+          const allMessages: any[] = [...localMessages, ...remoteMessages];
+          const uniqueMessages: any[] = [];
           const seenIds = new Set();
 
-          // Priorizamos mensagens remotas (mais confiáveis) se houver conflito?
-          // Na verdade, apenas garantimos unicidade pelo ID (key.id)
           for (const msg of allMessages) {
-              const id = msg.key?.id || msg.id;
-              if (id && !seenIds.has(id)) {
-                  seenIds.add(id);
-                  uniqueMessages.push(msg);
-              }
+            const id = msg.key?.id || msg.id;
+            if (id && !seenIds.has(id)) {
+              seenIds.add(id);
+              uniqueMessages.push(msg);
+            }
           }
 
-          // 4. Ordenar por Timestamp
           uniqueMessages.sort((a: any, b: any) => {
-              const tA = Number(a.messageTimestamp || 0);
-              const tB = Number(b.messageTimestamp || 0);
-              return tA - tB;
+            const tA = Number(a.messageTimestamp || 0);
+            const tB = Number(b.messageTimestamp || 0);
+            return tA - tB;
           });
-
-          // 5. Fallback Cego (Só se REALMENTE não tiver nada)
-          if (uniqueMessages.length === 0) {
-            console.log(`[whatsapp-proxy] Still empty, checking blind history without filters`);
-            const blindRes = await callEvo(`chat/findMessages/${payload.instanceName}`, 'POST', {
-              options: { limit: 50 }
-            }).catch(() => []);
-            
-            const blindArray = blindRes?.messages || blindRes?.data || (Array.isArray(blindRes) ? blindRes : []);
-            // Filtro manual rigoroso por JID no array cego
-            const blindMatches = blindArray.filter((m: any) => {
-              const mJid = m.key?.remoteJid || m.remoteJid || m.jid;
-              return mJid === jid;
-            });
-            uniqueMessages.push(...blindMatches);
-          }
 
           result = { messages: uniqueMessages };
         } catch (e) {
@@ -478,37 +397,65 @@ serve(async (req) => {
           result = { messages: [], error: String(e) };
         }
         break;
+      }
 
-      case 'get_groups':
+      case 'get_groups': {
         try {
           console.log(`[whatsapp-proxy] get_groups for ${payload.instanceName}`);
-          const groupsData = await callEvo(`group/fetchAllGroups/${payload.instanceName}`, 'POST', {}).catch(async () => {
-            // Fallback: buscar chats e filtrar por @g.us
-            const allChats = await callEvo(`chat/findChats/${payload.instanceName}`, 'POST', {});
+
+          // Evolution GO: GET /group/myall or GET /group/list (no instance in path)
+          // Evolution v2: POST /group/fetchAllGroups/{instanceName}
+          const groupsData = await tryEndpoints([
+            { path: `group/myall?instanceName=${payload.instanceName}`, method: 'GET' },
+            { path: 'group/myall', method: 'GET' },
+            { path: `group/list?instanceName=${payload.instanceName}`, method: 'GET' },
+            { path: 'group/list', method: 'GET' },
+            { path: `group/fetchAllGroups/${payload.instanceName}`, method: 'POST', body: {} },
+          ]).catch(async () => {
+            // Last resort: fetch chats and filter @g.us
+            console.log(`[whatsapp-proxy] All group endpoints failed, falling back to chat filter`);
+            const allChats = await tryEndpoints([
+              { path: `user/contacts?instanceName=${payload.instanceName}`, method: 'GET' },
+              { path: 'user/contacts', method: 'GET' },
+              { path: `chat/findChats/${payload.instanceName}`, method: 'POST', body: {} },
+            ]).catch(() => []);
             const chatsArray = Array.isArray(allChats) ? allChats : (allChats?.data || allChats?.chats || []);
             return chatsArray.filter((c: any) => {
-              const id = c.id || c.remoteJid || '';
+              const id = c.id || c.remoteJid || c.jid || '';
               return typeof id === 'string' && id.includes('@g.us');
             });
           });
+
           const groupsArr = Array.isArray(groupsData) ? groupsData : (groupsData?.data || groupsData?.groups || []);
+          console.log(`[whatsapp-proxy] Groups found: ${groupsArr.length}`);
+
           result = groupsArr.map((g: any) => ({
-            id: g.id || g.jid || g.remoteJid || '',
-            name: g.subject || g.name || 'Grupo sem nome',
-            groupId: g.id || g.jid || g.remoteJid || '',
+            id: g.id || g.jid || g.remoteJid || g.JID || '',
+            name: g.subject || g.name || g.Name || g.Subject || 'Grupo sem nome',
+            groupId: g.id || g.jid || g.remoteJid || g.JID || '',
           }));
         } catch (e) {
           console.error(`[whatsapp-proxy] Error in get_groups:`, e);
           result = [];
         }
         break;
+      }
 
       case 'send_message':
-        result = await callEvo(`message/sendText/${payload.instanceName}`, 'POST', {
-          number: payload.to,
-          text: payload.text,
-          delay: 1000
-        });
+        // Evolution GO: POST /send/text
+        // Evolution v2: POST /message/sendText/{instanceName}
+        result = await tryEndpoints([
+          { path: 'send/text', method: 'POST', body: {
+            instanceName: payload.instanceName,
+            number: payload.to,
+            text: payload.text,
+          }},
+          { path: `message/sendText/${payload.instanceName}`, method: 'POST', body: {
+            number: payload.to,
+            text: payload.text,
+            delay: 1000
+          }},
+        ]);
         break;
 
       case 'toggle_ai':
@@ -517,15 +464,9 @@ serve(async (req) => {
         break;
 
       case 'set_ai_config':
-        // Update per-instance AI configuration (enabled + mode + selected model)
         await supabase
           .from('whatsapp_instances')
-          .update({
-            // Temporário: Drippy SEMPRE ativa no WhatsApp
-            ai_enabled: true,
-            ai_mode: 'drippy',
-            ai_agent_id: null,
-          })
+          .update({ ai_enabled: true, ai_mode: 'drippy', ai_agent_id: null })
           .eq('instance_name', payload.instanceName)
           .eq('user_id', user.id);
         result = { success: true };

@@ -11,7 +11,18 @@ function cleanSecret(value?: string | null, isUrl = false): string | null {
   const normalized = value.trim();
   if (!normalized) return null;
 
-  return isUrl ? normalized.replace(/\/$/, "") : normalized;
+  if (isUrl) {
+    let url = normalized.replace(/\/$/, "");
+    // Evolution GO: /manager is the web UI, not the API root.
+    // Strip it so we hit the correct REST endpoints.
+    url = url.replace(/\/manager\/?$/, "");
+    // Also strip common non-API suffixes
+    url = url.replace(/\/swagger(\/.*)?$/, "");
+    url = url.replace(/\/$/, "");
+    return url;
+  }
+
+  return normalized;
 }
 
 export function resolveEvolutionConfig(sources: EvolutionConfigSources) {
