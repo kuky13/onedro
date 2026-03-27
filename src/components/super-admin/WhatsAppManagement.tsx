@@ -199,16 +199,23 @@ export function WhatsAppManagement() {
     data: groups = [],
     isLoading: groupsLoading
   } = useQuery<any[]>({
-    queryKey: ['superadmin-whatsapp-waha-groups'],
+    queryKey: ['superadmin-whatsapp-evo-groups', evolutionInstanceName],
     queryFn: async () => {
       const {
         data,
         error
-      } = await supabase.functions.invoke('waha-list-groups');
+      } = await supabase.functions.invoke('whatsapp-proxy', {
+        body: {
+          action: 'get_groups',
+          payload: {
+            instanceName: evolutionInstanceName || undefined
+          }
+        }
+      });
       if (error) throw error;
-      return data as any[] || [];
+      return Array.isArray(data) ? data : (data?.groups || []);
     },
-    enabled: isAuthenticated
+    enabled: isAuthenticated && !!evolutionInstanceName
   });
   const {
     data: logs = [],
