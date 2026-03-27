@@ -154,13 +154,14 @@ export function WhatsAppManagement() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async ({ chatId, text }: { chatId: string, text: string }) => {
-      const { data, error } = await supabase.functions.invoke('waha-proxy', {
+      const cleanNumber = chatId.split('@')[0];
+      const { data, error } = await supabase.functions.invoke('whatsapp-proxy', {
         body: {
           action: 'send_message',
           payload: {
-            chatId,
+            to: cleanNumber,
             text,
-            session: evolutionInstanceName || undefined
+            instanceName: evolutionInstanceName || undefined
           }
         }
       });
