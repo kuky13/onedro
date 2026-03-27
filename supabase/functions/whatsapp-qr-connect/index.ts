@@ -305,16 +305,15 @@ serve(async (req) => {
           lastConnectStatus = qrRes.status;
           lastConnectBody = await qrRes.text();
 
-        lastConnectStatus = qrRes.status;
-        lastConnectBody = await qrRes.text();
-
-        if (qrRes.ok) {
-          try {
-            const qrData = JSON.parse(lastConnectBody);
-            qrCode = qrData?.qrcode?.base64 ?? qrData?.code ?? qrData?.base64 ?? null;
-          } catch {
-            // ignore
+          if (qrRes.ok) {
+            try {
+              const qrData = JSON.parse(lastConnectBody);
+              qrCode = qrData?.qrcode?.base64 ?? qrData?.code ?? qrData?.base64 ?? null;
+            } catch {
+              // ignore
+            }
           }
+          if (qrCode) break;
         }
 
         if (!qrCode) await new Promise((r) => setTimeout(r, 1000));
