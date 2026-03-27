@@ -417,7 +417,7 @@ export function WhatsAppManagement() {
       } = await supabase.from('whatsapp_zapi_settings').insert({
         owner_id: ownerId,
         is_active: true,
-        provider: 'waha',
+        provider: 'evolution-go',
         allowed_numbers: allowedNumbers || null,
         allowed_groups: allowedGroups || null,
         waha_session: evolutionInstanceName?.trim() || null,
