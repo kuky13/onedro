@@ -283,7 +283,11 @@ serve(async (req) => {
       const errTxt = await createRes.text();
       console.warn("[whatsapp-qr-connect] Create instance not OK, trying connect:", createRes.status, errTxt);
 
-      const connectUrl = `${baseUrl}/instance/connect/${instanceName}`;
+      // Try Evolution GO (POST) first, then v2 (GET)
+      const connectCandidates = [
+        { url: `${baseUrl}/instance/connect`, method: "POST", body: JSON.stringify({ instanceName }) },
+        { url: `${baseUrl}/instance/connect/${instanceName}`, method: "GET", body: undefined as string | undefined },
+      ];
 
       let qrCode: string | null = null;
       let lastConnectStatus: number | null = null;
@@ -291,10 +295,15 @@ serve(async (req) => {
 
       // Retry because QR can take a moment to become available
       for (let i = 0; i < 20 && !qrCode; i++) {
-        const qrRes = await fetch(connectUrl, {
-          method: "GET",
-          headers: { apikey: evolutionApiKey },
-        });
+        for (const candidate of connectCandidates) {
+          const qrRes = await fetch(candidate.url, {
+            method: candidate.method,
+            headers: { "Content-Type": "application/json", apikey: evolutionApiKey },
+            ...(candidate.body ? { body: candidate.body } : {}),
+          });
+
+          lastConnectStatus = qrRes.status;
+          lastConnectBody = await qrRes.text();
 
         lastConnectStatus = qrRes.status;
         lastConnectBody = await qrRes.text();
