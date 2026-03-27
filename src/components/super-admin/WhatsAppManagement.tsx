@@ -610,7 +610,7 @@ export function WhatsAppManagement() {
                     {groupsLoading && <p className="px-2 py-3 text-xs text-muted-foreground">Carregando grupos...</p>}
 
                     {!groupsLoading && parsedGroups.length === 0 && <p className="px-2 py-3 text-xs text-muted-foreground">
-                        Nenhum grupo encontrado no WAHA.
+                        Nenhum grupo encontrado na Evolution GO.
                       </p>}
 
                      {!groupsLoading && parsedGroups.map(group => {
