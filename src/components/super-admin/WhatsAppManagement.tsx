@@ -106,16 +106,16 @@ export function WhatsAppManagement() {
     isLoading: chatsLoading,
     refetch: refetchChats
   } = useQuery<any[]>({
-    queryKey: ['superadmin-whatsapp-waha-chats', evolutionInstanceName],
+    queryKey: ['superadmin-whatsapp-evo-chats', evolutionInstanceName],
     queryFn: async () => {
       const {
         data,
         error
-      } = await supabase.functions.invoke('waha-proxy', {
+      } = await supabase.functions.invoke('whatsapp-proxy', {
         body: {
-          action: 'list_chats',
+          action: 'get_chats',
           payload: {
-            session: evolutionInstanceName || undefined
+            instanceName: evolutionInstanceName || undefined
           }
         }
       });
