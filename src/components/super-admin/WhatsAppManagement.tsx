@@ -106,16 +106,16 @@ export function WhatsAppManagement() {
     isLoading: chatsLoading,
     refetch: refetchChats
   } = useQuery<any[]>({
-    queryKey: ['superadmin-whatsapp-waha-chats', evolutionInstanceName],
+    queryKey: ['superadmin-whatsapp-evo-chats', evolutionInstanceName],
     queryFn: async () => {
       const {
         data,
         error
-      } = await supabase.functions.invoke('waha-proxy', {
+      } = await supabase.functions.invoke('whatsapp-proxy', {
         body: {
-          action: 'list_chats',
+          action: 'get_chats',
           payload: {
-            session: evolutionInstanceName || undefined
+            instanceName: evolutionInstanceName || undefined
           }
         }
       });
@@ -130,22 +130,23 @@ export function WhatsAppManagement() {
     isLoading: messagesLoading,
     refetch: refetchMessages
   } = useQuery<any[]>({
-    queryKey: ['superadmin-whatsapp-waha-messages', selectedChatId, evolutionInstanceName],
+    queryKey: ['superadmin-whatsapp-evo-messages', selectedChatId, evolutionInstanceName],
     queryFn: async () => {
       const {
         data,
         error
-      } = await supabase.functions.invoke('waha-proxy', {
+      } = await supabase.functions.invoke('whatsapp-proxy', {
         body: {
           action: 'get_messages',
           payload: {
-            chatId: selectedChatId,
-            session: evolutionInstanceName || undefined
+            remoteJid: selectedChatId,
+            instanceName: evolutionInstanceName || undefined
           }
         }
       });
       if (error) throw error;
-      return Array.isArray(data) ? data : [];
+      const msgs = data?.messages || data;
+      return Array.isArray(msgs) ? msgs : [];
     },
     enabled: isAuthenticated && !!selectedChatId && !!evolutionInstanceName,
     refetchInterval: 5000 // Polling a cada 5 segundos para o "ao vivo"
@@ -153,13 +154,14 @@ export function WhatsAppManagement() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async ({ chatId, text }: { chatId: string, text: string }) => {
-      const { data, error } = await supabase.functions.invoke('waha-proxy', {
+      const cleanNumber = chatId.split('@')[0];
+      const { data, error } = await supabase.functions.invoke('whatsapp-proxy', {
         body: {
           action: 'send_message',
           payload: {
-            chatId,
+            to: cleanNumber,
             text,
-            session: evolutionInstanceName || undefined
+            instanceName: evolutionInstanceName || undefined
           }
         }
       });
@@ -197,16 +199,23 @@ export function WhatsAppManagement() {
     data: groups = [],
     isLoading: groupsLoading
   } = useQuery<any[]>({
-    queryKey: ['superadmin-whatsapp-waha-groups'],
+    queryKey: ['superadmin-whatsapp-evo-groups', evolutionInstanceName],
     queryFn: async () => {
       const {
         data,
         error
-      } = await supabase.functions.invoke('waha-list-groups');
+      } = await supabase.functions.invoke('whatsapp-proxy', {
+        body: {
+          action: 'get_groups',
+          payload: {
+            instanceName: evolutionInstanceName || undefined
+          }
+        }
+      });
       if (error) throw error;
-      return data as any[] || [];
+      return Array.isArray(data) ? data : (data?.groups || []);
     },
-    enabled: isAuthenticated
+    enabled: isAuthenticated && !!evolutionInstanceName
   });
   const {
     data: logs = [],
@@ -408,7 +417,7 @@ export function WhatsAppManagement() {
       } = await supabase.from('whatsapp_zapi_settings').insert({
         owner_id: ownerId,
         is_active: true,
-        provider: 'waha',
+        provider: 'evolution-go',
         allowed_numbers: allowedNumbers || null,
         allowed_groups: allowedGroups || null,
         waha_session: evolutionInstanceName?.trim() || null,
@@ -509,7 +518,7 @@ export function WhatsAppManagement() {
         </div>
         <h1 className="text-xl lg:text-3xl font-bold tracking-tight">WhatsApp & Notificações</h1>
         <p className="text-sm lg:text-base text-muted-foreground">
-          Gerencie integrações, orçamentos e notificações automáticas via WAHA.
+          Gerencie integrações, orçamentos e notificações automáticas via Evolution GO.
         </p>
       </div>
 
@@ -551,12 +560,12 @@ export function WhatsAppManagement() {
                 <p className="text-xs text-muted-foreground">Orçamentos gerados pela IA serão atribuídos a este usuário.</p>
               </div>
 
-              {/* Sessão WAHA (global) */}
+              {/* Instância Evolution GO */}
               <div className="space-y-2 border p-3 rounded-md bg-muted/20">
-                <Label>Sessão do WAHA (global)</Label>
-                <Input value={evolutionInstanceName} onChange={e => setEvolutionInstanceName(e.target.value)} placeholder="Ex: default" />
-                <p className="text-[11px] text-muted-foreground">Esta sessão será usada para envio de mensagens e listagem de grupos. Precisa existir no seu WAHA.
-                  <br />Secrets esperadas: WAHA_BASE_URL / WAHA_API_KEY / WAHA_SESSION.</p>
+                <Label>Nome da Instância (Evolution GO)</Label>
+                <Input value={evolutionInstanceName} onChange={e => setEvolutionInstanceName(e.target.value)} placeholder="Ex: onedrip_main" />
+                <p className="text-[11px] text-muted-foreground">Esta instância será usada para envio de mensagens e listagem de grupos via Evolution GO.
+                  <br />Configure sua Evolution API URL e chave em /whats ou na tabela evolution_config.</p>
               </div>
               {/* Grupos Permitidos */}
               <div className="space-y-3 rounded-xl border bg-card/40 p-4">
@@ -601,7 +610,7 @@ export function WhatsAppManagement() {
                     {groupsLoading && <p className="px-2 py-3 text-xs text-muted-foreground">Carregando grupos...</p>}
 
                     {!groupsLoading && parsedGroups.length === 0 && <p className="px-2 py-3 text-xs text-muted-foreground">
-                        Nenhum grupo encontrado no WAHA.
+                        Nenhum grupo encontrado na Evolution GO.
                       </p>}
 
                      {!groupsLoading && parsedGroups.map(group => {
@@ -705,7 +714,7 @@ export function WhatsAppManagement() {
 
               {/* Webhook Info */}
               <div className="pt-4 border-t space-y-2">
-                <Label>Webhook URL (WAHA)</Label>
+                <Label>Webhook URL (Evolution GO)</Label>
                 <div className="p-2 bg-muted rounded text-[10px] font-mono break-all">{webhookUrl}</div>
               </div>
 
