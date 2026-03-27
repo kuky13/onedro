@@ -19,16 +19,16 @@ export function resolveEvolutionConfig(sources: EvolutionConfigSources) {
   const secretKey = cleanSecret(Deno.env.get("KUKY_EVO_KEY")) ?? cleanSecret(Deno.env.get("EVOLUTION_API_KEY"));
 
   const apiUrl =
-    cleanSecret(sources.userApiUrl, true) ??
     secretUrl ??
+    cleanSecret(sources.userApiUrl, true) ??
     cleanSecret(sources.globalApiUrl, true) ??
     "";
 
   const apiKeys = Array.from(
     new Set(
       [
-        cleanSecret(sources.userApiKey),
         secretKey,
+        cleanSecret(sources.userApiKey),
         cleanSecret(sources.globalApiKey),
       ].filter((value): value is string => Boolean(value))
     )
