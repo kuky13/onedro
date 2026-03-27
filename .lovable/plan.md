@@ -1,67 +1,112 @@
 
+## Problema encontrado
 
-## Migrar /supadmin/whatsapp de WAHA para Evolution GO
+O erro não é mais de secret nem de SSL. O backend está chamando a URL errada para a API da Evolution GO.
 
-### Situacao Atual
-
-A pagina `/supadmin/whatsapp` (`WhatsAppManagement.tsx`) usa duas edge functions exclusivas do WAHA:
-- **`waha-proxy`** — lista chats, busca mensagens, envia mensagens (usa secrets `WAHA_BASE_URL`, `WAHA_API_KEY`, `WAHA_SESSION`)
-- **`waha-list-groups`** — lista grupos WhatsApp (mesmas secrets WAHA)
-
-Porem, ja existe a edge function **`whatsapp-proxy`** que suporta Evolution API v2 e usa `resolveEvolutionConfig()` (tabelas `user_evolution_config` e `evolution_config` + secrets `KUKY_EVO_URL`/`KUKY_EVO_KEY`). Essa funcao ja tem actions para: `list_instances`, `create_instance`, `connect_instance`, `get_chats`, `get_messages`, `send_message`, `set_webhook`, etc.
-
-A Evolution GO usa endpoints compativeis com a Evolution API v2 (mesmos paths como `/instance/all`, `/message/sendText/{instance}`, etc.), entao `whatsapp-proxy` ja funciona para Evolution GO sem mudancas nos endpoints.
-
-### Plano
-
-#### 1. Atualizar WhatsAppManagement.tsx para usar whatsapp-proxy
-
-Trocar todas as chamadas de `waha-proxy` e `waha-list-groups` por `whatsapp-proxy`:
-
-- **Lista de chats** — action `get_chats` com `payload.instanceName` (em vez de `session`)
-- **Mensagens** — action `get_messages` com `payload.instanceName` + `payload.remoteJid`
-- **Enviar mensagem** — action `send_message` com `payload.instanceName` + `payload.to` + `payload.text`
-- **Lista de grupos** — nova action `get_groups` no `whatsapp-proxy` (ou usar `get_chats` filtrando `@g.us`)
-
-#### 2. Adicionar action get_groups no whatsapp-proxy
-
-Adicionar um case `get_groups` na edge function `whatsapp-proxy` que chama `group/fetchAllGroups/{instanceName}` na Evolution API, com fallback para filtrar chats com `@g.us`.
-
-#### 3. Atualizar a UI e labels
-
-- Trocar "WAHA" / "Sessao do WAHA" por "Evolution GO" / "Nome da Instancia"
-- Trocar referencia a secrets `WAHA_*` por "Configure sua Evolution API URL e chave em /whats ou na tabela evolution_config"
-- O campo `evolutionInstanceName` passa a representar o `instanceName` da Evolution GO
-
-#### 4. Atualizar a mutacao de save
-
-- Mudar `provider: 'waha'` para `provider: 'evolution-go'`
-- Manter compatibilidade: gravar tanto `waha_session` quanto `evolution_instance_name` para nao quebrar flows existentes (webhook, orcamentos)
-
-#### 5. Atualizar whatsapp-zapi-orcamentos (envio de teste)
-
-A funcao de envio de teste ja usa `whatsapp-zapi-orcamentos` que internamente resolve a config da Evolution. Verificar se o `instance_name` do payload esta sendo passado corretamente para a Evolution GO.
-
-### Arquivos Alterados
-
-| Arquivo | Mudanca |
-|---------|---------|
-| `src/components/super-admin/WhatsAppManagement.tsx` | Trocar `waha-proxy` / `waha-list-groups` por `whatsapp-proxy`, atualizar payloads, labels |
-| `supabase/functions/whatsapp-proxy/index.ts` | Adicionar action `get_groups` |
-| Nenhuma migracao de banco necessaria | Tabelas existentes ja suportam os campos |
-
-### Detalhes Tecnicos
-
-**Evolution GO API (endpoints confirmados):**
+Pelos logs da edge function:
 ```text
-GET  /instance/all                    — apikey header
-POST /instance/create                 — { instanceName, integration }
-POST /instance/connect                — { immediate, phone, webhookUrl }
-GET  /instance/{name}/qrcode          — QR code
-POST /message/sendText/{instance}     — { number, text }
-POST /chat/findChats/{instance}       — lista chats
-POST /group/fetchAllGroups/{instance} — lista grupos
+POST https://go.kuky.help/manager/group/fetchAllGroups/cookie1 -> 404
+POST https://go.kuky.help/manager/chat/findChats/cookie1 -> 404
 ```
 
-Esses endpoints sao os mesmos da Evolution API v2, entao `callEvo()` no `whatsapp-proxy` ja os suporta nativamente. A unica adicao real de codigo e o case `get_groups` e a atualizacao do frontend.
+E pela documentação pública do seu servidor:
+```text
+Painel: https://go.kuky.help/manager
+API/Swagger: https://go.kuky.help/swagger/index.html
+```
 
+Na Swagger da Evolution GO, os endpoints disponíveis são diferentes do padrão Evolution v2. Exemplo:
+```text
+GET /group/list
+GET /group/myall
+GET /instance/status
+GET /instance/qr
+POST /send/text
+```
+
+Ou seja: `/manager` é a interface web, não a base da API REST.
+
+## O que precisa ser implementado
+
+### 1. Corrigir a resolução da base URL da Evolution
+Atualizar a camada compartilhada/config para normalizar a URL informada:
+- se vier `https://go.kuky.help/manager`, usar `https://go.kuky.help`
+- remover barra final
+- evitar montar requests em cima do painel admin
+
+### 2. Adaptar `whatsapp-proxy` para Evolution GO real
+Hoje a função usa endpoints no estilo Evolution v2:
+```text
+group/fetchAllGroups/{instance}
+chat/findChats/{instance}
+message/sendText/{instance}
+instance/connectionState/{instance}
+```
+
+Precisará ganhar suporte ao modo Evolution GO com fallback por endpoint:
+- grupos: tentar `GET /group/myall` e depois `GET /group/list`
+- status: tentar `GET /instance/status` no formato esperado pela GO
+- QR/conexão: alinhar com `POST /instance/connect` e `GET /instance/qr`
+- envio de mensagem: suportar `POST /send/text` além do endpoint antigo
+- manter fallback legado para instalações Evolution v2
+
+### 3. Normalizar respostas da Evolution GO
+Os retornos da GO provavelmente não têm o mesmo shape do código atual. Vou ajustar os normalizadores para converter qualquer resposta de grupos/chats em:
+```ts
+{ id, name, groupId }
+```
+assim a UI `/supadmin/whatsapp` continua funcionando sem grande refactor.
+
+### 4. Melhorar logs de diagnóstico
+Adicionar logs mais claros mostrando:
+- URL base efetiva usada
+- endpoint tentado
+- status HTTP
+- trecho curto da resposta
+- qual fallback foi escolhido
+
+Isso acelera muito se algum endpoint da sua GO estiver ligeiramente diferente.
+
+### 5. Ajustar também `whatsapp-qr-connect`
+Essa função hoje também assume rotas do padrão antigo (`instance/connect/{name}`, `instance/connectionState/{name}`).
+Vou alinhar a função ao mesmo resolvedor/fallback da Evolution GO para evitar outro ponto quebrado depois.
+
+## Impacto esperado
+
+Depois disso, `/supadmin/whatsapp` deve:
+- deixar de mostrar “Nenhum grupo encontrado” por erro silencioso de 404
+- buscar grupos pelos endpoints corretos da Evolution GO
+- continuar compatível com setups antigos quando possível
+
+## O que você não precisa fazer no painel
+Você não precisa criar grupos manualmente “de um jeito especial” no painel.
+O principal ajuste é no código, porque hoje ele está consumindo o painel `/manager` como se fosse API.
+
+## Detalhes técnicos
+Arquivos a ajustar:
+- `supabase/functions/_shared/evolution-config.ts`
+- `supabase/functions/whatsapp-proxy/index.ts`
+- `supabase/functions/whatsapp-qr-connect/index.ts`
+
+Estratégia:
+```text
+KUKY_EVO_URL = https://go.kuky.help/manager
+          ↓ normalizar
+baseApiUrl = https://go.kuky.help
+
+grupos:
+  GET /group/myall
+  fallback GET /group/list
+  fallback legado /group/fetchAllGroups/{instance}
+
+mensagens/status/envio:
+  tentar GO primeiro
+  fallback legado depois
+```
+
+## Validação após implementar
+1. Abrir `/supadmin/whatsapp`
+2. Informar a instância `cookie` ou `cookie1` conforme a instância real
+3. Testar listagem de grupos
+4. Testar status/QR
+5. Conferir logs da edge function para ver qual endpoint respondeu com sucesso
