@@ -560,12 +560,12 @@ export function WhatsAppManagement() {
                 <p className="text-xs text-muted-foreground">Orçamentos gerados pela IA serão atribuídos a este usuário.</p>
               </div>
 
-              {/* Sessão WAHA (global) */}
+              {/* Instância Evolution GO */}
               <div className="space-y-2 border p-3 rounded-md bg-muted/20">
-                <Label>Sessão do WAHA (global)</Label>
-                <Input value={evolutionInstanceName} onChange={e => setEvolutionInstanceName(e.target.value)} placeholder="Ex: default" />
-                <p className="text-[11px] text-muted-foreground">Esta sessão será usada para envio de mensagens e listagem de grupos. Precisa existir no seu WAHA.
-                  <br />Secrets esperadas: WAHA_BASE_URL / WAHA_API_KEY / WAHA_SESSION.</p>
+                <Label>Nome da Instância (Evolution GO)</Label>
+                <Input value={evolutionInstanceName} onChange={e => setEvolutionInstanceName(e.target.value)} placeholder="Ex: onedrip_main" />
+                <p className="text-[11px] text-muted-foreground">Esta instância será usada para envio de mensagens e listagem de grupos via Evolution GO.
+                  <br />Configure sua Evolution API URL e chave em /whats ou na tabela evolution_config.</p>
               </div>
               {/* Grupos Permitidos */}
               <div className="space-y-3 rounded-xl border bg-card/40 p-4">
