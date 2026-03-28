@@ -185,6 +185,12 @@ export function WhatsAppConnector() {
     setConnectingInstance(null);
   }, [connected]);
 
+  // Stable refs for polling callbacks
+  const showSuccessRef = useRef(showSuccess);
+  showSuccessRef.current = showSuccess;
+  const queryClientRef = useRef(queryClient);
+  queryClientRef.current = queryClient;
+
   // Poll check_status while QR is visible to detect connection in real-time
   useEffect(() => {
     if (!qrCode || connected) return;
@@ -195,12 +201,12 @@ export function WhatsAppConnector() {
           body: { action: 'check_status', instance_name: connectingInstance },
         });
         if (!error && data?.connected) {
-          queryClient.invalidateQueries({ queryKey: ['whatsapp-connection-status'] });
+          queryClientRef.current.invalidateQueries({ queryKey: ['whatsapp-connection-status'] });
           setQrCode(null);
           setQrExpiresAt(null);
           setQrState('idle');
           setConnectingInstance(null);
-          showSuccess({ title: 'WhatsApp conectado!', description: 'Conexão detectada com sucesso.' });
+          showSuccessRef.current({ title: 'WhatsApp conectado!', description: 'Conexão detectada com sucesso.' });
         }
       } catch {
         // ignore polling errors
@@ -208,7 +214,7 @@ export function WhatsAppConnector() {
     }, 4000);
 
     return () => window.clearInterval(interval);
-  }, [qrCode, connected, connectingInstance, queryClient, showSuccess]);
+  }, [qrCode, connected, connectingInstance]);
 
   const connectMutation = useMutation({
     mutationFn: async () => {
