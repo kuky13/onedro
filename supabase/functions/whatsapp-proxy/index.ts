@@ -382,15 +382,14 @@ serve(async (req) => {
       case 'get_chats': {
         try {
           console.log(`[whatsapp-proxy] get_chats for ${payload.instanceName}`);
+          const chatsToken = await resolveInstanceToken(payload.instanceName);
 
-          // Evolution GO: GET /user/contacts
+          // Evolution GO: GET /user/contacts (identified by token)
           // Evolution v2: POST /chat/findChats/{instanceName}
           const chats = await tryEndpoints([
-            { path: `user/contacts?instanceName=${payload.instanceName}`, method: 'GET' },
             { path: 'user/contacts', method: 'GET' },
             { path: `chat/findChats/${payload.instanceName}`, method: 'POST', body: {} },
-            { path: 'chat/findChats', method: 'POST', body: { instanceName: payload.instanceName } },
-          ]).catch(() => []);
+          ], chatsToken || undefined).catch(() => []);
 
           const chatsArr = Array.isArray(chats) ? chats : ((chats as any)?.data || (chats as any)?.chats || (chats as any)?.contacts || []);
 
@@ -410,16 +409,17 @@ serve(async (req) => {
           const jid = payload.remoteJid;
           const cleanNumber = jid.split('@')[0];
           console.log(`[whatsapp-proxy] get_messages for ${jid} in ${payload.instanceName}`);
+          const msgToken = await resolveInstanceToken(payload.instanceName);
 
           const [localRes, remoteRes] = await Promise.allSettled([
             callEvo(`chat/findMessages/${payload.instanceName}`, 'POST', {
               where: { key: { remoteJid: jid } },
               options: { limit: 30 }
-            }),
+            }, msgToken || undefined),
             callEvo(`chat/fetchMessages/${payload.instanceName}`, 'POST', {
               number: cleanNumber,
               limit: 30
-            })
+            }, msgToken || undefined)
           ]);
 
           const toArray = (v: any): any[] => {
@@ -468,23 +468,25 @@ serve(async (req) => {
       case 'get_groups': {
         try {
           console.log(`[whatsapp-proxy] get_groups for ${payload.instanceName}`);
+          const groupsToken = await resolveInstanceToken(payload.instanceName);
 
-          // Evolution GO: GET /group/myall or GET /group/list (no instance in path)
+          if (!groupsToken) {
+            console.error(`[whatsapp-proxy] Could not resolve token for instance "${payload.instanceName}". Groups will likely be empty.`);
+          }
+
+          // Evolution GO: GET /group/myall or GET /group/list (identified by token)
           // Evolution v2: POST /group/fetchAllGroups/{instanceName}
           const groupsData = await tryEndpoints([
-            { path: `group/myall?instanceName=${payload.instanceName}`, method: 'GET' },
             { path: 'group/myall', method: 'GET' },
-            { path: `group/list?instanceName=${payload.instanceName}`, method: 'GET' },
             { path: 'group/list', method: 'GET' },
             { path: `group/fetchAllGroups/${payload.instanceName}`, method: 'POST', body: {} },
-          ]).catch(async () => {
+          ], groupsToken || undefined).catch(async () => {
             // Last resort: fetch chats and filter @g.us
             console.log(`[whatsapp-proxy] All group endpoints failed, falling back to chat filter`);
             const allChats = await tryEndpoints([
-              { path: `user/contacts?instanceName=${payload.instanceName}`, method: 'GET' },
               { path: 'user/contacts', method: 'GET' },
               { path: `chat/findChats/${payload.instanceName}`, method: 'POST', body: {} },
-            ]).catch(() => []);
+            ], groupsToken || undefined).catch(() => []);
             const chatsArray = Array.isArray(allChats) ? allChats : (allChats?.data || allChats?.chats || []);
             return chatsArray.filter((c: any) => {
               const id = c.id || c.remoteJid || c.jid || '';
@@ -507,7 +509,8 @@ serve(async (req) => {
         break;
       }
 
-      case 'send_message':
+      case 'send_message': {
+        const sendToken = await resolveInstanceToken(payload.instanceName);
         // Evolution GO: POST /send/text
         // Evolution v2: POST /message/sendText/{instanceName}
         result = await tryEndpoints([
@@ -521,8 +524,9 @@ serve(async (req) => {
             text: payload.text,
             delay: 1000
           }},
-        ]);
+        ], sendToken || undefined);
         break;
+      }
 
       case 'toggle_ai':
         await supabase.from('whatsapp_instances').update({ ai_enabled: payload.enabled }).eq('instance_name', payload.instanceName);
