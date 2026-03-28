@@ -234,23 +234,27 @@ serve(async (req) => {
         break;
       }
 
-      case 'connect_instance':
+      case 'connect_instance': {
+        // Resolve instance token for Evolution GO
+        const connectToken = await resolveInstanceToken(payload.instanceName);
         // Evolution GO: POST /instance/connect (body: { instanceName })
         // Evolution v2: GET /instance/connect/{instanceName}
         result = await tryEndpoints([
           { path: 'instance/connect', method: 'POST', body: { instanceName: payload.instanceName } },
           { path: `instance/connect/${payload.instanceName}`, method: 'GET' },
-        ]);
+        ], connectToken || undefined);
         break;
+      }
 
       case 'get_status': {
-        // Evolution GO: GET /instance/status (query param or header for instance)
+        const statusToken = await resolveInstanceToken(payload.instanceName);
+        // Evolution GO: GET /instance/status (identified by token)
         // Evolution v2: GET /instance/connectionState/{instanceName}
         const state = await tryEndpoints([
-          { path: `instance/status?instanceName=${payload.instanceName}`, method: 'GET' },
           { path: 'instance/status', method: 'GET' },
+          { path: `instance/status?instanceName=${payload.instanceName}`, method: 'GET' },
           { path: `instance/connectionState/${payload.instanceName}`, method: 'GET' },
-        ]);
+        ], statusToken || undefined);
         const status = state?.instance?.state || state?.state || state?.status || 'disconnected';
         await supabase.from('whatsapp_instances').update({ status }).eq('instance_name', payload.instanceName);
         result = { status, state };
