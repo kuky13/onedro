@@ -131,7 +131,7 @@ export function WhatsAppManagement() {
     isLoading: messagesLoading,
     refetch: refetchMessages
   } = useQuery<any[]>({
-    queryKey: ['superadmin-whatsapp-evo-messages', selectedChatId, evolutionInstanceName],
+    queryKey: ['superadmin-whatsapp-evo-messages', selectedChatId, confirmedInstanceName],
     queryFn: async () => {
       const {
         data,
@@ -141,7 +141,7 @@ export function WhatsAppManagement() {
           action: 'get_messages',
           payload: {
             remoteJid: selectedChatId,
-            instanceName: evolutionInstanceName || undefined
+            instanceName: confirmedInstanceName || undefined
           }
         }
       });
@@ -149,8 +149,8 @@ export function WhatsAppManagement() {
       const msgs = data?.messages || data;
       return Array.isArray(msgs) ? msgs : [];
     },
-    enabled: isAuthenticated && !!selectedChatId && !!evolutionInstanceName,
-    refetchInterval: 5000 // Polling a cada 5 segundos para o "ao vivo"
+    enabled: isAuthenticated && !!selectedChatId && !!confirmedInstanceName,
+    refetchInterval: 5000
   });
 
   const sendMessageMutation = useMutation({
