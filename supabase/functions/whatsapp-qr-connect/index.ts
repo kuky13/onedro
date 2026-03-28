@@ -79,6 +79,31 @@ serve(async (req) => {
     if (existing?.evolution_instance_id) {
       const instanceName = existing.evolution_instance_id;
 
+      // Resolve the instance-specific token for Evolution GO
+      let instanceToken: string | null = null;
+      try {
+        const allRes = await fetch(`${baseUrl}/instance/all`, {
+          method: "GET",
+          headers: { apikey: evolutionApiKey, Authorization: `Bearer ${evolutionApiKey}` },
+        });
+        if (allRes.ok) {
+          const allData = await allRes.json();
+          const instances = Array.isArray(allData) ? allData : (allData?.instances || allData?.data || []);
+          const target = instances.find((inst: any) => {
+            const name = inst.name || inst.instanceName || inst.instance?.instanceName || "";
+            return name.toLowerCase() === instanceName.toLowerCase();
+          });
+          if (target) {
+            instanceToken = target.token || target.apikey || target.api_key || null;
+            console.log(`[whatsapp-qr-connect] Resolved token for "${instanceName}": ...${instanceToken?.slice(-6)}`);
+          }
+        }
+      } catch (e) {
+        console.warn("[whatsapp-qr-connect] Could not resolve instance token:", String(e));
+      }
+
+      const effectiveKey = instanceToken || evolutionApiKey;
+
       // Ensure the multi-instance table has a row for this instance (so Atendimento works consistently)
       try {
         await supabase
@@ -87,7 +112,6 @@ serve(async (req) => {
             {
               user_id: ownerId,
               instance_name: instanceName,
-              // For QR-connect flow we may not have Evolution's UUID instanceId; use name as stable id.
               instance_id: instanceName,
               status: existing?.is_active ? "open" : "created",
               ai_enabled: true,
@@ -100,20 +124,11 @@ serve(async (req) => {
         console.warn("[whatsapp-qr-connect] whatsapp_instances upsert skipped:", String(e));
       }
 
-      // Check connection status (if connected, mark as active)
-      // Try Evolution GO endpoint first, then v2
+      // Check connection status
       let statusRes: Response;
-      const statusCandidates = [
-        { url: `${baseUrl}/instance/status?instanceName=${instanceName}`, method: "GET" },
-        { url: `${baseUrl}/instance/status`, method: "GET" },
-        { url: `${baseUrl}/instance/connectionState/${instanceName}`, method: "GET" },
-      ];
-      statusRes = await fetch(statusCandidates[0].url, { method: "GET", headers: { apikey: evolutionApiKey } });
+      statusRes = await fetch(`${baseUrl}/instance/status`, { method: "GET", headers: { apikey: effectiveKey } });
       if (!statusRes.ok) {
-        statusRes = await fetch(statusCandidates[1].url, { method: "GET", headers: { apikey: evolutionApiKey } });
-      }
-      if (!statusRes.ok) {
-        statusRes = await fetch(statusCandidates[2].url, { method: "GET", headers: { apikey: evolutionApiKey } });
+        statusRes = await fetch(`${baseUrl}/instance/connectionState/${instanceName}`, { method: "GET", headers: { apikey: effectiveKey } });
       }
 
       if (statusRes.ok) {
