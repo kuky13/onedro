@@ -345,7 +345,7 @@ serve(async (req) => {
           });
         } catch { /* ignore */ }
 
-        const qr = await pollQr(baseUrl, retryToken);
+        const qr = await pollQr(baseUrl, retryToken, retryName);
         if (qr) {
           return new Response(JSON.stringify({ ok: true, instance_id: retryName, qr_code: qr }), {
             status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
