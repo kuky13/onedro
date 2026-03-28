@@ -86,7 +86,7 @@ export function useWhatsAppConnectionStatus(options: Options = {}) {
         return { connected: true, instance_id: activeInstance.instance_name, connected_phone: activeInstance.connected_phone ?? null };
       }
 
-      // ⬇️ Fallback legado (single-instance)
+      // ⬇️ Fallback legado (single-instance) — treat is_active=true as connected
       const { data: settings, error } = await supabase
         .from('whatsapp_settings')
         .select('evolution_instance_id, is_active')
@@ -99,6 +99,7 @@ export function useWhatsAppConnectionStatus(options: Options = {}) {
         return { connected: false, instance_id: null, connected_phone: null };
       }
 
+      // If is_active is true (set by check_status), treat as connected immediately
       return {
         connected: Boolean(settings.is_active),
         instance_id: settings.evolution_instance_id,

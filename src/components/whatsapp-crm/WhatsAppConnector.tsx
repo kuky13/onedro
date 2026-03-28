@@ -211,7 +211,7 @@ export function WhatsAppConnector() {
       } catch {
         // ignore polling errors
       }
-    }, 4000);
+    }, 2000);
 
     return () => window.clearInterval(interval);
   }, [qrCode, connected, connectingInstance]);
