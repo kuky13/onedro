@@ -58,42 +58,9 @@ export function WebChat({ instanceName, onBack }: WebChatProps) {
         if (webhookSetupForInstanceRef.current === instanceName) return;
         webhookSetupForInstanceRef.current = instanceName;
 
-        let retryCount = 0;
-        const maxRetries = 3;
-
-         const setupWebhook = async () => {
-            try {
-                console.log("[WebChat] Ensuring webhook configuration...");
-                 const { data, error } = await supabase.functions.invoke('whatsapp-proxy', {
-                    body: { action: 'set_webhook', payload: { instanceName } }
-                });
-
-                if (error) throw error;
-                 // IMPORTANT: whatsapp-proxy returns 200 even when VPS rejects; check payload.
-                 if (data && (data as any).success === false) {
-                     throw new Error((data as any).details || (data as any).error || 'VPS rejeitou o webhook');
-                 }
-                console.log("[WebChat] Webhook configured successfully");
-              } catch (err) {
-                 // Webhook failure should not block the CRM.
-                 // Many VPS setups (proxy/CDN) can temporarily return non-JSON 502.
-                 console.warn("[WebChat] Webhook setup failed (non-blocking):", err);
-                  const msg = (err as any)?.message ? String((err as any).message) : '';
-                  // Se a VPS retorna 404/Not Found nos endpoints de webhook, retentar não ajuda.
-                  const isNotFound = msg.toLowerCase().includes('not found') || msg.includes('404');
-
-                  if (!isNotFound && retryCount < maxRetries) {
-                      retryCount++;
-                      setTimeout(setupWebhook, 2000 * retryCount); // Backoff: 2s, 4s, 6s
-                  } else {
-                     const msg = (err as any)?.message ? String((err as any).message) : '';
-                      const suffix = msg.includes('502') ? ' (VPS retornou 502)' : isNotFound ? ' (endpoint não encontrado na VPS)' : '';
-                      showError({ title: 'Webhook', description: `Não foi possível configurar o webhook automaticamente${suffix}. Você ainda pode usar o atendimento (polling).` });
-                 }
-             }
-        };
-
-        setupWebhook();
+        // Webhook já é configurado durante a conexão da instância (whatsapp-qr-connect).
+        // Não tentamos novamente aqui para evitar 404s desnecessários.
+        console.log("[WebChat] Webhook já configurado na conexão. Usando Realtime + polling.");
 
         // Realtime Subscription unificado
         setRealtimeStatus('connecting');
