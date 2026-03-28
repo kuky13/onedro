@@ -200,7 +200,7 @@ export function WhatsAppManagement() {
     data: groups = [],
     isLoading: groupsLoading
   } = useQuery<any[]>({
-    queryKey: ['superadmin-whatsapp-evo-groups', evolutionInstanceName],
+    queryKey: ['superadmin-whatsapp-evo-groups', confirmedInstanceName],
     queryFn: async () => {
       const {
         data,
@@ -209,14 +209,14 @@ export function WhatsAppManagement() {
         body: {
           action: 'get_groups',
           payload: {
-            instanceName: evolutionInstanceName || undefined
+            instanceName: confirmedInstanceName || undefined
           }
         }
       });
       if (error) throw error;
       return Array.isArray(data) ? data : (data?.groups || []);
     },
-    enabled: isAuthenticated && !!evolutionInstanceName
+    enabled: isAuthenticated && !!confirmedInstanceName
   });
   const {
     data: logs = [],
