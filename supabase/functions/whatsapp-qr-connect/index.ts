@@ -376,6 +376,7 @@ serve(async (req) => {
           body: JSON.stringify({
             name: retryName,
             instanceName: retryName,
+            token: crypto.randomUUID().replace(/-/g, ""),
             integration: "WHATSAPP-BAILEYS",
             qrcode: true,
             webhook: {
