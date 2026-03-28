@@ -95,6 +95,7 @@ export function WhatsAppManagement() {
   const [allowedNumbers, setAllowedNumbers] = useState<string>('');
   const [allowedGroups, setAllowedGroups] = useState<string>('');
   const [evolutionInstanceName, setEvolutionInstanceName] = useState<string>('');
+  const [confirmedInstanceName, setConfirmedInstanceName] = useState<string>('');
   const [adminNotificationPhone, setAdminNotificationPhone] = useState<string>('');
   const [purchaseTemplate, setPurchaseTemplate] = useState<string>(`*🚀 Nova Venda Aprovada!*\n\n` + `👤 *Cliente:* {{client_name}}\n` + `📧 *Email:* {{email}}\n` + `📱 *Tel:* {{phone}}\n` + `💰 *Valor:* R$ {{amount}}\n` + `📦 *Plano:* {{plan_type}}\n` + `🎫 *Licença:* \`{{license_code}}\`\n\n` + `*ID Abacate Pay:* \`{{mp_id}}\`\n` + `*Status:* {{status}}\n` + `*Método:* {{method}}\n\n` + `{{datetime_brt}}\n\n` + `O sistema processou tudo automaticamente. ✅`);
   const [buyerTemplate, setBuyerTemplate] = useState<string>(`*✅ Pagamento Confirmado!*\n\n` + `Olá *{{client_name}}*, seu pagamento foi aprovado com sucesso!\n\n` + `*Detalhes da Compra:*\n` + `📦 *Plano:* {{plan_name}}\n` + `💰 *Valor:* R$ {{amount}}\n` + `🎫 *Licença:* \`{{license_code}}\`\n` + `📅 *Validade:* {{validity}}\n\n` + `{{datetime_brt}}\n\n` + `Obrigado por escolher nosso sistema! 🐧`);
@@ -106,7 +107,7 @@ export function WhatsAppManagement() {
     isLoading: chatsLoading,
     refetch: refetchChats
   } = useQuery<any[]>({
-    queryKey: ['superadmin-whatsapp-evo-chats', evolutionInstanceName],
+    queryKey: ['superadmin-whatsapp-evo-chats', confirmedInstanceName],
     queryFn: async () => {
       const {
         data,
@@ -115,14 +116,14 @@ export function WhatsAppManagement() {
         body: {
           action: 'get_chats',
           payload: {
-            instanceName: evolutionInstanceName || undefined
+            instanceName: confirmedInstanceName || undefined
           }
         }
       });
       if (error) throw error;
       return Array.isArray(data) ? data : [];
     },
-    enabled: isAuthenticated && !!evolutionInstanceName
+    enabled: isAuthenticated && !!confirmedInstanceName
   });
 
   const {
@@ -130,7 +131,7 @@ export function WhatsAppManagement() {
     isLoading: messagesLoading,
     refetch: refetchMessages
   } = useQuery<any[]>({
-    queryKey: ['superadmin-whatsapp-evo-messages', selectedChatId, evolutionInstanceName],
+    queryKey: ['superadmin-whatsapp-evo-messages', selectedChatId, confirmedInstanceName],
     queryFn: async () => {
       const {
         data,
@@ -140,7 +141,7 @@ export function WhatsAppManagement() {
           action: 'get_messages',
           payload: {
             remoteJid: selectedChatId,
-            instanceName: evolutionInstanceName || undefined
+            instanceName: confirmedInstanceName || undefined
           }
         }
       });
@@ -148,8 +149,8 @@ export function WhatsAppManagement() {
       const msgs = data?.messages || data;
       return Array.isArray(msgs) ? msgs : [];
     },
-    enabled: isAuthenticated && !!selectedChatId && !!evolutionInstanceName,
-    refetchInterval: 5000 // Polling a cada 5 segundos para o "ao vivo"
+    enabled: isAuthenticated && !!selectedChatId && !!confirmedInstanceName,
+    refetchInterval: 5000
   });
 
   const sendMessageMutation = useMutation({
@@ -199,7 +200,7 @@ export function WhatsAppManagement() {
     data: groups = [],
     isLoading: groupsLoading
   } = useQuery<any[]>({
-    queryKey: ['superadmin-whatsapp-evo-groups', evolutionInstanceName],
+    queryKey: ['superadmin-whatsapp-evo-groups', confirmedInstanceName],
     queryFn: async () => {
       const {
         data,
@@ -208,14 +209,14 @@ export function WhatsAppManagement() {
         body: {
           action: 'get_groups',
           payload: {
-            instanceName: evolutionInstanceName || undefined
+            instanceName: confirmedInstanceName || undefined
           }
         }
       });
       if (error) throw error;
       return Array.isArray(data) ? data : (data?.groups || []);
     },
-    enabled: isAuthenticated && !!evolutionInstanceName
+    enabled: isAuthenticated && !!confirmedInstanceName
   });
   const {
     data: logs = [],
@@ -471,6 +472,7 @@ export function WhatsAppManagement() {
     setAllowedNumbers(currentSetting?.allowed_numbers ?? '');
     setAllowedGroups(currentSetting?.allowed_groups ?? '');
     setEvolutionInstanceName((currentSetting as any)?.waha_session ?? currentSetting?.evolution_instance_name ?? '');
+    setConfirmedInstanceName((currentSetting as any)?.waha_session ?? currentSetting?.evolution_instance_name ?? '');
     setAdminNotificationPhone(currentSetting?.admin_notification_phone ?? '');
     if (currentSetting?.purchase_approved_template) setPurchaseTemplate(currentSetting.purchase_approved_template);
     if (currentSetting?.buyer_notification_template) setBuyerTemplate(currentSetting.buyer_notification_template);
@@ -563,9 +565,29 @@ export function WhatsAppManagement() {
               {/* Instância Evolution GO */}
               <div className="space-y-2 border p-3 rounded-md bg-muted/20">
                 <Label>Nome da Instância (Evolution GO)</Label>
-                <Input value={evolutionInstanceName} onChange={e => setEvolutionInstanceName(e.target.value)} placeholder="Ex: onedrip_main" />
-                <p className="text-[11px] text-muted-foreground">Esta instância será usada para envio de mensagens e listagem de grupos via Evolution GO.
-                  <br />Configure sua Evolution API URL e chave em /whats ou na tabela evolution_config.</p>
+                <div className="flex gap-2">
+                  <Input 
+                    value={evolutionInstanceName} 
+                    onChange={e => setEvolutionInstanceName(e.target.value)} 
+                    onKeyDown={e => { if (e.key === 'Enter') setConfirmedInstanceName(evolutionInstanceName.trim()); }}
+                    placeholder="Ex: cookie1" 
+                  />
+                  <Button 
+                    type="button" 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => setConfirmedInstanceName(evolutionInstanceName.trim())}
+                    disabled={!evolutionInstanceName.trim()}
+                  >
+                    <Search className="h-4 w-4 mr-1" /> Buscar
+                  </Button>
+                </div>
+                {confirmedInstanceName && (
+                  <p className="text-[11px] text-primary">
+                    ✓ Buscando dados da instância: <strong>{confirmedInstanceName}</strong>
+                  </p>
+                )}
+                <p className="text-[11px] text-muted-foreground">Digite o nome da instância e clique em Buscar ou pressione Enter.</p>
               </div>
               {/* Grupos Permitidos */}
               <div className="space-y-3 rounded-xl border bg-card/40 p-4">
