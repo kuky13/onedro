@@ -200,8 +200,17 @@ export function WhatsAppConnector() {
 
       const { data, error } = await Promise.race([invokePromise, timeoutPromise]);
 
-      if (error) throw error;
-      if (!data?.ok) throw new Error(data?.error ?? 'Erro desconhecido');
+      if (error) {
+        // Supabase functions.invoke puts the response body in `data` even on error
+        const enrichedError = new Error(data?.message || data?.error || error.message);
+        (enrichedError as any).errorCode = data?.error;
+        throw enrichedError;
+      }
+      if (!data?.ok) {
+        const enrichedError = new Error(data?.message || data?.error || 'Erro desconhecido');
+        (enrichedError as any).errorCode = data?.error;
+        throw enrichedError;
+      }
 
       return data;
     },
@@ -231,7 +240,15 @@ export function WhatsAppConnector() {
     },
     onError: (err: any) => {
       setQrState('idle');
-      showError({ title: 'Erro ao conectar', description: err.message });
+      const errorCode = err?.errorCode;
+      const errorMessages: Record<string, string> = {
+        missing_evolution_config: 'Configure a URL e chave da Evolution antes de conectar.',
+        evolution_auth_failed: 'Chave da Evolution inválida ou expirada. Verifique nas configurações.',
+        evolution_unreachable: 'Evolution API indisponível. Verifique se a URL está correta e o servidor está online.',
+        qr_code_timeout: 'QR code não foi gerado. Tente novamente em alguns segundos.',
+      };
+      const description = (errorCode && errorMessages[errorCode]) || err.message;
+      showError({ title: 'Erro ao conectar', description });
     },
   });
 

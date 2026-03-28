@@ -75,6 +75,34 @@ serve(async (req) => {
       });
     }
 
+    // ── Health check: verify Evolution API is reachable and key is valid ──
+    try {
+      const healthRes = await fetch(`${baseUrl}/instance/all`, {
+        method: "GET",
+        headers: { apikey: evolutionApiKey, Authorization: `Bearer ${evolutionApiKey}` },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (healthRes.status === 401 || healthRes.status === 403) {
+        return new Response(
+          JSON.stringify({ ok: false, error: "evolution_auth_failed", message: "Chave da Evolution inválida ou expirada. Verifique nas configurações." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (!healthRes.ok) {
+        console.error("[whatsapp-qr-connect] Evolution health check failed:", healthRes.status);
+        return new Response(
+          JSON.stringify({ ok: false, error: "evolution_unreachable", message: `Evolution API retornou status ${healthRes.status}. Verifique se o servidor está online.` }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } catch (e) {
+      console.error("[whatsapp-qr-connect] Evolution health check error:", String(e));
+      return new Response(
+        JSON.stringify({ ok: false, error: "evolution_unreachable", message: "Não foi possível conectar à Evolution API. Verifique se a URL está correta e o servidor está online." }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // If we already have an instance name stored, always reuse it.
     if (existing?.evolution_instance_id) {
       const instanceName = existing.evolution_instance_id;
@@ -421,9 +449,9 @@ serve(async (req) => {
       });
 
       return new Response(
-        JSON.stringify({ ok: false, error: "qr_code_missing", create_status: createRes.status, connect_status: lastConnectStatus }),
+        JSON.stringify({ ok: false, error: "evolution_unreachable", message: `Evolution API não gerou o QR code (create: ${createRes.status}, connect: ${lastConnectStatus}). Verifique se o servidor da Evolution está funcionando.`, create_status: createRes.status, connect_status: lastConnectStatus }),
         {
-          status: 500,
+          status: 502,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
@@ -496,8 +524,8 @@ serve(async (req) => {
 
     if (!qrCode) {
       console.error("[whatsapp-qr-connect] No QR code in response:", createData);
-      return new Response(JSON.stringify({ ok: false, error: "qr_code_missing" }), {
-        status: 500,
+      return new Response(JSON.stringify({ ok: false, error: "qr_code_timeout", message: "A instância foi criada mas o QR code não foi gerado. Tente novamente em alguns segundos." }), {
+        status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -580,7 +608,7 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("[whatsapp-qr-connect] Fatal error:", e);
-    return new Response(JSON.stringify({ ok: false, error: String(e) }), {
+    return new Response(JSON.stringify({ ok: false, error: "internal_error", message: `Erro interno: ${String(e)}` }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
