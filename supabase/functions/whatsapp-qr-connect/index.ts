@@ -56,25 +56,46 @@ async function resolveInstanceToken(
   return { token: null, instanceId: null };
 }
 
-/** Poll GET /instance/qr with the instance token until QR is available */
-async function pollQr(baseUrl: string, instanceKey: string, maxAttempts = 12, delayMs = 2000): Promise<string | null> {
+/** Poll multiple QR endpoints until QR is available */
+async function pollQr(baseUrl: string, instanceKey: string, instanceName?: string, maxAttempts = 15, delayMs = 2000): Promise<string | null> {
+  // Try multiple endpoint patterns used by different Evolution GO versions
+  const endpoints = [
+    `${baseUrl}/instance/qr`,
+    `${baseUrl}/instance/qrcode`,
+    ...(instanceName ? [
+      `${baseUrl}/instance/qr/${instanceName}`,
+      `${baseUrl}/instance/qrcode/${instanceName}`,
+    ] : []),
+  ];
+
   for (let i = 0; i < maxAttempts; i++) {
-    try {
-      const res = await fetch(`${baseUrl}/instance/qr`, {
-        method: "GET",
-        headers: { apikey: instanceKey },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const qr = extractQr(data);
-        if (qr) {
-          console.log(`[qr-connect] QR obtained on attempt ${i + 1}`);
-          return qr;
+    for (const endpoint of endpoints) {
+      try {
+        const res = await fetch(endpoint, {
+          method: "GET",
+          headers: { apikey: instanceKey },
+        });
+        const text = await res.text();
+        if (i < 3) {
+          console.log(`[qr-connect] Poll attempt ${i + 1} ${endpoint}: ${res.status} body=${text.slice(0, 300)}`);
         }
-      } else {
-        await res.text(); // drain
-      }
-    } catch { /* ignore */ }
+        if (res.ok && text.length > 10) {
+          // Check if response is a data URI or base64 image directly
+          if (text.startsWith("data:image") || (text.length > 200 && /^[A-Za-z0-9+/=\s]+$/.test(text.trim()))) {
+            console.log(`[qr-connect] QR obtained as raw image/base64 on attempt ${i + 1}`);
+            return text.trim();
+          }
+          try {
+            const data = JSON.parse(text);
+            const qr = extractQr(data);
+            if (qr) {
+              console.log(`[qr-connect] QR obtained on attempt ${i + 1} from ${endpoint}`);
+              return qr;
+            }
+          } catch { /* not json, already checked raw */ }
+        }
+      } catch { /* ignore network errors */ }
+    }
     if (i < maxAttempts - 1) await new Promise(r => setTimeout(r, delayMs));
   }
   return null;
@@ -254,7 +275,7 @@ serve(async (req) => {
       }
 
       // Poll GET /instance/qr
-      const qr = await pollQr(baseUrl, instanceToken);
+      const qr = await pollQr(baseUrl, instanceToken, instanceName);
       if (qr) {
         return new Response(JSON.stringify({ ok: true, instance_id: instanceName, qr_code: qr }), {
           status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -324,7 +345,7 @@ serve(async (req) => {
           });
         } catch { /* ignore */ }
 
-        const qr = await pollQr(baseUrl, retryToken);
+        const qr = await pollQr(baseUrl, retryToken, retryName);
         if (qr) {
           return new Response(JSON.stringify({ ok: true, instance_id: retryName, qr_code: qr }), {
             status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -379,7 +400,7 @@ serve(async (req) => {
     }
 
     // ── Poll for QR ──
-    const qr = await pollQr(baseUrl, createdToken);
+    const qr = await pollQr(baseUrl, createdToken, instanceName);
     if (qr) {
       await setupWebhookAndIa(supabase, baseUrl, createdToken, instanceName, ownerId, webhookUrl);
       return new Response(JSON.stringify({ ok: true, instance_id: instanceName, qr_code: qr }), {
@@ -388,7 +409,7 @@ serve(async (req) => {
     }
 
     // ── Final fallback: try global key for QR ──
-    const qrFallback = await pollQr(baseUrl, evolutionApiKey, 5, 1500);
+    const qrFallback = await pollQr(baseUrl, evolutionApiKey, instanceName, 5, 1500);
     if (qrFallback) {
       await setupWebhookAndIa(supabase, baseUrl, createdToken, instanceName, ownerId, webhookUrl);
       return new Response(JSON.stringify({ ok: true, instance_id: instanceName, qr_code: qrFallback }), {
