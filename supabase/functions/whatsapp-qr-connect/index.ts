@@ -304,7 +304,7 @@ serve(async (req) => {
 
       // Try Evolution GO (POST) first, then v2 (GET)
       const connectCandidates = [
-        { url: `${baseUrl}/instance/connect`, method: "POST", body: JSON.stringify({ instanceName }) },
+        { url: `${baseUrl}/instance/connect`, method: "POST", body: JSON.stringify({ name: instanceName, instanceName }) },
         { url: `${baseUrl}/instance/connect/${instanceName}`, method: "GET", body: undefined as string | undefined },
       ];
 
