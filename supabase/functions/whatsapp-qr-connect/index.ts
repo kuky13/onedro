@@ -179,13 +179,13 @@ serve(async (req) => {
       // Evolution v2: GET /instance/connect/{instanceName}
       let qrRes = await fetch(`${baseUrl}/instance/connect`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", apikey: evolutionApiKey },
+        headers: { "Content-Type": "application/json", apikey: effectiveKey },
         body: JSON.stringify({ instanceName }),
       });
       if (!qrRes.ok) {
         qrRes = await fetch(`${baseUrl}/instance/connect/${instanceName}`, {
           method: "GET",
-          headers: { apikey: evolutionApiKey },
+          headers: { apikey: effectiveKey },
         });
       }
 
