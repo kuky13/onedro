@@ -174,11 +174,11 @@ serve(async (req) => {
     };
 
     // ── Helper: try multiple endpoint candidates sequentially ──
-    const tryEndpoints = async (candidates: Array<{ path: string; method: string; body?: any }>) => {
+    const tryEndpoints = async (candidates: Array<{ path: string; method: string; body?: any }>, overrideKey?: string) => {
       let lastErr: unknown = null;
       for (const c of candidates) {
         try {
-          return await callEvo(c.path, c.method, c.body ?? null);
+          return await callEvo(c.path, c.method, c.body ?? null, overrideKey);
         } catch (e: any) {
           console.log(`[whatsapp-proxy] Endpoint ${c.method} ${c.path} failed: ${e?.message}`);
           lastErr = e;
