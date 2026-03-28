@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle, Eye, EyeOff, Loader2, QrCode, Trash2, Unplug, XCircle } from 'lucide-react';
