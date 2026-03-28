@@ -57,8 +57,8 @@ function findInstance(instances: any[], name: string): { name: string; token: st
 
 function findConnectedInstance(instances: any[]): { name: string; token: string | null; ownerJid: string | null } | null {
   for (const inst of instances) {
-    const st = (inst.status || inst.connectionStatus || "").toLowerCase();
-    if (st === "open" || st === "connected") {
+    const isConnected = normalizeIsConnected(inst);
+    if (isConnected) {
       const name = inst.name || inst.instanceName || inst.instance?.instanceName || "";
       const ownerJid = inst.ownerJid || inst.owner || inst.instance?.ownerJid || null;
       return {
@@ -66,6 +66,59 @@ function findConnectedInstance(instances: any[]): { name: string; token: string 
         token: inst.token || inst.apikey || inst.api_key || null,
         ownerJid,
       };
+    }
+  }
+  return null;
+}
+
+/**
+ * Normalize connection status from ANY shape the Evolution GO might return.
+ * Returns true if the instance appears connected.
+ */
+function normalizeIsConnected(data: any): boolean {
+  if (!data || typeof data !== "object") return false;
+
+  // Direct boolean flags
+  if (data.connected === true) return true;
+  if (data.isOpen === true) return true;
+
+  // String status fields - check multiple possible locations
+  const candidates = [
+    data.state,
+    data.status,
+    data.connectionStatus,
+    data.instance?.state,
+    data.instance?.status,
+    data.instance?.connectionStatus,
+    data.data?.state,
+    data.data?.status,
+    data.data?.connectionStatus,
+    data.connection?.state,
+    data.connection?.status,
+  ];
+
+  for (const val of candidates) {
+    if (typeof val === "string") {
+      const lower = val.toLowerCase();
+      if (lower === "open" || lower === "connected" || lower === "online" || lower === "authenticated") {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+/** Extract phone/ownerJid from various response shapes */
+function extractPhone(data: any): string | null {
+  const candidates = [
+    data.ownerJid, data.owner, data.instance?.ownerJid,
+    data.data?.ownerJid, data.connection?.ownerJid,
+    data.me?.id, data.wid?._serialized,
+  ];
+  for (const val of candidates) {
+    if (typeof val === "string" && val.length > 5) {
+      return val.replace(/@.*$/, "").replace(/\D/g, "");
     }
   }
   return null;
@@ -125,7 +178,7 @@ async function markConnected(
   instanceName: string,
   connectedPhone: string | null,
 ) {
-  console.log(`[qr-connect] Marking "${instanceName}" as connected for user ${ownerId}`);
+  console.log(`[qr-connect] Marking "${instanceName}" as connected for user ${ownerId}, phone=${connectedPhone}`);
 
   await supabase
     .from("whatsapp_settings")
@@ -179,7 +232,10 @@ async function ensureIaConfig(supabase: any, ownerId: string) {
   }
 }
 
-/** Check instance status in Evolution GO and update DB if connected */
+/**
+ * ROBUST status check: tries multiple endpoints with instance token,
+ * then falls back to /instance/all with global key.
+ */
 async function checkAndSyncStatus(
   supabase: any,
   baseUrl: string,
@@ -187,28 +243,83 @@ async function checkAndSyncStatus(
   ownerId: string,
   instanceName?: string,
 ): Promise<{ connected: boolean; instance_name: string | null; phone: string | null }> {
+
+  // 1. Fetch all instances to resolve instance token
   const allInstances = await fetchAllInstances(baseUrl, evolutionApiKey);
-  
-  // If a specific instance was requested, check it first
+  console.log(`[qr-connect] check_status: ${allInstances.length} instances found`);
+
+  // 2. If we have a specific instance name, try dedicated status endpoints with its token
   if (instanceName) {
     const inst = findInstance(allInstances, instanceName);
-    if (inst) {
-      const st = inst.status.toLowerCase();
-      if (st === "open" || st === "connected") {
-        await markConnected(supabase, ownerId, inst.name, null);
-        return { connected: true, instance_name: inst.name, phone: null };
-      }
+    const token = inst?.token || evolutionApiKey;
+    
+    console.log(`[qr-connect] check_status: instance "${instanceName}" found=${!!inst}, token=${token ? "yes" : "no"}, listStatus="${inst?.status}"`);
+
+    // 2a. Check if /instance/all already shows connected
+    if (inst && normalizeIsConnected(inst)) {
+      const phone = extractPhone(inst);
+      console.log(`[qr-connect] check_status: CONNECTED via /instance/all, phone=${phone}`);
+      await markConnected(supabase, ownerId, inst.name, phone);
+      return { connected: true, instance_name: inst.name, phone };
+    }
+
+    // 2b. Try GET /instance/status with instance token
+    const statusEndpoints = [
+      `${baseUrl}/instance/status`,
+      `${baseUrl}/instance/status/${instanceName}`,
+      `${baseUrl}/instance/connectionState`,
+      `${baseUrl}/instance/connectionState/${instanceName}`,
+    ];
+
+    for (const endpoint of statusEndpoints) {
+      try {
+        const res = await fetch(endpoint, {
+          method: "GET",
+          headers: { apikey: token },
+        });
+        if (res.ok) {
+          const text = await res.text();
+          console.log(`[qr-connect] check_status: ${endpoint} → ${res.status} ${text.slice(0, 300)}`);
+          try {
+            const data = JSON.parse(text);
+            if (normalizeIsConnected(data)) {
+              const phone = extractPhone(data);
+              console.log(`[qr-connect] check_status: CONNECTED via ${endpoint}, phone=${phone}`);
+              await markConnected(supabase, ownerId, instanceName, phone);
+              return { connected: true, instance_name: instanceName, phone };
+            }
+          } catch { /* not json */ }
+
+          // Check for raw "open" or "connected" in response
+          const lower = text.toLowerCase();
+          if (lower.includes('"open"') || lower.includes('"connected"') || lower.includes('"authenticated"')) {
+            console.log(`[qr-connect] check_status: CONNECTED via text match from ${endpoint}`);
+            await markConnected(supabase, ownerId, instanceName, null);
+            return { connected: true, instance_name: instanceName, phone: null };
+          }
+        } else {
+          // Don't log 404s to reduce noise
+          if (res.status !== 404) {
+            const text = await res.text();
+            console.log(`[qr-connect] check_status: ${endpoint} → ${res.status} ${text.slice(0, 200)}`);
+          } else {
+            await res.text(); // consume body
+          }
+        }
+      } catch { /* ignore network errors for individual endpoints */ }
     }
   }
 
-  // Check any connected instance
+  // 3. Fallback: check any connected instance from the full list
   const connectedInst = findConnectedInstance(allInstances);
   if (connectedInst && connectedInst.name) {
     const phone = connectedInst.ownerJid ? connectedInst.ownerJid.replace(/@.*$/, "").replace(/\D/g, "") : null;
+    console.log(`[qr-connect] check_status: found OTHER connected instance "${connectedInst.name}", phone=${phone}`);
     await markConnected(supabase, ownerId, connectedInst.name, phone);
     return { connected: true, instance_name: connectedInst.name, phone };
   }
 
+  console.log(`[qr-connect] check_status: NOT connected`);
   return { connected: false, instance_name: null, phone: null };
 }
 
@@ -422,42 +533,37 @@ serve(async (req) => {
       if (resolved?.token) {
         createdToken = resolved.token;
       } else {
-        return new Response(JSON.stringify({ ok: false, error: "instance_create_failed", detail: `${createRes.status}: ${createText.slice(0, 200)}` }), {
-          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return new Response(JSON.stringify({
+          ok: false, error: "create_failed", create_status: createRes.status,
+        }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
     } else {
       try {
-        const createData = JSON.parse(createText);
-        const d = createData?.data ?? createData;
-        createdToken = d?.token ?? createData?.instance?.token ?? newToken;
-
-        const qr = extractQr(createData);
-        if (qr) {
-          await supabase.from("whatsapp_settings")
-            .upsert({ owner_id: ownerId, evolution_api_url: baseUrl, evolution_instance_id: instanceName, is_active: false }, { onConflict: "owner_id" });
-          await ensureIaConfig(supabase, ownerId);
-          return new Response(JSON.stringify({ ok: true, instance_id: instanceName, qr_code: qr }), {
-            status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      } catch { /* not json */ }
+        const parsed = JSON.parse(createText);
+        if (parsed.token) createdToken = parsed.token;
+        if (parsed.instance?.token) createdToken = parsed.instance.token;
+      } catch { /* keep newToken */ }
     }
 
-    // Upsert DB
+    // Save to DB immediately
     await supabase.from("whatsapp_settings")
       .upsert({ owner_id: ownerId, evolution_api_url: baseUrl, evolution_instance_id: instanceName, is_active: false }, { onConflict: "owner_id" });
 
     try {
       await supabase.from("whatsapp_instances")
         .upsert({
-          user_id: ownerId, instance_name: instanceName, instance_id: instanceName,
-          status: "created", ai_enabled: true, ai_mode: "drippy", ai_agent_id: null,
+          user_id: ownerId,
+          instance_name: instanceName,
+          instance_id: instanceName,
+          status: "created",
+          ai_enabled: true,
+          ai_mode: "drippy",
         } as any, { onConflict: "user_id,instance_name" });
-    } catch { /* ignore */ }
+    } catch (e) {
+      console.warn("[qr-connect] instances upsert:", String(e));
+    }
 
     // Connect with webhookUrl
-    console.log(`[qr-connect] Calling POST /instance/connect with token ...${createdToken.slice(-6)}`);
     try {
       const connectRes = await fetch(`${baseUrl}/instance/connect`, {
         method: "POST",
@@ -465,7 +571,8 @@ serve(async (req) => {
         body: JSON.stringify(connectBody),
       });
       const connectText = await connectRes.text();
-      console.log(`[qr-connect] Connect: ${connectRes.status} ${connectText.slice(0, 200)}`);
+      console.log(`[qr-connect] POST /instance/connect (new): ${connectRes.status} ${connectText.slice(0, 200)}`);
+
       if (connectRes.ok) {
         try {
           const qr = extractQr(JSON.parse(connectText));
@@ -478,10 +585,10 @@ serve(async (req) => {
         } catch { /* not json */ }
       }
     } catch (e) {
-      console.warn(`[qr-connect] Connect failed:`, String(e));
+      console.warn(`[qr-connect] connect (new) failed:`, String(e));
     }
 
-    // Poll QR
+    // Poll for QR
     const { qr, alreadyLoggedIn } = await pollQr(baseUrl, createdToken, instanceName);
 
     if (alreadyLoggedIn) {
@@ -499,14 +606,12 @@ serve(async (req) => {
       });
     }
 
-    console.error(`[qr-connect] QR not available for "${instanceName}" after all attempts`);
-    return new Response(JSON.stringify({ ok: false, error: "qr_code_missing", instance: instanceName }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-
-  } catch (e) {
-    console.error("[qr-connect] Fatal error:", e);
-    return new Response(JSON.stringify({ ok: false, error: String(e) }), {
+    return new Response(JSON.stringify({
+      ok: false, error: "qr_code_missing", instance: instanceName,
+    }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  } catch (err) {
+    console.error("[qr-connect] Unhandled error:", err);
+    return new Response(JSON.stringify({ ok: false, error: "internal_error", message: String(err) }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
