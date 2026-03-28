@@ -272,11 +272,15 @@ serve(async (req) => {
       "messages.update", "presence.update",
     ];
 
+    // Generate a random token for the new instance (Evolution GO requires it)
+    const instanceToken = crypto.randomUUID().replace(/-/g, "");
+
     const createUrl = `${baseUrl}/instance/create`;
-    // Evolution GO uses "name", Evolution v2 uses "instanceName" — send both for compatibility
+    // Evolution GO uses "name"+"token", Evolution v2 uses "instanceName" — send all for compatibility
     const createBody = {
       name: instanceName,
       instanceName,
+      token: instanceToken,
       integration: "WHATSAPP-BAILEYS",
       qrcode: true,
       webhook: {
