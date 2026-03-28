@@ -56,25 +56,46 @@ async function resolveInstanceToken(
   return { token: null, instanceId: null };
 }
 
-/** Poll GET /instance/qr with the instance token until QR is available */
-async function pollQr(baseUrl: string, instanceKey: string, maxAttempts = 12, delayMs = 2000): Promise<string | null> {
+/** Poll multiple QR endpoints until QR is available */
+async function pollQr(baseUrl: string, instanceKey: string, instanceName?: string, maxAttempts = 15, delayMs = 2000): Promise<string | null> {
+  // Try multiple endpoint patterns used by different Evolution GO versions
+  const endpoints = [
+    `${baseUrl}/instance/qr`,
+    `${baseUrl}/instance/qrcode`,
+    ...(instanceName ? [
+      `${baseUrl}/instance/qr/${instanceName}`,
+      `${baseUrl}/instance/qrcode/${instanceName}`,
+    ] : []),
+  ];
+
   for (let i = 0; i < maxAttempts; i++) {
-    try {
-      const res = await fetch(`${baseUrl}/instance/qr`, {
-        method: "GET",
-        headers: { apikey: instanceKey },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const qr = extractQr(data);
-        if (qr) {
-          console.log(`[qr-connect] QR obtained on attempt ${i + 1}`);
-          return qr;
+    for (const endpoint of endpoints) {
+      try {
+        const res = await fetch(endpoint, {
+          method: "GET",
+          headers: { apikey: instanceKey },
+        });
+        const text = await res.text();
+        if (i < 3) {
+          console.log(`[qr-connect] Poll attempt ${i + 1} ${endpoint}: ${res.status} body=${text.slice(0, 300)}`);
         }
-      } else {
-        await res.text(); // drain
-      }
-    } catch { /* ignore */ }
+        if (res.ok && text.length > 10) {
+          // Check if response is a data URI or base64 image directly
+          if (text.startsWith("data:image") || (text.length > 200 && /^[A-Za-z0-9+/=\s]+$/.test(text.trim()))) {
+            console.log(`[qr-connect] QR obtained as raw image/base64 on attempt ${i + 1}`);
+            return text.trim();
+          }
+          try {
+            const data = JSON.parse(text);
+            const qr = extractQr(data);
+            if (qr) {
+              console.log(`[qr-connect] QR obtained on attempt ${i + 1} from ${endpoint}`);
+              return qr;
+            }
+          } catch { /* not json, already checked raw */ }
+        }
+      } catch { /* ignore network errors */ }
+    }
     if (i < maxAttempts - 1) await new Promise(r => setTimeout(r, delayMs));
   }
   return null;
