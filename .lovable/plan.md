@@ -1,43 +1,80 @@
 
+Objetivo: fazer o status sair de “Aguardando conexão…” quase na hora do scan e aparecer como conectado de forma confiável.
 
-## Problema
+Diagnóstico encontrado:
+- O frontend já está fazendo polling a cada 4s e isso está disparando corretamente.
+- O gargalo real está no backend: `check_status` sempre responde `connected: false`.
+- Pelos logs, a instância é criada, o QR é obtido, mas o banco nunca muda de `created` para `open`.
+- O webhook `whatsapp-webhook` praticamente não está recebendo/processando `CONNECTION_UPDATE` nesse fluxo.
+- O `check_status` atual consulta só `GET /instance/all` e tenta inferir status por `status/connectionStatus`. Isso é frágil: na prática, a Evolution GO pode não refletir o “open” ali com rapidez, ou retornar o estado em outro formato.
+- Resultado: o frontend fica preso esperando uma confirmação que nunca chega, mesmo após conectar.
 
-Quando o usuário conecta o WhatsApp (escaneia o QR), o status nunca atualiza em tempo real. Duas causas raiz:
+Plano de correção
 
-### 1. Webhook nunca é configurado
-O `setupWebhookAndIa` tenta `POST /webhook/set` que **nao existe** na Evolution GO. O Swagger confirma: nao ha nenhum endpoint de webhook separado. Na Evolution GO, o webhook e configurado no `POST /instance/connect` via o campo `webhookUrl` do `ConnectStruct`.
+1. Fortalecer o `check_status` no `whatsapp-qr-connect`
+- Manter o `GET /instance/all` como fallback.
+- Antes disso, consultar explicitamente o estado da instância com endpoints dedicados, usando o token da própria instância:
+  - `GET /instance/status`
+  - fallback `GET /instance/status?instanceName=...`
+  - fallback legado se necessário
+- Normalizar várias respostas possíveis (`open`, `connected`, `online`, `isOpen`, `connected: true`, etc.).
+- Se detectar conexão, atualizar imediatamente:
+  - `whatsapp_settings.is_active = true`
+  - `whatsapp_settings.evolution_instance_id = instanceName`
+  - `whatsapp_instances.status = open`
+  - `whatsapp_instances.connected_at`
+  - `whatsapp_instances.connected_phone` quando disponível
 
-### 2. Sem fallback de polling de status
-Quando o webhook nao funciona, nao ha mecanismo no frontend para verificar ativamente se a instancia conectou apos o scan do QR.
+2. Resolver corretamente o token da instância no polling
+- No `check_status`, se chegar `instance_name`, buscar em `/instance/all` e resolver o token exato da instância.
+- Não depender apenas da chave global para inferir status.
+- Isso deixa a verificação alinhada com o padrão já usado no `whatsapp-proxy`.
 
-## Solucao
+3. Melhorar a leitura de status da Evolution GO
+- Criar um helper de normalização de status.
+- Aceitar diferentes formatos de payload da GO, por exemplo:
+  - `data.state`
+  - `instance.state`
+  - `status`
+  - `connected`
+  - `instance.connected`
+  - `connectionStatus`
+- Assim o sistema marca conectado mesmo que a API varie o shape da resposta.
 
-### Passo 1 -- Passar webhookUrl no `/instance/connect`
-No `whatsapp-qr-connect`, ao chamar `POST /instance/connect`, incluir:
-```json
-{
-  "immediate": true,
-  "webhookUrl": "https://oghjlypdnmqecaavekyr.supabase.co/functions/v1/whatsapp-webhook",
-  "subscribe": ["MESSAGES_UPSERT", "CONNECTION_UPDATE", "QRCODE_UPDATED"]
-}
-```
-Isso faz a Evolution GO enviar eventos para nosso webhook automaticamente.
+4. Tornar a atualização visual mais rápida no frontend
+- Reduzir o intervalo do polling enquanto o QR está visível, de 4s para algo mais rápido e seguro, como 2s.
+- Quando `check_status` retornar conectado:
+  - limpar QR imediatamente
+  - invalidar query de status
+  - opcionalmente aplicar atualização otimista local do estado para o texto mudar na hora
 
-### Passo 2 -- Remover `setupWebhookAndIa` (a parte do webhook)
-A chamada a `POST /webhook/set` e inutill na Evolution GO. Remover para evitar erros 404.
+5. Ajustar o hook `useWhatsAppConnectionStatus`
+- Garantir que, ao encontrar `whatsapp_settings.is_active = true`, ele trate isso como conectado mesmo antes de aparecer linha “open” em `whatsapp_instances`.
+- Opcionalmente ampliar o fallback para aceitar status transitórios sincronizados pelo polling/backend.
 
-### Passo 3 -- Adicionar polling de status no frontend
-No `WhatsAppConnector`, enquanto o QR estiver visivel, fazer polling a cada 3s chamando uma edge function leve (ou reutilizando `whatsapp-proxy` com `GET /instance/status`) para verificar se a instancia ficou `open`. Quando detectar conexao, atualizar o banco e invalidar a query de status.
+6. Revisar o webhook como complemento, não como dependência principal
+- Manter o webhook para eventos assíncronos, mas não depender dele para a UX de conexão.
+- Se necessário, ampliar logs e parsing de `CONNECTION_UPDATE`, porém a confirmação principal deve vir do `check_status`.
 
-Alternativa mais simples: usar o polling que ja existe (`pollMs: qrCode ? 3000 : false` no `useWhatsAppConnectionStatus`), mas garantir que o banco e atualizado. Para isso, criar um novo endpoint ou ajustar o `whatsapp-qr-connect` para aceitar uma action `check_status` que consulta `GET /instance/status` na Evolution GO e atualiza o banco se conectou.
+Resultado esperado
+- Após escanear o QR, em cerca de 2–4 segundos a tela troca de:
+  `Aguardando conexão…`
+  para
+  `WhatsApp conectado (...)`
+- Mesmo se o webhook falhar, o polling detecta e sincroniza o banco.
+- O usuário não fica mais preso no estado de espera.
 
-### Passo 4 -- Frontend: chamar check_status enquanto QR visivel
-No `WhatsAppConnector`, apos exibir o QR, iniciar um `setInterval` que chama `whatsapp-qr-connect` com `{ action: "check_status", instance_name: "..." }` a cada 4s. Quando retornar `connected: true`, invalidar queries e mostrar status conectado.
+Arquivos a ajustar
+- `supabase/functions/whatsapp-qr-connect/index.ts`
+- `src/components/whatsapp-crm/WhatsAppConnector.tsx`
+- `src/hooks/useWhatsAppConnectionStatus.ts`
 
-## Arquivos a alterar
-- `supabase/functions/whatsapp-qr-connect/index.ts` -- passar webhookUrl no connect, adicionar action check_status, remover setupWebhookAndIa webhook part
-- `src/components/whatsapp-crm/WhatsAppConnector.tsx` -- polling de check_status enquanto QR visivel
-
-## Resultado esperado
-Apos escanear o QR, o status muda para "WhatsApp conectado" em ate 4-8 segundos automaticamente.
-
+Validação
+1. Abrir `/whatsapp-crm`
+2. Clicar em conectar e gerar QR
+3. Escanear o QR
+4. Confirmar que em poucos segundos o QR some
+5. Confirmar que aparece “WhatsApp conectado”
+6. Confirmar no banco que:
+   - `whatsapp_settings.is_active = true`
+   - `whatsapp_instances.status = open`
