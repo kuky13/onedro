@@ -4,6 +4,7 @@ import { SettingsManager } from './SettingsManager';
 import { WebhookEventsViewer } from './WebhookEventsViewer';
 import { WhatsAppConnector } from './WhatsAppConnector';
 import { IAConfigManager } from './IAConfigManager';
+import { AnalyticsDashboard } from './AnalyticsDashboard';
 
 export function WhatsAppCrmLite() {
   return (
@@ -14,10 +15,11 @@ export function WhatsAppCrmLite() {
       </header>
 
       <Tabs defaultValue="connector" className="w-full">
-        <TabsList className="w-full justify-start">
+        <TabsList className="w-full justify-start flex-wrap">
           <TabsTrigger value="connector">Conectar</TabsTrigger>
           <TabsTrigger value="conversations">Atendimento</TabsTrigger>
           <TabsTrigger value="ia-config">Personalizar IA</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="settings">Configurações</TabsTrigger>
           <TabsTrigger value="events">Auditoria</TabsTrigger>
         </TabsList>
@@ -32,6 +34,10 @@ export function WhatsAppCrmLite() {
 
         <TabsContent value="ia-config" className="mt-4">
           <IAConfigManager />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="mt-4">
+          <AnalyticsDashboard />
         </TabsContent>
 
         <TabsContent value="settings" className="mt-4">

@@ -507,14 +507,53 @@ export function WebChat({ instanceName, onBack }: WebChatProps) {
         }
     };
 
+    const saveNote = async (text: string) => {
+        if (!activeChatId || !user) return;
+
+        const noteId = 'note-' + Date.now();
+        const noteTimestamp = Date.now() / 1000;
+
+        // Optimistic add
+        const noteMsg: Message = {
+            id: noteId,
+            key: { remoteJid: activeChatId, fromMe: true, id: noteId },
+            message: { conversation: text },
+            messageTimestamp: noteTimestamp,
+            isNote: true,
+        };
+        setMessages(prev => [...prev, noteMsg]);
+
+        // Persist to Supabase: find conversation_id by phone_number
+        try {
+            const phone = activeChatId.split('@')[0];
+            const { data: conv } = await supabase
+                .from('whatsapp_conversations')
+                .select('id')
+                .eq('owner_id', user.id)
+                .eq('phone_number', phone)
+                .maybeSingle();
+
+            if (conv?.id) {
+                await supabase.from('whatsapp_messages').insert({
+                    owner_id: user.id,
+                    conversation_id: conv.id,
+                    direction: 'note',
+                    content: text,
+                } as any);
+            }
+        } catch (err) {
+            console.warn('[WebChat] Failed to persist note:', err);
+        }
+    };
+
     const sendMessage = async (text: string) => {
         if (!activeChatId) return;
-        
+
         if (text === "#sync") {
             loadMessages(activeChatId, true);
             return;
         }
-        
+
         const tempMsg: Message = {
             id: 'temp-' + Date.now(),
             key: { remoteJid: activeChatId, fromMe: true, id: 'temp-' + Date.now() },
@@ -687,6 +726,7 @@ export function WebChat({ instanceName, onBack }: WebChatProps) {
                         activeChatName={chats.find((c) => c.id === activeChatId)?.name ?? null}
                         messages={messages}
                         onSendMessage={sendMessage}
+                        onSaveNote={saveNote}
                         isLoading={loadingMessages}
                         isSyncing={isSyncing}
                         presenceStatus={activeChatId ? presenceMap[(activeChatId.split('@')[0] ?? activeChatId)] : undefined}

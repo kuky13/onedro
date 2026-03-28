@@ -36,4 +36,5 @@ export interface Message {
     };
     pushName?: string;
     messageTimestamp: number | string;
+    isNote?: boolean; // internal note — not sent to WhatsApp
 }

@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Loader2, Send, Bot, CheckCheck, Search, MoreVertical, Plus, RefreshCw, Zap } from 'lucide-react';
+import { Loader2, Send, Bot, CheckCheck, Search, MoreVertical, Plus, RefreshCw, Zap, NotebookPen } from 'lucide-react';
 import { HumanHandoffBar } from './HumanHandoffBar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -17,6 +17,7 @@ interface ChatWindowProps {
     activeChatName?: string | null;
     messages: Message[];
     onSendMessage: (text: string) => Promise<void>;
+    onSaveNote?: (text: string) => Promise<void>;
     isLoading: boolean;
     isSyncing?: boolean;
     presenceStatus?: string | undefined;
@@ -25,10 +26,11 @@ interface ChatWindowProps {
     debugData?: any;
 }
 
-export function ChatWindow({ activeChat, activeChatName, messages, onSendMessage, isLoading, isSyncing, presenceStatus, canLoadMore, onLoadMore }: ChatWindowProps) {
+export function ChatWindow({ activeChat, activeChatName, messages, onSendMessage, onSaveNote, isLoading, isSyncing, presenceStatus, canLoadMore, onLoadMore }: ChatWindowProps) {
     const { user } = useAuth();
     const [text, setText] = useState('');
     const [sending, setSending] = useState(false);
+    const [isNoteMode, setIsNoteMode] = useState(false);
     const [templateOpen, setTemplateOpen] = useState(false);
     const [templateSearch, setTemplateSearch] = useState('');
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -75,7 +77,11 @@ export function ChatWindow({ activeChat, activeChatName, messages, onSendMessage
 
         setSending(true);
         try {
-            await onSendMessage(text);
+            if (isNoteMode && onSaveNote) {
+                await onSaveNote(text);
+            } else {
+                await onSendMessage(text);
+            }
             setText('');
         } finally {
             setSending(false);
@@ -185,6 +191,25 @@ export function ChatWindow({ activeChat, activeChatName, messages, onSendMessage
                 )}
 
                 {messages.map((msg) => {
+                    if (msg.isNote) {
+                        let time = Number(msg.messageTimestamp) || 0;
+                        if (time < 2000000000) time = time * 1000;
+                        if (time === 0) time = Date.now();
+                        const content = (msg.message as any)?.conversation ?? '';
+                        return (
+                            <div key={msg.key.id} className="flex w-full justify-center animate-in fade-in duration-200">
+                                <div className="max-w-[85%] rounded-xl px-3 py-2 shadow-sm bg-amber-500/15 border border-amber-500/30 text-amber-200">
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                        <NotebookPen className="h-3 w-3 text-amber-400 shrink-0" />
+                                        <span className="text-[9px] uppercase tracking-wider font-bold text-amber-400">Nota interna</span>
+                                    </div>
+                                    <p className="text-[13px] whitespace-pre-wrap leading-tight">{content}</p>
+                                    <span className="text-[9px] text-amber-400/60 font-medium mt-1 block text-right">{format(new Date(time), 'HH:mm')}</span>
+                                </div>
+                            </div>
+                        );
+                    }
+
                     const isMe = msg.key.fromMe;
                     const msgCore = msg.message || msg;
                     const content = msgCore.conversation ||
@@ -229,10 +254,17 @@ export function ChatWindow({ activeChat, activeChatName, messages, onSendMessage
             </div>
 
             {/* Input Area */}
-            <div className="p-3 bg-[#202c33] flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="text-white/70 hover:text-white rounded-full h-10 w-10">
-                    <Plus className="h-6 w-6" />
-                </Button>
+            <div className={cn("p-3 flex items-center gap-2", isNoteMode ? "bg-amber-950/40 border-t border-amber-500/20" : "bg-[#202c33]")}>
+                {isNoteMode ? (
+                    <div className="flex items-center gap-1.5 shrink-0 bg-amber-500/20 border border-amber-500/30 rounded-full px-2 py-1">
+                        <NotebookPen className="h-3.5 w-3.5 text-amber-400" />
+                        <span className="text-[9px] uppercase tracking-wider font-bold text-amber-400">Nota</span>
+                    </div>
+                ) : (
+                    <Button variant="ghost" size="icon" className="text-white/70 hover:text-white rounded-full h-10 w-10">
+                        <Plus className="h-6 w-6" />
+                    </Button>
+                )}
 
                 {/* Templates Popover */}
                 {templates.length > 0 && (
@@ -290,21 +322,34 @@ export function ChatWindow({ activeChat, activeChatName, messages, onSendMessage
                     </Popover>
                 )}
 
+                {onSaveNote && (
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => { setIsNoteMode(v => !v); setText(''); }}
+                        title={isNoteMode ? "Cancelar nota" : "Nota interna"}
+                        className={cn("rounded-full h-10 w-10 shrink-0", isNoteMode ? "text-amber-400 hover:text-amber-300 hover:bg-amber-500/10" : "text-[#aebac1] hover:text-amber-400 hover:bg-amber-500/10")}
+                    >
+                        <NotebookPen className="h-5 w-5" />
+                    </Button>
+                )}
+
                 <form onSubmit={handleSend} className="flex-1 flex gap-2">
                     <Input
                         value={text}
                         onChange={(e) => setText(e.target.value)}
-                        placeholder="Enviar mensagem..."
+                        placeholder={isNoteMode ? "Escrever nota interna (visível só para agentes)..." : "Enviar mensagem..."}
                         disabled={sending}
-                        className="bg-[#2a3942] border-none text-white focus-visible:ring-0 h-10 px-4 rounded-lg placeholder:text-white/30"
+                        className={cn("border-none focus-visible:ring-0 h-10 px-4 rounded-lg", isNoteMode ? "bg-amber-500/10 text-amber-100 placeholder:text-amber-400/50" : "bg-[#2a3942] text-white placeholder:text-white/30")}
                     />
                     <Button
                         type="submit"
                         size="icon"
                         disabled={!text.trim() || sending}
-                        className="h-10 w-10 rounded-full bg-[#00a884] hover:bg-[#06cf9c] text-black shadow-none transition-all"
+                        className={cn("h-10 w-10 rounded-full shadow-none transition-all", isNoteMode ? "bg-amber-500 hover:bg-amber-400 text-black" : "bg-[#00a884] hover:bg-[#06cf9c] text-black")}
                     >
-                        {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                        {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : isNoteMode ? <NotebookPen className="h-5 w-5" /> : <Send className="h-5 w-5" />}
                     </Button>
                 </form>
             </div>

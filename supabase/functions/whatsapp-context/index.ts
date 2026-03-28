@@ -607,24 +607,33 @@ serve(async (req: Request) => {
         }
       }
 
-      // Temporário: Drippy SEMPRE ativa (ignora modelos e desliga/liga)
-       // Always send using the canonical instance_name (Evolution expects instanceName in the URL)
-       const sendInstanceId = canonicalInstanceName ?? instanceId;
+      // Respeitar config de IA por instância (ai_enabled, ai_mode, ai_agent_id)
+      const aiEnabled = instanceCfg ? instanceCfg.ai_enabled !== false : true;
 
-       fetch(`${supabaseUrl}/functions/v1/whatsapp-ai-reply`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${serviceRoleKey}`,
-        },
-        body: JSON.stringify({
-          owner_id: ownerId,
-          conversation_id: conversationId,
-          instance_id: sendInstanceId,
-          user_message: messageText,
-          ai_mode: "drippy",
-        }),
-      }).catch((err) => console.error("[whatsapp-context] AI reply trigger failed:", err));
+      if (!aiEnabled) {
+        console.log("[whatsapp-context] AI disabled for instance:", instanceId, "— skipping reply");
+      } else {
+        // Always send using the canonical instance_name (Evolution expects instanceName in the URL)
+        const sendInstanceId = canonicalInstanceName ?? instanceId;
+        const aiMode = instanceCfg?.ai_mode ?? "drippy";
+        const aiAgentId = instanceCfg?.ai_agent_id ?? null;
+
+        fetch(`${supabaseUrl}/functions/v1/whatsapp-ai-reply`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${serviceRoleKey}`,
+          },
+          body: JSON.stringify({
+            owner_id: ownerId,
+            conversation_id: conversationId,
+            instance_id: sendInstanceId,
+            user_message: messageText,
+            ai_mode: aiMode,
+            ai_agent_id: aiAgentId,
+          }),
+        }).catch((err) => console.error("[whatsapp-context] AI reply trigger failed:", err));
+      }
       } // end else (ai not paused)
     }
 
