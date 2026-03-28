@@ -1,117 +1,122 @@
 
-## Diagnóstico
+## Corrigir conexão do `/whatsapp-crm`
 
-Achei a causa principal no que já está rodando:
+### Problema encontrado
+A falha está concentrada na edge function `supabase/functions/whatsapp-qr-connect/index.ts`.
 
-1. **O nome da instância está chegando no backend**
-   - Os logs mostram `get_groups for cookie1`
-   - Também mostram `Resolved token for "cookie1"`
-   - Então o campo **já está sendo usado**, mas hoje ele dispara consulta **enquanto você digita**, inclusive para valores parciais como `o` e `on`
+Pelo código atual, ela ainda mistura fluxo de:
+- Evolution GO
+- Evolution v2/legado
 
-2. **A autenticação da instância está funcionando**
-   - `GET /user/contacts` retorna contatos
-   - Isso prova que o token da instância foi resolvido e aceito pela Evolution GO
+Isso faz a função chamar endpoints certos com payloads errados.
 
-3. **O erro real é na lógica de grupos**
-   - `GET /group/myall` responde `200` com `{"data":null,"message":"success"}`
-   - O código atual trata isso como “sucesso final” e **não cai para o fallback**
-   - Resultado: a tela recebe lista vazia e mostra “Nenhum grupo encontrado”
+### Causa raiz
+Com base no Swagger da Evolution GO (`go.kuky.help/swagger/doc.json`):
 
-## O que vou implementar
+- `POST /instance/create` aceita essencialmente `name` e `token`
+- `POST /instance/connect` usa um body do tipo `ConnectStruct`
+  - `immediate`
+  - `phone`
+  - `subscribe`
+  - `webhookUrl`
+- `GET /instance/qr` busca o QR da instância autenticada pelo token da própria instância
+- `GET /instance/status` também depende do token da instância
 
-### 1. Fazer o campo “Nome da Instância” consultar só o valor confirmado
-Hoje a busca acontece a cada tecla. Vou ajustar a UI para separar:
+Hoje o código:
+- envia campos extras de v2 no `create` (`instanceName`, `integration`, `qrcode`, `webhook`)
+- tenta `POST /instance/connect` com `{ name, instanceName }`
+- tenta fallbacks de v2 como `/instance/connect/{name}` e `/instance/connectionState/{name}`
+- extrai QR só de formatos antigos
 
-- **valor digitado**
-- **valor confirmado para busca**
+Isso explica o `qr_code_missing`.
 
-Fluxo novo:
+## O que vou ajustar
+
+### 1. Reescrever o fluxo do `whatsapp-qr-connect` para Evolution GO de verdade
+Vou simplificar o fluxo para:
+
 ```text
-Você digita: cookie1
-↓
-clica em “Buscar grupos” / Enter
-↓
-o sistema usa exatamente "cookie1"
+resolver config
+→ reaproveitar ou criar nome da instância
+→ criar instância com { name, token } se não existir
+→ se já existir, resolver token via /instance/all
+→ chamar POST /instance/connect com payload compatível com GO
+→ fazer polling em GET /instance/qr usando o token da instância
+→ retornar qr_code
 ```
 
-Isso evita consultas com `o`, `on`, etc. e garante que o sistema procure exatamente a instância informada.
+### 2. Remover dependência dos endpoints legados no CRM
+No fluxo de conexão do CRM, vou parar de depender de:
+- `/instance/connect/{instanceName}`
+- `/instance/connectionState/{instanceName}`
 
-### 2. Corrigir o fallback de grupos no `whatsapp-proxy`
-Vou mudar a lógica de `get_groups` para:
+Esses fallbacks podem continuar só onde fizer sentido legado, mas não no fluxo principal do CRM.
 
-- tentar `GET /group/myall`
-- se vier `data: null`, array vazio ou resposta sem grupos, **não considerar sucesso**
-- tentar `GET /group/list`
-- se ainda vier vazio, buscar chats/contacts e filtrar grupos (`@g.us`)
-- só devolver vazio depois de esgotar tudo
+### 3. Corrigir payload de connect
+Vou montar o `connect` com o formato esperado pela Evolution GO, por exemplo:
+- `webhookUrl`
+- `subscribe`
+- `immediate`
 
-Hoje o fallback só acontece quando há erro HTTP. Vou fazer fallback também quando houver **sucesso vazio**.
+Sem mandar `name`/`instanceName` no body se o GO identifica a instância pelo token no header.
 
-### 3. Normalizar melhor respostas da Evolution GO
-Vou ampliar a leitura dos formatos possíveis de grupo, usando campos como:
+### 4. Melhorar leitura do QR
+Vou ampliar a leitura do QR para aceitar respostas em formatos como:
+- `data.qrcode`
+- `data.code`
+- `qrcode`
+- `qrcode.base64`
+- `code`
+- `base64`
 
-- `id`
-- `jid`
-- `Jid`
-- `remoteJid`
-- `JID`
-- `subject`
-- `name`
-- `pushName`
+E registrar melhor qual endpoint respondeu e com qual shape.
 
-Isso reduz risco de a API devolver grupos em outro shape e a UI ignorar.
+### 5. Ajustar checagem de status da instância existente
+Quando já houver instância salva:
+- resolver token da instância via `/instance/all`
+- consultar `/instance/status` com esse token
+- se não estiver conectada, executar o fluxo GO de connect + qr
+- só marcar como conectada se o status realmente vier `open/connected`
 
-### 4. Melhorar o feedback na tela
-Na área de grupos vou exibir algo como:
+### 6. Preservar sincronização com Supabase
+Vou manter a atualização de:
+- `whatsapp_settings`
+- `whatsapp_instances`
 
-- instância consultada
-- fonte usada (`group/myall`, `group/list` ou fallback por contacts/chats)
-- mensagem mais clara quando a instância existe mas a Evolution não devolve grupos
-
-Assim fica fácil saber se:
-- a instância foi encontrada
-- o token foi resolvido
-- os grupos vieram vazios da própria Evolution
+Mas sem marcar `is_active` cedo demais. Só após confirmação real de conexão.
 
 ## Arquivos a ajustar
-
-- `src/components/super-admin/WhatsAppManagement.tsx`
-- `supabase/functions/whatsapp-proxy/index.ts`
+- `supabase/functions/whatsapp-qr-connect/index.ts`
+- possivelmente `supabase/functions/whatsapp-instance-manage/index.ts` apenas se eu encontrar o mesmo problema de endpoint GO vs legado
+- não espero mudança grande no `src/components/whatsapp-crm/WhatsAppConnector.tsx`, porque o erro principal está no backend
 
 ## Resultado esperado
+Depois da correção, ao clicar em “Conectar meu WhatsApp” no `/whatsapp-crm`, o sistema deve:
 
-Depois disso:
-
-- o sistema vai procurar **exatamente o nome que você confirmar no campo**
-- não vai mais consultar instâncias parciais enquanto digita
-- se `group/myall` vier vazio, ele vai continuar tentando outros caminhos
-- a chance de os grupos aparecerem aumenta bastante, porque hoje o fluxo para cedo demais
+1. usar a URL normalizada da Evolution (`/manager` removido)
+2. resolver/criar a instância corretamente
+3. conectar usando o token correto da instância
+4. buscar o QR em `GET /instance/qr`
+5. exibir o QR sem retornar `qr_code_missing`
 
 ## Detalhes técnicos
-
 ```text
-Problema atual:
-input = cookie1
-→ token resolvido corretamente
-→ /group/myall = 200 { data: null }
-→ código encerra como sucesso
-→ UI recebe []
+Fluxo atual:
+create -> payload misto (GO + v2)
+connect -> body errado / fallback legado
+qr -> nem sempre chega porque connect não iniciou corretamente
 
 Fluxo corrigido:
-input confirmado = cookie1
-→ token resolvido corretamente
-→ /group/myall vazio
-→ tentar /group/list
-→ se vazio, tentar contacts/chats e filtrar @g.us
-→ normalizar retorno
-→ UI exibe grupos encontrados
+create(name, token)
+→ connect(immediate/webhookUrl/subscribe) com token da instância
+→ poll GET /instance/qr com token da instância
+→ retornar QR
 ```
 
 ## Validação após implementar
-
-1. Abrir `/supadmin/whatsapp`
-2. Digitar `cookie1`
-3. Confirmar a busca
-4. Ver se a tela mostra a instância consultada
-5. Ver se os grupos aparecem
-6. Se ainda vier vazio, os logs já vão indicar claramente em qual etapa parou
+1. Abrir `/whatsapp-crm`
+2. Confirmar URL + chave da Evolution do usuário
+3. Clicar em “Conectar meu WhatsApp”
+4. Ver se o QR aparece
+5. Escanear o QR
+6. Conferir se o status muda para conectado e se a instância fica sincronizada no Supabase
