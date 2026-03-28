@@ -8,21 +8,24 @@ import { resolveEvolutionConfig } from "../_shared/evolution-config.ts";
 /** Deep-search a parsed JSON response for a QR code string */
 function extractQr(data: any): string | null {
   if (!data || typeof data !== "object") return null;
-  // Direct fields
-  for (const key of ["qrcode", "code", "base64", "qr"]) {
+
+  for (const key of ["qrcode", "Qrcode", "QRCode", "code", "base64", "qr", "Qr", "QR"]) {
     const v = data[key];
     if (typeof v === "string" && v.length > 20) return v;
     if (v && typeof v === "object") {
-      for (const sub of ["base64", "code", "qrcode"]) {
+      for (const sub of ["base64", "Base64", "code", "Code", "qrcode", "Qrcode", "QRCode", "qr", "Qr", "QR"]) {
         if (typeof v[sub] === "string" && v[sub].length > 20) return v[sub];
       }
     }
   }
-  // Nested under "data"
-  if (data.data && typeof data.data === "object") {
-    const nested = extractQr(data.data);
-    if (nested) return nested;
+
+  for (const value of Object.values(data)) {
+    if (value && typeof value === "object") {
+      const nested = extractQr(value);
+      if (nested) return nested;
+    }
   }
+
   return null;
 }
 
