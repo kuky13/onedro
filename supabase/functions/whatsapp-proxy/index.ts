@@ -122,7 +122,10 @@ serve(async (req) => {
 
       let lastErr: unknown = null;
 
-      for (const evoKey of evoKeys) {
+      // If overrideKey is provided, use ONLY that key (Evolution GO instance token)
+      const keysToTry = overrideKey ? [overrideKey] : evoKeys;
+
+      for (const evoKey of keysToTry) {
         const options: any = {
           method,
           headers: {
