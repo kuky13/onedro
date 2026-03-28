@@ -472,6 +472,7 @@ export function WhatsAppManagement() {
     setAllowedNumbers(currentSetting?.allowed_numbers ?? '');
     setAllowedGroups(currentSetting?.allowed_groups ?? '');
     setEvolutionInstanceName((currentSetting as any)?.waha_session ?? currentSetting?.evolution_instance_name ?? '');
+    setConfirmedInstanceName((currentSetting as any)?.waha_session ?? currentSetting?.evolution_instance_name ?? '');
     setAdminNotificationPhone(currentSetting?.admin_notification_phone ?? '');
     if (currentSetting?.purchase_approved_template) setPurchaseTemplate(currentSetting.purchase_approved_template);
     if (currentSetting?.buyer_notification_template) setBuyerTemplate(currentSetting.buyer_notification_template);
