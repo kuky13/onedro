@@ -1,122 +1,45 @@
 
-## Corrigir conexão do `/whatsapp-crm`
 
-### Problema encontrado
-A falha está concentrada na edge function `supabase/functions/whatsapp-qr-connect/index.ts`.
+## Problema
 
-Pelo código atual, ela ainda mistura fluxo de:
-- Evolution GO
-- Evolution v2/legado
+Quando o usuário clica "Conectar meu WhatsApp" no `/whatsapp-crm`, mesmo que a instância seja criada e o QR escaneado, o status nunca muda para "conectado". Dois problemas separados:
 
-Isso faz a função chamar endpoints certos com payloads errados.
+### 1. Nome da instância desalinhado
+- O `whatsapp-qr-connect` cria instâncias com nome `onedrip_49e47da50de6`
+- Mas o usuário já tem uma instância `cookie1` rodando e conectada na Evolution GO
+- O webhook recebe eventos de `cookie1`, mas o CRM procura `onedrip_49e47da50de6` no banco
+- Resultado: o CONNECTION_UPDATE de `cookie1` nunca atualiza o registro correto
 
-### Causa raiz
-Com base no Swagger da Evolution GO (`go.kuky.help/swagger/doc.json`):
+### 2. Status nunca atualizado após QR scan
+- A edge function marca `is_active: false` e status `created` no início
+- Depois de retornar o QR, não há mecanismo para atualizar quando o usuário escaneia
+- O webhook deveria fazer isso via `CONNECTION_UPDATE`, mas só funciona se o nome da instância bater
 
-- `POST /instance/create` aceita essencialmente `name` e `token`
-- `POST /instance/connect` usa um body do tipo `ConnectStruct`
-  - `immediate`
-  - `phone`
-  - `subscribe`
-  - `webhookUrl`
-- `GET /instance/qr` busca o QR da instância autenticada pelo token da própria instância
-- `GET /instance/status` também depende do token da instância
+## Solução
 
-Hoje o código:
-- envia campos extras de v2 no `create` (`instanceName`, `integration`, `qrcode`, `webhook`)
-- tenta `POST /instance/connect` com `{ name, instanceName }`
-- tenta fallbacks de v2 como `/instance/connect/{name}` e `/instance/connectionState/{name}`
-- extrai QR só de formatos antigos
+### Passo 1 — `whatsapp-qr-connect`: detectar instância já conectada
+Antes de criar uma nova instância, buscar TODAS as instâncias via `GET /instance/all` e verificar se alguma já está `open/connected`. Se sim:
+- Salvar o nome real da instância (ex: `cookie1`) no `whatsapp_settings` e `whatsapp_instances`
+- Marcar `is_active: true` e status `open`
+- Retornar `already_connected: true` imediatamente
 
-Isso explica o `qr_code_missing`.
+### Passo 2 — `whatsapp-qr-connect`: usar nome real ao criar
+Quando criar instância nova, garantir que o nome salvo no banco é exatamente o mesmo que a Evolution GO conhece, para que os webhooks de CONNECTION_UPDATE façam match.
 
-## O que vou ajustar
+### Passo 3 — `whatsapp-qr-connect`: polling de status após QR
+Depois de retornar o QR code com sucesso, adicionar um campo `instance_name` na resposta para que o frontend saiba qual instância monitorar. O frontend já faz polling via `useWhatsAppConnectionStatus` com `pollMs: 3000` quando o QR está visível.
 
-### 1. Reescrever o fluxo do `whatsapp-qr-connect` para Evolution GO de verdade
-Vou simplificar o fluxo para:
+### Passo 4 — Webhook: melhorar matching de instância
+No `whatsapp-webhook`, quando receber CONNECTION_UPDATE, também tentar match por `whatsapp_settings.evolution_instance_id` além de `whatsapp_instances.instance_name`.
 
-```text
-resolver config
-→ reaproveitar ou criar nome da instância
-→ criar instância com { name, token } se não existir
-→ se já existir, resolver token via /instance/all
-→ chamar POST /instance/connect com payload compatível com GO
-→ fazer polling em GET /instance/qr usando o token da instância
-→ retornar qr_code
-```
+### Passo 5 — Frontend: usar instância `cookie1` existente
+O `WhatsAppConnector` já usa `useWhatsAppConnectionStatus` com polling de 3s quando QR visível. Quando o banco atualizar (via webhook ou via detecção na edge function), o status mudará automaticamente.
 
-### 2. Remover dependência dos endpoints legados no CRM
-No fluxo de conexão do CRM, vou parar de depender de:
-- `/instance/connect/{instanceName}`
-- `/instance/connectionState/{instanceName}`
-
-Esses fallbacks podem continuar só onde fizer sentido legado, mas não no fluxo principal do CRM.
-
-### 3. Corrigir payload de connect
-Vou montar o `connect` com o formato esperado pela Evolution GO, por exemplo:
-- `webhookUrl`
-- `subscribe`
-- `immediate`
-
-Sem mandar `name`/`instanceName` no body se o GO identifica a instância pelo token no header.
-
-### 4. Melhorar leitura do QR
-Vou ampliar a leitura do QR para aceitar respostas em formatos como:
-- `data.qrcode`
-- `data.code`
-- `qrcode`
-- `qrcode.base64`
-- `code`
-- `base64`
-
-E registrar melhor qual endpoint respondeu e com qual shape.
-
-### 5. Ajustar checagem de status da instância existente
-Quando já houver instância salva:
-- resolver token da instância via `/instance/all`
-- consultar `/instance/status` com esse token
-- se não estiver conectada, executar o fluxo GO de connect + qr
-- só marcar como conectada se o status realmente vier `open/connected`
-
-### 6. Preservar sincronização com Supabase
-Vou manter a atualização de:
-- `whatsapp_settings`
-- `whatsapp_instances`
-
-Mas sem marcar `is_active` cedo demais. Só após confirmação real de conexão.
-
-## Arquivos a ajustar
-- `supabase/functions/whatsapp-qr-connect/index.ts`
-- possivelmente `supabase/functions/whatsapp-instance-manage/index.ts` apenas se eu encontrar o mesmo problema de endpoint GO vs legado
-- não espero mudança grande no `src/components/whatsapp-crm/WhatsAppConnector.tsx`, porque o erro principal está no backend
+## Arquivos a alterar
+- `supabase/functions/whatsapp-qr-connect/index.ts` — detectar instância existente conectada, usar nome real
+- `supabase/functions/whatsapp-webhook/index.ts` — melhorar resolução de instância no CONNECTION_UPDATE
 
 ## Resultado esperado
-Depois da correção, ao clicar em “Conectar meu WhatsApp” no `/whatsapp-crm`, o sistema deve:
+1. Se `cookie1` já está conectada → CRM mostra "WhatsApp conectado (cookie1)" imediatamente
+2. Se criar nova instância → após scan do QR, webhook atualiza status e CRM reflete em ~3s
 
-1. usar a URL normalizada da Evolution (`/manager` removido)
-2. resolver/criar a instância corretamente
-3. conectar usando o token correto da instância
-4. buscar o QR em `GET /instance/qr`
-5. exibir o QR sem retornar `qr_code_missing`
-
-## Detalhes técnicos
-```text
-Fluxo atual:
-create -> payload misto (GO + v2)
-connect -> body errado / fallback legado
-qr -> nem sempre chega porque connect não iniciou corretamente
-
-Fluxo corrigido:
-create(name, token)
-→ connect(immediate/webhookUrl/subscribe) com token da instância
-→ poll GET /instance/qr com token da instância
-→ retornar QR
-```
-
-## Validação após implementar
-1. Abrir `/whatsapp-crm`
-2. Confirmar URL + chave da Evolution do usuário
-3. Clicar em “Conectar meu WhatsApp”
-4. Ver se o QR aparece
-5. Escanear o QR
-6. Conferir se o status muda para conectado e se a instância fica sincronizada no Supabase
