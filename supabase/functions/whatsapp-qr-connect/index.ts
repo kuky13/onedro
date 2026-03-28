@@ -180,7 +180,7 @@ serve(async (req) => {
       let qrRes = await fetch(`${baseUrl}/instance/connect`, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: effectiveKey },
-        body: JSON.stringify({ instanceName }),
+        body: JSON.stringify({ name: instanceName, instanceName }),
       });
       if (!qrRes.ok) {
         qrRes = await fetch(`${baseUrl}/instance/connect/${instanceName}`, {
