@@ -306,10 +306,39 @@ serve(async (req) => {
       const errTxt = await createRes.text();
       console.warn("[whatsapp-qr-connect] Create instance not OK, trying connect:", createRes.status, errTxt);
 
-      // Try Evolution GO (POST) first, then v2 (GET)
+      // Resolve the instance-specific token (Evolution GO identifies by token, not name)
+      let existingToken: string | null = null;
+      try {
+        const allRes = await fetch(`${baseUrl}/instance/all`, {
+          method: "GET",
+          headers: { apikey: evolutionApiKey, Authorization: `Bearer ${evolutionApiKey}` },
+        });
+        if (allRes.ok) {
+          const allData = await allRes.json();
+          const instances = Array.isArray(allData) ? allData : (allData?.instances || allData?.data || []);
+          const target = instances.find((inst: any) => {
+            const n = inst.name || inst.instanceName || inst.instance?.instanceName || "";
+            return n.toLowerCase() === instanceName.toLowerCase();
+          });
+          if (target) {
+            existingToken = target.token || target.apikey || target.api_key || null;
+            console.log(`[whatsapp-qr-connect] Resolved existing instance token: ...${existingToken?.slice(-6)}`);
+          }
+        } else {
+          await allRes.text();
+        }
+      } catch (e) {
+        console.warn("[whatsapp-qr-connect] Could not resolve existing instance token:", String(e));
+      }
+
+      const effectiveKey = existingToken || evolutionApiKey;
+
+      // Try Evolution GO (GET /instance/qrcode with instance token) first, then fallbacks
       const connectCandidates = [
-        { url: `${baseUrl}/instance/connect`, method: "POST", body: JSON.stringify({ name: instanceName, instanceName }) },
-        { url: `${baseUrl}/instance/connect/${instanceName}`, method: "GET", body: undefined as string | undefined },
+        { url: `${baseUrl}/instance/qrcode`, method: "GET", key: effectiveKey },
+        { url: `${baseUrl}/instance/connect`, method: "POST", key: effectiveKey, body: JSON.stringify({ name: instanceName, instanceName }) },
+        { url: `${baseUrl}/instance/connect/${instanceName}`, method: "GET", key: effectiveKey },
+        { url: `${baseUrl}/instance/connect/${instanceName}`, method: "GET", key: evolutionApiKey },
       ];
 
       let qrCode: string | null = null;
@@ -317,29 +346,37 @@ serve(async (req) => {
       let lastConnectBody: string | null = null;
 
       // Retry because QR can take a moment to become available
-      for (let i = 0; i < 20 && !qrCode; i++) {
+      for (let i = 0; i < 15 && !qrCode; i++) {
         for (const candidate of connectCandidates) {
-          const qrRes = await fetch(candidate.url, {
-            method: candidate.method,
-            headers: { "Content-Type": "application/json", apikey: evolutionApiKey },
-            ...(candidate.body ? { body: candidate.body } : {}),
-          });
+          try {
+            const qrRes = await fetch(candidate.url, {
+              method: candidate.method,
+              headers: { "Content-Type": "application/json", apikey: candidate.key },
+              ...(candidate.body ? { body: candidate.body } : {}),
+            });
 
-          lastConnectStatus = qrRes.status;
-          lastConnectBody = await qrRes.text();
+            lastConnectStatus = qrRes.status;
+            lastConnectBody = await qrRes.text();
 
-          if (qrRes.ok) {
-            try {
-              const qrData = JSON.parse(lastConnectBody);
-              qrCode = qrData?.qrcode?.base64 ?? qrData?.code ?? qrData?.base64 ?? null;
-            } catch {
-              // ignore
+            if (qrRes.ok) {
+              try {
+                const qrData = JSON.parse(lastConnectBody);
+                qrCode = qrData?.data?.qrcode || qrData?.qrcode?.base64 || qrData?.qrcode || qrData?.code || qrData?.base64 || null;
+                if (qrCode === "") qrCode = null;
+                if (qrCode) {
+                  console.log(`[whatsapp-qr-connect] QR obtained from ${candidate.url}`);
+                }
+              } catch {
+                // ignore
+              }
             }
+          } catch {
+            // ignore
           }
           if (qrCode) break;
         }
 
-        if (!qrCode) await new Promise((r) => setTimeout(r, 1000));
+        if (!qrCode) await new Promise((r) => setTimeout(r, 1500));
       }
 
       if (qrCode) {
