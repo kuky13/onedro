@@ -53,8 +53,67 @@ serve(async (req) => {
 
     console.log(`[whatsapp-proxy] Base URL resolved: ${evoUrl}`);
 
+    // ── Cache for resolved instance tokens (per-request) ──
+    const instanceTokenCache: Record<string, string> = {};
+
+    // ── Helper: resolve instance-specific token from Evolution GO ──
+    // Evolution GO identifies instances by their token (apikey header),
+    // NOT by name in the URL. We call GET /instance/all with the global key,
+    // find the instance by name, and return its token.
+    const resolveInstanceToken = async (instanceName: string): Promise<string | null> => {
+      if (instanceTokenCache[instanceName]) return instanceTokenCache[instanceName];
+
+      const base = evoUrl.replace(/\/$/, "");
+      console.log(`[whatsapp-proxy] Resolving token for instance "${instanceName}" via GET /instance/all`);
+
+      for (const key of evoKeys) {
+        try {
+          const res = await fetch(`${base}/instance/all`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: key,
+              Authorization: `Bearer ${key}`,
+              "x-api-key": key,
+            },
+          });
+
+          if (!res.ok) {
+            console.log(`[whatsapp-proxy] /instance/all returned ${res.status} with key ...${key.slice(-4)}`);
+            continue;
+          }
+
+          const data = await res.json();
+          const instances = Array.isArray(data) ? data : (data?.instances || data?.data || []);
+          console.log(`[whatsapp-proxy] Found ${instances.length} instances in Evolution GO`);
+
+          // Search by name (case-insensitive)
+          const target = instances.find((inst: any) => {
+            const name = inst.name || inst.instanceName || inst.instance?.instanceName || "";
+            return name.toLowerCase() === instanceName.toLowerCase();
+          });
+
+          if (target) {
+            const token = target.token || target.apikey || target.api_key || null;
+            if (token) {
+              console.log(`[whatsapp-proxy] Resolved token for "${instanceName}": ...${token.slice(-6)}`);
+              instanceTokenCache[instanceName] = token;
+              return token;
+            } else {
+              console.log(`[whatsapp-proxy] Instance "${instanceName}" found but has no token field. Keys: ${Object.keys(target).join(", ")}`);
+            }
+          } else {
+            console.log(`[whatsapp-proxy] Instance "${instanceName}" NOT found. Available: ${instances.map((i: any) => i.name || i.instanceName || "?").join(", ")}`);
+          }
+        } catch (e) {
+          console.error(`[whatsapp-proxy] Error fetching /instance/all:`, e);
+        }
+      }
+      return null;
+    };
+
     // ── Helper: call Evolution API with multi-key + multi-base fallback ──
-    const callEvo = async (path: string, method: string, body: any = null) => {
+    const callEvo = async (path: string, method: string, body: any = null, overrideKey?: string) => {
       const base = evoUrl.replace(/\/$/, "");
       const cleanedPath = String(path).replace(/^\//, "");
 
@@ -63,7 +122,10 @@ serve(async (req) => {
 
       let lastErr: unknown = null;
 
-      for (const evoKey of evoKeys) {
+      // If overrideKey is provided, use ONLY that key (Evolution GO instance token)
+      const keysToTry = overrideKey ? [overrideKey] : evoKeys;
+
+      for (const evoKey of keysToTry) {
         const options: any = {
           method,
           headers: {
@@ -112,11 +174,11 @@ serve(async (req) => {
     };
 
     // ── Helper: try multiple endpoint candidates sequentially ──
-    const tryEndpoints = async (candidates: Array<{ path: string; method: string; body?: any }>) => {
+    const tryEndpoints = async (candidates: Array<{ path: string; method: string; body?: any }>, overrideKey?: string) => {
       let lastErr: unknown = null;
       for (const c of candidates) {
         try {
-          return await callEvo(c.path, c.method, c.body ?? null);
+          return await callEvo(c.path, c.method, c.body ?? null, overrideKey);
         } catch (e: any) {
           console.log(`[whatsapp-proxy] Endpoint ${c.method} ${c.path} failed: ${e?.message}`);
           lastErr = e;
@@ -172,23 +234,27 @@ serve(async (req) => {
         break;
       }
 
-      case 'connect_instance':
+      case 'connect_instance': {
+        // Resolve instance token for Evolution GO
+        const connectToken = await resolveInstanceToken(payload.instanceName);
         // Evolution GO: POST /instance/connect (body: { instanceName })
         // Evolution v2: GET /instance/connect/{instanceName}
         result = await tryEndpoints([
           { path: 'instance/connect', method: 'POST', body: { instanceName: payload.instanceName } },
           { path: `instance/connect/${payload.instanceName}`, method: 'GET' },
-        ]);
+        ], connectToken || undefined);
         break;
+      }
 
       case 'get_status': {
-        // Evolution GO: GET /instance/status (query param or header for instance)
+        const statusToken = await resolveInstanceToken(payload.instanceName);
+        // Evolution GO: GET /instance/status (identified by token)
         // Evolution v2: GET /instance/connectionState/{instanceName}
         const state = await tryEndpoints([
-          { path: `instance/status?instanceName=${payload.instanceName}`, method: 'GET' },
           { path: 'instance/status', method: 'GET' },
+          { path: `instance/status?instanceName=${payload.instanceName}`, method: 'GET' },
           { path: `instance/connectionState/${payload.instanceName}`, method: 'GET' },
-        ]);
+        ], statusToken || undefined);
         const status = state?.instance?.state || state?.state || state?.status || 'disconnected';
         await supabase.from('whatsapp_instances').update({ status }).eq('instance_name', payload.instanceName);
         result = { status, state };
@@ -316,15 +382,14 @@ serve(async (req) => {
       case 'get_chats': {
         try {
           console.log(`[whatsapp-proxy] get_chats for ${payload.instanceName}`);
+          const chatsToken = await resolveInstanceToken(payload.instanceName);
 
-          // Evolution GO: GET /user/contacts
+          // Evolution GO: GET /user/contacts (identified by token)
           // Evolution v2: POST /chat/findChats/{instanceName}
           const chats = await tryEndpoints([
-            { path: `user/contacts?instanceName=${payload.instanceName}`, method: 'GET' },
             { path: 'user/contacts', method: 'GET' },
             { path: `chat/findChats/${payload.instanceName}`, method: 'POST', body: {} },
-            { path: 'chat/findChats', method: 'POST', body: { instanceName: payload.instanceName } },
-          ]).catch(() => []);
+          ], chatsToken || undefined).catch(() => []);
 
           const chatsArr = Array.isArray(chats) ? chats : ((chats as any)?.data || (chats as any)?.chats || (chats as any)?.contacts || []);
 
@@ -344,16 +409,17 @@ serve(async (req) => {
           const jid = payload.remoteJid;
           const cleanNumber = jid.split('@')[0];
           console.log(`[whatsapp-proxy] get_messages for ${jid} in ${payload.instanceName}`);
+          const msgToken = await resolveInstanceToken(payload.instanceName);
 
           const [localRes, remoteRes] = await Promise.allSettled([
             callEvo(`chat/findMessages/${payload.instanceName}`, 'POST', {
               where: { key: { remoteJid: jid } },
               options: { limit: 30 }
-            }),
+            }, msgToken || undefined),
             callEvo(`chat/fetchMessages/${payload.instanceName}`, 'POST', {
               number: cleanNumber,
               limit: 30
-            })
+            }, msgToken || undefined)
           ]);
 
           const toArray = (v: any): any[] => {
@@ -402,23 +468,25 @@ serve(async (req) => {
       case 'get_groups': {
         try {
           console.log(`[whatsapp-proxy] get_groups for ${payload.instanceName}`);
+          const groupsToken = await resolveInstanceToken(payload.instanceName);
 
-          // Evolution GO: GET /group/myall or GET /group/list (no instance in path)
+          if (!groupsToken) {
+            console.error(`[whatsapp-proxy] Could not resolve token for instance "${payload.instanceName}". Groups will likely be empty.`);
+          }
+
+          // Evolution GO: GET /group/myall or GET /group/list (identified by token)
           // Evolution v2: POST /group/fetchAllGroups/{instanceName}
           const groupsData = await tryEndpoints([
-            { path: `group/myall?instanceName=${payload.instanceName}`, method: 'GET' },
             { path: 'group/myall', method: 'GET' },
-            { path: `group/list?instanceName=${payload.instanceName}`, method: 'GET' },
             { path: 'group/list', method: 'GET' },
             { path: `group/fetchAllGroups/${payload.instanceName}`, method: 'POST', body: {} },
-          ]).catch(async () => {
+          ], groupsToken || undefined).catch(async () => {
             // Last resort: fetch chats and filter @g.us
             console.log(`[whatsapp-proxy] All group endpoints failed, falling back to chat filter`);
             const allChats = await tryEndpoints([
-              { path: `user/contacts?instanceName=${payload.instanceName}`, method: 'GET' },
               { path: 'user/contacts', method: 'GET' },
               { path: `chat/findChats/${payload.instanceName}`, method: 'POST', body: {} },
-            ]).catch(() => []);
+            ], groupsToken || undefined).catch(() => []);
             const chatsArray = Array.isArray(allChats) ? allChats : (allChats?.data || allChats?.chats || []);
             return chatsArray.filter((c: any) => {
               const id = c.id || c.remoteJid || c.jid || '';
@@ -441,7 +509,8 @@ serve(async (req) => {
         break;
       }
 
-      case 'send_message':
+      case 'send_message': {
+        const sendToken = await resolveInstanceToken(payload.instanceName);
         // Evolution GO: POST /send/text
         // Evolution v2: POST /message/sendText/{instanceName}
         result = await tryEndpoints([
@@ -455,8 +524,9 @@ serve(async (req) => {
             text: payload.text,
             delay: 1000
           }},
-        ]);
+        ], sendToken || undefined);
         break;
+      }
 
       case 'toggle_ai':
         await supabase.from('whatsapp_instances').update({ ai_enabled: payload.enabled }).eq('instance_name', payload.instanceName);
