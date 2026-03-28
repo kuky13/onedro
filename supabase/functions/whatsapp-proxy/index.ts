@@ -474,33 +474,76 @@ serve(async (req) => {
             console.error(`[whatsapp-proxy] Could not resolve token for instance "${payload.instanceName}". Groups will likely be empty.`);
           }
 
-          // Evolution GO: GET /group/myall or GET /group/list (identified by token)
-          // Evolution v2: POST /group/fetchAllGroups/{instanceName}
-          const groupsData = await tryEndpoints([
-            { path: 'group/myall', method: 'GET' },
-            { path: 'group/list', method: 'GET' },
-            { path: `group/fetchAllGroups/${payload.instanceName}`, method: 'POST', body: {} },
-          ], groupsToken || undefined).catch(async () => {
-            // Last resort: fetch chats and filter @g.us
-            console.log(`[whatsapp-proxy] All group endpoints failed, falling back to chat filter`);
-            const allChats = await tryEndpoints([
-              { path: 'user/contacts', method: 'GET' },
-              { path: `chat/findChats/${payload.instanceName}`, method: 'POST', body: {} },
-            ], groupsToken || undefined).catch(() => []);
-            const chatsArray = Array.isArray(allChats) ? allChats : (allChats?.data || allChats?.chats || []);
-            return chatsArray.filter((c: any) => {
-              const id = c.id || c.remoteJid || c.jid || '';
-              return typeof id === 'string' && id.includes('@g.us');
-            });
-          });
+          // Helper to extract groups array from any response shape
+          const extractGroups = (data: any): any[] => {
+            if (!data) return [];
+            if (Array.isArray(data)) return data;
+            if (Array.isArray(data?.data) && data.data.length > 0) return data.data;
+            if (Array.isArray(data?.groups)) return data.groups;
+            return [];
+          };
 
-          const groupsArr = Array.isArray(groupsData) ? groupsData : (groupsData?.data || groupsData?.groups || []);
-          console.log(`[whatsapp-proxy] Groups found: ${groupsArr.length}`);
+          let groupsArr: any[] = [];
+          let source = '';
+
+          // Try endpoint 1: GET /group/myall
+          try {
+            const r1 = await callEvo('group/myall', 'GET', null, groupsToken || undefined);
+            groupsArr = extractGroups(r1);
+            if (groupsArr.length > 0) source = 'group/myall';
+            else console.log(`[whatsapp-proxy] group/myall returned empty (data: ${JSON.stringify(r1?.data ?? null)})`);
+          } catch (e: any) {
+            console.log(`[whatsapp-proxy] group/myall failed: ${e?.message}`);
+          }
+
+          // Try endpoint 2: GET /group/list
+          if (groupsArr.length === 0) {
+            try {
+              const r2 = await callEvo('group/list', 'GET', null, groupsToken || undefined);
+              groupsArr = extractGroups(r2);
+              if (groupsArr.length > 0) source = 'group/list';
+              else console.log(`[whatsapp-proxy] group/list returned empty`);
+            } catch (e: any) {
+              console.log(`[whatsapp-proxy] group/list failed: ${e?.message}`);
+            }
+          }
+
+          // Try endpoint 3: POST /group/fetchAllGroups/{instance} (legacy v2)
+          if (groupsArr.length === 0) {
+            try {
+              const r3 = await callEvo(`group/fetchAllGroups/${payload.instanceName}`, 'POST', {}, groupsToken || undefined);
+              groupsArr = extractGroups(r3);
+              if (groupsArr.length > 0) source = 'group/fetchAllGroups';
+              else console.log(`[whatsapp-proxy] group/fetchAllGroups returned empty`);
+            } catch (e: any) {
+              console.log(`[whatsapp-proxy] group/fetchAllGroups failed: ${e?.message}`);
+            }
+          }
+
+          // Fallback: fetch contacts and filter @g.us JIDs
+          if (groupsArr.length === 0) {
+            console.log(`[whatsapp-proxy] All group endpoints empty/failed, falling back to contacts @g.us filter`);
+            try {
+              const contacts = await callEvo('user/contacts', 'GET', null, groupsToken || undefined);
+              const contactsArr = Array.isArray(contacts) ? contacts : (contacts?.data || contacts?.contacts || []);
+              groupsArr = contactsArr.filter((c: any) => {
+                const id = c.Jid || c.jid || c.id || c.remoteJid || '';
+                return typeof id === 'string' && id.includes('@g.us');
+              });
+              if (groupsArr.length > 0) source = 'contacts/@g.us filter';
+              else console.log(`[whatsapp-proxy] No @g.us contacts found either`);
+            } catch (e: any) {
+              console.log(`[whatsapp-proxy] contacts fallback failed: ${e?.message}`);
+            }
+          }
+
+          console.log(`[whatsapp-proxy] Groups found: ${groupsArr.length} (source: ${source || 'none'})`);
 
           result = groupsArr.map((g: any) => ({
-            id: g.id || g.jid || g.remoteJid || g.JID || '',
-            name: g.subject || g.name || g.Name || g.Subject || 'Grupo sem nome',
-            groupId: g.id || g.jid || g.remoteJid || g.JID || '',
+            id: g.id || g.Jid || g.jid || g.remoteJid || g.JID || '',
+            name: g.subject || g.name || g.Name || g.Subject || g.PushName || g.pushName || 'Grupo sem nome',
+            groupId: g.id || g.Jid || g.jid || g.remoteJid || g.JID || '',
+            _source: source,
           }));
         } catch (e) {
           console.error(`[whatsapp-proxy] Error in get_groups:`, e);
