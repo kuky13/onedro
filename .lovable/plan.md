@@ -1,77 +1,117 @@
-## Problema Real Identificado
 
-Analisei o Swagger completo da Evolution GO (`go.kuky.help/swagger/doc.json`) e descobri a causa raiz:
+## Diagnóstico
 
-**Na Evolution GO, a instancia e identificada pelo token (API key), nao pelo nome na URL ou query param.**
+Achei a causa principal no que já está rodando:
 
-Os endpoints `GET /group/list`, `GET /group/myall`, `GET /user/contacts`, `GET /instance/status` nao aceitam nenhum parametro -- a instancia e determinada exclusivamente pelo `apikey` no header. O `KUKY_EVO_KEY` que esta configurado provavelmente e a **Global API Key** (chave de admin), nao o **token da instancia "cookie"**.
+1. **O nome da instância está chegando no backend**
+   - Os logs mostram `get_groups for cookie1`
+   - Também mostram `Resolved token for "cookie1"`
+   - Então o campo **já está sendo usado**, mas hoje ele dispara consulta **enquanto você digita**, inclusive para valores parciais como `o` e `on`
 
-Por isso retorna vazio: a API nao sabe qual instancia consultar.
+2. **A autenticação da instância está funcionando**
+   - `GET /user/contacts` retorna contatos
+   - Isso prova que o token da instância foi resolvido e aceito pela Evolution GO
 
-## Solucao
+3. **O erro real é na lógica de grupos**
+   - `GET /group/myall` responde `200` com `{"data":null,"message":"success"}`
+   - O código atual trata isso como “sucesso final” e **não cai para o fallback**
+   - Resultado: a tela recebe lista vazia e mostra “Nenhum grupo encontrado”
 
-### 1. Resolver o token da instancia pelo nome
+## O que vou implementar
 
-Antes de chamar qualquer endpoint, o `whatsapp-proxy` precisa:
+### 1. Fazer o campo “Nome da Instância” consultar só o valor confirmado
+Hoje a busca acontece a cada tecla. Vou ajustar a UI para separar:
 
-1. Chamar `GET /instance/all` com a Global API Key
-2. Encontrar a instancia cujo `name` bate com o `instanceName` enviado pelo usuario (ex: "cookie1")
-3. Extrair o `token` dessa instancia
-4. Usar esse token como `apikey` nas chamadas subsequentes (grupo, chat, envio, etc.)
+- **valor digitado**
+- **valor confirmado para busca**
 
-### 2. Alterar `callEvo` para aceitar token override
-
-Hoje `callEvo` usa `evoKeys` (lista fixa de chaves). Precisa aceitar um parametro opcional de token para usar o token especifico da instancia.
-
-### 3. Implementar cache simples por request
-
-Para nao chamar `/instance/all` toda vez, guardar o token resolvido em uma variavel local durante o request.
-
-## Arquivos a alterar
-
-### `supabase/functions/whatsapp-proxy/index.ts`
-
-- Adicionar funcao `resolveInstanceToken(instanceName)`:
-  - `GET /instance/all` com a global key
-  - Procura instancia pelo nome
-  - Retorna o token da instancia
-- Nos cases `get_groups`, `get_chats`, `get_messages`, `send_message`, `get_status`, `connect_instance`:
-  - Resolver o token primeiro
-  - Usar o token da instancia nas chamadas ao inves da global key
-- Alterar `callEvo` para aceitar `overrideKey?: string`
-
-### `supabase/functions/whatsapp-qr-connect/index.ts`
-
-- Mesma logica de resolver token por nome antes de chamar endpoints
-
-## Detalhes Tecnicos
-
+Fluxo novo:
 ```text
-Fluxo atual (quebrado):
-  Frontend: instanceName="cookie1"
-  → callEvo("group/myall", GET) com Global API Key
-  → Evolution GO nao sabe qual instancia → retorna vazio
-
-Fluxo corrigido:
-  Frontend: instanceName="cookie"
-  → GET /instance/all com Global API Key → lista de instancias
-  → Encontra instancia com name="cookie" → token="abc123..."
-  → callEvo("group/myall", GET) com apikey="abc123..."
-  → Evolution GO identifica instancia → retorna grupos
+Você digita: cookie1
+↓
+clica em “Buscar grupos” / Enter
+↓
+o sistema usa exatamente "cookie1"
 ```
 
-A `CreateStruct` da Evolution GO confirma:
+Isso evita consultas com `o`, `on`, etc. e garante que o sistema procure exatamente a instância informada.
 
-```json
-{ "name": "string", "token": "string" }
-```
+### 2. Corrigir o fallback de grupos no `whatsapp-proxy`
+Vou mudar a lógica de `get_groups` para:
 
-Cada instancia tem seu proprio token. E esse token que deve ser usado como `apikey` nas chamadas de dados.
+- tentar `GET /group/myall`
+- se vier `data: null`, array vazio ou resposta sem grupos, **não considerar sucesso**
+- tentar `GET /group/list`
+- se ainda vier vazio, buscar chats/contacts e filtrar grupos (`@g.us`)
+- só devolver vazio depois de esgotar tudo
+
+Hoje o fallback só acontece quando há erro HTTP. Vou fazer fallback também quando houver **sucesso vazio**.
+
+### 3. Normalizar melhor respostas da Evolution GO
+Vou ampliar a leitura dos formatos possíveis de grupo, usando campos como:
+
+- `id`
+- `jid`
+- `Jid`
+- `remoteJid`
+- `JID`
+- `subject`
+- `name`
+- `pushName`
+
+Isso reduz risco de a API devolver grupos em outro shape e a UI ignorar.
+
+### 4. Melhorar o feedback na tela
+Na área de grupos vou exibir algo como:
+
+- instância consultada
+- fonte usada (`group/myall`, `group/list` ou fallback por contacts/chats)
+- mensagem mais clara quando a instância existe mas a Evolution não devolve grupos
+
+Assim fica fácil saber se:
+- a instância foi encontrada
+- o token foi resolvido
+- os grupos vieram vazios da própria Evolution
+
+## Arquivos a ajustar
+
+- `src/components/super-admin/WhatsAppManagement.tsx`
+- `supabase/functions/whatsapp-proxy/index.ts`
 
 ## Resultado esperado
 
-Apos implementar, ao digitar "cookie" em Nome da Instancia e clicar Listar Grupos, o sistema vai:
+Depois disso:
 
-1. Buscar todas as instancias
-2. Encontrar "cookie1" e pegar seu token
-3. Listar os grupos usando o token correto
+- o sistema vai procurar **exatamente o nome que você confirmar no campo**
+- não vai mais consultar instâncias parciais enquanto digita
+- se `group/myall` vier vazio, ele vai continuar tentando outros caminhos
+- a chance de os grupos aparecerem aumenta bastante, porque hoje o fluxo para cedo demais
+
+## Detalhes técnicos
+
+```text
+Problema atual:
+input = cookie1
+→ token resolvido corretamente
+→ /group/myall = 200 { data: null }
+→ código encerra como sucesso
+→ UI recebe []
+
+Fluxo corrigido:
+input confirmado = cookie1
+→ token resolvido corretamente
+→ /group/myall vazio
+→ tentar /group/list
+→ se vazio, tentar contacts/chats e filtrar @g.us
+→ normalizar retorno
+→ UI exibe grupos encontrados
+```
+
+## Validação após implementar
+
+1. Abrir `/supadmin/whatsapp`
+2. Digitar `cookie1`
+3. Confirmar a busca
+4. Ver se a tela mostra a instância consultada
+5. Ver se os grupos aparecem
+6. Se ainda vier vazio, os logs já vão indicar claramente em qual etapa parou
