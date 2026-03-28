@@ -53,8 +53,67 @@ serve(async (req) => {
 
     console.log(`[whatsapp-proxy] Base URL resolved: ${evoUrl}`);
 
+    // ── Cache for resolved instance tokens (per-request) ──
+    const instanceTokenCache: Record<string, string> = {};
+
+    // ── Helper: resolve instance-specific token from Evolution GO ──
+    // Evolution GO identifies instances by their token (apikey header),
+    // NOT by name in the URL. We call GET /instance/all with the global key,
+    // find the instance by name, and return its token.
+    const resolveInstanceToken = async (instanceName: string): Promise<string | null> => {
+      if (instanceTokenCache[instanceName]) return instanceTokenCache[instanceName];
+
+      const base = evoUrl.replace(/\/$/, "");
+      console.log(`[whatsapp-proxy] Resolving token for instance "${instanceName}" via GET /instance/all`);
+
+      for (const key of evoKeys) {
+        try {
+          const res = await fetch(`${base}/instance/all`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: key,
+              Authorization: `Bearer ${key}`,
+              "x-api-key": key,
+            },
+          });
+
+          if (!res.ok) {
+            console.log(`[whatsapp-proxy] /instance/all returned ${res.status} with key ...${key.slice(-4)}`);
+            continue;
+          }
+
+          const data = await res.json();
+          const instances = Array.isArray(data) ? data : (data?.instances || data?.data || []);
+          console.log(`[whatsapp-proxy] Found ${instances.length} instances in Evolution GO`);
+
+          // Search by name (case-insensitive)
+          const target = instances.find((inst: any) => {
+            const name = inst.name || inst.instanceName || inst.instance?.instanceName || "";
+            return name.toLowerCase() === instanceName.toLowerCase();
+          });
+
+          if (target) {
+            const token = target.token || target.apikey || target.api_key || null;
+            if (token) {
+              console.log(`[whatsapp-proxy] Resolved token for "${instanceName}": ...${token.slice(-6)}`);
+              instanceTokenCache[instanceName] = token;
+              return token;
+            } else {
+              console.log(`[whatsapp-proxy] Instance "${instanceName}" found but has no token field. Keys: ${Object.keys(target).join(", ")}`);
+            }
+          } else {
+            console.log(`[whatsapp-proxy] Instance "${instanceName}" NOT found. Available: ${instances.map((i: any) => i.name || i.instanceName || "?").join(", ")}`);
+          }
+        } catch (e) {
+          console.error(`[whatsapp-proxy] Error fetching /instance/all:`, e);
+        }
+      }
+      return null;
+    };
+
     // ── Helper: call Evolution API with multi-key + multi-base fallback ──
-    const callEvo = async (path: string, method: string, body: any = null) => {
+    const callEvo = async (path: string, method: string, body: any = null, overrideKey?: string) => {
       const base = evoUrl.replace(/\/$/, "");
       const cleanedPath = String(path).replace(/^\//, "");
 
