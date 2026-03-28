@@ -20,7 +20,7 @@ import {
   AlertDialogDescription,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Bot, Brain, Building2, Globe, MessageSquare, Save, Loader2, Sparkles, Trash2 } from 'lucide-react';
+import { Bot, Brain, Building2, Globe, MessageSquare, Save, Loader2, Sparkles, Trash2, ShoppingBag, Info } from 'lucide-react';
 import { ProductCatalogCard } from './ProductCatalogCard';
 import { clearAllMessages } from '@/services/chatMemoryService';
 
@@ -378,27 +378,33 @@ export function IAConfigManager() {
         </CardContent>
       </Card>
 
-      {/* Base de Conhecimento */}
+      {/* Base de Conhecimento + Tabela de Preços */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-primary" />
-            Base de Conhecimento Personalizada
+            Base de Conhecimento e Tabela de Preços
           </CardTitle>
           <CardDescription>
-            Adicione informações específicas que a IA deve usar como referência principal.
+            Adicione sua tabela de preços, políticas e informações que a IA deve usar para responder clientes no WhatsApp.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-3">
+          <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30 p-3">
+            <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+            <p className="text-xs text-blue-700 dark:text-blue-300">
+              <strong>Catálogo da Loja:</strong> Os serviços e produtos cadastrados na sua Loja são automaticamente incluídos no contexto da IA. Use este campo para complementar com preços extras, condições especiais ou regras de negócio.
+            </p>
+          </div>
           <Textarea
             value={customKnowledge}
             onChange={(e) => setCustomKnowledge(e.target.value)}
-            placeholder={`Exemplo:\n- Não fazemos reparos em notebooks da marca X\n- Nosso horário de almoço é das 12h às 13h\n- Garantia de tela: 3 meses\n- Oferecemos desconto de 10% para pagamento à vista`}
-            rows={8}
+            placeholder={`Exemplos de tabela de preços e regras:\n\nTroca de tela iPhone 14: R$ 350,00 (prazo: 1 dia útil)\nTroca de tela Samsung S23: R$ 280,00\nTroca de bateria (qualquer modelo): R$ 80,00 - R$ 150,00\nConsertar conector de carga: R$ 120,00\n\nDescontos:\n- 10% no pagamento à vista (PIX/dinheiro)\n- Parcelamento em até 3x sem juros no cartão\n\nPolíticas:\n- Garantia de 90 dias em peças e serviços\n- Não fazemos reparos em notebooks (só smartphones/tablets)\n- Avaliação gratuita no balcão (sem compromisso)`}
+            rows={10}
             className="font-mono text-sm"
           />
           <p className="text-xs text-muted-foreground">
-            Use Markdown ou texto simples. A IA vai priorizar essas informações antes de buscar no banco de dados.
+            Use texto simples ou Markdown. Quando um cliente perguntar sobre preços, a IA consultará essas informações e responderá automaticamente. Se o serviço não estiver na lista, a IA transfere para atendimento humano.
           </p>
         </CardContent>
       </Card>

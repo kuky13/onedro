@@ -584,6 +584,48 @@ serve(async (req) => {
           .eq('user_id', user.id);
         result = { success: true };
         break;
+
+      case 'resume_ai': {
+        // Resume AI for a specific conversation (clear ai_paused flag)
+        if (!payload.conversationId && !payload.phone) {
+          throw new Error('conversationId or phone required for resume_ai');
+        }
+        let resumeQuery = supabase
+          .from('whatsapp_conversations')
+          .update({ ai_paused: false, ai_paused_at: null, ai_paused_by: null, assigned_to: null } as any)
+          .eq('owner_id', user.id);
+
+        if (payload.conversationId) {
+          resumeQuery = resumeQuery.eq('id', payload.conversationId);
+        } else {
+          resumeQuery = resumeQuery.eq('phone_number', payload.phone);
+        }
+        const { error: resumeErr } = await resumeQuery;
+        if (resumeErr) throw resumeErr;
+        result = { success: true };
+        break;
+      }
+
+      case 'pause_ai': {
+        // Pause AI for a specific conversation (set ai_paused flag for human takeover)
+        if (!payload.conversationId && !payload.phone) {
+          throw new Error('conversationId or phone required for pause_ai');
+        }
+        let pauseQuery = supabase
+          .from('whatsapp_conversations')
+          .update({ ai_paused: true, ai_paused_at: new Date().toISOString(), ai_paused_by: user.id, assigned_to: user.id } as any)
+          .eq('owner_id', user.id);
+
+        if (payload.conversationId) {
+          pauseQuery = pauseQuery.eq('id', payload.conversationId);
+        } else {
+          pauseQuery = pauseQuery.eq('phone_number', payload.phone);
+        }
+        const { error: pauseErr } = await pauseQuery;
+        if (pauseErr) throw pauseErr;
+        result = { success: true };
+        break;
+      }
     }
 
     return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

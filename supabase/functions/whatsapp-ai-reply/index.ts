@@ -59,6 +59,46 @@ serve(async (req: Request) => {
       .eq("owner_id", owner_id)
       .maybeSingle();
 
+    // Fetch user's service/product catalog for AI price lookup
+    const [{ data: catalogServices }, { data: catalogProducts }] = await Promise.all([
+      supabase
+        .from("store_services")
+        .select("name, description, price, category")
+        .eq("user_id", owner_id)
+        .eq("is_active", true)
+        .limit(60),
+      supabase
+        .from("store_products")
+        .select("name, description, price, category")
+        .eq("user_id", owner_id)
+        .eq("active", true)
+        .limit(60),
+    ]);
+
+    let catalogInfo: string | null = null;
+    const catalogLines: string[] = [];
+    if (catalogServices && catalogServices.length > 0) {
+      catalogLines.push("## Serviços:");
+      for (const s of catalogServices) {
+        const price = s.price != null ? `R$ ${Number(s.price).toFixed(2)}` : "sob consulta";
+        const cat = s.category ? ` [${s.category}]` : "";
+        const desc = s.description ? ` — ${s.description}` : "";
+        catalogLines.push(`- ${s.name}${cat}: ${price}${desc}`);
+      }
+    }
+    if (catalogProducts && catalogProducts.length > 0) {
+      catalogLines.push("## Produtos:");
+      for (const p of catalogProducts) {
+        const price = p.price != null ? `R$ ${Number(p.price).toFixed(2)}` : "sob consulta";
+        const cat = p.category ? ` [${p.category}]` : "";
+        const desc = p.description ? ` — ${p.description}` : "";
+        catalogLines.push(`- ${p.name}${cat}: ${price}${desc}`);
+      }
+    }
+    if (catalogLines.length > 0) {
+      catalogInfo = catalogLines.join("\n");
+    }
+
     let aiReply = iaConfig?.away_message ?? "eu não consegui entender o comando irei passar para um atendente nesse instante";
 
     if (mode === "drippy") {
@@ -71,7 +111,8 @@ serve(async (req: Request) => {
         custom_knowledge: iaConfig.custom_knowledge,
         web_search_enabled: iaConfig.web_search_enabled,
         company_info: companyInfo || null,
-      } : (companyInfo ? { company_info: companyInfo } : null);
+        catalog_info: catalogInfo,
+      } : (companyInfo ? { company_info: companyInfo, catalog_info: catalogInfo } : (catalogInfo ? { catalog_info: catalogInfo } : null));
 
       // Use the existing Drippy brain (chat-ai) in internal mode
       const { data: chatData, error: chatErr } = await supabase.functions.invoke("chat-ai", {
@@ -114,6 +155,22 @@ serve(async (req: Request) => {
           console.error("[whatsapp-ai-reply] Failed to pause AI:", pauseErr.message);
         } else {
           console.log("[whatsapp-ai-reply] ✅ AI paused successfully for conversation:", conversation_id);
+          // Fire push notification to owner (non-blocking)
+          try {
+            await supabase.functions.invoke("send-push-notification", {
+              body: {
+                target_type: "user",
+                target_user_id: owner_id,
+                title: "Atendimento requer atenção",
+                body: "Um cliente precisa de atendimento humano no WhatsApp.",
+                url: "/whatsapp-crm",
+                data: { conversation_id, type: "handoff" },
+              },
+              headers: { Authorization: `Bearer ${serviceRoleKey}` },
+            });
+          } catch (pushErr) {
+            console.warn("[whatsapp-ai-reply] Push notification failed (non-blocking):", String(pushErr));
+          }
         }
       }
     }

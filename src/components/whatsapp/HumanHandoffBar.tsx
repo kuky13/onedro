@@ -4,8 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/button';
-import { Bot, UserRound, Loader2 } from 'lucide-react';
+import { Bot, UserRound, Loader2, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface HumanHandoffBarProps {
   /** The phone number (digits only, no @) of the active chat */
@@ -24,7 +26,7 @@ export function HumanHandoffBar({ phone }: HumanHandoffBarProps) {
       if (!user?.id || !phone) return null;
       const { data, error } = await supabase
         .from('whatsapp_conversations')
-        .select('id, ai_paused, ai_paused_at, assigned_to')
+        .select('id, ai_paused, ai_paused_at, ai_paused_by, assigned_to')
         .eq('owner_id', user.id)
         .eq('phone_number', phone)
         .maybeSingle();
@@ -32,7 +34,7 @@ export function HumanHandoffBar({ phone }: HumanHandoffBarProps) {
       return data;
     },
     enabled: !!user?.id && !!phone,
-    refetchInterval: 5000,
+    refetchInterval: 10000,
   });
 
   const toggleHandoff = useMutation({
@@ -65,25 +67,37 @@ export function HumanHandoffBar({ phone }: HumanHandoffBarProps) {
 
   const isPaused = conversation.ai_paused;
 
+  const pausedAt = conversation?.ai_paused_at
+    ? formatDistanceToNow(new Date(conversation.ai_paused_at), { addSuffix: true, locale: ptBR })
+    : null;
+  const pausedBySystem = isPaused && conversation?.ai_paused_by == null;
+
   return (
     <div
       className={cn(
         'flex items-center justify-between px-3 py-1.5 text-xs border-b transition-colors',
         isPaused
-          ? 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400'
+          ? 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400 animate-pulse'
           : 'bg-primary/5 border-primary/10 text-primary'
       )}
     >
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 min-w-0">
         {isPaused ? (
           <>
-            <UserRound className="h-3.5 w-3.5" />
-            <span className="font-medium">Atendimento humano</span>
-            <span className="text-muted-foreground">— IA pausada</span>
+            <UserRound className="h-3.5 w-3.5 shrink-0" />
+            <span className="font-medium shrink-0">
+              {pausedBySystem ? 'IA transferiu' : 'Atendimento humano'}
+            </span>
+            {pausedAt && (
+              <span className="flex items-center gap-0.5 text-muted-foreground truncate">
+                <Clock className="h-3 w-3 shrink-0" />
+                {pausedAt}
+              </span>
+            )}
           </>
         ) : (
           <>
-            <Bot className="h-3.5 w-3.5" />
+            <Bot className="h-3.5 w-3.5 shrink-0" />
             <span className="font-medium">IA Drippy ativa</span>
           </>
         )}

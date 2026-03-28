@@ -15,6 +15,7 @@ interface MenuItem {
   permission?: string;
   action?: () => void;
   href?: string;
+  badge?: number;
 }
 interface MenuData {
   items: MenuItem[];
@@ -218,7 +219,13 @@ export const MobileHamburgerMenu = ({
                           <IconComponent className="h-4 w-4 text-muted-foreground transition-all duration-200 group-hover:scale-110 group-hover:text-primary-foreground shrink-0" />
                         </div>
                         <span className="truncate text-foreground transition-colors duration-200 group-hover:text-foreground">{item.label}</span>
-                        <ChevronRight className="ml-auto h-3.5 w-3.5 text-muted-foreground/70 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-primary" />
+                        {item.badge ? (
+                          <span className="ml-auto mr-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+                            {item.badge > 99 ? '99+' : item.badge}
+                          </span>
+                        ) : (
+                          <ChevronRight className="ml-auto h-3.5 w-3.5 text-muted-foreground/70 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-primary" />
+                        )}
                       </Button>
                     </motion.div>
                   );

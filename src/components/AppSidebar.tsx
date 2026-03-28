@@ -2,7 +2,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useResponsive } from '@/hooks/useResponsive';
 import { cn } from '@/lib/utils';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarSeparator, useSidebar } from '@/components/ui/sidebar';
-import { Plus, HelpCircle, Home } from 'lucide-react';
+import { Plus, HelpCircle, Home, MessageCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AppSidebarProps {
   activeTab: string;
@@ -16,6 +18,26 @@ export const AppSidebar = ({
   const { user, profile } = useAuth();
   const { state } = useSidebar();
   const { isDesktop } = useResponsive();
+  const [handoffCount, setHandoffCount] = useState(0);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const fetch = async () => {
+      const { count } = await supabase
+        .from('whatsapp_conversations')
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_id', user.id)
+        .eq('ai_paused', true)
+        .eq('status', 'open');
+      setHandoffCount(count || 0);
+    };
+    fetch();
+    const channel = supabase
+      .channel('sidebar-handoff')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_conversations', filter: `owner_id=eq.${user.id}` }, fetch)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id]);
 
   if (!user) return null;
 
@@ -32,6 +54,13 @@ export const AppSidebar = ({
       icon: Plus,
       description: 'Sistema exclusivo de orçamentos',
       action: () => window.location.href = '/worm'
+    },
+    {
+      id: 'whatsapp-crm',
+      label: 'WhatsApp CRM',
+      icon: MessageCircle,
+      description: 'Atendimento e IA no WhatsApp',
+      action: () => window.location.href = '/whatsapp-crm'
     },
     {
       id: 'help',
@@ -85,6 +114,11 @@ export const AppSidebar = ({
                       {item.description}
                     </div>
                   </div>
+                )}
+                {item.id === 'whatsapp-crm' && handoffCount > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground shrink-0">
+                    {handoffCount > 99 ? '99+' : handoffCount}
+                  </span>
                 )}
               </SidebarMenuButton>
             </SidebarMenuItem>
