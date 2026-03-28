@@ -79,6 +79,7 @@ export function WhatsAppConnector() {
   });
 
   const [qrCode, setQrCode] = useState<string | null>(null);
+  const [connectingInstance, setConnectingInstance] = useState<string | null>(null);
   const [qrImageSrc, setQrImageSrc] = useState<string | null>(null);
   const [qrState, setQrState] = useState<QrState>('idle');
   const [qrExpiresAt, setQrExpiresAt] = useState<number | null>(null);
