@@ -400,7 +400,7 @@ serve(async (req) => {
     }
 
     // ── Poll for QR ──
-    const qr = await pollQr(baseUrl, createdToken);
+    const qr = await pollQr(baseUrl, createdToken, instanceName);
     if (qr) {
       await setupWebhookAndIa(supabase, baseUrl, createdToken, instanceName, ownerId, webhookUrl);
       return new Response(JSON.stringify({ ok: true, instance_id: instanceName, qr_code: qr }), {
@@ -409,7 +409,7 @@ serve(async (req) => {
     }
 
     // ── Final fallback: try global key for QR ──
-    const qrFallback = await pollQr(baseUrl, evolutionApiKey, 5, 1500);
+    const qrFallback = await pollQr(baseUrl, evolutionApiKey, instanceName, 5, 1500);
     if (qrFallback) {
       await setupWebhookAndIa(supabase, baseUrl, createdToken, instanceName, ownerId, webhookUrl);
       return new Response(JSON.stringify({ ok: true, instance_id: instanceName, qr_code: qrFallback }), {
