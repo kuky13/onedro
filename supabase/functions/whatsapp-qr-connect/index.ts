@@ -2,54 +2,140 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { resolveEvolutionConfig } from "../_shared/evolution-config.ts";
+
+// ── Helpers ──────────────────────────────────────────────────────────
+
+/** Deep-search a parsed JSON response for a QR code string */
+function extractQr(data: any): string | null {
+  if (!data || typeof data !== "object") return null;
+  // Direct fields
+  for (const key of ["qrcode", "code", "base64", "qr"]) {
+    const v = data[key];
+    if (typeof v === "string" && v.length > 20) return v;
+    if (v && typeof v === "object") {
+      for (const sub of ["base64", "code", "qrcode"]) {
+        if (typeof v[sub] === "string" && v[sub].length > 20) return v[sub];
+      }
+    }
+  }
+  // Nested under "data"
+  if (data.data && typeof data.data === "object") {
+    const nested = extractQr(data.data);
+    if (nested) return nested;
+  }
+  return null;
+}
+
+/** Resolve the instance-specific token from GET /instance/all */
+async function resolveInstanceToken(
+  baseUrl: string,
+  globalKey: string,
+  instanceName: string
+): Promise<{ token: string | null; instanceId: string | null }> {
+  try {
+    const res = await fetch(`${baseUrl}/instance/all`, {
+      method: "GET",
+      headers: { apikey: globalKey },
+    });
+    if (!res.ok) { await res.text(); return { token: null, instanceId: null }; }
+    const body = await res.json();
+    const instances = Array.isArray(body) ? body : (body?.instances || body?.data || []);
+    const target = instances.find((inst: any) => {
+      const n = inst.name || inst.instanceName || inst.instance?.instanceName || "";
+      return n.toLowerCase() === instanceName.toLowerCase();
+    });
+    if (target) {
+      return {
+        token: target.token || target.apikey || target.api_key || null,
+        instanceId: target.id || null,
+      };
+    }
+  } catch (e) {
+    console.warn("[qr-connect] resolveInstanceToken error:", String(e));
+  }
+  return { token: null, instanceId: null };
+}
+
+/** Poll GET /instance/qr with the instance token until QR is available */
+async function pollQr(baseUrl: string, instanceKey: string, maxAttempts = 12, delayMs = 2000): Promise<string | null> {
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      const res = await fetch(`${baseUrl}/instance/qr`, {
+        method: "GET",
+        headers: { apikey: instanceKey },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const qr = extractQr(data);
+        if (qr) {
+          console.log(`[qr-connect] QR obtained on attempt ${i + 1}`);
+          return qr;
+        }
+      } else {
+        await res.text(); // drain
+      }
+    } catch { /* ignore */ }
+    if (i < maxAttempts - 1) await new Promise(r => setTimeout(r, delayMs));
+  }
+  return null;
+}
+
+/** Check instance connection status */
+async function checkStatus(baseUrl: string, key: string): Promise<{ state: string; ownerJid: string | null }> {
+  try {
+    const res = await fetch(`${baseUrl}/instance/status`, {
+      method: "GET",
+      headers: { apikey: key },
+    });
+    if (res.ok) {
+      const d = await res.json();
+      const state = d?.instance?.state ?? d?.state ?? d?.data?.state ?? "unknown";
+      const ownerJid = d?.instance?.ownerJid ?? d?.ownerJid ?? null;
+      return { state, ownerJid };
+    }
+    await res.text();
+  } catch { /* ignore */ }
+  return { state: "unknown", ownerJid: null };
+}
+
+// ── Main Handler ─────────────────────────────────────────────────────
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
     if (!supabaseUrl || !serviceRoleKey) {
       return new Response(JSON.stringify({ ok: false, error: "misconfigured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Get authenticated user
+    // ── Auth ──
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ ok: false, error: "unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const token = authHeader.replace("Bearer ", "");
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser(token);
-
+    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
     if (authError || !user) {
       return new Response(JSON.stringify({ ok: false, error: "invalid_token" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
     const ownerId = user.id;
 
-    // Reuse an existing instance name for this owner (even if not connected yet)
+    // ── Resolve Evolution config ──
     const { data: existing } = await supabase
       .from("whatsapp_settings")
       .select("evolution_instance_id, evolution_api_url, is_active")
       .eq("owner_id", ownerId)
       .maybeSingle();
 
-    // Prefer per-user Evolution config, then project secrets, then legacy global config.
     const { data: userEvoCfg } = await supabase
       .from("user_evolution_config")
       .select("api_url, api_key")
@@ -70,154 +156,16 @@ serve(async (req) => {
 
     if (!baseUrl || !evolutionApiKey) {
       return new Response(JSON.stringify({ ok: false, error: "missing_evolution_config" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // If we already have an instance name stored, always reuse it.
-    if (existing?.evolution_instance_id) {
-      const instanceName = existing.evolution_instance_id;
+    console.log(`[qr-connect] baseUrl=${baseUrl}, owner=${ownerId}`);
 
-      // Resolve the instance-specific token for Evolution GO
-      let instanceToken: string | null = null;
-      try {
-        const allRes = await fetch(`${baseUrl}/instance/all`, {
-          method: "GET",
-          headers: { apikey: evolutionApiKey, Authorization: `Bearer ${evolutionApiKey}` },
-        });
-        if (allRes.ok) {
-          const allData = await allRes.json();
-          const instances = Array.isArray(allData) ? allData : (allData?.instances || allData?.data || []);
-          const target = instances.find((inst: any) => {
-            const name = inst.name || inst.instanceName || inst.instance?.instanceName || "";
-            return name.toLowerCase() === instanceName.toLowerCase();
-          });
-          if (target) {
-            instanceToken = target.token || target.apikey || target.api_key || null;
-            console.log(`[whatsapp-qr-connect] Resolved token for "${instanceName}": ...${instanceToken?.slice(-6)}`);
-          }
-        }
-      } catch (e) {
-        console.warn("[whatsapp-qr-connect] Could not resolve instance token:", String(e));
-      }
+    // ── Determine instance name ──
+    const stableSuffix = ownerId.replace(/-/g, "").slice(0, 12);
 
-      const effectiveKey = instanceToken || evolutionApiKey;
-
-      // Ensure the multi-instance table has a row for this instance (so Atendimento works consistently)
-      try {
-        await supabase
-          .from("whatsapp_instances")
-          .upsert(
-            {
-              user_id: ownerId,
-              instance_name: instanceName,
-              instance_id: instanceName,
-              status: existing?.is_active ? "open" : "created",
-              ai_enabled: true,
-              ai_mode: "drippy",
-              ai_agent_id: null,
-            } as any,
-            { onConflict: "user_id,instance_name" }
-          );
-      } catch (e) {
-        console.warn("[whatsapp-qr-connect] whatsapp_instances upsert skipped:", String(e));
-      }
-
-      // Check connection status
-      let statusRes: Response;
-      statusRes = await fetch(`${baseUrl}/instance/status`, { method: "GET", headers: { apikey: effectiveKey } });
-      if (!statusRes.ok) {
-        statusRes = await fetch(`${baseUrl}/instance/connectionState/${instanceName}`, { method: "GET", headers: { apikey: effectiveKey } });
-      }
-
-      if (statusRes.ok) {
-        const statusData = await statusRes.json();
-        const state = statusData?.instance?.state ?? statusData?.state ?? "unknown";
-
-        if (state === "open" || state === "connected") {
-          await supabase.from("whatsapp_settings").update({ is_active: true }).eq("owner_id", ownerId);
-
-          // Bug 4 fix: extract connected phone from ownerJid
-          const ownerJid = statusData?.instance?.ownerJid ?? statusData?.ownerJid ?? null;
-          const connectedPhone = ownerJid ? ownerJid.replace(/@.*$/, "") : null;
-
-          // Bug 3 fix: Keep whatsapp_instances status in sync
-          try {
-            await supabase
-              .from("whatsapp_instances")
-              .update({
-                status: "open",
-                ai_enabled: true,
-                ai_mode: "drippy",
-                connected_at: new Date().toISOString(),
-                ...(connectedPhone ? { connected_phone: connectedPhone } : {}),
-              })
-              .eq("user_id", ownerId)
-              .eq("instance_name", instanceName);
-          } catch {
-            // ignore
-          }
-
-          return new Response(
-            JSON.stringify({
-              ok: true,
-              already_connected: true,
-              instance_id: instanceName,
-              state,
-            }),
-            {
-              status: 200,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
-        }
-      }
-
-      // Not connected: fetch a fresh QR code
-      // Evolution GO: POST /instance/connect with body
-      // Evolution v2: GET /instance/connect/{instanceName}
-      let qrRes = await fetch(`${baseUrl}/instance/connect`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", apikey: effectiveKey },
-        body: JSON.stringify({ name: instanceName, instanceName }),
-      });
-      if (!qrRes.ok) {
-        qrRes = await fetch(`${baseUrl}/instance/connect/${instanceName}`, {
-          method: "GET",
-          headers: { apikey: effectiveKey },
-        });
-      }
-
-      if (qrRes.ok) {
-        const qrData = await qrRes.json();
-        const qrCode = qrData?.qrcode?.base64 ?? qrData?.code ?? qrData?.base64 ?? null;
-
-        if (qrCode) {
-          // Ensure we keep it marked as not connected while waiting scan
-          await supabase.from("whatsapp_settings").update({ is_active: false }).eq("owner_id", ownerId);
-
-          try {
-            await supabase
-              .from("whatsapp_instances")
-              .update({ status: "created", ai_enabled: true, ai_mode: "drippy" })
-              .eq("user_id", ownerId)
-              .eq("instance_name", instanceName);
-          } catch {
-            // ignore
-          }
-
-          return new Response(JSON.stringify({ ok: true, instance_id: instanceName, qr_code: qrCode }), {
-            status: 200,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      }
-
-      // If Evolution no longer has that instance (deleted manually), we fall through and recreate.
-    }
-
-    // ── Check whatsapp_instances for an existing instance to reuse ──
+    // Check whatsapp_instances too
     const { data: existingInst } = await supabase
       .from("whatsapp_instances")
       .select("instance_name, status")
@@ -226,431 +174,292 @@ serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
-    // Reuse the existing instance name if we have one, otherwise create a deterministic one
-    const stableSuffix = ownerId.replace(/-/g, "").slice(0, 12);
-    const instanceName = existingInst?.instance_name ?? `onedrip_${stableSuffix}`;
+    const instanceName = existing?.evolution_instance_id || existingInst?.instance_name || `onedrip_${stableSuffix}`;
 
-    // Persist the instance name BEFORE creating it to avoid generating multiple instances on repeated clicks.
+    // ── Upsert whatsapp_settings early (to prevent duplicate creates on repeated clicks) ──
     await supabase
       .from("whatsapp_settings")
-      .upsert(
-        {
-          owner_id: ownerId,
-          evolution_api_url: baseUrl,
-          evolution_instance_id: instanceName,
-          is_active: false,
-        },
-        { onConflict: "owner_id" }
-      );
+      .upsert({ owner_id: ownerId, evolution_api_url: baseUrl, evolution_instance_id: instanceName, is_active: false }, { onConflict: "owner_id" });
 
-    // Also register it in whatsapp_instances so Atendimento can pick it up.
+    // ── Upsert whatsapp_instances ──
     try {
       await supabase
         .from("whatsapp_instances")
-        .upsert(
-          {
-            user_id: ownerId,
-            instance_name: instanceName,
-            instance_id: instanceName,
-            status: "created",
-            ai_enabled: true,
-            ai_mode: "drippy",
-            ai_agent_id: null,
-          } as any,
-          { onConflict: "user_id,instance_name" }
-        );
+        .upsert({
+          user_id: ownerId,
+          instance_name: instanceName,
+          instance_id: instanceName,
+          status: "created",
+          ai_enabled: true,
+          ai_mode: "drippy",
+          ai_agent_id: null,
+        } as any, { onConflict: "user_id,instance_name" });
     } catch (e) {
-      console.warn("[whatsapp-qr-connect] whatsapp_instances initial upsert skipped:", String(e));
+      console.warn("[qr-connect] whatsapp_instances upsert skipped:", String(e));
     }
 
-    // Webhook must point to whatsapp-webhook (the main entry point that routes to context/AI)
-    const webhookUrl = `${supabaseUrl}/functions/v1/whatsapp-webhook`;
-    const webhookEvents = [
-      "MESSAGES_UPSERT", "CONNECTION_UPDATE", "QRCODE_UPDATED",
-      "MESSAGES_UPDATE", "PRESENCE_UPDATE",
-      "messages.upsert", "connection.update", "qrcode.updated",
-      "messages.update", "presence.update",
-    ];
+    // ── Try to resolve an existing instance token ──
+    let { token: instanceToken } = await resolveInstanceToken(baseUrl, evolutionApiKey, instanceName);
+    let effectiveKey = instanceToken || evolutionApiKey;
 
-    // Generate a random token for the new instance (Evolution GO requires it)
-    const instanceToken = crypto.randomUUID().replace(/-/g, "");
+    // ── Check if already connected ──
+    if (instanceToken) {
+      const { state, ownerJid } = await checkStatus(baseUrl, instanceToken);
+      console.log(`[qr-connect] Instance "${instanceName}" status: ${state}`);
 
-    const createUrl = `${baseUrl}/instance/create`;
-    // Evolution GO uses "name"+"token", Evolution v2 uses "instanceName" — send all for compatibility
-    const createBody = {
-      name: instanceName,
-      instanceName,
-      token: instanceToken,
-      integration: "WHATSAPP-BAILEYS",
-      qrcode: true,
-      webhook: {
-        url: webhookUrl,
-        enabled: true,
-        byEvents: true,
-        events: webhookEvents,
-      },
-    };
-    console.log("[whatsapp-qr-connect] Creating instance:", JSON.stringify({ url: createUrl, name: instanceName }));
-    const createRes = await fetch(createUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: evolutionApiKey,
-      },
-      body: JSON.stringify(createBody),
-    });
+      if (state === "open" || state === "connected") {
+        await supabase.from("whatsapp_settings").update({ is_active: true }).eq("owner_id", ownerId);
+        const connectedPhone = ownerJid ? ownerJid.replace(/@.*$/, "") : null;
+        try {
+          await supabase.from("whatsapp_instances").update({
+            status: "open",
+            ai_enabled: true,
+            ai_mode: "drippy",
+            connected_at: new Date().toISOString(),
+            ...(connectedPhone ? { connected_phone: connectedPhone } : {}),
+          }).eq("user_id", ownerId).eq("instance_name", instanceName);
+        } catch { /* ignore */ }
 
-    // If the instance already exists in Evolution (common after a failed attempt), reuse it.
-    // Evolution may return 403 "name already in use".
-    if (!createRes.ok) {
-      const errTxt = await createRes.text();
-      console.warn("[whatsapp-qr-connect] Create instance not OK, trying connect:", createRes.status, errTxt);
-
-      // Resolve the instance-specific token (Evolution GO identifies by token, not name)
-      let existingToken: string | null = null;
-      try {
-        const allRes = await fetch(`${baseUrl}/instance/all`, {
-          method: "GET",
-          headers: { apikey: evolutionApiKey, Authorization: `Bearer ${evolutionApiKey}` },
+        return new Response(JSON.stringify({ ok: true, already_connected: true, instance_id: instanceName, state }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
-        if (allRes.ok) {
-          const allData = await allRes.json();
-          const instances = Array.isArray(allData) ? allData : (allData?.instances || allData?.data || []);
-          const target = instances.find((inst: any) => {
-            const n = inst.name || inst.instanceName || inst.instance?.instanceName || "";
-            return n.toLowerCase() === instanceName.toLowerCase();
-          });
-          if (target) {
-            existingToken = target.token || target.apikey || target.api_key || null;
-            console.log(`[whatsapp-qr-connect] Resolved existing instance token: ...${existingToken?.slice(-6)}`);
-          }
-        } else {
-          await allRes.text();
+      }
+
+      // ── Instance exists but not connected → connect + get QR ──
+      console.log(`[qr-connect] Instance exists but not connected, calling connect...`);
+
+      // POST /instance/connect triggers the QR generation in Evolution GO
+      try {
+        const connectRes = await fetch(`${baseUrl}/instance/connect`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", apikey: instanceToken },
+          body: JSON.stringify({ immediate: true }),
+        });
+        const connectBody = await connectRes.text();
+        console.log(`[qr-connect] POST /instance/connect: ${connectRes.status} ${connectBody.slice(0, 200)}`);
+
+        // Check if connect response itself contains a QR
+        if (connectRes.ok) {
+          try {
+            const qr = extractQr(JSON.parse(connectBody));
+            if (qr) {
+              return new Response(JSON.stringify({ ok: true, instance_id: instanceName, qr_code: qr }), {
+                status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+              });
+            }
+          } catch { /* not json */ }
         }
       } catch (e) {
-        console.warn("[whatsapp-qr-connect] Could not resolve existing instance token:", String(e));
+        console.warn(`[qr-connect] connect call failed:`, String(e));
       }
 
-      const effectiveKey = existingToken || evolutionApiKey;
-
-      // Try Evolution GO (GET /instance/qr with instance token) first, then fallbacks
-      const connectCandidates = [
-        { url: `${baseUrl}/instance/qr`, method: "GET", key: effectiveKey },
-        { url: `${baseUrl}/instance/connect`, method: "POST", key: effectiveKey, body: JSON.stringify({ name: instanceName, instanceName }) },
-        { url: `${baseUrl}/instance/connect/${instanceName}`, method: "GET", key: effectiveKey },
-        { url: `${baseUrl}/instance/connect/${instanceName}`, method: "GET", key: evolutionApiKey },
-      ];
-
-      let qrCode: string | null = null;
-      let lastConnectStatus: number | null = null;
-      let lastConnectBody: string | null = null;
-
-      // Retry because QR can take a moment to become available
-      for (let i = 0; i < 15 && !qrCode; i++) {
-        for (const candidate of connectCandidates) {
-          try {
-            const qrRes = await fetch(candidate.url, {
-              method: candidate.method,
-              headers: { "Content-Type": "application/json", apikey: candidate.key },
-              ...(candidate.body ? { body: candidate.body } : {}),
-            });
-
-            lastConnectStatus = qrRes.status;
-            lastConnectBody = await qrRes.text();
-
-            if (qrRes.ok) {
-              try {
-                const qrData = JSON.parse(lastConnectBody);
-                qrCode = qrData?.data?.qrcode || qrData?.qrcode?.base64 || qrData?.qrcode || qrData?.code || qrData?.base64 || null;
-                if (qrCode === "") qrCode = null;
-                if (qrCode) {
-                  console.log(`[whatsapp-qr-connect] QR obtained from ${candidate.url}`);
-                }
-              } catch {
-                // ignore
-              }
-            }
-          } catch {
-            // ignore
-          }
-          if (qrCode) break;
-        }
-
-        if (!qrCode) await new Promise((r) => setTimeout(r, 1500));
-      }
-
-      if (qrCode) {
-        return new Response(JSON.stringify({ ok: true, instance_id: instanceName, qr_code: qrCode }), {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      // If the deterministic name collided with another instance not owned by this user,
-      // Evolution can refuse create with 403 and connect returns no QR. In that case,
-      // create a new unique name ONCE, persist it, and retry.
-      if (createRes.status === 403) {
-        const retryName = `onedrip_${stableSuffix}_${Math.random().toString(36).slice(2, 7)}`;
-
-        await supabase
-          .from("whatsapp_settings")
-          .upsert(
-            {
-              owner_id: ownerId,
-              evolution_api_url: baseUrl,
-              evolution_instance_id: retryName,
-              is_active: false,
-            },
-            { onConflict: "owner_id" }
-          );
-
-        const retryCreateRes = await fetch(createUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: evolutionApiKey,
-          },
-          body: JSON.stringify({
-            name: retryName,
-            instanceName: retryName,
-            token: crypto.randomUUID().replace(/-/g, ""),
-            integration: "WHATSAPP-BAILEYS",
-            qrcode: true,
-            webhook: {
-              url: webhookUrl,
-              enabled: true,
-              byEvents: true,
-              events: webhookEvents,
-            },
-          }),
-        });
-
-        if (retryCreateRes.ok) {
-          const retryData = await retryCreateRes.json();
-          const retryInstance = retryData?.instance?.instanceName ?? retryName;
-          let retryQr = retryData?.qrcode?.base64 ?? retryData?.code ?? retryData?.base64 ?? null;
-
-          if (!retryQr) {
-            const retryConnectUrl = `${baseUrl}/instance/connect/${retryInstance}`;
-            for (let i = 0; i < 20 && !retryQr; i++) {
-              const rRes = await fetch(retryConnectUrl, {
-                method: "GET",
-                headers: { apikey: evolutionApiKey },
-              });
-              const body = await rRes.text();
-              if (rRes.ok) {
-                try {
-                  const qrData = JSON.parse(body);
-                  retryQr = qrData?.qrcode?.base64 ?? qrData?.code ?? qrData?.base64 ?? null;
-                } catch {
-                  // ignore
-                }
-              }
-              if (!retryQr) await new Promise((r) => setTimeout(r, 1000));
-            }
-          }
-
-          if (retryQr) {
-            return new Response(JSON.stringify({ ok: true, instance_id: retryInstance, qr_code: retryQr }), {
-              status: 200,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
-          }
-        }
-      }
-
-      console.error("[whatsapp-qr-connect] Connect QR not available after create failure:", {
-        instance: instanceName,
-        create_status: createRes.status,
-        create_body: errTxt,
-        lastConnectStatus,
-        lastConnectBody,
-      });
-
-      return new Response(
-        JSON.stringify({ ok: false, error: "qr_code_missing", create_status: createRes.status, connect_status: lastConnectStatus }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const createData = await createRes.json();
-    console.log("[whatsapp-qr-connect] Create response:", JSON.stringify(createData).slice(0, 500));
-
-    // Evolution GO returns data directly; Evolution v2 nests under "instance"
-    const goData = createData?.data ?? createData;
-    const instanceNameCreated = goData?.name ?? createData?.instance?.instanceName ?? instanceName;
-    const createdToken = goData?.token ?? createData?.instance?.token ?? instanceToken;
-
-    // Update whatsapp_instances with the final instance name/id (if any)
-    try {
-      await supabase
-        .from("whatsapp_instances")
-        .upsert(
-          {
-            user_id: ownerId,
-            instance_name: instanceNameCreated,
-            instance_id: goData?.id ?? createData?.instance?.instanceId ?? instanceNameCreated,
-            status: "created",
-            ai_enabled: true,
-            ai_mode: "drippy",
-            ai_agent_id: null,
-          } as any,
-          { onConflict: "user_id,instance_name" }
-        );
-    } catch (e) {
-      console.warn("[whatsapp-qr-connect] whatsapp_instances final upsert skipped:", String(e));
-    }
-
-    // Try to extract QR from create response (Evolution v2 sometimes includes it)
-    let qrCode = goData?.qrcode ?? createData?.qrcode?.base64 ?? createData?.code ?? createData?.base64 ?? null;
-    // If qrcode is empty string, treat as null
-    if (qrCode === "") qrCode = null;
-
-    if (!qrCode) {
-      // Evolution GO: use instance token to call GET /instance/qr
-      // Also try: GET /instance/connect/{name}, POST /instance/connect
-      const qrCandidates = [
-        { url: `${baseUrl}/instance/qr`, method: "GET", key: createdToken },
-        { url: `${baseUrl}/instance/connect`, method: "POST", key: createdToken, body: JSON.stringify({ name: instanceNameCreated }) },
-        { url: `${baseUrl}/instance/connect/${instanceNameCreated}`, method: "GET", key: createdToken },
-        { url: `${baseUrl}/instance/connect/${instanceNameCreated}`, method: "GET", key: evolutionApiKey },
-      ];
-
-      let lastConnectStatus: number | null = null;
-      let lastConnectBody: string | null = null;
-
-      for (let i = 0; i < 15 && !qrCode; i++) {
-        for (const candidate of qrCandidates) {
-          try {
-            const qrRes = await fetch(candidate.url, {
-              method: candidate.method,
-              headers: { "Content-Type": "application/json", apikey: candidate.key },
-              ...(candidate.body ? { body: candidate.body } : {}),
-            });
-
-            lastConnectStatus = qrRes.status;
-            lastConnectBody = await qrRes.text();
-
-            if (qrRes.ok) {
-              const qrData = JSON.parse(lastConnectBody);
-              // Evolution GO may return { data: { qrcode: "base64..." } } or { qrcode: { base64: "..." } }
-              qrCode = qrData?.data?.qrcode || qrData?.qrcode?.base64 || qrData?.qrcode || qrData?.code || qrData?.base64 || null;
-              if (qrCode === "" || qrCode === null) qrCode = null;
-              if (qrCode) {
-                console.log(`[whatsapp-qr-connect] QR obtained from ${candidate.url}`);
-                break;
-              }
-            }
-          } catch {
-            // ignore
-          }
-          if (qrCode) break;
-        }
-
-        if (!qrCode) await new Promise((r) => setTimeout(r, 1500));
-      }
-
-      if (!qrCode) {
-        console.error("[whatsapp-qr-connect] Connect QR not available:", {
-          instance: instanceNameCreated,
-          lastConnectStatus,
-          lastConnectBody,
+      // Poll GET /instance/qr
+      const qr = await pollQr(baseUrl, instanceToken);
+      if (qr) {
+        return new Response(JSON.stringify({ ok: true, instance_id: instanceName, qr_code: qr }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
     }
 
-    if (!qrCode) {
-      console.error("[whatsapp-qr-connect] No QR code in response:", createData);
-      return new Response(JSON.stringify({ ok: false, error: "qr_code_missing" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // ── Instance doesn't exist in Evolution → create it ──
+    const newToken = crypto.randomUUID().replace(/-/g, "");
+    const webhookUrl = `${supabaseUrl}/functions/v1/whatsapp-webhook`;
 
-    // Ensure settings keep the same instance name (pending until connection is confirmed)
-    const { error: upsertError } = await supabase
-      .from("whatsapp_settings")
-      .upsert(
-        {
-          owner_id: ownerId,
-          evolution_api_url: baseUrl,
-          evolution_instance_id: instanceNameCreated,
-          is_active: false,
-        },
-        { onConflict: "owner_id" }
-      );
+    const createBody = { name: instanceName, token: newToken };
+    console.log(`[qr-connect] Creating instance: ${JSON.stringify(createBody)}`);
 
-    if (upsertError) {
-      console.error("[whatsapp-qr-connect] Upsert settings error:", upsertError);
-    }
-
-    // ── AUTO-SETUP: Webhook + IA Config ──
-    // 1) Explicitly set webhook via Evolution API (fallback if create payload didn't stick)
-    const webhookSetPaths = [
-      `webhook/set/${instanceNameCreated}`,
-      `instance/webhook/${instanceNameCreated}`,
-    ];
-    const webhookBodies = [
-      { webhook: { url: webhookUrl, enabled: true, byEvents: true, events: webhookEvents } },
-      { url: webhookUrl, enabled: true, byEvents: true, events: webhookEvents },
-    ];
-
-    for (const wPath of webhookSetPaths) {
-      let success = false;
-      for (const wBody of webhookBodies) {
-        try {
-          const wRes = await fetch(`${baseUrl}/${wPath}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", apikey: evolutionApiKey },
-            body: JSON.stringify(wBody),
-          });
-          if (wRes.ok) {
-            console.log(`[whatsapp-qr-connect] Webhook auto-set OK via ${wPath}`);
-            success = true;
-            break;
-          }
-        } catch (e) {
-          console.warn(`[whatsapp-qr-connect] Webhook set attempt ${wPath} failed:`, e);
-        }
-      }
-      if (success) break;
-    }
-
-    // 2) Auto-create IA config defaults if not exists
-    try {
-      const { data: existingIaCfg } = await supabase
-        .from("ia_configs")
-        .select("id")
-        .eq("owner_id", ownerId)
-        .maybeSingle();
-
-      if (!existingIaCfg) {
-        await supabase.from("ia_configs").insert({
-          owner_id: ownerId,
-          ai_name: "Assistente IA",
-          personality: "Seja profissional, educado e objetivo. Responda em português brasileiro.",
-          welcome_message: "Olá! Sou o assistente virtual. Como posso ajudá-lo?",
-          away_message: "No momento estou indisponível. Retornarei em breve!",
-          web_search_enabled: false,
-        });
-        console.log("[whatsapp-qr-connect] Auto-created ia_configs for user", ownerId);
-      }
-    } catch (e) {
-      console.warn("[whatsapp-qr-connect] ia_configs auto-create skipped:", String(e));
-    }
-
-    return new Response(JSON.stringify({ ok: true, instance_id: instanceNameCreated, qr_code: qrCode }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const createRes = await fetch(`${baseUrl}/instance/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: evolutionApiKey },
+      body: JSON.stringify(createBody),
     });
+    const createText = await createRes.text();
+    console.log(`[qr-connect] Create response: ${createRes.status} ${createText.slice(0, 300)}`);
+
+    let createdToken = newToken;
+
+    if (!createRes.ok) {
+      // Instance may already exist (name conflict) — resolve token
+      console.warn(`[qr-connect] Create failed (${createRes.status}), trying to resolve existing instance...`);
+      const resolved = await resolveInstanceToken(baseUrl, evolutionApiKey, instanceName);
+      if (resolved.token) {
+        createdToken = resolved.token;
+      } else {
+        // Try creating with a unique name
+        const retryName = `onedrip_${stableSuffix}_${Math.random().toString(36).slice(2, 7)}`;
+        const retryToken = crypto.randomUUID().replace(/-/g, "");
+        const retryRes = await fetch(`${baseUrl}/instance/create`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", apikey: evolutionApiKey },
+          body: JSON.stringify({ name: retryName, token: retryToken }),
+        });
+        const retryText = await retryRes.text();
+        console.log(`[qr-connect] Retry create "${retryName}": ${retryRes.status} ${retryText.slice(0, 200)}`);
+
+        if (!retryRes.ok) {
+          return new Response(JSON.stringify({
+            ok: false, error: "instance_create_failed",
+            detail: `Original: ${createRes.status}, Retry: ${retryRes.status}`,
+          }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
+        // Update instance name everywhere
+        await supabase.from("whatsapp_settings").update({ evolution_instance_id: retryName }).eq("owner_id", ownerId);
+        try {
+          await supabase.from("whatsapp_instances").upsert({
+            user_id: ownerId, instance_name: retryName, instance_id: retryName,
+            status: "created", ai_enabled: true, ai_mode: "drippy", ai_agent_id: null,
+          } as any, { onConflict: "user_id,instance_name" });
+        } catch { /* ignore */ }
+
+        createdToken = retryToken;
+        // Use retryName for the rest
+        // Connect + QR
+        try {
+          await fetch(`${baseUrl}/instance/connect`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", apikey: retryToken },
+            body: JSON.stringify({ immediate: true }),
+          });
+        } catch { /* ignore */ }
+
+        const qr = await pollQr(baseUrl, retryToken);
+        if (qr) {
+          return new Response(JSON.stringify({ ok: true, instance_id: retryName, qr_code: qr }), {
+            status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        return new Response(JSON.stringify({ ok: false, error: "qr_code_missing", instance: retryName }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } else {
+      // Parse create response for token/QR
+      try {
+        const createData = JSON.parse(createText);
+        const d = createData?.data ?? createData;
+        createdToken = d?.token ?? createData?.instance?.token ?? newToken;
+
+        const qr = extractQr(createData);
+        if (qr) {
+          await setupWebhookAndIa(supabase, baseUrl, createdToken, instanceName, ownerId, webhookUrl);
+          return new Response(JSON.stringify({ ok: true, instance_id: instanceName, qr_code: qr }), {
+            status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } catch { /* not json */ }
+    }
+
+    // ── Connect the newly created/existing instance ──
+    console.log(`[qr-connect] Calling POST /instance/connect with token ...${createdToken.slice(-6)}`);
+    try {
+      const connectRes = await fetch(`${baseUrl}/instance/connect`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: createdToken },
+        body: JSON.stringify({ immediate: true }),
+      });
+      const connectText = await connectRes.text();
+      console.log(`[qr-connect] Connect: ${connectRes.status} ${connectText.slice(0, 200)}`);
+
+      if (connectRes.ok) {
+        try {
+          const qr = extractQr(JSON.parse(connectText));
+          if (qr) {
+            await setupWebhookAndIa(supabase, baseUrl, createdToken, instanceName, ownerId, webhookUrl);
+            return new Response(JSON.stringify({ ok: true, instance_id: instanceName, qr_code: qr }), {
+              status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+        } catch { /* not json */ }
+      }
+    } catch (e) {
+      console.warn(`[qr-connect] Connect failed:`, String(e));
+    }
+
+    // ── Poll for QR ──
+    const qr = await pollQr(baseUrl, createdToken);
+    if (qr) {
+      await setupWebhookAndIa(supabase, baseUrl, createdToken, instanceName, ownerId, webhookUrl);
+      return new Response(JSON.stringify({ ok: true, instance_id: instanceName, qr_code: qr }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Final fallback: try global key for QR ──
+    const qrFallback = await pollQr(baseUrl, evolutionApiKey, 5, 1500);
+    if (qrFallback) {
+      await setupWebhookAndIa(supabase, baseUrl, createdToken, instanceName, ownerId, webhookUrl);
+      return new Response(JSON.stringify({ ok: true, instance_id: instanceName, qr_code: qrFallback }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    console.error(`[qr-connect] QR not available for "${instanceName}" after all attempts`);
+    return new Response(JSON.stringify({ ok: false, error: "qr_code_missing", instance: instanceName }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+
   } catch (e) {
-    console.error("[whatsapp-qr-connect] Fatal error:", e);
+    console.error("[qr-connect] Fatal error:", e);
     return new Response(JSON.stringify({ ok: false, error: String(e) }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
+
+// ── Post-QR setup: webhook + IA config ──────────────────────────────
+
+async function setupWebhookAndIa(
+  supabase: any,
+  baseUrl: string,
+  instanceKey: string,
+  instanceName: string,
+  ownerId: string,
+  webhookUrl: string,
+) {
+  const webhookEvents = [
+    "MESSAGES_UPSERT", "CONNECTION_UPDATE", "QRCODE_UPDATED",
+    "MESSAGES_UPDATE", "PRESENCE_UPDATE",
+    "messages.upsert", "connection.update", "qrcode.updated",
+    "messages.update", "presence.update",
+  ];
+
+  // Try to set webhook via Evolution GO endpoint
+  try {
+    const res = await fetch(`${baseUrl}/webhook/set`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: instanceKey },
+      body: JSON.stringify({ url: webhookUrl, enabled: true, byEvents: true, events: webhookEvents }),
+    });
+    if (res.ok) {
+      console.log("[qr-connect] Webhook set OK");
+    } else {
+      await res.text();
+    }
+  } catch { /* ignore */ }
+
+  // Auto-create IA config defaults if not exists
+  try {
+    const { data: existingIaCfg } = await supabase
+      .from("ia_configs")
+      .select("id")
+      .eq("owner_id", ownerId)
+      .maybeSingle();
+
+    if (!existingIaCfg) {
+      await supabase.from("ia_configs").insert({
+        owner_id: ownerId,
+        ai_name: "Assistente IA",
+        personality: "Seja profissional, educado e objetivo. Responda em português brasileiro.",
+        welcome_message: "Olá! Sou o assistente virtual. Como posso ajudá-lo?",
+        away_message: "No momento estou indisponível. Retornarei em breve!",
+        web_search_enabled: false,
+      });
+      console.log("[qr-connect] Auto-created ia_configs for user", ownerId);
+    }
+  } catch (e) {
+    console.warn("[qr-connect] ia_configs auto-create skipped:", String(e));
+  }
+}
