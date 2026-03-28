@@ -91,6 +91,24 @@ serve(async (req) => {
       instData = instById ?? null;
     }
 
+    // Fallback: try whatsapp_settings by evolution_instance_id
+    if (!instData) {
+      const { data: settingsMatch } = await supabase
+        .from("whatsapp_settings")
+        .select("owner_id, evolution_instance_id, is_active")
+        .eq("evolution_instance_id", instanceName)
+        .maybeSingle();
+
+      if (settingsMatch?.owner_id) {
+        instData = {
+          user_id: settingsMatch.owner_id,
+          ai_enabled: true,
+          instance_name: settingsMatch.evolution_instance_id || instanceName,
+        };
+        console.log(`[whatsapp-webhook] Matched via whatsapp_settings.evolution_instance_id: owner=${settingsMatch.owner_id}`);
+      }
+    }
+
     // Fallback adicional para o fluxo WAHA/SuperAdmin que usa whatsapp_zapi_settings
     if (!instData) {
       const { data: activeSettings, error: settingsErr } = await supabase
