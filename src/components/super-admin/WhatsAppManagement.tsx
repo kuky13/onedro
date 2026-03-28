@@ -565,9 +565,29 @@ export function WhatsAppManagement() {
               {/* Instância Evolution GO */}
               <div className="space-y-2 border p-3 rounded-md bg-muted/20">
                 <Label>Nome da Instância (Evolution GO)</Label>
-                <Input value={evolutionInstanceName} onChange={e => setEvolutionInstanceName(e.target.value)} placeholder="Ex: onedrip_main" />
-                <p className="text-[11px] text-muted-foreground">Esta instância será usada para envio de mensagens e listagem de grupos via Evolution GO.
-                  <br />Configure sua Evolution API URL e chave em /whats ou na tabela evolution_config.</p>
+                <div className="flex gap-2">
+                  <Input 
+                    value={evolutionInstanceName} 
+                    onChange={e => setEvolutionInstanceName(e.target.value)} 
+                    onKeyDown={e => { if (e.key === 'Enter') setConfirmedInstanceName(evolutionInstanceName.trim()); }}
+                    placeholder="Ex: cookie1" 
+                  />
+                  <Button 
+                    type="button" 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => setConfirmedInstanceName(evolutionInstanceName.trim())}
+                    disabled={!evolutionInstanceName.trim()}
+                  >
+                    <Search className="h-4 w-4 mr-1" /> Buscar
+                  </Button>
+                </div>
+                {confirmedInstanceName && (
+                  <p className="text-[11px] text-primary">
+                    ✓ Buscando dados da instância: <strong>{confirmedInstanceName}</strong>
+                  </p>
+                )}
+                <p className="text-[11px] text-muted-foreground">Digite o nome da instância e clique em Buscar ou pressione Enter.</p>
               </div>
               {/* Grupos Permitidos */}
               <div className="space-y-3 rounded-xl border bg-card/40 p-4">
