@@ -17,7 +17,7 @@ type ConfirmAction = 'logout' | 'delete';
 
 type QrState = 'idle' | 'generating' | 'qr_ready' | 'expired';
 
-const QR_TTL_MS = 60_000;
+const QR_TTL_MS = 90_000; // 90 segundos para escanear o QR
 
 export function WhatsAppConnector() {
   const { showError, showSuccess } = useToast();
@@ -185,7 +185,7 @@ export function WhatsAppConnector() {
 
   const connectMutation = useMutation({
     mutationFn: async () => {
-      const timeoutMs = 20000;
+      const timeoutMs = 45000;
 
       const invokePromise = supabase.functions.invoke('whatsapp-qr-connect', {
         body: {},
@@ -194,7 +194,7 @@ export function WhatsAppConnector() {
       const timeoutPromise = new Promise<never>((_, reject) => {
         const id = setTimeout(() => {
           clearTimeout(id);
-          reject(new Error('Tempo esgotado ao gerar QR Code. Tente novamente.'));
+          reject(new Error('Tempo esgotado ao gerar QR Code. Verifique se a URL e chave da Evolution estão corretas e tente novamente.'));
         }, timeoutMs);
       });
 

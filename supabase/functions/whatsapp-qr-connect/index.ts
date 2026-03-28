@@ -308,8 +308,8 @@ serve(async (req) => {
       let lastConnectStatus: number | null = null;
       let lastConnectBody: string | null = null;
 
-      // Retry because QR can take a moment to become available
-      for (let i = 0; i < 20 && !qrCode; i++) {
+      // Retry because QR can take a moment to become available (max 8s)
+      for (let i = 0; i < 8 && !qrCode; i++) {
         for (const candidate of connectCandidates) {
           const qrRes = await fetch(candidate.url, {
             method: candidate.method,
@@ -385,7 +385,7 @@ serve(async (req) => {
 
           if (!retryQr) {
             const retryConnectUrl = `${baseUrl}/instance/connect/${retryInstance}`;
-            for (let i = 0; i < 20 && !retryQr; i++) {
+            for (let i = 0; i < 8 && !retryQr; i++) {
               const rRes = await fetch(retryConnectUrl, {
                 method: "GET",
                 headers: { apikey: evolutionApiKey },
@@ -459,11 +459,11 @@ serve(async (req) => {
     if (!qrCode) {
       const connectUrl = `${baseUrl}/instance/connect/${instanceNameCreated}`;
 
-      // small retries because QR may take time to become available
+      // small retries because QR may take time to become available (max 8s)
       let lastConnectStatus: number | null = null;
       let lastConnectBody: string | null = null;
 
-      for (let i = 0; i < 20 && !qrCode; i++) {
+      for (let i = 0; i < 8 && !qrCode; i++) {
         const qrRes = await fetch(connectUrl, {
           method: "GET",
           headers: { apikey: evolutionApiKey },
