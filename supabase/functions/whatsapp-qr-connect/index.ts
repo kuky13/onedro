@@ -510,10 +510,10 @@ serve(async (req) => {
     if (qrCode === "") qrCode = null;
 
     if (!qrCode) {
-      // Evolution GO: use instance token to call GET /instance/qrcode
+      // Evolution GO: use instance token to call GET /instance/qr
       // Also try: GET /instance/connect/{name}, POST /instance/connect
       const qrCandidates = [
-        { url: `${baseUrl}/instance/qrcode`, method: "GET", key: createdToken },
+        { url: `${baseUrl}/instance/qr`, method: "GET", key: createdToken },
         { url: `${baseUrl}/instance/connect`, method: "POST", key: createdToken, body: JSON.stringify({ name: instanceNameCreated }) },
         { url: `${baseUrl}/instance/connect/${instanceNameCreated}`, method: "GET", key: createdToken },
         { url: `${baseUrl}/instance/connect/${instanceNameCreated}`, method: "GET", key: evolutionApiKey },
