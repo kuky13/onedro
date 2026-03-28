@@ -155,6 +155,22 @@ serve(async (req: Request) => {
           console.error("[whatsapp-ai-reply] Failed to pause AI:", pauseErr.message);
         } else {
           console.log("[whatsapp-ai-reply] ✅ AI paused successfully for conversation:", conversation_id);
+          // Fire push notification to owner (non-blocking)
+          try {
+            await supabase.functions.invoke("send-push-notification", {
+              body: {
+                target_type: "user",
+                target_user_id: owner_id,
+                title: "Atendimento requer atenção",
+                body: "Um cliente precisa de atendimento humano no WhatsApp.",
+                url: "/whatsapp-crm",
+                data: { conversation_id, type: "handoff" },
+              },
+              headers: { Authorization: `Bearer ${serviceRoleKey}` },
+            });
+          } catch (pushErr) {
+            console.warn("[whatsapp-ai-reply] Push notification failed (non-blocking):", String(pushErr));
+          }
         }
       }
     }

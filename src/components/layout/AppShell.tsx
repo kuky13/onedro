@@ -23,7 +23,8 @@ const AppShellContent = ({ children }: AppShellProps) => {
     pathname !== '/worm' &&
     !pathname.startsWith('/service-orders') &&
     !pathname.startsWith('/store/orcamentos') &&
-    !pathname.startsWith('/reparos');
+    !pathname.startsWith('/reparos') &&
+    !pathname.startsWith('/whatsapp-crm');
 
   return (
     <div className="min-h-screen bg-background">
