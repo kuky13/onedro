@@ -107,7 +107,7 @@ export function WhatsAppManagement() {
     isLoading: chatsLoading,
     refetch: refetchChats
   } = useQuery<any[]>({
-    queryKey: ['superadmin-whatsapp-evo-chats', evolutionInstanceName],
+    queryKey: ['superadmin-whatsapp-evo-chats', confirmedInstanceName],
     queryFn: async () => {
       const {
         data,
@@ -116,14 +116,14 @@ export function WhatsAppManagement() {
         body: {
           action: 'get_chats',
           payload: {
-            instanceName: evolutionInstanceName || undefined
+            instanceName: confirmedInstanceName || undefined
           }
         }
       });
       if (error) throw error;
       return Array.isArray(data) ? data : [];
     },
-    enabled: isAuthenticated && !!evolutionInstanceName
+    enabled: isAuthenticated && !!confirmedInstanceName
   });
 
   const {
