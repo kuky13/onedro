@@ -370,6 +370,7 @@ serve(async (req) => {
             apikey: evolutionApiKey,
           },
           body: JSON.stringify({
+            name: retryName,
             instanceName: retryName,
             integration: "WHATSAPP-BAILEYS",
             qrcode: true,
