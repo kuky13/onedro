@@ -2,44 +2,42 @@
 
 ## Problema
 
-Quando o usuário clica "Conectar meu WhatsApp" no `/whatsapp-crm`, mesmo que a instância seja criada e o QR escaneado, o status nunca muda para "conectado". Dois problemas separados:
+Quando o usuário conecta o WhatsApp (escaneia o QR), o status nunca atualiza em tempo real. Duas causas raiz:
 
-### 1. Nome da instância desalinhado
-- O `whatsapp-qr-connect` cria instâncias com nome `onedrip_49e47da50de6`
-- Mas o usuário já tem uma instância `cookie1` rodando e conectada na Evolution GO
-- O webhook recebe eventos de `cookie1`, mas o CRM procura `onedrip_49e47da50de6` no banco
-- Resultado: o CONNECTION_UPDATE de `cookie1` nunca atualiza o registro correto
+### 1. Webhook nunca é configurado
+O `setupWebhookAndIa` tenta `POST /webhook/set` que **nao existe** na Evolution GO. O Swagger confirma: nao ha nenhum endpoint de webhook separado. Na Evolution GO, o webhook e configurado no `POST /instance/connect` via o campo `webhookUrl` do `ConnectStruct`.
 
-### 2. Status nunca atualizado após QR scan
-- A edge function marca `is_active: false` e status `created` no início
-- Depois de retornar o QR, não há mecanismo para atualizar quando o usuário escaneia
-- O webhook deveria fazer isso via `CONNECTION_UPDATE`, mas só funciona se o nome da instância bater
+### 2. Sem fallback de polling de status
+Quando o webhook nao funciona, nao ha mecanismo no frontend para verificar ativamente se a instancia conectou apos o scan do QR.
 
-## Solução
+## Solucao
 
-### Passo 1 — `whatsapp-qr-connect`: detectar instância já conectada
-Antes de criar uma nova instância, buscar TODAS as instâncias via `GET /instance/all` e verificar se alguma já está `open/connected`. Se sim:
-- Salvar o nome real da instância (ex: `cookie1`) no `whatsapp_settings` e `whatsapp_instances`
-- Marcar `is_active: true` e status `open`
-- Retornar `already_connected: true` imediatamente
+### Passo 1 -- Passar webhookUrl no `/instance/connect`
+No `whatsapp-qr-connect`, ao chamar `POST /instance/connect`, incluir:
+```json
+{
+  "immediate": true,
+  "webhookUrl": "https://oghjlypdnmqecaavekyr.supabase.co/functions/v1/whatsapp-webhook",
+  "subscribe": ["MESSAGES_UPSERT", "CONNECTION_UPDATE", "QRCODE_UPDATED"]
+}
+```
+Isso faz a Evolution GO enviar eventos para nosso webhook automaticamente.
 
-### Passo 2 — `whatsapp-qr-connect`: usar nome real ao criar
-Quando criar instância nova, garantir que o nome salvo no banco é exatamente o mesmo que a Evolution GO conhece, para que os webhooks de CONNECTION_UPDATE façam match.
+### Passo 2 -- Remover `setupWebhookAndIa` (a parte do webhook)
+A chamada a `POST /webhook/set` e inutill na Evolution GO. Remover para evitar erros 404.
 
-### Passo 3 — `whatsapp-qr-connect`: polling de status após QR
-Depois de retornar o QR code com sucesso, adicionar um campo `instance_name` na resposta para que o frontend saiba qual instância monitorar. O frontend já faz polling via `useWhatsAppConnectionStatus` com `pollMs: 3000` quando o QR está visível.
+### Passo 3 -- Adicionar polling de status no frontend
+No `WhatsAppConnector`, enquanto o QR estiver visivel, fazer polling a cada 3s chamando uma edge function leve (ou reutilizando `whatsapp-proxy` com `GET /instance/status`) para verificar se a instancia ficou `open`. Quando detectar conexao, atualizar o banco e invalidar a query de status.
 
-### Passo 4 — Webhook: melhorar matching de instância
-No `whatsapp-webhook`, quando receber CONNECTION_UPDATE, também tentar match por `whatsapp_settings.evolution_instance_id` além de `whatsapp_instances.instance_name`.
+Alternativa mais simples: usar o polling que ja existe (`pollMs: qrCode ? 3000 : false` no `useWhatsAppConnectionStatus`), mas garantir que o banco e atualizado. Para isso, criar um novo endpoint ou ajustar o `whatsapp-qr-connect` para aceitar uma action `check_status` que consulta `GET /instance/status` na Evolution GO e atualiza o banco se conectou.
 
-### Passo 5 — Frontend: usar instância `cookie1` existente
-O `WhatsAppConnector` já usa `useWhatsAppConnectionStatus` com polling de 3s quando QR visível. Quando o banco atualizar (via webhook ou via detecção na edge function), o status mudará automaticamente.
+### Passo 4 -- Frontend: chamar check_status enquanto QR visivel
+No `WhatsAppConnector`, apos exibir o QR, iniciar um `setInterval` que chama `whatsapp-qr-connect` com `{ action: "check_status", instance_name: "..." }` a cada 4s. Quando retornar `connected: true`, invalidar queries e mostrar status conectado.
 
 ## Arquivos a alterar
-- `supabase/functions/whatsapp-qr-connect/index.ts` — detectar instância existente conectada, usar nome real
-- `supabase/functions/whatsapp-webhook/index.ts` — melhorar resolução de instância no CONNECTION_UPDATE
+- `supabase/functions/whatsapp-qr-connect/index.ts` -- passar webhookUrl no connect, adicionar action check_status, remover setupWebhookAndIa webhook part
+- `src/components/whatsapp-crm/WhatsAppConnector.tsx` -- polling de check_status enquanto QR visivel
 
 ## Resultado esperado
-1. Se `cookie1` já está conectada → CRM mostra "WhatsApp conectado (cookie1)" imediatamente
-2. Se criar nova instância → após scan do QR, webhook atualiza status e CRM reflete em ~3s
+Apos escanear o QR, o status muda para "WhatsApp conectado" em ate 4-8 segundos automaticamente.
 
