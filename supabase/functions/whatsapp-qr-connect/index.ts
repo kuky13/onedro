@@ -448,7 +448,7 @@ serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
-    let instanceName = existing?.evolution_instance_id || existingInst?.instance_name || `onedrip_${stableSuffix}`;
+    const instanceName = existing?.evolution_instance_id || existingInst?.instance_name || `onedrip_${stableSuffix}`;
 
     const existingEvolution = findInstance(allInstances, instanceName);
     const webhookUrl = `${supabaseUrl}/functions/v1/whatsapp-webhook`;
