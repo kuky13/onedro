@@ -180,7 +180,7 @@ serve(async (req) => {
       let qrRes = await fetch(`${baseUrl}/instance/connect`, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: effectiveKey },
-        body: JSON.stringify({ instanceName }),
+        body: JSON.stringify({ name: instanceName, instanceName }),
       });
       if (!qrRes.ok) {
         qrRes = await fetch(`${baseUrl}/instance/connect/${instanceName}`, {
@@ -273,23 +273,27 @@ serve(async (req) => {
     ];
 
     const createUrl = `${baseUrl}/instance/create`;
+    // Evolution GO uses "name", Evolution v2 uses "instanceName" — send both for compatibility
+    const createBody = {
+      name: instanceName,
+      instanceName,
+      integration: "WHATSAPP-BAILEYS",
+      qrcode: true,
+      webhook: {
+        url: webhookUrl,
+        enabled: true,
+        byEvents: true,
+        events: webhookEvents,
+      },
+    };
+    console.log("[whatsapp-qr-connect] Creating instance:", JSON.stringify({ url: createUrl, name: instanceName }));
     const createRes = await fetch(createUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         apikey: evolutionApiKey,
       },
-      body: JSON.stringify({
-        instanceName,
-        integration: "WHATSAPP-BAILEYS",
-        qrcode: true,
-        webhook: {
-          url: webhookUrl,
-          enabled: true,
-          byEvents: true,
-          events: webhookEvents,
-        },
-      }),
+      body: JSON.stringify(createBody),
     });
 
     // If the instance already exists in Evolution (common after a failed attempt), reuse it.
@@ -300,7 +304,7 @@ serve(async (req) => {
 
       // Try Evolution GO (POST) first, then v2 (GET)
       const connectCandidates = [
-        { url: `${baseUrl}/instance/connect`, method: "POST", body: JSON.stringify({ instanceName }) },
+        { url: `${baseUrl}/instance/connect`, method: "POST", body: JSON.stringify({ name: instanceName, instanceName }) },
         { url: `${baseUrl}/instance/connect/${instanceName}`, method: "GET", body: undefined as string | undefined },
       ];
 
@@ -366,6 +370,7 @@ serve(async (req) => {
             apikey: evolutionApiKey,
           },
           body: JSON.stringify({
+            name: retryName,
             instanceName: retryName,
             integration: "WHATSAPP-BAILEYS",
             qrcode: true,

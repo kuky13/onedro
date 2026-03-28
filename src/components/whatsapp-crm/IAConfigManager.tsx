@@ -20,7 +20,7 @@ import {
   AlertDialogDescription,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Bot, Brain, Building2, Globe, MessageSquare, Save, Loader2, Sparkles, Trash2, ShoppingBag, Info } from 'lucide-react';
+import { Bot, Brain, Building2, Globe, MessageSquare, Save, Loader2, Sparkles, Trash2, Info } from 'lucide-react';
 import { ProductCatalogCard } from './ProductCatalogCard';
 import { clearAllMessages } from '@/services/chatMemoryService';
 

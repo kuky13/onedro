@@ -78,7 +78,7 @@ export const useMobileMenu = () => {
             icon: 'MessageCircle',
             href: '/whatsapp-crm',
             description: 'Atendimento via WhatsApp com IA',
-            badge: pendingHandoffCount > 0 ? pendingHandoffCount : undefined
+            ...(pendingHandoffCount > 0 ? { badge: pendingHandoffCount } : {})
           },
           {
             id: 'chat',
