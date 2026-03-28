@@ -962,7 +962,7 @@ async function callAI(
   userId: string,
   meta?: {
     source?: "app" | "whatsapp" | "internal";
-    iaConfig?: { ai_name?: string; personality?: string; welcome_message?: string; active_topics?: any; custom_knowledge?: string; web_search_enabled?: boolean; company_info?: any } | null;
+    iaConfig?: { ai_name?: string; personality?: string; welcome_message?: string; active_topics?: any; custom_knowledge?: string; web_search_enabled?: boolean; company_info?: any; catalog_info?: string } | null;
   }
 ): Promise<string> {
   try {
@@ -999,6 +999,9 @@ async function callAI(
       }
       if (iaConf.custom_knowledge) {
         overrides.push(`BASE DE CONHECIMENTO PERSONALIZADA DO DONO:\n${iaConf.custom_knowledge}`);
+      }
+      if (iaConf.catalog_info) {
+        overrides.push(`CATÁLOGO DE SERVIÇOS E PRODUTOS (use para responder sobre preços e disponibilidade):\n${iaConf.catalog_info}\n\nQUANDO O CLIENTE PERGUNTAR SOBRE PREÇOS: consulte o catálogo acima. Se o serviço/produto não estiver no catálogo ou precisar de avaliação presencial, use [HANDOFF] para transferir ao atendente humano.`);
       }
       if (iaConf.active_topics) {
         const disabled = Object.entries(iaConf.active_topics)

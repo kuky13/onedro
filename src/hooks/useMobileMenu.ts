@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MenuItem {
   id: string;
@@ -9,6 +10,7 @@ interface MenuItem {
   action?: () => void;
   href?: string;
   description?: string;
+  badge?: number;
 }
 
 interface MenuData {
@@ -27,7 +29,25 @@ export const useMobileMenu = () => {
     userInfo: null
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingHandoffCount, setPendingHandoffCount] = useState(0);
   const { profile, user, hasPermission, signOut } = useAuth();
+
+  // Poll for pending handoff conversations (ai_paused=true)
+  useEffect(() => {
+    if (!user) return;
+    const fetchPendingHandoffs = async () => {
+      const { count } = await supabase
+        .from('whatsapp_conversations')
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_id', user.id)
+        .eq('ai_paused', true)
+        .eq('status', 'open');
+      setPendingHandoffCount(count || 0);
+    };
+    fetchPendingHandoffs();
+    const interval = setInterval(fetchPendingHandoffs, 30000);
+    return () => clearInterval(interval);
+  }, [user?.id]);
 
   // Fetch menu data using native fetch()
   useEffect(() => {
@@ -51,6 +71,14 @@ export const useMobileMenu = () => {
             icon: 'FileText',
             href: '/service-orders',
             description: 'Gerenciar ordens de serviço'
+          },
+          {
+            id: 'whatsapp-crm',
+            label: 'WhatsApp CRM',
+            icon: 'MessageCircle',
+            href: '/whatsapp-crm',
+            description: 'Atendimento via WhatsApp com IA',
+            badge: pendingHandoffCount > 0 ? pendingHandoffCount : undefined
           },
           {
             id: 'chat',

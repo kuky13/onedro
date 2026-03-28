@@ -82,6 +82,7 @@ const SettingsLite = lazyWithRetry(() => import("./components/lite/SettingsLite"
 const NotificationsPage = lazyWithRetry(() => import("./pages/NotificationsPage"));
 const DrippyPage = lazyWithRetry(() => import("./pages/DrippyPage").then(m => ({ default: m.DrippyPage })));
 const ChatPage = lazyWithRetry(() => import("./pages/ChatPage"));
+const WhatsAppCRMPage = lazyWithRetry(() => import("./pages/WhatsAppCRMPage"));
 const ChatwootWidget = lazyWithRetry(() => import("@/components/ChatwootWidget").then(m => ({ default: m.ChatwootWidget })));
 const AppShell = lazyWithRetry(() => import("@/components/layout/AppShell").then(m => ({ default: m.AppShell })));
 
@@ -421,6 +422,11 @@ const AppContent = () => {
         <Route path="/chat" element={<AppShell>
           <ChatPage />
         </AppShell>} />
+        <Route path="/whatsapp-crm" element={<MaintenanceGuard>
+          <UnifiedProtectionGuard>
+            <AppShell><WhatsAppCRMPage /></AppShell>
+          </UnifiedProtectionGuard>
+        </MaintenanceGuard>} />
         <Route path="/kukysolutions" element={<KukySolutions />} />
         <Route path="/detalhes" element={<UnifiedProtectionGuard>
           <AppShell><UpdateDetailsPage /></AppShell>
