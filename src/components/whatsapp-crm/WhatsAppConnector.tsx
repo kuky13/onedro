@@ -243,10 +243,12 @@ export function WhatsAppConnector() {
         setQrCode(null);
         setQrExpiresAt(null);
         setQrState('idle');
+        setConnectingInstance(null);
       } else if (data.qr_code) {
         setQrCode(data.qr_code);
         setQrExpiresAt(Date.now() + QR_TTL_MS);
         setQrState('qr_ready');
+        setConnectingInstance(data.instance_id || null);
         showSuccess({
           title: 'QR Code gerado',
           description: 'Escaneie o código abaixo com seu WhatsApp.',
