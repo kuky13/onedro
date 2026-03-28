@@ -75,7 +75,9 @@ serve(async (req) => {
       });
     }
 
-    // ── Health check: verify Evolution API is reachable and key is valid ──
+    // ── Health check: verify Evolution API is reachable ──
+    // Only blocks on: network failure (truly unreachable) OR explicit auth rejection (401/403).
+    // Any other HTTP response (404, 500, etc.) means the server IS reachable — proceed.
     try {
       const healthRes = await fetch(`${baseUrl}/instance/all`, {
         method: "GET",
@@ -88,14 +90,10 @@ serve(async (req) => {
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (!healthRes.ok) {
-        console.error("[whatsapp-qr-connect] Evolution health check failed:", healthRes.status);
-        return new Response(
-          JSON.stringify({ ok: false, error: "evolution_unreachable", message: `Evolution API retornou status ${healthRes.status}. Verifique se o servidor está online.` }),
-          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      // Any other HTTP status (200, 404, 500...) = server is reachable, continue.
+      console.log(`[whatsapp-qr-connect] Evolution health check OK (status ${healthRes.status})`);
     } catch (e) {
+      // Network error: truly unreachable (connection refused, DNS fail, timeout).
       console.error("[whatsapp-qr-connect] Evolution health check error:", String(e));
       return new Response(
         JSON.stringify({ ok: false, error: "evolution_unreachable", message: "Não foi possível conectar à Evolution API. Verifique se a URL está correta e o servidor está online." }),
