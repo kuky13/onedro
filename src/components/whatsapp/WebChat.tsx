@@ -23,15 +23,22 @@ export function WebChat({ instanceName, onBack }: WebChatProps) {
     const [chats, setChats] = useState<Chat[]>([]);
     const [activeChatId, setActiveChatId] = useState<string | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
+    const [messageLimit, setMessageLimit] = useState(50);
     const [activeTab, setActiveTab] = useState<'contacts' | 'groups'>('contacts');
     const [loadingChats, setLoadingChats] = useState(true);
     const [loadingMessages, setLoadingMessages] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
     const activeChatIdRef = useRef<string | null>(null);
 
+    const [searchQuery, setSearchQuery] = useState('');
+
     const filteredChats = chats.filter(chat => {
         const isGroup = chat.id.includes('@g.us');
-        return activeTab === 'groups' ? isGroup : !isGroup;
+        const matchesTab = activeTab === 'groups' ? isGroup : !isGroup;
+        if (!matchesTab) return false;
+        if (!searchQuery.trim()) return true;
+        const q = searchQuery.toLowerCase();
+        return chat.name.toLowerCase().includes(q) || chat.id.split('@')[0].includes(q);
     });
 
     useEffect(() => {
@@ -180,6 +187,7 @@ export function WebChat({ instanceName, onBack }: WebChatProps) {
 
     useEffect(() => {
         if (activeChatId) {
+            setMessageLimit(50);
             loadMessages(activeChatId);
         } else {
             setMessages([]);
@@ -276,8 +284,8 @@ export function WebChat({ instanceName, onBack }: WebChatProps) {
                 const updated = [...prev, newMessage];
                 updated.sort((a, b) => getTs(a) - getTs(b));
                 
-                // Mantém as últimas 30
-                return updated.slice(-30);
+                // Mantém as últimas N (paginado)
+                return updated.slice(-messageLimit);
             });
 
             // Feedback Visual imediato
@@ -453,7 +461,7 @@ export function WebChat({ instanceName, onBack }: WebChatProps) {
 
             setMessages(prev => {
                 // Se a lista anterior estiver vazia (primeira carga), apenas retorna o fetch
-                if (prev.length === 0) return uniqueFetchedMessages.slice(-30);
+                if (prev.length === 0) return uniqueFetchedMessages.slice(-messageLimit);
 
                 // Helper para normalizar timestamp para Segundos
                 const getTs = (msg: any) => {
@@ -484,7 +492,7 @@ export function WebChat({ instanceName, onBack }: WebChatProps) {
                 });
 
                 // 5. Limitar (mas garantindo que as novas fiquem)
-                return combined.slice(-30); 
+                return combined.slice(-messageLimit);
             });
 
             if (forceSync && uniqueFetchedMessages.length > 0) {
@@ -629,10 +637,12 @@ export function WebChat({ instanceName, onBack }: WebChatProps) {
                     <div className="p-2 bg-[#111b21] flex items-center gap-2 border-b border-white/5">
                         <div className="flex-1 bg-[#202c33] flex items-center gap-3 px-3 py-1.5 rounded-lg">
                             <Search className="h-4 w-4 text-[#8696a0]" />
-                            <input 
-                                type="text" 
-                                placeholder="Pesquisar ou começar uma nova conversa" 
+                            <input
+                                type="text"
+                                placeholder="Pesquisar ou começar uma nova conversa"
                                 className="bg-transparent border-none text-[14px] text-white focus:ring-0 w-full placeholder:text-[#8696a0]"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
                     </div>
@@ -672,7 +682,7 @@ export function WebChat({ instanceName, onBack }: WebChatProps) {
 
                 {/* Main Window */}
                 <div className="flex-1 flex flex-col min-w-0 bg-muted/5">
-                    <ChatWindow 
+                    <ChatWindow
                         activeChat={activeChatId}
                         activeChatName={chats.find((c) => c.id === activeChatId)?.name ?? null}
                         messages={messages}
@@ -680,6 +690,12 @@ export function WebChat({ instanceName, onBack }: WebChatProps) {
                         isLoading={loadingMessages}
                         isSyncing={isSyncing}
                         presenceStatus={activeChatId ? presenceMap[(activeChatId.split('@')[0] ?? activeChatId)] : undefined}
+                        canLoadMore={messages.length >= messageLimit}
+                        onLoadMore={() => {
+                            const newLimit = messageLimit + 50;
+                            setMessageLimit(newLimit);
+                            if (activeChatId) loadMessages(activeChatId);
+                        }}
                     />
                 </div>
             </div>

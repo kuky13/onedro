@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle2, Loader2, XCircle, Wifi } from 'lucide-react';
 
 interface SettingsRow {
   id: string;
@@ -46,6 +48,8 @@ export function SettingsManager() {
   const [evolutionInstanceId, setEvolutionInstanceId] = useState('');
   const [webhookSecret, setWebhookSecret] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [testResult, setTestResult] = useState<'ok' | 'error' | null>(null);
+  const [testMessage, setTestMessage] = useState('');
 
   useEffect(() => {
     if (!settings) return;
@@ -67,16 +71,9 @@ export function SettingsManager() {
         is_active: isActive,
       };
 
-      if (settings?.id) {
-        const { error } = await supabase
-          .from('whatsapp_settings')
-          .update(payload)
-          .eq('id', settings.id);
-        if (error) throw error;
-        return;
-      }
-
-      const { error } = await supabase.from('whatsapp_settings').insert(payload);
+      const { error } = await supabase
+        .from('whatsapp_settings')
+        .upsert(payload, { onConflict: 'owner_id' });
       if (error) throw error;
     },
     onSuccess: async () => {
@@ -84,6 +81,38 @@ export function SettingsManager() {
       await queryClient.invalidateQueries({ queryKey: ['whatsapp-crm', 'settings'] });
     },
     onError: (err: any) => showError({ title: 'Erro ao salvar', description: err.message }),
+  });
+
+  const testMutation = useMutation({
+    mutationFn: async () => {
+      setTestResult(null);
+      setTestMessage('');
+
+      const instanceName = evolutionInstanceId.trim();
+      if (!instanceName) throw new Error('Preencha o Instance ID antes de testar');
+
+      const { data, error } = await supabase.functions.invoke('whatsapp-proxy', {
+        body: { action: 'diagnose_instance', payload: { instanceName } },
+      });
+
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+
+      return data;
+    },
+    onSuccess: (data: any) => {
+      const connected = data?.connected === true || data?.status === 'open' || data?.state === 'open';
+      setTestResult(connected ? 'ok' : 'error');
+      setTestMessage(
+        connected
+          ? `Conectado${data?.phone ? ` · ${data.phone}` : ''}`
+          : data?.message || data?.status || 'Instância não está conectada'
+      );
+    },
+    onError: (err: any) => {
+      setTestResult('error');
+      setTestMessage(err.message || 'Falha ao testar conexão');
+    },
   });
 
   return (
@@ -108,25 +137,52 @@ export function SettingsManager() {
 
             <div className="grid gap-2">
               <Label htmlFor="evo-instance">Evolution Instance ID</Label>
-              <Input
-                id="evo-instance"
-                placeholder="instance-01"
-                value={evolutionInstanceId}
-                onChange={(e) => setEvolutionInstanceId(e.target.value)}
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="evo-instance"
+                  placeholder="instance-01"
+                  value={evolutionInstanceId}
+                  onChange={(e) => {
+                    setEvolutionInstanceId(e.target.value);
+                    setTestResult(null);
+                  }}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => testMutation.mutate()}
+                  disabled={testMutation.isPending || !evolutionInstanceId.trim()}
+                  className="shrink-0"
+                  title="Testar conexão com a instância"
+                >
+                  {testMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Wifi className="h-4 w-4" />
+                  )}
+                  <span className="ml-1.5 hidden sm:inline">Testar</span>
+                </Button>
+              </div>
+              {testResult && (
+                <div className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm ${testResult === 'ok' ? 'bg-green-500/10 text-green-600' : 'bg-destructive/10 text-destructive'}`}>
+                  {testResult === 'ok' ? (
+                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  ) : (
+                    <XCircle className="h-4 w-4 shrink-0" />
+                  )}
+                  {testMessage}
+                </div>
+              )}
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="webhook-secret">Webhook Secret (opcional)</Label>
+              <Label htmlFor="webhook-secret">Webhook Secret <Badge variant="outline" className="ml-1 text-[10px]">opcional</Badge></Label>
               <Input
                 id="webhook-secret"
-                placeholder="opcional (não usado no auto-responder)"
+                placeholder="Não utilizado no auto-responder"
                 value={webhookSecret}
                 onChange={(e) => setWebhookSecret(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">
-                Typebot foi removido. A IA responde automaticamente via DeepSeek.
-              </p>
             </div>
 
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
@@ -139,6 +195,7 @@ export function SettingsManager() {
 
             <div className="flex justify-end">
               <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+                {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Salvar
               </Button>
             </div>
