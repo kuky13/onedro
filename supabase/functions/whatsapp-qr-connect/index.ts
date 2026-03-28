@@ -275,7 +275,7 @@ serve(async (req) => {
       }
 
       // Poll GET /instance/qr
-      const qr = await pollQr(baseUrl, instanceToken);
+      const qr = await pollQr(baseUrl, instanceToken, instanceName);
       if (qr) {
         return new Response(JSON.stringify({ ok: true, instance_id: instanceName, qr_code: qr }), {
           status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
