@@ -1,70 +1,87 @@
 
 
-## Problema raiz
+## Transformar o WebChat em experiencia tipo WhatsApp Web
 
-**Evolution GO nao tem endpoint de historico de mensagens.** O Swagger confirma: nao existe `chat/findMessages`, `chat/fetchMessages`, nem nenhum endpoint para buscar mensagens antigas. Por isso o proxy sempre retorna 404 e o frontend mostra "Nenhuma mensagem encontrada localmente".
+### Problemas identificados
 
-As mensagens ja estao sendo salvas no banco (`whatsapp_messages`) pelo `whatsapp-context` quando chegam via webhook. Porem o frontend ignora o banco e tenta buscar da API (que nao existe).
+1. **Realtime channel CLOSED** — O canal Supabase fecha imediatamente, o que impede atualizacoes em tempo real. O nome do canal usa o instanceName (`instance-onedrip_49e47da50de6`) mas nenhum broadcaster envia para esse canal (o webhook usa outro padrao).
 
-## Plano
+2. **Busca nao funciona** — O input de pesquisa existe mas nao filtra nada (sem estado, sem logica).
 
-### 1. Backend: `get_messages` deve ler do banco de dados
+3. **Mensagens sempre vazias** — O banco `whatsapp_messages` provavelmente nao tem dados para esse usuario/instancia. O "Sincronizar Mensagens" chama `#sync` que dispara `loadMessages(chatId, true)`, que tenta a Evolution API e falha (404). Resultado: sempre "Nenhuma mensagem encontrada localmente".
 
-**Arquivo: `supabase/functions/whatsapp-proxy/index.ts`** (case `get_messages`)
+4. **Header ocupando espaco demais** — O header superior com "Voltar para Instancias", status, IA, instancia ativa tira ~80px do layout. No WhatsApp Web real nao existe isso.
 
-Substituir a logica atual (que chama endpoints 404) por:
-1. Buscar o `phone_number` a partir do JID (ex: `556499394191` de `556499394191@s.whatsapp.net`)
-2. Encontrar a `whatsapp_conversation` do usuario com esse telefone
-3. Buscar as ultimas 50 mensagens da tabela `whatsapp_messages` ordenadas por `created_at`
-4. Converter para o formato que o frontend espera (com `key`, `message`, `messageTimestamp`)
-5. Como fallback, ainda tentar a API da Evolution para mensagens nao persistidas, mas sem bloquear se der 404
+5. **Contatos sem ordem logica** — 595 contatos sem ordenacao por ultima mensagem. Quem nao tem mensagem recente aparece misturado.
 
-```text
-Fluxo:
-remoteJid = "556499394191@s.whatsapp.net"
-→ phone = "556499394191"
-→ SELECT * FROM whatsapp_conversations WHERE owner_id = user.id AND phone_number LIKE '%556499394191%'
-→ SELECT * FROM whatsapp_messages WHERE conversation_id = X ORDER BY created_at DESC LIMIT 50
-→ Converter para formato Message { key, message, messageTimestamp }
-→ Retornar ao frontend
-```
+6. **Botoes nao funcionais** — O botao "+" (novo contato), o botao de search na janela de chat, e o botao de 3 pontos (MoreVertical) nao fazem nada.
 
-### 2. Backend: `get_chats` deve incluir conversas do banco
+7. **Mobile nao responsivo** — Sidebar fixa em 400px, nao esconde em telas pequenas.
 
-**Arquivo: `supabase/functions/whatsapp-proxy/index.ts`** (case `get_chats`)
+---
 
-Alem dos contatos da Evolution GO (`GET /user/contacts`), tambem buscar `whatsapp_conversations` do banco para enriquecer a lista com:
-- Ultima mensagem real (de `whatsapp_messages`)
-- Contagem de nao lidas
-- Garantir que conversas com historico aparecam mesmo se nao estiverem nos contatos
+### Plano de correcao
 
-### 3. Frontend: tratar resposta do banco corretamente
+#### 1. Sidebar de busca funcional
+**Arquivo: `WebChat.tsx`**
+- Adicionar estado `searchQuery`
+- Conectar o input de pesquisa a esse estado
+- Filtrar `filteredChats` pelo nome ou numero do contato usando `searchQuery`
 
-**Arquivo: `src/components/whatsapp/WebChat.tsx`** (funcao `loadMessages`)
+#### 2. Ordenar contatos por ultima mensagem
+**Arquivo: `WebChat.tsx`**
+- Apos mapear os chats, ordenar por `lastMessageDate` descendente
+- Contatos sem mensagem recente ficam no final
 
-A normalizacao de mensagens precisa aceitar o novo formato vindo do banco:
-```json
-{
-  "key": { "remoteJid": "556499394191@s.whatsapp.net", "fromMe": false, "id": "uuid" },
-  "message": { "conversation": "Ola!" },
-  "messageTimestamp": 1774791584
-}
-```
-Isso ja e compativel com a normalizacao atual, entao mudancas minimas no frontend.
+#### 3. Remover header redundante e integrar ao layout WhatsApp Web
+**Arquivo: `WebChat.tsx`**
+- Remover o header superior com "Voltar para Instancias", status da conexao, IA etc
+- Mover o botao de logout e status para dentro do header da sidebar (junto ao avatar)
+- O `onBack` sera chamado pelo botao de logout ou por um icone discreto
+- Resultado: layout fullscreen como WhatsApp Web real
 
-### 4. Webhook: garantir persistencia de mensagens enviadas
+#### 4. Responsividade mobile
+**Arquivo: `WebChat.tsx`**
+- Em telas < 768px, mostrar apenas a sidebar OU a conversa (nao ambos)
+- Ao selecionar um chat, esconder sidebar e mostrar conversa com botao de voltar
+- Ao clicar voltar, mostrar sidebar novamente
 
-**Arquivo: `supabase/functions/whatsapp-proxy/index.ts`** (case `send_message`)
+#### 5. Corrigir canal Realtime
+**Arquivo: `WebChat.tsx`**
+- O canal fecha porque nenhum producer envia broadcast para `instance-{instanceName}`
+- Solucao: trocar para subscription na tabela `whatsapp_messages` via Postgres Changes (INSERT) filtrado pelo `owner_id` do usuario
+- Isso captura mensagens novas inseridas pelo webhook automaticamente
+- Remover a dependencia de broadcast que nunca funciona
 
-Apos enviar a mensagem com sucesso, inserir na `whatsapp_messages` com `direction = 'outbound'` para que apareca no historico quando recarregar.
+#### 6. Remover botoes sem funcao
+**Arquivo: `ChatWindow.tsx`**
+- Remover os botoes de Search e MoreVertical do header da conversa (nao fazem nada)
+- Remover o botao "+" do input area (nao implementado)
+- Manter apenas o input de texto e o botao de enviar
 
-## Arquivos a alterar
-- `supabase/functions/whatsapp-proxy/index.ts` — reescrever `get_messages` para ler do banco, enriquecer `get_chats`, persistir `send_message`
-- `src/components/whatsapp/WebChat.tsx` — ajustes minimos na normalizacao
+#### 7. Melhorar estado vazio de mensagens
+**Arquivo: `ChatWindow.tsx`**
+- Trocar "Nenhuma mensagem encontrada localmente" por mensagem mais amigavel: "Inicie uma conversa enviando uma mensagem"
+- Remover o botao "Sincronizar Mensagens" que nunca funciona (Evolution GO nao tem endpoint de historico)
+- Mostrar apenas o campo de input para o usuario comecar a digitar
 
-## Resultado esperado
-- Ao clicar num contato, as mensagens trocadas (recebidas via webhook) aparecem imediatamente
-- Ao enviar mensagem, ela fica salva e aparece ao reabrir a conversa
-- Lista de conversas mostra ultimas mensagens reais do banco
-- Grupos continuam aparecendo via `GET /group/list` + `GET /group/myall`
+#### 8. Polling mais inteligente
+**Arquivo: `WebChat.tsx`**
+- Ativar polling de chats a cada 15s (para atualizar a lista lateral com novas mensagens)
+- Manter polling de mensagens a cada 3s quando realtime nao estiver conectado
+
+---
+
+### Arquivos a alterar
+- `src/components/whatsapp/WebChat.tsx` — busca, ordenacao, layout, realtime, responsividade
+- `src/components/whatsapp/ChatWindow.tsx` — remover botoes mortos, melhorar estado vazio
+- `src/components/whatsapp/ChatList.tsx` — ajustes visuais menores para WhatsApp Web feel
+
+### Resultado esperado
+- Layout fullscreen tipo WhatsApp Web (sem header redundante)
+- Busca funcional na barra lateral
+- Contatos ordenados por ultima mensagem
+- Mensagens em tempo real via Postgres Changes
+- Mobile responsivo (sidebar ou conversa, nao ambos)
+- Sem botoes mortos ou mensagens confusas
 
