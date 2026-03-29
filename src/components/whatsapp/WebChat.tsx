@@ -96,17 +96,7 @@ export function WebChat({ instanceName, onBack }: WebChatProps) {
         };
     }, [user?.id]);
 
-    const _handlePresenceEvent = (payload: any) => {
-        const jidRaw: unknown = payload?.jid || payload?.id || payload?.remoteJid;
-        const presenceRaw = payload?.presence || payload?.lastKnownPresence || payload?.type || payload?.status;
-        if (typeof jidRaw !== 'string' || !jidRaw) return;
-        const jidKey = jidRaw.includes('@') ? jidRaw.split('@')[0] : jidRaw;
-        const normalized: string | undefined =
-            typeof presenceRaw === 'string' ? presenceRaw
-            : (presenceRaw?.lastKnownPresence || presenceRaw?.type || presenceRaw?.status);
-        if (!normalized) return;
-        setPresenceMap((prev) => ({ ...prev, [String(jidKey)]: normalized }));
-    };
+
 
     const playNotificationSound = () => {
         try {
