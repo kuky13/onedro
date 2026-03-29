@@ -47,7 +47,7 @@ export function WebChat({ instanceName, onBack }: WebChatProps) {
         activeChatIdRef.current = activeChatId;
     }, [activeChatId]);
 
-    const [presenceMap, setPresenceMap] = useState<Record<string, string>>({});
+    const [presenceMap] = useState<Record<string, string>>({});
     const [realtimeStatus, setRealtimeStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
 
     // Initial Load + Realtime via Postgres Changes
