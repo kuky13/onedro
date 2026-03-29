@@ -71,6 +71,7 @@ export function useWhatsAppConnectionStatus(options: Options = {}) {
       }
 
       // ✅ Preferir whatsapp_instances (multi-instância). Essa é a instância que a Evolution realmente conhece.
+      // Primeiro tenta instâncias abertas/conectadas
       const { data: activeInstance, error: instErr } = await supabase
         .from('whatsapp_instances')
         .select('instance_name, status, updated_at, connected_phone')
@@ -84,6 +85,20 @@ export function useWhatsAppConnectionStatus(options: Options = {}) {
 
       if (activeInstance?.instance_name) {
         return { connected: true, instance_id: activeInstance.instance_name, connected_phone: activeInstance.connected_phone ?? null };
+      }
+
+      // Fallback: qualquer instância existente (pode estar em status 'created', 'connecting', etc.)
+      // Isso permite mostrar o WebChat mesmo quando o webhook ainda nao atualizou o status
+      const { data: anyInstance } = await supabase
+        .from('whatsapp_instances')
+        .select('instance_name, status, connected_phone')
+        .eq('user_id', userId)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (anyInstance?.instance_name) {
+        return { connected: false, instance_id: anyInstance.instance_name, connected_phone: anyInstance.connected_phone ?? null };
       }
 
       // ⬇️ Fallback legado (single-instance)

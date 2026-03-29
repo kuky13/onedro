@@ -397,6 +397,35 @@ serve(async (req) => {
             ...chat,
             name: chat.name || chat.pushName || chat.verifiedName || chat.subject || '',
           }));
+
+          // Fallback: se Evolution nao retornou nada, buscar conversas do Supabase
+          if (result.length === 0) {
+            console.log(`[whatsapp-proxy] get_chats: Evolution returned 0, falling back to Supabase conversations`);
+            const { data: convs } = await supabase
+              .from('whatsapp_conversations')
+              .select('*')
+              .eq('owner_id', user.id)
+              .order('last_message_at', { ascending: false })
+              .limit(50);
+
+            if (convs && convs.length > 0) {
+              result = convs.map((c: any) => {
+                const jid = c.remote_jid || `${c.phone_number}@s.whatsapp.net`;
+                return {
+                  id: jid,
+                  remoteJid: jid,
+                  name: c.phone_number || jid.split('@')[0],
+                  lastMessage: '',
+                  messageTimestamp: c.last_message_at
+                    ? Math.floor(new Date(c.last_message_at).getTime() / 1000)
+                    : undefined,
+                  unreadCount: 0,
+                  _supabase: true,
+                };
+              });
+              console.log(`[whatsapp-proxy] get_chats: Supabase fallback returned ${result.length} conversations`);
+            }
+          }
         } catch (e) {
           console.error(`[whatsapp-proxy] Error in get_chats:`, e);
           result = [];
@@ -457,7 +486,49 @@ serve(async (req) => {
             return tA - tB;
           });
 
-          result = { messages: uniqueMessages };
+          // Fallback: se Evolution nao retornou mensagens, buscar do Supabase
+          if (uniqueMessages.length === 0) {
+            console.log(`[whatsapp-proxy] get_messages: Evolution returned 0, falling back to Supabase`);
+            const { data: conv } = await supabase
+              .from('whatsapp_conversations')
+              .select('id')
+              .eq('owner_id', user.id)
+              .or(`remote_jid.eq.${jid},phone_number.eq.${cleanNumber}`)
+              .order('last_message_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (conv?.id) {
+              const { data: msgs } = await supabase
+                .from('whatsapp_messages')
+                .select('*')
+                .eq('conversation_id', conv.id)
+                .order('created_at', { ascending: true })
+                .limit(50);
+
+              if (msgs && msgs.length > 0) {
+                console.log(`[whatsapp-proxy] get_messages: Supabase fallback returned ${msgs.length} messages`);
+                result = {
+                  messages: msgs.map((m: any) => ({
+                    key: {
+                      id: m.external_id || m.id,
+                      remoteJid: jid,
+                      fromMe: m.direction === 'outbound',
+                    },
+                    message: { conversation: m.content },
+                    messageTimestamp: Math.floor(new Date(m.created_at).getTime() / 1000),
+                    _supabase: true,
+                  })),
+                };
+              } else {
+                result = { messages: uniqueMessages };
+              }
+            } else {
+              result = { messages: uniqueMessages };
+            }
+          } else {
+            result = { messages: uniqueMessages };
+          }
         } catch (e) {
           console.error(`[whatsapp-proxy] Fatal error in get_messages:`, e);
           result = { messages: [], error: String(e) };
