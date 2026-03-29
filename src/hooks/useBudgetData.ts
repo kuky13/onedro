@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Budget } from '@/types/budget';
 import { useRealtimeQueryInvalidation } from './useSupabaseRealtime';
-import { budgetsApi } from '@/services/api/budgetsApi';
 
 export interface BudgetStats {
   totalBudgets: number;
@@ -18,36 +17,15 @@ export const useBudgetData = (userId: string) => {
   const fetchBudgets = useCallback(async (): Promise<Budget[]> => {
     if (!userId) return [];
 
-    // Preferir leitura via API (GET). Se falhar (CORS/5xx/etc), cai no Supabase.
-    try {
-      const apiData = await budgetsApi.list();
+    const { data, error: fetchError } = await supabase
+      .from('budgets')
+      .select('*')
+      .eq('owner_id', userId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false });
 
-      // Se a API retornou vazio, fallback para Supabase
-      if (!apiData || apiData.length === 0) {
-        throw new Error('API retornou vazio, fallback para Supabase');
-      }
-
-      const scoped = apiData.filter((b: any) => {
-        if (typeof b?.owner_id !== 'string') return false;
-        return b.owner_id === userId && b.deleted_at == null;
-      });
-
-      if (scoped.length === 0) {
-        throw new Error('API retornou dados fora do escopo do usuário');
-      }
-
-      return scoped as Budget[];
-    } catch {
-      const { data, error: fetchError } = await supabase
-        .from('budgets')
-        .select('*')
-        .eq('owner_id', userId)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false });
-
-      if (fetchError) throw fetchError;
-      return data || [];
-    }
+    if (fetchError) throw fetchError;
+    return data || [];
   }, [userId]);
 
   // Query usando React Query

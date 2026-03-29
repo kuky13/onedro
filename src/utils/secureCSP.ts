@@ -144,17 +144,15 @@ class SecureCSPManager {
       }
     })();
 
-     // No preview/dev, o ambiente pode injetar scripts (ex.: vercel.live feedback).
-     // Permitimos explicitamente para evitar spam de erros no console.
-     const devExtraScriptSrc = this.config.developmentMode
-       ? ' https://vercel.live'
-       : '';
+     // O Vercel injeta scripts de feedback/analytics em todos os deploys (dev e produção).
+     // Permitimos sempre para evitar spam de erros de CSP no console.
+     const vercelExtraScriptSrc = ' https://vercel.live';
     
     const basePolicy: Record<string, string> = {
       'default-src': "'self'",
       'script-src': this.config.strictMode 
-        ? (`'self' 'unsafe-eval' 'nonce-${this.currentNonce}' ${hashes}${devExtraScriptSrc}`).trim()
-        : (`'self' 'unsafe-eval' 'nonce-${this.currentNonce}' ${hashes} ${devExtraScriptSrc}`).trim(),
+        ? (`'self' 'unsafe-eval' 'nonce-${this.currentNonce}' ${hashes}${vercelExtraScriptSrc}`).trim()
+        : (`'self' 'unsafe-eval' 'nonce-${this.currentNonce}' ${hashes} ${vercelExtraScriptSrc}`).trim(),
       'style-src': this.config.strictMode
         ? `'self' 'unsafe-inline' https://fonts.googleapis.com` // unsafe-inline required for React styled-components/emotion
         : `'self' 'unsafe-inline' https://fonts.googleapis.com`,
