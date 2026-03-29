@@ -1,23 +1,34 @@
 
 
-## Corrigir erro de webhook no atendimento WhatsApp CRM
+## Corrigir lista de conversas vazia no WebChat
 
-### Problema
-O `WebChat.tsx` tenta configurar webhook via `POST /webhook/set/{instance}` ao abrir o atendimento. Esse endpoint **nao existe** na Evolution GO (confirmado pelos 404s). O webhook ja e configurado corretamente durante a criacao da instancia no `whatsapp-qr-connect` (via campo `webhookUrl` no payload de `/instance/connect`). Portanto essa tentativa separada e desnecessaria e so gera erro visual.
+### Causa raiz
+A resposta da Evolution GO usa campos com letra maiuscula:
+```json
+{ "Jid": "5564...@s.whatsapp.net", "FullName": "Manin BR", "PushName": "", "BusinessName": "" }
+```
+
+Mas o codigo so verifica versoes em minuscula:
+```js
+const jid = c.remoteJid || c.id || c.jid || ...  // nunca testa c.Jid
+let name = c.name || c.pushName || ...            // nunca testa c.FullName
+```
+
+Resultado: todos os 595 contatos retornados tem `jid = undefined`, sao filtrados pelo `.filter(chat => chat.id && ...)`, e a lista fica vazia.
 
 ### Solucao
 
-**Arquivo: `src/components/whatsapp/WebChat.tsx`**
+**Arquivo: `src/components/whatsapp/WebChat.tsx`** (funcao `loadChats`, ~linha 279-282)
 
-Remover a chamada `set_webhook` do `useEffect` de setup do WebChat. Como o webhook ja foi configurado na conexao da instancia, nao precisa tentar novamente. Isso elimina:
-- O toast de erro "Nao foi possivel configurar o webhook automaticamente"
-- Os 404s no console
-- As 6 tentativas desnecessarias ao servidor
+Adicionar os campos capitalizados da Evolution GO na cadeia de fallback:
 
-Substituir o bloco inteiro do `setupWebhook` (linhas ~60-95) por um simples log informativo, mantendo o resto do fluxo (canal Realtime, polling) intacto.
+```
+jid:  c.Jid || c.remoteJid || c.id || c.jid || ...
+name: c.FullName || c.name || c.PushName || c.pushName || c.BusinessName || ...
+```
 
-### Resultado
-- Nenhum erro/toast ao abrir o atendimento
-- O atendimento continua funcionando via Realtime channel + polling (ja implementado)
-- Webhooks continuam sendo configurados durante a conexao inicial da instancia
+Isso faz os 595 contatos serem reconhecidos e exibidos corretamente.
+
+### Resultado esperado
+Ao abrir o atendimento no `/whatsapp-crm`, a lista lateral mostra todas as conversas com nomes corretos em vez de "Nenhuma conversa".
 
