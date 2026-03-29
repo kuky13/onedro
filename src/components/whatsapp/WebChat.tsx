@@ -308,14 +308,14 @@ export function WebChat({ instanceName, onBack }: WebChatProps) {
                             msg.stickerMessage ? "🃏 Figurinha" : "Mensagem");
                 };
 
-                const lastMsg = getMsgContent(c.lastMessage || c.message);
+                const lastMsg = c.lastMessage ? (typeof c.lastMessage === 'string' ? c.lastMessage : getMsgContent(c.lastMessage)) : getMsgContent(c.message);
 
                 return {
                     id: jid,
                     name: name || 'Desconhecido',
                     image: c.profilePicUrl || c.profilePictureUrl || c.profilePic || c.imgUrl || c.contact?.profilePicUrl || "",
-                    lastMessage: lastMsg,
-                    lastMessageDate: c.messageTimestamp || c.lastMessage?.messageTimestamp || (c.updatedAt ? Math.floor(new Date(c.updatedAt).getTime() / 1000) : undefined),
+                    lastMessage: lastMsg || '...',
+                    lastMessageDate: c.lastMessageTimestamp || c.messageTimestamp || c.lastMessage?.messageTimestamp || (c.updatedAt ? Math.floor(new Date(c.updatedAt).getTime() / 1000) : undefined),
                     unreadCount: c.unreadCount || c.unread_count || 0
                 };
             }).filter(chat => chat.id && (chat.id.includes('@s.whatsapp.net') || chat.id.includes('@g.us')));

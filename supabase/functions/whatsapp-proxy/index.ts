@@ -385,7 +385,6 @@ serve(async (req) => {
           const chatsToken = await resolveInstanceToken(payload.instanceName);
 
           // Evolution GO: GET /user/contacts (identified by token)
-          // Evolution v2: POST /chat/findChats/{instanceName}
           const chats = await tryEndpoints([
             { path: 'user/contacts', method: 'GET' },
             { path: `chat/findChats/${payload.instanceName}`, method: 'POST', body: {} },
@@ -393,10 +392,61 @@ serve(async (req) => {
 
           const chatsArr = Array.isArray(chats) ? chats : ((chats as any)?.data || (chats as any)?.chats || (chats as any)?.contacts || []);
 
-          result = chatsArr.map((chat: any) => ({
-            ...chat,
-            name: chat.name || chat.pushName || chat.verifiedName || chat.subject || '',
-          }));
+          // ── Enrich with DB conversations (last message, unread count) ──
+          const { data: dbConvos } = await supabase
+            .from('whatsapp_conversations')
+            .select('id, phone_number, remote_jid, last_message_at, status')
+            .eq('owner_id', user.id);
+
+          // Build a map of phone -> last message from DB
+          const convoMap: Record<string, any> = {};
+          if (dbConvos) {
+            // Fetch last message for each conversation
+            const convoIds = dbConvos.map((c: any) => c.id);
+            const { data: lastMsgs } = await supabase
+              .from('whatsapp_messages')
+              .select('conversation_id, content, direction, created_at')
+              .in('conversation_id', convoIds)
+              .order('created_at', { ascending: false })
+              .limit(500);
+
+            const lastMsgMap: Record<string, any> = {};
+            if (lastMsgs) {
+              for (const msg of lastMsgs) {
+                if (!lastMsgMap[msg.conversation_id]) {
+                  lastMsgMap[msg.conversation_id] = msg;
+                }
+              }
+            }
+
+            for (const conv of dbConvos) {
+              const phone = conv.phone_number?.replace(/\D/g, '') || '';
+              const jid = conv.remote_jid || '';
+              const key = jid || phone;
+              const lastMsg = lastMsgMap[conv.id];
+              convoMap[phone] = {
+                lastMessage: lastMsg?.content || '',
+                lastMessageAt: lastMsg?.created_at ? Math.floor(new Date(lastMsg.created_at).getTime() / 1000) : null,
+                jid: jid,
+              };
+              if (jid) {
+                convoMap[jid.split('@')[0]] = convoMap[phone];
+              }
+            }
+          }
+
+          result = chatsArr.map((chat: any) => {
+            const chatJid = chat.Jid || chat.jid || chat.id || chat.remoteJid || '';
+            const chatPhone = chatJid.split('@')[0];
+            const dbInfo = convoMap[chatPhone] || {};
+
+            return {
+              ...chat,
+              name: chat.FullName || chat.name || chat.pushName || chat.PushName || chat.verifiedName || chat.BusinessName || chat.subject || '',
+              lastMessage: dbInfo.lastMessage || chat.lastMessage || undefined,
+              lastMessageTimestamp: dbInfo.lastMessageAt || undefined,
+            };
+          });
         } catch (e) {
           console.error(`[whatsapp-proxy] Error in get_chats:`, e);
           result = [];
@@ -409,55 +459,77 @@ serve(async (req) => {
           const jid = payload.remoteJid;
           const cleanNumber = jid.split('@')[0];
           console.log(`[whatsapp-proxy] get_messages for ${jid} in ${payload.instanceName}`);
-          const msgToken = await resolveInstanceToken(payload.instanceName);
 
-          const [localRes, remoteRes] = await Promise.allSettled([
-            callEvo(`chat/findMessages/${payload.instanceName}`, 'POST', {
-              where: { key: { remoteJid: jid } },
-              options: { limit: 30 }
-            }, msgToken || undefined),
-            callEvo(`chat/fetchMessages/${payload.instanceName}`, 'POST', {
-              number: cleanNumber,
-              limit: 30
-            }, msgToken || undefined)
-          ]);
+          // ── PRIMARY: Read from Supabase whatsapp_messages ──
+          // Find conversation by phone_number or remote_jid
+          const { data: convos } = await supabase
+            .from('whatsapp_conversations')
+            .select('id, phone_number, remote_jid')
+            .eq('owner_id', user.id)
+            .or(`phone_number.ilike.%${cleanNumber}%,remote_jid.eq.${jid},remote_jid_alt.eq.${jid}`);
 
-          const toArray = (v: any): any[] => {
-            if (!v) return [];
-            if (Array.isArray(v)) return v;
-            if (Array.isArray(v.records)) return v.records;
-            if (Array.isArray(v.messages)) return v.messages;
-            if (Array.isArray(v.data)) return v.data;
-            if (Array.isArray(v?.messages?.records)) return v.messages.records;
-            return [];
-          };
+          let dbMessages: any[] = [];
 
-          const localMessages = localRes.status === 'fulfilled'
-            ? toArray(localRes.value?.messages ?? localRes.value?.data ?? localRes.value)
-            : [];
-          const remoteMessages = remoteRes.status === 'fulfilled'
-            ? toArray(remoteRes.value?.messages ?? remoteRes.value?.data ?? remoteRes.value)
-            : [];
+          if (convos && convos.length > 0) {
+            const convoIds = convos.map((c: any) => c.id);
+            console.log(`[whatsapp-proxy] Found ${convoIds.length} conversations in DB for ${cleanNumber}`);
 
-          const allMessages: any[] = [...localMessages, ...remoteMessages];
-          const uniqueMessages: any[] = [];
-          const seenIds = new Set();
+            const { data: msgs } = await supabase
+              .from('whatsapp_messages')
+              .select('*')
+              .in('conversation_id', convoIds)
+              .order('created_at', { ascending: true })
+              .limit(50);
 
-          for (const msg of allMessages) {
-            const id = msg.key?.id || msg.id;
-            if (id && !seenIds.has(id)) {
-              seenIds.add(id);
-              uniqueMessages.push(msg);
+            if (msgs && msgs.length > 0) {
+              console.log(`[whatsapp-proxy] Found ${msgs.length} messages in DB`);
+              dbMessages = msgs.map((m: any) => ({
+                key: {
+                  remoteJid: jid,
+                  fromMe: m.direction === 'outbound',
+                  id: m.external_id || m.id,
+                },
+                message: { conversation: m.content },
+                messageTimestamp: Math.floor(new Date(m.created_at).getTime() / 1000),
+                pushName: m.direction === 'inbound' ? '' : undefined,
+                _source: 'database',
+              }));
             }
+          } else {
+            console.log(`[whatsapp-proxy] No conversation found in DB for ${cleanNumber}`);
           }
 
-          uniqueMessages.sort((a: any, b: any) => {
-            const tA = Number(a.messageTimestamp || 0);
-            const tB = Number(b.messageTimestamp || 0);
-            return tA - tB;
-          });
+          // If we got DB messages, return them directly (Evolution GO has no message history endpoint)
+          if (dbMessages.length > 0) {
+            result = { messages: dbMessages };
+            break;
+          }
 
-          result = { messages: uniqueMessages };
+          // ── FALLBACK: Try Evolution API (will likely 404 on Evolution GO but works on v2) ──
+          console.log(`[whatsapp-proxy] No DB messages, trying Evolution API as fallback...`);
+          const msgToken = await resolveInstanceToken(payload.instanceName);
+
+          try {
+            const evoMessages = await callEvo(`chat/findMessages/${payload.instanceName}`, 'POST', {
+              where: { key: { remoteJid: jid } },
+              options: { limit: 30 }
+            }, msgToken || undefined);
+
+            const toArray = (v: any): any[] => {
+              if (!v) return [];
+              if (Array.isArray(v)) return v;
+              if (Array.isArray(v.records)) return v.records;
+              if (Array.isArray(v.messages)) return v.messages;
+              if (Array.isArray(v.data)) return v.data;
+              return [];
+            };
+
+            const evoArr = toArray(evoMessages?.messages ?? evoMessages?.data ?? evoMessages);
+            result = { messages: evoArr };
+          } catch {
+            console.log(`[whatsapp-proxy] Evolution API fallback failed, returning empty`);
+            result = { messages: [] };
+          }
         } catch (e) {
           console.error(`[whatsapp-proxy] Fatal error in get_messages:`, e);
           result = { messages: [], error: String(e) };
@@ -568,6 +640,53 @@ serve(async (req) => {
             delay: 1000
           }},
         ], sendToken || undefined);
+
+        // ── Persist sent message to DB ──
+        try {
+          const sentJid = payload.to;
+          const sentPhone = sentJid.split('@')[0].replace(/\D/g, '');
+
+          // Find or create conversation
+          let { data: conv } = await supabase
+            .from('whatsapp_conversations')
+            .select('id')
+            .eq('owner_id', user.id)
+            .or(`phone_number.ilike.%${sentPhone}%,remote_jid.eq.${sentJid}`)
+            .maybeSingle();
+
+          if (!conv) {
+            const { data: newConv } = await supabase
+              .from('whatsapp_conversations')
+              .insert({
+                owner_id: user.id,
+                phone_number: sentPhone,
+                remote_jid: sentJid,
+                status: 'open',
+                last_message_at: new Date().toISOString(),
+              })
+              .select('id')
+              .single();
+            conv = newConv;
+          }
+
+          if (conv) {
+            await supabase.from('whatsapp_messages').insert({
+              conversation_id: conv.id,
+              owner_id: user.id,
+              content: payload.text,
+              direction: 'outbound',
+              external_id: result?.key?.id || result?.messageId || `sent-${Date.now()}`,
+            });
+            // Update last_message_at
+            await supabase
+              .from('whatsapp_conversations')
+              .update({ last_message_at: new Date().toISOString() })
+              .eq('id', conv.id);
+          }
+        } catch (persistErr) {
+          console.error(`[whatsapp-proxy] Failed to persist sent message:`, persistErr);
+          // Don't fail the send if persistence fails
+        }
         break;
       }
 
