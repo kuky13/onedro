@@ -34,12 +34,12 @@ export function WebChat({ instanceName, onBack }: WebChatProps) {
 
     const filteredChats = chats
         .filter(chat => {
-            const isGroup = chat.id.includes('@g.us');
+            const isGroup = chat.id?.includes('@g.us');
             const matchesTab = activeTab === 'groups' ? isGroup : !isGroup;
             if (!matchesTab) return false;
             if (!searchQuery.trim()) return true;
             const q = searchQuery.toLowerCase();
-            return (chat.name?.toLowerCase().includes(q) || chat.id.split('@')[0].includes(q));
+            return (chat.name?.toLowerCase().includes(q) || chat.id?.split('@')[0]?.includes(q));
         })
         .sort((a, b) => (b.lastMessageDate || 0) - (a.lastMessageDate || 0));
 
