@@ -640,6 +640,53 @@ serve(async (req) => {
             delay: 1000
           }},
         ], sendToken || undefined);
+
+        // ── Persist sent message to DB ──
+        try {
+          const sentJid = payload.to;
+          const sentPhone = sentJid.split('@')[0].replace(/\D/g, '');
+
+          // Find or create conversation
+          let { data: conv } = await supabase
+            .from('whatsapp_conversations')
+            .select('id')
+            .eq('owner_id', user.id)
+            .or(`phone_number.ilike.%${sentPhone}%,remote_jid.eq.${sentJid}`)
+            .maybeSingle();
+
+          if (!conv) {
+            const { data: newConv } = await supabase
+              .from('whatsapp_conversations')
+              .insert({
+                owner_id: user.id,
+                phone_number: sentPhone,
+                remote_jid: sentJid,
+                status: 'open',
+                last_message_at: new Date().toISOString(),
+              })
+              .select('id')
+              .single();
+            conv = newConv;
+          }
+
+          if (conv) {
+            await supabase.from('whatsapp_messages').insert({
+              conversation_id: conv.id,
+              owner_id: user.id,
+              content: payload.text,
+              direction: 'outbound',
+              external_id: result?.key?.id || result?.messageId || `sent-${Date.now()}`,
+            });
+            // Update last_message_at
+            await supabase
+              .from('whatsapp_conversations')
+              .update({ last_message_at: new Date().toISOString() })
+              .eq('id', conv.id);
+          }
+        } catch (persistErr) {
+          console.error(`[whatsapp-proxy] Failed to persist sent message:`, persistErr);
+          // Don't fail the send if persistence fails
+        }
         break;
       }
 
