@@ -385,7 +385,6 @@ serve(async (req) => {
           const chatsToken = await resolveInstanceToken(payload.instanceName);
 
           // Evolution GO: GET /user/contacts (identified by token)
-          // Evolution v2: POST /chat/findChats/{instanceName}
           const chats = await tryEndpoints([
             { path: 'user/contacts', method: 'GET' },
             { path: `chat/findChats/${payload.instanceName}`, method: 'POST', body: {} },
@@ -393,10 +392,61 @@ serve(async (req) => {
 
           const chatsArr = Array.isArray(chats) ? chats : ((chats as any)?.data || (chats as any)?.chats || (chats as any)?.contacts || []);
 
-          result = chatsArr.map((chat: any) => ({
-            ...chat,
-            name: chat.name || chat.pushName || chat.verifiedName || chat.subject || '',
-          }));
+          // ── Enrich with DB conversations (last message, unread count) ──
+          const { data: dbConvos } = await supabase
+            .from('whatsapp_conversations')
+            .select('id, phone_number, remote_jid, last_message_at, status')
+            .eq('owner_id', user.id);
+
+          // Build a map of phone -> last message from DB
+          const convoMap: Record<string, any> = {};
+          if (dbConvos) {
+            // Fetch last message for each conversation
+            const convoIds = dbConvos.map((c: any) => c.id);
+            const { data: lastMsgs } = await supabase
+              .from('whatsapp_messages')
+              .select('conversation_id, content, direction, created_at')
+              .in('conversation_id', convoIds)
+              .order('created_at', { ascending: false })
+              .limit(500);
+
+            const lastMsgMap: Record<string, any> = {};
+            if (lastMsgs) {
+              for (const msg of lastMsgs) {
+                if (!lastMsgMap[msg.conversation_id]) {
+                  lastMsgMap[msg.conversation_id] = msg;
+                }
+              }
+            }
+
+            for (const conv of dbConvos) {
+              const phone = conv.phone_number?.replace(/\D/g, '') || '';
+              const jid = conv.remote_jid || '';
+              const key = jid || phone;
+              const lastMsg = lastMsgMap[conv.id];
+              convoMap[phone] = {
+                lastMessage: lastMsg?.content || '',
+                lastMessageAt: lastMsg?.created_at ? Math.floor(new Date(lastMsg.created_at).getTime() / 1000) : null,
+                jid: jid,
+              };
+              if (jid) {
+                convoMap[jid.split('@')[0]] = convoMap[phone];
+              }
+            }
+          }
+
+          result = chatsArr.map((chat: any) => {
+            const chatJid = chat.Jid || chat.jid || chat.id || chat.remoteJid || '';
+            const chatPhone = chatJid.split('@')[0];
+            const dbInfo = convoMap[chatPhone] || {};
+
+            return {
+              ...chat,
+              name: chat.FullName || chat.name || chat.pushName || chat.PushName || chat.verifiedName || chat.BusinessName || chat.subject || '',
+              lastMessage: dbInfo.lastMessage || chat.lastMessage || undefined,
+              lastMessageTimestamp: dbInfo.lastMessageAt || undefined,
+            };
+          });
         } catch (e) {
           console.error(`[whatsapp-proxy] Error in get_chats:`, e);
           result = [];
