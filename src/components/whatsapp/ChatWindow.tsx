@@ -17,10 +17,10 @@ interface ChatWindowProps {
     isSyncing?: boolean;
     presenceStatus?: string | undefined;
     debugData?: any;
-    onMobileBack?: () => void;
+    onMobileBack?: (() => void) | undefined;
 }
 
-export function ChatWindow({ activeChat, activeChatName, messages, onSendMessage, isLoading, isSyncing, presenceStatus, onMobileBack }: ChatWindowProps) {
+export function ChatWindow({ activeChat, activeChatName, messages, onSendMessage, isLoading, presenceStatus, onMobileBack }: ChatWindowProps) {
     const [text, setText] = useState('');
     const [sending, setSending] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);

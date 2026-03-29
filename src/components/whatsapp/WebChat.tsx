@@ -96,7 +96,7 @@ export function WebChat({ instanceName, onBack }: WebChatProps) {
         };
     }, [user?.id]);
 
-    const handlePresenceEvent = (payload: any) => {
+    const _handlePresenceEvent = (payload: any) => {
         const jidRaw: unknown = payload?.jid || payload?.id || payload?.remoteJid;
         const presenceRaw = payload?.presence || payload?.lastKnownPresence || payload?.type || payload?.status;
         if (typeof jidRaw !== 'string' || !jidRaw) return;
