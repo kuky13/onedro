@@ -5,6 +5,7 @@ import { WebhookEventsViewer } from './WebhookEventsViewer';
 import { WhatsAppConnector } from './WhatsAppConnector';
 import { IAConfigManager } from './IAConfigManager';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
+import { WhatsAppAtendimento } from './WhatsAppAtendimento';
 
 export function WhatsAppCrmLite() {
   return (
@@ -17,7 +18,8 @@ export function WhatsAppCrmLite() {
       <Tabs defaultValue="connector" className="w-full">
         <TabsList className="w-full justify-start flex-wrap">
           <TabsTrigger value="connector">Conectar</TabsTrigger>
-          <TabsTrigger value="conversations">Atendimento</TabsTrigger>
+          <TabsTrigger value="atendimento">Atendimento</TabsTrigger>
+          <TabsTrigger value="conversations">Conversas</TabsTrigger>
           <TabsTrigger value="ia-config">Personalizar IA</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="settings">Configurações</TabsTrigger>
@@ -26,6 +28,10 @@ export function WhatsAppCrmLite() {
 
         <TabsContent value="connector" className="mt-4">
           <WhatsAppConnector />
+        </TabsContent>
+
+        <TabsContent value="atendimento" className="mt-0">
+          <WhatsAppAtendimento />
         </TabsContent>
 
         <TabsContent value="conversations" className="mt-4">

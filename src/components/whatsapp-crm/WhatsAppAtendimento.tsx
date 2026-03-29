@@ -1,32 +1,34 @@
 import { useWhatsAppConnectionStatus } from '@/hooks/useWhatsAppConnectionStatus';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { WebChat } from '@/components/whatsapp/WebChat';
+import { Loader2, QrCode } from 'lucide-react';
 
 export function WhatsAppAtendimento() {
-  const { data: connectionStatus, isLoading } = useWhatsAppConnectionStatus();
+  const { data: connectionStatus, isLoading } = useWhatsAppConnectionStatus({ pollMs: 10_000 });
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Atendimento</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">Verificando conexão...</p>
-        </CardContent>
-      </Card>
+      <div className=”flex items-center justify-center py-20”>
+        <Loader2 className=”h-6 w-6 animate-spin text-muted-foreground” />
+      </div>
     );
   }
 
-  if (!connectionStatus?.connected || !connectionStatus.instance_id) {
+  // Mostrar WebChat se tiver instance_id — mesmo que status ainda não seja “open”
+  // (Evolution pode estar conectado mas o DB ainda não atualizou via webhook)
+  if (!connectionStatus?.instance_id) {
     return (
-      <Card>
+      <Card className=”max-w-md mx-auto mt-8”>
         <CardHeader>
-          <CardTitle>Atendimento</CardTitle>
+          <CardTitle className=”flex items-center gap-2”>
+            <QrCode className=”h-5 w-5 text-muted-foreground” />
+            WhatsApp não conectado
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
-          <p className="text-sm text-muted-foreground">Você precisa conectar seu WhatsApp para atender por aqui.</p>
-          <p className="text-xs text-muted-foreground">Vá na aba “Conectar” e gere um QR Code.</p>
+        <CardContent>
+          <p className=”text-sm text-muted-foreground”>
+            Vá na aba <strong>Conectar</strong> acima e escaneie o QR Code para vincular seu WhatsApp.
+          </p>
         </CardContent>
       </Card>
     );
