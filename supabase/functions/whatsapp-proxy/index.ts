@@ -409,55 +409,77 @@ serve(async (req) => {
           const jid = payload.remoteJid;
           const cleanNumber = jid.split('@')[0];
           console.log(`[whatsapp-proxy] get_messages for ${jid} in ${payload.instanceName}`);
-          const msgToken = await resolveInstanceToken(payload.instanceName);
 
-          const [localRes, remoteRes] = await Promise.allSettled([
-            callEvo(`chat/findMessages/${payload.instanceName}`, 'POST', {
-              where: { key: { remoteJid: jid } },
-              options: { limit: 30 }
-            }, msgToken || undefined),
-            callEvo(`chat/fetchMessages/${payload.instanceName}`, 'POST', {
-              number: cleanNumber,
-              limit: 30
-            }, msgToken || undefined)
-          ]);
+          // ── PRIMARY: Read from Supabase whatsapp_messages ──
+          // Find conversation by phone_number or remote_jid
+          const { data: convos } = await supabase
+            .from('whatsapp_conversations')
+            .select('id, phone_number, remote_jid')
+            .eq('owner_id', user.id)
+            .or(`phone_number.ilike.%${cleanNumber}%,remote_jid.eq.${jid},remote_jid_alt.eq.${jid}`);
 
-          const toArray = (v: any): any[] => {
-            if (!v) return [];
-            if (Array.isArray(v)) return v;
-            if (Array.isArray(v.records)) return v.records;
-            if (Array.isArray(v.messages)) return v.messages;
-            if (Array.isArray(v.data)) return v.data;
-            if (Array.isArray(v?.messages?.records)) return v.messages.records;
-            return [];
-          };
+          let dbMessages: any[] = [];
 
-          const localMessages = localRes.status === 'fulfilled'
-            ? toArray(localRes.value?.messages ?? localRes.value?.data ?? localRes.value)
-            : [];
-          const remoteMessages = remoteRes.status === 'fulfilled'
-            ? toArray(remoteRes.value?.messages ?? remoteRes.value?.data ?? remoteRes.value)
-            : [];
+          if (convos && convos.length > 0) {
+            const convoIds = convos.map((c: any) => c.id);
+            console.log(`[whatsapp-proxy] Found ${convoIds.length} conversations in DB for ${cleanNumber}`);
 
-          const allMessages: any[] = [...localMessages, ...remoteMessages];
-          const uniqueMessages: any[] = [];
-          const seenIds = new Set();
+            const { data: msgs } = await supabase
+              .from('whatsapp_messages')
+              .select('*')
+              .in('conversation_id', convoIds)
+              .order('created_at', { ascending: true })
+              .limit(50);
 
-          for (const msg of allMessages) {
-            const id = msg.key?.id || msg.id;
-            if (id && !seenIds.has(id)) {
-              seenIds.add(id);
-              uniqueMessages.push(msg);
+            if (msgs && msgs.length > 0) {
+              console.log(`[whatsapp-proxy] Found ${msgs.length} messages in DB`);
+              dbMessages = msgs.map((m: any) => ({
+                key: {
+                  remoteJid: jid,
+                  fromMe: m.direction === 'outbound',
+                  id: m.external_id || m.id,
+                },
+                message: { conversation: m.content },
+                messageTimestamp: Math.floor(new Date(m.created_at).getTime() / 1000),
+                pushName: m.direction === 'inbound' ? '' : undefined,
+                _source: 'database',
+              }));
             }
+          } else {
+            console.log(`[whatsapp-proxy] No conversation found in DB for ${cleanNumber}`);
           }
 
-          uniqueMessages.sort((a: any, b: any) => {
-            const tA = Number(a.messageTimestamp || 0);
-            const tB = Number(b.messageTimestamp || 0);
-            return tA - tB;
-          });
+          // If we got DB messages, return them directly (Evolution GO has no message history endpoint)
+          if (dbMessages.length > 0) {
+            result = { messages: dbMessages };
+            break;
+          }
 
-          result = { messages: uniqueMessages };
+          // ── FALLBACK: Try Evolution API (will likely 404 on Evolution GO but works on v2) ──
+          console.log(`[whatsapp-proxy] No DB messages, trying Evolution API as fallback...`);
+          const msgToken = await resolveInstanceToken(payload.instanceName);
+
+          try {
+            const evoMessages = await callEvo(`chat/findMessages/${payload.instanceName}`, 'POST', {
+              where: { key: { remoteJid: jid } },
+              options: { limit: 30 }
+            }, msgToken || undefined);
+
+            const toArray = (v: any): any[] => {
+              if (!v) return [];
+              if (Array.isArray(v)) return v;
+              if (Array.isArray(v.records)) return v.records;
+              if (Array.isArray(v.messages)) return v.messages;
+              if (Array.isArray(v.data)) return v.data;
+              return [];
+            };
+
+            const evoArr = toArray(evoMessages?.messages ?? evoMessages?.data ?? evoMessages);
+            result = { messages: evoArr };
+          } catch {
+            console.log(`[whatsapp-proxy] Evolution API fallback failed, returning empty`);
+            result = { messages: [] };
+          }
         } catch (e) {
           console.error(`[whatsapp-proxy] Fatal error in get_messages:`, e);
           result = { messages: [], error: String(e) };
