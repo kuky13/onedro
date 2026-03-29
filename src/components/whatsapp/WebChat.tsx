@@ -276,10 +276,10 @@ export function WebChat({ instanceName, onBack }: WebChatProps) {
 
             const formattedChats = rawArray.map((c: any) => {
                 // Tenta extrair JID de qualquer lugar
-                const jid = c.remoteJid || c.id || c.jid || c.key?.remoteJid || c.instance?.instanceId;
+                const jid = c.Jid || c.remoteJid || c.id || c.jid || c.key?.remoteJid || c.instance?.instanceId;
                 
-                // Tenta extrair nome de qualquer lugar (Ordem de prioridade: Nome real > Nome verificado > Nome de push)
-                let name = c.name || c.verifiedName || c.pushName || c.pushname || c.contact?.name || c.instance?.instanceName;
+                // Tenta extrair nome de qualquer lugar (Evolution GO usa campos capitalizados)
+                let name = c.FullName || c.name || c.verifiedName || c.PushName || c.pushName || c.pushname || c.BusinessName || c.contact?.name || c.instance?.instanceName;
                 
                 if (!name && jid) {
                     const cleanJid = jid.split('@')[0];
