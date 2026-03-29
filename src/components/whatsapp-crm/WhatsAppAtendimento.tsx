@@ -4,7 +4,7 @@ import { WebChat } from '@/components/whatsapp/WebChat';
 import { Loader2, QrCode } from 'lucide-react';
 
 export function WhatsAppAtendimento() {
-  const { data: connectionStatus, isLoading } = useWhatsAppConnectionStatus({ pollMs: 10_000 });
+  const { data: connectionStatus, isLoading } = useWhatsAppConnectionStatus({ pollMs: 10000 });
 
   if (isLoading) {
     return (
